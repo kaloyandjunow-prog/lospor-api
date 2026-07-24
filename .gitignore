@@ -1,0 +1,78 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# /src/generated/prisma  — committed so Vercel build works without prisma generate
+
+dev.log
+dev-current.*.log
+.next-dev-*.log
+.next-e2e-*.log
+debug.log
+*.backup.tsx
+*.backup2.tsx
+.tmp-*.jpg
+
+# playwright e2e
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/e2e/.auth/
+.tmp-*.png
+
+# Claude Code worktrees and session artefacts
+.claude/
+
+# Temporary one-off scripts
+scripts/clean-dev-db.ts
+
+# Throwaway verification/screenshot scripts. Underscore prefix = scratch,
+# never meant for the public repo. (Only .ts — the committed
+# scripts/_drug-*.json/.csv data files are deliberately tracked.)
+scripts/_*.ts
+e2e/_*.spec.ts
+
+# Local MCP server config (contains project refs, not for public repos)
+.mcp.json
+
+# Codex workspace artefacts
+.codex/

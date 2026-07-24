@@ -1,0 +1,5200 @@
+{
+  "agents": [
+    {
+      "name": "Sevoflurane",
+      "min": 0,
+      "max": 8,
+      "step": 0.1,
+      "quickValues": [
+        1,
+        2,
+        2.5,
+        3,
+        8
+      ]
+    },
+    {
+      "name": "Desflurane",
+      "min": 0,
+      "max": 18,
+      "step": 0.1,
+      "quickValues": [
+        4,
+        6,
+        8,
+        12,
+        18
+      ]
+    },
+    {
+      "name": "Isoflurane",
+      "min": 0,
+      "max": 5,
+      "step": 0.1,
+      "quickValues": [
+        0.5,
+        1,
+        1.5,
+        3,
+        5
+      ]
+    }
+  ],
+  "skipped": [
+    "Fospropofol",
+    "Thiamylal",
+    "Pentobarbital",
+    "Tapentadol",
+    "Piritramide",
+    "Codeine",
+    "Levorphanol",
+    "Celecoxib",
+    "Etoricoxib",
+    "Meloxicam",
+    "Gabapentin",
+    "Pregabalin",
+    "Doxacurium",
+    "Edrophonium",
+    "Pyridostigmine",
+    "Articaine",
+    "Procaine",
+    "Cocaine",
+    "Benzocaine",
+    "Etidocaine",
+    "Dibucaine / Cinchocaine",
+    "Oxybuprocaine / Benoxinate",
+    "Regional anesthesia adjuvants category (entire category skipped — Epinephrine/Clonidine/Dexmedetomidine/Dexamethasone/Sodium bicarbonate/Hyaluronidase/Buprenorphine/Morphine/Fentanyl/Sufentanil/Diamorphine/Ketamine/Magnesium sulfate/Midazolam — user says these will be revisited later, either as existing-drug duplicates or in their own categories)",
+    "Mephentermine",
+    "Midodrine",
+    "Etilefrine",
+    "Dopexamine",
+    "Enoximone",
+    "Inamrinone / Amrinone",
+    "Atenolol",
+    "Urapidil",
+    "Phentolamine",
+    "Nitric oxide",
+    "Alprostadil",
+    "Fenoldopam",
+    "Procainamide",
+    "Ibutilide",
+    "Sotalol",
+    "Dolasetron",
+    "Domperidone",
+    "Prochlorperazine",
+    "Diphenhydramine",
+    "Aprepitant",
+    "Amisulpride",
+    "Perphenazine",
+    "Acid suppression / aspiration prophylaxis category remainder (Sodium citrate, Pantoprazole, Omeprazole, Esomeprazole, Lansoprazole, Rabeprazole, Famotidine, Ranitidine, Cimetidine, Nizatidine, Alvimopan, Naloxegol — skipped as a batch, mostly preop/PO)",
+    "Penicillin G (IU-scale dosing, deferred)",
+    "Colistin / Colistimethate (complex region/salt-form-dependent dosing, deferred)",
+    "Trimethoprim-sulfamethoxazole (combo-drug dosing, deferred)",
+    "Amphotericin B (formulation-dependent dosing, deferred)",
+    "Mupirocin (topical, not stepper-dosed)",
+    "Povidone-iodine (topical, not stepper-dosed)",
+    "Chlorhexidine (topical, not stepper-dosed)",
+    "Dextran (colloid, explicitly excluded)",
+    "Factor VIII/IX/vWF/Antithrombin concentrates (target-level dosing paradigm, deferred)",
+    "Low-molecular-weight heparin / Enoxaparin",
+    "Aminocaproic acid",
+    "Aprotinin",
+    "Prothrombin complex concentrate 3-factor",
+    "Urokinase",
+    "Topical thrombin",
+    "Fibrin sealant / fibrin glue",
+    "Oxidized cellulose",
+    "Gelatin-thrombin matrix",
+    "Dinoprostone",
+    "Sulprostone",
+    "Salbutamol / Albuterol (deferred to Respiratory drugs/bronchodilators category)",
+    "Nifedipine",
+    "Atosiban",
+    "Indomethacin",
+    "Dextrose / Glucose (hypoglycemia bolus, deferred — D5W/D10W maintenance forms belong in fluid library)",
+    "Prednisolone",
+    "Bumetanide",
+    "Acetazolamide",
+    "Levothyroxine",
+    "Liothyronine",
+    "Sodium zirconium cyclosilicate",
+    "Calcium resonium / Sodium polystyrene sulfonate",
+    "Levosalbutamol / Levalbuterol",
+    "Ipratropium",
+    "Tiotropium",
+    "Racemic epinephrine",
+    "Budesonide",
+    "Beclomethasone",
+    "Fluticasone",
+    "Surfactant",
+    "Dornase alfa",
+    "Cyproheptadine",
+    "Fosphenytoin",
+    "Lacosamide",
+    "Papaverine",
+    "Topical airway/nasal/ENT agents category (entire category skipped — all topical/nebulized, non-stepper-dosed)",
+    "Ophthalmic/specialty intraoperative agents category (entire category skipped — surgeon-administered ophthalmic agents, not anesthesia-dosed)",
+    "Clemastine",
+    "Miscellaneous perioperative adjuncts category (entire category skipped — niche specialty dyes/sclerosants/neurolytics)",
+    "Ringer's lactate + 5% dextrose (duplicate of D5LR)",
+    "Succinylated gelatin (duplicate of Gelatin 4%)"
+  ],
+  "addAtEnd": [],
+  "rules": {
+    "weightBasisIBW": "Constant: for ANY infusion (or weight-based bolus) whose weightBasis is IBW, the weight used for the per-kg calculation is min(IBW, TBW) — i.e. IBW unless IBW exceeds the patient's actual total body weight, in which case TBW is used instead. Current code (calcSuggestedDose / 'Total will use IBW' hint) does NOT apply this cap yet — falls back to plain ibw ?? tbw. Needs fixing when this library is wired in.",
+    "doseCalcRounding": "Auto-calculated suggested doses need their OWN rounding granularity (doseCalc.roundTo), separate from the slider's step — confirmed NOT always the same: Propofol rounds to 10 (matches its step=10), but Etomidate rounds to 1 despite a 0.1 step.",
+    "doseCalcUnitAgnostic": "doseCalc's per-kg multiplier must NOT be hardcoded as 'mgPerKg' — Dexmedetomidine doses in mcg/kg, not mg/kg. Rename to a unit-agnostic field (e.g. perKg, interpreted in the drug's own canonical unit) rather than mgPerKg specifically. Final doseCalc schema: { perKg?: number, flat?: number, basis?: 'IBW'|'TBW', roundTo: number } — interpreted in the drug's own `unit`.",
+    "doseCalcPerRoute": "Confirmed via Ketamine: when a drug has multiple routes, the per-kg auto-fill multiplier can differ BY ROUTE (Ketamine IV 2mg/kg, IM 4mg/kg, IN 3mg/kg, PO 8mg/kg, all IBW, all roundTo 10). doseCalc therefore needs to be keyed per-route (Record<route, DoseCalc>), not one flat object per drug, whenever routes.length > 1.",
+    "doseModeByRoute": "Confirmed via Lidocaine: the DOSING MODE itself (not just the doseCalc multiplier) can vary by route. IV = flat mg dose with a stepper. SC / Local infiltration / PD (peridural) / IT (intrathecal) = concentration% + volume(mL) — the same 'pick a concentration, dial a volume' mechanism already built for LA infusions (concentrationOptions), but now ALSO needed at the BOLUS level, keyed per-route. Same applies to infusions: IV infusion = rate in mg/kg/hr; PD/IT infusion = concentration% + rate(mL/hr). One drug, one catalog entry, but routes split into 'dose-mode' routes (flat unit) vs 'concentration-mode' routes (% + volume/rate), each with their own range/step/quickValues. Schema needs: routeMode: Record<route, 'dose'|'concentration'>, plus per-route range/quick/concentrationOptions where mode is 'concentration'.",
+    "infusionSuggestedRate": "Infusions can have a suggested STARTING rate too (Atracurium: 0.3 mg/kg/hr), same idea as bolus doseCalc but for the infusion's rate field. New field: suggestedRate (interpreted in the infusion's own unit, possibly per-kg if weightBasis is set). Not yet built in the UI (infusion start currently has no auto-fill, only bolus does via calcSuggestedDose) — needs its own wiring.",
+    "unitSwitchNoConversion": "CONFIRMED BUG-IN-WAITING, not yet fixed: DoseSelector's onUnitChange only relabels the unit (IntraopTimetable.tsx:2735,2765 — setFp(f => ({...f, unit: u})) / rateUnit), it does NOT convert the numeric value. Decision: until a real conversion-on-switch feature is built, every drug gets exactly ONE canonical unit (no multi-unit allowedUnits with incompatible bases like mg/kg/hr vs mcg/kg/min). Revisit as its own feature later if dual-unit entry is wanted.",
+    "variableStep": "Confirmed via Bupivacaine: dose/volume sliders sometimes need a non-uniform step (fine below a threshold, coarser above) — same idea as mobile's existing weight wheel (0.5kg steps up to 20kg, then whole-kg after). New field: variableStep?: { upTo: number, step: number }[] (ordered ascending by upTo, last entry's step applies above its upTo). When present, overrides the flat `step` field for slider behavior.",
+    "canonicalUnitsExtended": "Original canonical infusion-unit list (IU/kg/hr, IU/hr, mL/hr, mcg/kg/min, mg/kg/hr, g/kg/hr) was missing several units actually needed clinically. Full audited list of infusion units in use as of this pass: IU/min (Vasopressin), g/hr (Magnesium sulfate), mL/hr (Lidocaine PD/IT, concentration-rate mode), mcg/kg/hr (Dexmedetomidine, Fentanyl, Sufentanil), mcg/kg/min (Remifentanil, Alfentanil, Cisatracurium-equivalent before conversion, Atracurium-equivalent, Mivacurium, Dobutamine, Milrinone, Levosimendan, Dopamine), mcg/min (Isoproterenol), mg/hr (Metaraminol), mg/kg/hr (Propofol, Ketamine, Esketamine, Rocuronium, Vecuronium, Cisatracurium, Atracurium, Lidocaine IV), ng/kg/min (Angiotensin II). Final canonical infusion-unit list: IU/kg/hr, IU/hr, IU/min, mL/hr, ng/kg/min, mcg/min, mcg/kg/min, mcg/kg/hr, mg/min, mg/hr, mg/kg/hr, g/hr, g/kg/hr. Always check this list before introducing a new infusion unit — extend deliberately, don't invent ad hoc.",
+    "prepStrengthInfusion": "New mechanism activated via Amiodarone: when an infusion is dosed in mL/hr with a FIXED single prep strength (not a multi-choice % list like LA concentrationOptions), record prepStrength: { mg: number, mL: number } on the infusion profile. Total mg delivered = rate(mL/hr) * (prepStrength.mg/prepStrength.mL) * hours. UI needs to prompt for this once per drug (or let the user override per-case if their pharmacy mixes differently) — not yet wired into the dose-selector UI.",
+    "doseCalcCap": "doseCalc needs an optional cap field — PCC 4-factor: 25 IU/kg, but the computed auto-fill must never exceed 3000 IU regardless of weight (heavy patients would otherwise compute beyond the safe ceiling). Schema: doseCalc.cap?: number — clamp the computed suggestion to this value before applying roundTo."
+  },
+  "drugs": [
+    {
+      "name": "Propofol",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        150,
+        200,
+        250
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 2,
+        "basis": "IBW",
+        "roundTo": 10
+      },
+      "hint": "2 mg/kg IBW (range 1-2.5 mg/kg)"
+    },
+    {
+      "name": "Etomidate",
+      "min": 0,
+      "max": 50,
+      "step": 0.1,
+      "quickValues": [
+        10,
+        15,
+        20,
+        25,
+        30
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.3,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.3 mg/kg IBW"
+    },
+    {
+      "name": "Ketamine",
+      "min": 0,
+      "max": 250,
+      "step": 5,
+      "quickValues": [
+        10,
+        20,
+        50,
+        100,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM",
+        "IN",
+        "PO"
+      ],
+      "doseCalcByRoute": {
+        "IV": {
+          "perKg": 2,
+          "basis": "IBW",
+          "roundTo": 10
+        },
+        "IM": {
+          "perKg": 4,
+          "basis": "IBW",
+          "roundTo": 10
+        },
+        "IN": {
+          "perKg": 3,
+          "basis": "IBW",
+          "roundTo": 10
+        },
+        "PO": {
+          "perKg": 8,
+          "basis": "IBW",
+          "roundTo": 10
+        }
+      }
+    },
+    {
+      "name": "Esketamine",
+      "min": 0,
+      "max": 250,
+      "step": 5,
+      "quickValues": [
+        10,
+        20,
+        50,
+        100,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM",
+        "IN",
+        "PO"
+      ],
+      "doseCalcByRoute": {
+        "IV": {
+          "perKg": 1,
+          "basis": "IBW",
+          "roundTo": 10
+        },
+        "IM": {
+          "perKg": 2,
+          "basis": "IBW",
+          "roundTo": 10
+        },
+        "IN": {
+          "perKg": 1.5,
+          "basis": "IBW",
+          "roundTo": 10
+        },
+        "PO": {
+          "perKg": 4,
+          "basis": "IBW",
+          "roundTo": 10
+        }
+      }
+    },
+    {
+      "name": "Thiopental / Thiopentone",
+      "min": 0,
+      "max": 1000,
+      "step": 10,
+      "quickValues": [
+        100,
+        200,
+        300,
+        400,
+        500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 4,
+        "basis": "IBW",
+        "roundTo": 10
+      },
+      "hint": "4 mg/kg IBW"
+    },
+    {
+      "name": "Methohexital",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        150,
+        200,
+        300
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 1.5,
+        "basis": "IBW",
+        "roundTo": 10
+      },
+      "hint": "1.5 mg/kg IBW"
+    },
+    {
+      "name": "Midazolam",
+      "min": 0,
+      "max": 15,
+      "step": 0.5,
+      "quickValues": [
+        1,
+        2,
+        3,
+        5,
+        10
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM",
+        "IN",
+        "PO"
+      ],
+      "doseCalcByRoute": {
+        "IV": {
+          "perKg": 0.05,
+          "basis": "IBW",
+          "roundTo": 0.5
+        },
+        "IM": {
+          "perKg": 0.1,
+          "basis": "IBW",
+          "roundTo": 0.5
+        },
+        "IN": {
+          "perKg": 0.2,
+          "basis": "IBW",
+          "roundTo": 0.5
+        },
+        "PO": {
+          "perKg": 0.5,
+          "basis": "IBW",
+          "roundTo": 0.5
+        }
+      }
+    },
+    {
+      "name": "Diazepam",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        2,
+        5,
+        10,
+        15,
+        20
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "PO",
+        "IM"
+      ],
+      "doseCalc": {
+        "perKg": 0.1,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.1 mg/kg IBW (IV)"
+    },
+    {
+      "name": "Lorazepam",
+      "min": 0,
+      "max": 4,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        2,
+        3,
+        4
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "PO",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 mg"
+    },
+    {
+      "name": "Remimazolam",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        2.5,
+        5,
+        7.5,
+        10,
+        12.5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2.5
+      },
+      "hint": "2.5 mg"
+    },
+    {
+      "name": "Dexmedetomidine",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "quickValues": [
+        25,
+        50,
+        75,
+        100,
+        150
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 1,
+        "basis": "IBW",
+        "roundTo": 5
+      },
+      "hint": "1 mcg/kg IBW (loading dose)"
+    },
+    {
+      "name": "Clonidine",
+      "min": 0,
+      "max": 300,
+      "step": 25,
+      "quickValues": [
+        50,
+        75,
+        100,
+        150,
+        200
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV",
+        "PO"
+      ],
+      "doseCalc": {
+        "perKg": 2,
+        "basis": "IBW",
+        "roundTo": 25
+      },
+      "hint": "2 mcg/kg IBW"
+    },
+    {
+      "name": "Droperidol",
+      "min": 0,
+      "max": 2.5,
+      "step": 0.125,
+      "quickValues": [
+        0.625,
+        1.25,
+        1.875,
+        2.5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 0.625
+      },
+      "hint": "0.625 mg"
+    },
+    {
+      "name": "Haloperidol",
+      "min": 0,
+      "max": 5,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        2,
+        2.5,
+        5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 mg"
+    },
+    {
+      "name": "Promethazine",
+      "min": 0,
+      "max": 25,
+      "step": 1,
+      "quickValues": [
+        5,
+        10,
+        20,
+        25
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 10
+      },
+      "hint": "10 mg"
+    },
+    {
+      "name": "Fentanyl",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        10,
+        25,
+        50,
+        200
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "perKg": 1.5,
+        "basis": "IBW",
+        "roundTo": 25
+      },
+      "hint": "1.5 mcg/kg IBW"
+    },
+    {
+      "name": "Sufentanil",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "quickValues": [
+        5,
+        10,
+        15,
+        25,
+        40
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.2,
+        "basis": "IBW",
+        "roundTo": 2.5
+      },
+      "hint": "0.2 mcg/kg IBW"
+    },
+    {
+      "name": "Remifentanil",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "quickValues": [
+        10,
+        20,
+        30,
+        50,
+        75
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.5,
+        "basis": "IBW",
+        "roundTo": 5
+      },
+      "hint": "0.5 mcg/kg IBW"
+    },
+    {
+      "name": "Alfentanil",
+      "min": 0,
+      "max": 1500,
+      "step": 50,
+      "quickValues": [
+        250,
+        500,
+        750,
+        1000,
+        1500
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 20,
+        "basis": "IBW",
+        "roundTo": 50
+      },
+      "hint": "20 mcg/kg IBW"
+    },
+    {
+      "name": "Morphine",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "quickValues": [
+        2,
+        4,
+        5,
+        10,
+        15
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "perKg": 0.1,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.1 mg/kg IBW"
+    },
+    {
+      "name": "Hydromorphone",
+      "min": 0,
+      "max": 4,
+      "step": 0.1,
+      "quickValues": [
+        0.2,
+        0.4,
+        0.5,
+        1,
+        2
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "perKg": 0.015,
+        "basis": "IBW",
+        "roundTo": 0.1
+      },
+      "hint": "0.015 mg/kg IBW"
+    },
+    {
+      "name": "Oxycodone",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "quickValues": [
+        2,
+        5,
+        7.5,
+        10,
+        15
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.1,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.1 mg/kg IBW"
+    },
+    {
+      "name": "Methadone",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "quickValues": [
+        2.5,
+        5,
+        10,
+        15,
+        20
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.1,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.1 mg/kg IBW"
+    },
+    {
+      "name": "Pethidine / Meperidine",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "quickValues": [
+        12.5,
+        25,
+        50,
+        75,
+        100
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 25
+      },
+      "hint": "25 mg"
+    },
+    {
+      "name": "Tramadol",
+      "min": 0,
+      "max": 200,
+      "step": 25,
+      "quickValues": [
+        50,
+        100,
+        150,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "PO"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mg"
+    },
+    {
+      "name": "Nalbuphine",
+      "min": 0,
+      "max": 20,
+      "step": 2.5,
+      "quickValues": [
+        2.5,
+        5,
+        10,
+        15,
+        20
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 5
+      },
+      "hint": "5 mg"
+    },
+    {
+      "name": "Butorphanol",
+      "min": 0,
+      "max": 4,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        1.5,
+        2
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 mg"
+    },
+    {
+      "name": "Buprenorphine",
+      "min": 0,
+      "max": 600,
+      "step": 50,
+      "quickValues": [
+        150,
+        300,
+        450,
+        600
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV",
+        "IM",
+        "SL"
+      ],
+      "doseCalc": {
+        "flat": 300
+      },
+      "hint": "300 mcg"
+    },
+    {
+      "name": "Diamorphine",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "quickValues": [
+        1,
+        2.5,
+        5,
+        7.5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "perKg": 0.05,
+        "basis": "IBW",
+        "roundTo": 0.5
+      },
+      "hint": "0.05 mg/kg IBW"
+    },
+    {
+      "name": "Paracetamol / Acetaminophen",
+      "min": 0,
+      "max": 1000,
+      "step": 10,
+      "quickValues": [
+        500,
+        650,
+        1000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "PO"
+      ],
+      "doseCalc": {
+        "flat": 1000
+      },
+      "hint": "1000 mg"
+    },
+    {
+      "name": "Metamizole",
+      "min": 0,
+      "max": 2500,
+      "step": 10,
+      "quickValues": [
+        500,
+        1000,
+        1500,
+        2500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "PO"
+      ],
+      "doseCalc": {
+        "flat": 1000
+      },
+      "hint": "1000 mg"
+    },
+    {
+      "name": "Ketorolac",
+      "min": 0,
+      "max": 30,
+      "step": 5,
+      "quickValues": [
+        10,
+        15,
+        30
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 15
+      },
+      "hint": "15 mg"
+    },
+    {
+      "name": "Diclofenac",
+      "min": 0,
+      "max": 75,
+      "step": 5,
+      "quickValues": [
+        25,
+        50,
+        75
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM",
+        "PO"
+      ],
+      "doseCalc": {
+        "flat": 75
+      },
+      "hint": "75 mg"
+    },
+    {
+      "name": "Ibuprofen",
+      "min": 0,
+      "max": 800,
+      "step": 50,
+      "quickValues": [
+        200,
+        400,
+        600,
+        800
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "PO"
+      ],
+      "doseCalc": {
+        "flat": 400
+      },
+      "hint": "400 mg"
+    },
+    {
+      "name": "Dexketoprofen",
+      "min": 0,
+      "max": 50,
+      "step": 10,
+      "quickValues": [
+        25,
+        50
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 50
+      },
+      "hint": "50 mg"
+    },
+    {
+      "name": "Ketoprofen",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "quickValues": [
+        50,
+        100
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mg"
+    },
+    {
+      "name": "Parecoxib",
+      "min": 0,
+      "max": 40,
+      "step": 10,
+      "quickValues": [
+        20,
+        40
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 40
+      },
+      "hint": "40 mg"
+    },
+    {
+      "name": "Lornoxicam",
+      "min": 0,
+      "max": 16,
+      "step": 1,
+      "quickValues": [
+        8,
+        16
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 8
+      },
+      "hint": "8 mg"
+    },
+    {
+      "name": "Tenoxicam",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        20
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 20
+      },
+      "hint": "20 mg"
+    },
+    {
+      "name": "Nefopam",
+      "min": 0,
+      "max": 60,
+      "step": 10,
+      "quickValues": [
+        20,
+        40,
+        60
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 20
+      },
+      "hint": "20 mg"
+    },
+    {
+      "name": "Magnesium sulfate",
+      "min": 0,
+      "max": 4000,
+      "step": 100,
+      "quickValues": [
+        500,
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 30,
+        "basis": "IBW",
+        "roundTo": 100
+      },
+      "hint": "30 mg/kg IBW"
+    },
+    {
+      "name": "Lidocaine",
+      "routes": [
+        "IV",
+        "Local infiltration",
+        "PD",
+        "IT",
+        "Peripheral nerve block"
+      ],
+      "routeModes": {
+        "IV": {
+          "mode": "dose",
+          "min": 0,
+          "max": 500,
+          "step": 10,
+          "quickValues": [
+            50,
+            100,
+            150,
+            200,
+            250
+          ],
+          "unit": "mg",
+          "doseCalc": {
+            "perKg": 1,
+            "basis": "IBW",
+            "roundTo": 10
+          }
+        },
+        "Local infiltration": {
+          "mode": "concentration",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "quickValues": [
+            2,
+            5,
+            8,
+            10,
+            12
+          ],
+          "unit": "mL",
+          "concentrationOptions": [
+            "0.5%",
+            "1%",
+            "2%",
+            "5%"
+          ],
+          "suggestedVolume": 5
+        },
+        "PD": {
+          "mode": "concentration",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "quickValues": [
+            2,
+            5,
+            8,
+            10,
+            12
+          ],
+          "unit": "mL",
+          "concentrationOptions": [
+            "0.5%",
+            "1%",
+            "2%",
+            "5%"
+          ],
+          "suggestedVolume": 5
+        },
+        "IT": {
+          "mode": "concentration",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "quickValues": [
+            2,
+            5,
+            8,
+            10,
+            12
+          ],
+          "unit": "mL",
+          "concentrationOptions": [
+            "0.5%",
+            "1%",
+            "2%",
+            "5%"
+          ],
+          "suggestedVolume": 2
+        },
+        "Peripheral nerve block": {
+          "mode": "concentration",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "quickValues": [
+            2,
+            5,
+            8,
+            10,
+            12
+          ],
+          "unit": "mL",
+          "concentrationOptions": [
+            "0.5%",
+            "1%",
+            "2%",
+            "5%"
+          ],
+          "suggestedVolume": 5
+        }
+      }
+    },
+    {
+      "name": "Succinylcholine / Suxamethonium",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "quickValues": [
+        50,
+        75,
+        100,
+        150
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 1,
+        "basis": "TBW",
+        "roundTo": 5
+      },
+      "hint": "1 mg/kg TBW"
+    },
+    {
+      "name": "Rocuronium",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "quickValues": [
+        20,
+        30,
+        40,
+        50,
+        70
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.6,
+        "basis": "IBW",
+        "roundTo": 5
+      },
+      "hint": "0.6 mg/kg IBW"
+    },
+    {
+      "name": "Vecuronium",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.1,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.1 mg/kg IBW"
+    },
+    {
+      "name": "Pancuronium",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "quickValues": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.08,
+        "basis": "IBW",
+        "roundTo": 0.5
+      },
+      "hint": "0.08 mg/kg IBW"
+    },
+    {
+      "name": "Pipecuronium",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "quickValues": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.08,
+        "basis": "IBW",
+        "roundTo": 0.5
+      },
+      "hint": "0.08 mg/kg IBW"
+    },
+    {
+      "name": "Cisatracurium",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        5,
+        10,
+        14,
+        20
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.15,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.15 mg/kg IBW"
+    },
+    {
+      "name": "Atracurium",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "quickValues": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.5,
+        "basis": "IBW",
+        "roundTo": 5
+      },
+      "hint": "0.5 mg/kg IBW"
+    },
+    {
+      "name": "Mivacurium",
+      "min": 0,
+      "max": 15,
+      "step": 1,
+      "quickValues": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.15,
+        "basis": "IBW",
+        "roundTo": 1
+      },
+      "hint": "0.15 mg/kg IBW"
+    },
+    {
+      "name": "Sugammadex",
+      "min": 0,
+      "max": 800,
+      "step": 10,
+      "quickValues": [
+        100,
+        200,
+        400,
+        600
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 2,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "2 mg/kg TBW (4 mg/kg if deep block)"
+    },
+    {
+      "name": "Neostigmine",
+      "min": 0,
+      "max": 5,
+      "step": 0.5,
+      "quickValues": [
+        1,
+        2,
+        2.5,
+        5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.05,
+        "basis": "IBW",
+        "roundTo": 0.5
+      },
+      "hint": "0.05 mg/kg IBW"
+    },
+    {
+      "name": "Glycopyrrolate",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "quickValues": [
+        0.2,
+        0.4,
+        0.6,
+        1
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.01,
+        "basis": "IBW",
+        "roundTo": 0.1
+      },
+      "hint": "0.01 mg/kg IBW"
+    },
+    {
+      "name": "Atropine",
+      "min": 0,
+      "max": 3,
+      "step": 0.1,
+      "quickValues": [
+        0.5,
+        1,
+        2,
+        3
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 0.5
+      },
+      "hint": "0.5 mg"
+    },
+    {
+      "name": "Scopolamine / Hyoscine",
+      "min": 0,
+      "max": 0.6,
+      "step": 0.1,
+      "quickValues": [
+        0.2,
+        0.4,
+        0.6
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 0.4
+      },
+      "hint": "0.4 mg"
+    },
+    {
+      "name": "Hyoscine butylbromide",
+      "min": 0,
+      "max": 40,
+      "step": 10,
+      "quickValues": [
+        10,
+        20,
+        40
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 20
+      },
+      "hint": "20 mg"
+    },
+    {
+      "name": "Bupivacaine",
+      "mode": "concentration",
+      "min": 0,
+      "max": 60,
+      "variableStep": [
+        {
+          "upTo": 5,
+          "step": 0.1
+        },
+        {
+          "upTo": 60,
+          "step": 1
+        }
+      ],
+      "quickValues": [
+        1,
+        2,
+        5,
+        8,
+        10
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "0.125%",
+        "0.25%",
+        "0.5%",
+        "0.75%"
+      ],
+      "routes": [
+        "Local infiltration",
+        "PD",
+        "IT",
+        "Peripheral nerve block"
+      ],
+      "suggestedVolume": 5,
+      "suggestedVolumeByRoute": {
+        "IT": 2
+      }
+    },
+    {
+      "name": "Levobupivacaine",
+      "mode": "concentration",
+      "min": 0,
+      "max": 60,
+      "variableStep": [
+        {
+          "upTo": 5,
+          "step": 0.1
+        },
+        {
+          "upTo": 60,
+          "step": 1
+        }
+      ],
+      "quickValues": [
+        1,
+        2,
+        5,
+        8,
+        10
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "0.125%",
+        "0.25%",
+        "0.5%",
+        "0.75%"
+      ],
+      "routes": [
+        "Local infiltration",
+        "PD",
+        "IT",
+        "Peripheral nerve block"
+      ],
+      "suggestedVolume": 5,
+      "suggestedVolumeByRoute": {
+        "IT": 2
+      }
+    },
+    {
+      "name": "Ropivacaine",
+      "mode": "concentration",
+      "min": 0,
+      "max": 60,
+      "variableStep": [
+        {
+          "upTo": 5,
+          "step": 0.1
+        },
+        {
+          "upTo": 60,
+          "step": 1
+        }
+      ],
+      "quickValues": [
+        1,
+        2,
+        5,
+        8,
+        10
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "0.1%",
+        "0.2%",
+        "0.5%",
+        "0.75%",
+        "1%"
+      ],
+      "routes": [
+        "Local infiltration",
+        "PD",
+        "IT",
+        "Peripheral nerve block"
+      ],
+      "suggestedVolume": 5,
+      "suggestedVolumeByRoute": {
+        "IT": 2
+      }
+    },
+    {
+      "name": "Mepivacaine",
+      "mode": "concentration",
+      "min": 0,
+      "max": 60,
+      "variableStep": [
+        {
+          "upTo": 5,
+          "step": 0.1
+        },
+        {
+          "upTo": 60,
+          "step": 1
+        }
+      ],
+      "quickValues": [
+        1,
+        2,
+        5,
+        8,
+        10
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "1%",
+        "1.5%",
+        "2%",
+        "3%"
+      ],
+      "routes": [
+        "Local infiltration",
+        "PD",
+        "IT",
+        "Peripheral nerve block"
+      ],
+      "suggestedVolume": 5,
+      "suggestedVolumeByRoute": {
+        "IT": 2
+      }
+    },
+    {
+      "name": "Prilocaine",
+      "mode": "concentration",
+      "min": 0,
+      "max": 60,
+      "variableStep": [
+        {
+          "upTo": 5,
+          "step": 0.1
+        },
+        {
+          "upTo": 60,
+          "step": 1
+        }
+      ],
+      "quickValues": [
+        1,
+        2,
+        5,
+        8,
+        10
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "0.5%",
+        "1%",
+        "2%",
+        "3%",
+        "4%"
+      ],
+      "routes": [
+        "IV",
+        "Local infiltration",
+        "PD",
+        "IT",
+        "Peripheral nerve block"
+      ],
+      "suggestedVolume": 5,
+      "suggestedVolumeByRoute": {
+        "IT": 2
+      }
+    },
+    {
+      "name": "Chloroprocaine",
+      "mode": "concentration",
+      "min": 0,
+      "max": 60,
+      "variableStep": [
+        {
+          "upTo": 5,
+          "step": 0.1
+        },
+        {
+          "upTo": 60,
+          "step": 1
+        }
+      ],
+      "quickValues": [
+        1,
+        2,
+        5,
+        8,
+        10
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "1%",
+        "2%",
+        "3%"
+      ],
+      "routes": [
+        "Local infiltration",
+        "PD",
+        "IT",
+        "Peripheral nerve block"
+      ],
+      "suggestedVolume": 5,
+      "suggestedVolumeByRoute": {
+        "IT": 2
+      }
+    },
+    {
+      "name": "Tetracaine / Amethocaine",
+      "mode": "concentration",
+      "min": 0,
+      "max": 60,
+      "variableStep": [
+        {
+          "upTo": 5,
+          "step": 0.1
+        },
+        {
+          "upTo": 60,
+          "step": 1
+        }
+      ],
+      "quickValues": [
+        1,
+        2,
+        5,
+        8,
+        10
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "0.5%",
+        "1%"
+      ],
+      "routes": [
+        "IT"
+      ],
+      "suggestedVolume": 2
+    },
+    {
+      "name": "Phenylephrine",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        150,
+        200
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mcg"
+    },
+    {
+      "name": "Norepinephrine / Noradrenaline",
+      "min": 0,
+      "max": 20,
+      "step": 4,
+      "quickValues": [
+        4,
+        8,
+        12,
+        20
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 10
+      },
+      "hint": "10 mcg"
+    },
+    {
+      "name": "Epinephrine / Adrenaline",
+      "min": 0,
+      "max": 1000,
+      "step": 10,
+      "quickValues": [
+        100,
+        250,
+        500,
+        750
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 500
+      },
+      "hint": "500 mcg"
+    },
+    {
+      "name": "Ephedrine",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "quickValues": [
+        5,
+        10,
+        15,
+        25,
+        50
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 10
+      },
+      "hint": "10 mg"
+    },
+    {
+      "name": "Metaraminol",
+      "min": 0,
+      "max": 2,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        1.5,
+        2
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 0.5
+      },
+      "hint": "0.5 mg"
+    },
+    {
+      "name": "Vasopressin",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "quickValues": [
+        1,
+        2,
+        4
+      ],
+      "unit": "IU",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 IU"
+    },
+    {
+      "name": "Terlipressin",
+      "min": 0,
+      "max": 2,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        1.5,
+        2
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 mg"
+    },
+    {
+      "name": "Methylene blue",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        150,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 1.5,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "1.5 mg/kg TBW"
+    },
+    {
+      "name": "Hydroxocobalamin",
+      "min": 0,
+      "max": 5000,
+      "step": 500,
+      "quickValues": [
+        2500,
+        5000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 5000
+      },
+      "hint": "5000 mg"
+    },
+    {
+      "name": "Milrinone",
+      "min": 0,
+      "max": 1000,
+      "step": 50,
+      "quickValues": [
+        250,
+        500,
+        750,
+        1000
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 50,
+        "basis": "IBW",
+        "roundTo": 50
+      },
+      "hint": "50 mcg/kg IBW"
+    },
+    {
+      "name": "Levosimendan",
+      "min": 0,
+      "max": 24,
+      "step": 2,
+      "quickValues": [
+        6,
+        12,
+        18,
+        24
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 12,
+        "basis": "IBW",
+        "roundTo": 2
+      },
+      "hint": "12 mcg/kg IBW"
+    },
+    {
+      "name": "Glucagon",
+      "min": 0,
+      "max": 5,
+      "step": 0.5,
+      "quickValues": [
+        1,
+        2,
+        5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 mg"
+    },
+    {
+      "name": "Calcium chloride",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        500,
+        1000,
+        1500,
+        2000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1000
+      },
+      "hint": "1000 mg"
+    },
+    {
+      "name": "Calcium gluconate",
+      "min": 0,
+      "max": 3000,
+      "step": 100,
+      "quickValues": [
+        1000,
+        2000,
+        3000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1000
+      },
+      "hint": "1000 mg"
+    },
+    {
+      "name": "Digoxin",
+      "min": 0,
+      "max": 1,
+      "step": 0.125,
+      "quickValues": [
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 0.5
+      },
+      "hint": "0.5 mg"
+    },
+    {
+      "name": "Nitroglycerin / Glyceryl trinitrate",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        150,
+        200
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mcg"
+    },
+    {
+      "name": "Esmolol",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "quickValues": [
+        10,
+        20,
+        30,
+        50,
+        100
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.5,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "0.5 mg/kg TBW"
+    },
+    {
+      "name": "Labetalol",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "quickValues": [
+        5,
+        10,
+        20,
+        50,
+        100
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 10
+      },
+      "hint": "10 mg"
+    },
+    {
+      "name": "Metoprolol",
+      "min": 0,
+      "max": 15,
+      "step": 1,
+      "quickValues": [
+        2.5,
+        5,
+        10,
+        15
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 5
+      },
+      "hint": "5 mg"
+    },
+    {
+      "name": "Propranolol",
+      "min": 0,
+      "max": 5,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        2,
+        5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 mg"
+    },
+    {
+      "name": "Hydralazine",
+      "min": 0,
+      "max": 20,
+      "step": 2.5,
+      "quickValues": [
+        5,
+        10,
+        15,
+        20
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 5
+      },
+      "hint": "5 mg"
+    },
+    {
+      "name": "Sildenafil",
+      "min": 0,
+      "max": 10,
+      "step": 2.5,
+      "quickValues": [
+        2.5,
+        5,
+        7.5,
+        10
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 5
+      },
+      "hint": "5 mg"
+    },
+    {
+      "name": "Adenosine",
+      "min": 0,
+      "max": 18,
+      "step": 3,
+      "quickValues": [
+        6,
+        12,
+        18
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 6
+      },
+      "hint": "6 mg"
+    },
+    {
+      "name": "Amiodarone",
+      "min": 0,
+      "max": 300,
+      "step": 50,
+      "quickValues": [
+        150,
+        300
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 150
+      },
+      "hint": "150 mg"
+    },
+    {
+      "name": "Diltiazem",
+      "min": 0,
+      "max": 25,
+      "step": 2.5,
+      "quickValues": [
+        5,
+        10,
+        15,
+        20,
+        25
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.25,
+        "basis": "TBW",
+        "roundTo": 2.5
+      },
+      "hint": "0.25 mg/kg TBW"
+    },
+    {
+      "name": "Verapamil",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "quickValues": [
+        2.5,
+        5,
+        7.5,
+        10
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 5
+      },
+      "hint": "5 mg"
+    },
+    {
+      "name": "Ondansetron",
+      "min": 0,
+      "max": 8,
+      "step": 1,
+      "quickValues": [
+        4,
+        8
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 4
+      },
+      "hint": "4 mg"
+    },
+    {
+      "name": "Granisetron",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "quickValues": [
+        0.1,
+        1
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1
+      },
+      "hint": "1 mg"
+    },
+    {
+      "name": "Palonosetron",
+      "min": 0,
+      "max": 75,
+      "step": 25,
+      "quickValues": [
+        75
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 75
+      },
+      "hint": "75 mcg"
+    },
+    {
+      "name": "Tropisetron",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "quickValues": [
+        2,
+        5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 5
+      },
+      "hint": "5 mg"
+    },
+    {
+      "name": "Dexamethasone",
+      "min": 0,
+      "max": 12,
+      "step": 2,
+      "quickValues": [
+        4,
+        8,
+        10,
+        12
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 8
+      },
+      "hint": "8 mg"
+    },
+    {
+      "name": "Metoclopramide",
+      "min": 0,
+      "max": 10,
+      "step": 2.5,
+      "quickValues": [
+        2.5,
+        5,
+        10
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 10
+      },
+      "hint": "10 mg"
+    },
+    {
+      "name": "Cyclizine",
+      "min": 0,
+      "max": 50,
+      "step": 25,
+      "quickValues": [
+        25,
+        50
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 50
+      },
+      "hint": "50 mg"
+    },
+    {
+      "name": "Dimenhydrinate",
+      "min": 0,
+      "max": 62,
+      "step": 31,
+      "quickValues": [
+        31,
+        62
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 62
+      },
+      "hint": "62 mg"
+    },
+    {
+      "name": "Fosaprepitant",
+      "min": 0,
+      "max": 150,
+      "step": 30,
+      "quickValues": [
+        100,
+        150
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 150
+      },
+      "hint": "150 mg"
+    },
+    {
+      "name": "Octreotide",
+      "min": 0,
+      "max": 100,
+      "step": 25,
+      "quickValues": [
+        25,
+        50,
+        100
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 50
+      },
+      "hint": "50 mcg"
+    },
+    {
+      "name": "Cefazolin",
+      "min": 0,
+      "max": 3000,
+      "step": 250,
+      "quickValues": [
+        1000,
+        2000,
+        3000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Cefuroxime",
+      "min": 0,
+      "max": 3000,
+      "step": 250,
+      "quickValues": [
+        750,
+        1500,
+        3000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1500
+      },
+      "hint": "1500 mg"
+    },
+    {
+      "name": "Ceftriaxone",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Cefotaxime",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Cefoxitin",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Cefotetan",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Ceftazidime",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Cefepime",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Ceftaroline",
+      "min": 0,
+      "max": 1200,
+      "step": 100,
+      "quickValues": [
+        600,
+        1200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 600
+      },
+      "hint": "600 mg"
+    },
+    {
+      "name": "Ampicillin",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Amoxicillin-clavulanate",
+      "min": 0,
+      "max": 2400,
+      "step": 200,
+      "quickValues": [
+        1200,
+        2400
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1200
+      },
+      "hint": "1200 mg"
+    },
+    {
+      "name": "Ampicillin-sulbactam",
+      "min": 0,
+      "max": 6000,
+      "step": 500,
+      "quickValues": [
+        1500,
+        3000,
+        6000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 3000
+      },
+      "hint": "3000 mg"
+    },
+    {
+      "name": "Piperacillin-tazobactam",
+      "min": 0,
+      "max": 9000,
+      "step": 500,
+      "quickValues": [
+        2250,
+        4500,
+        9000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 4500
+      },
+      "hint": "4500 mg"
+    },
+    {
+      "name": "Flucloxacillin",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Oxacillin",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Nafcillin",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Clindamycin",
+      "min": 0,
+      "max": 1800,
+      "step": 150,
+      "quickValues": [
+        600,
+        900,
+        1800
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 900
+      },
+      "hint": "900 mg"
+    },
+    {
+      "name": "Vancomycin",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        500,
+        1000,
+        1500,
+        2000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 15,
+        "basis": "TBW",
+        "roundTo": 100
+      },
+      "hint": "15 mg/kg TBW"
+    },
+    {
+      "name": "Teicoplanin",
+      "min": 0,
+      "max": 800,
+      "step": 100,
+      "quickValues": [
+        400,
+        800
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 400
+      },
+      "hint": "400 mg"
+    },
+    {
+      "name": "Gentamicin",
+      "min": 0,
+      "max": 600,
+      "step": 20,
+      "quickValues": [
+        80,
+        160,
+        320
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 5,
+        "basis": "TBW",
+        "roundTo": 20
+      },
+      "hint": "5 mg/kg TBW"
+    },
+    {
+      "name": "Tobramycin",
+      "min": 0,
+      "max": 600,
+      "step": 20,
+      "quickValues": [
+        80,
+        160,
+        320
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 5,
+        "basis": "TBW",
+        "roundTo": 20
+      },
+      "hint": "5 mg/kg TBW"
+    },
+    {
+      "name": "Amikacin",
+      "min": 0,
+      "max": 1500,
+      "step": 50,
+      "quickValues": [
+        500,
+        1000,
+        1500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 15,
+        "basis": "TBW",
+        "roundTo": 50
+      },
+      "hint": "15 mg/kg TBW"
+    },
+    {
+      "name": "Metronidazole",
+      "min": 0,
+      "max": 1500,
+      "step": 250,
+      "quickValues": [
+        500,
+        1000,
+        1500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 500
+      },
+      "hint": "500 mg"
+    },
+    {
+      "name": "Ciprofloxacin",
+      "min": 0,
+      "max": 800,
+      "step": 100,
+      "quickValues": [
+        400,
+        800
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 400
+      },
+      "hint": "400 mg"
+    },
+    {
+      "name": "Levofloxacin",
+      "min": 0,
+      "max": 1000,
+      "step": 250,
+      "quickValues": [
+        500,
+        750,
+        1000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 500
+      },
+      "hint": "500 mg"
+    },
+    {
+      "name": "Moxifloxacin",
+      "min": 0,
+      "max": 400,
+      "step": 100,
+      "quickValues": [
+        400
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 400
+      },
+      "hint": "400 mg"
+    },
+    {
+      "name": "Ertapenem",
+      "min": 0,
+      "max": 1000,
+      "step": 250,
+      "quickValues": [
+        1000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1000
+      },
+      "hint": "1000 mg"
+    },
+    {
+      "name": "Meropenem",
+      "min": 0,
+      "max": 2000,
+      "step": 250,
+      "quickValues": [
+        1000,
+        2000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1000
+      },
+      "hint": "1000 mg"
+    },
+    {
+      "name": "Imipenem-cilastatin",
+      "min": 0,
+      "max": 1000,
+      "step": 250,
+      "quickValues": [
+        500,
+        1000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 500
+      },
+      "hint": "500 mg"
+    },
+    {
+      "name": "Aztreonam",
+      "min": 0,
+      "max": 2000,
+      "step": 250,
+      "quickValues": [
+        1000,
+        2000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Linezolid",
+      "min": 0,
+      "max": 600,
+      "step": 100,
+      "quickValues": [
+        600
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 600
+      },
+      "hint": "600 mg"
+    },
+    {
+      "name": "Daptomycin",
+      "min": 0,
+      "max": 800,
+      "step": 50,
+      "quickValues": [
+        400,
+        600,
+        800
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 6,
+        "basis": "TBW",
+        "roundTo": 50
+      },
+      "hint": "6 mg/kg TBW"
+    },
+    {
+      "name": "Tigecycline",
+      "min": 0,
+      "max": 200,
+      "step": 50,
+      "quickValues": [
+        100,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mg"
+    },
+    {
+      "name": "Doxycycline",
+      "min": 0,
+      "max": 200,
+      "step": 50,
+      "quickValues": [
+        100,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mg"
+    },
+    {
+      "name": "Azithromycin",
+      "min": 0,
+      "max": 500,
+      "step": 100,
+      "quickValues": [
+        500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 500
+      },
+      "hint": "500 mg"
+    },
+    {
+      "name": "Fluconazole",
+      "min": 0,
+      "max": 800,
+      "step": 100,
+      "quickValues": [
+        400,
+        800
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 400
+      },
+      "hint": "400 mg"
+    },
+    {
+      "name": "Voriconazole",
+      "min": 0,
+      "max": 600,
+      "step": 50,
+      "quickValues": [
+        200,
+        400,
+        600
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 6,
+        "basis": "TBW",
+        "roundTo": 50
+      },
+      "hint": "6 mg/kg TBW"
+    },
+    {
+      "name": "Anidulafungin",
+      "min": 0,
+      "max": 200,
+      "step": 50,
+      "quickValues": [
+        100,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 200
+      },
+      "hint": "200 mg"
+    },
+    {
+      "name": "Caspofungin",
+      "min": 0,
+      "max": 70,
+      "step": 10,
+      "quickValues": [
+        70
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 70
+      },
+      "hint": "70 mg"
+    },
+    {
+      "name": "Micafungin",
+      "min": 0,
+      "max": 150,
+      "step": 50,
+      "quickValues": [
+        100,
+        150
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mg"
+    },
+    {
+      "name": "Protamine",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "quickValues": [
+        25,
+        50,
+        75,
+        100
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ]
+    },
+    {
+      "name": "Unfractionated heparin",
+      "min": 0,
+      "max": 30000,
+      "step": 500,
+      "quickValues": [
+        5000,
+        10000,
+        20000,
+        30000
+      ],
+      "unit": "IU",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 80,
+        "basis": "TBW",
+        "roundTo": 500
+      },
+      "hint": "80 IU/kg TBW"
+    },
+    {
+      "name": "Tranexamic acid",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        500,
+        1000,
+        1500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 1000
+      },
+      "hint": "1000 mg"
+    },
+    {
+      "name": "Desmopressin",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "quickValues": [
+        4,
+        8,
+        20,
+        40
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.3,
+        "basis": "TBW",
+        "roundTo": 2
+      },
+      "hint": "0.3 mcg/kg TBW"
+    },
+    {
+      "name": "Vitamin K / Phytomenadione",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "quickValues": [
+        1,
+        2,
+        5,
+        10
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 10
+      },
+      "hint": "10 mg"
+    },
+    {
+      "name": "Fibrinogen concentrate",
+      "min": 0,
+      "max": 4000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 2000
+      },
+      "hint": "2000 mg"
+    },
+    {
+      "name": "Prothrombin complex concentrate 4-factor",
+      "min": 0,
+      "max": 3000,
+      "step": 10,
+      "quickValues": [
+        500,
+        1000,
+        2000,
+        3000
+      ],
+      "unit": "IU",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 25,
+        "basis": "TBW",
+        "roundTo": 10,
+        "cap": 3000
+      },
+      "hint": "25 IU/kg TBW (max 3000 IU)"
+    },
+    {
+      "name": "Activated factor VII / Eptacog alfa",
+      "min": 0,
+      "max": 9000,
+      "step": 500,
+      "quickValues": [
+        1000,
+        2000,
+        4500,
+        9000
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 90,
+        "basis": "TBW",
+        "roundTo": 500
+      },
+      "hint": "90 mcg/kg TBW"
+    },
+    {
+      "name": "Bivalirudin",
+      "min": 0,
+      "max": 150,
+      "step": 10,
+      "quickValues": [
+        25,
+        50,
+        75,
+        100
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 1,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "1 mg/kg TBW"
+    },
+    {
+      "name": "Alteplase",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "quickValues": [
+        10,
+        50,
+        100
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mg"
+    },
+    {
+      "name": "Tenecteplase",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "quickValues": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.53,
+        "basis": "TBW",
+        "roundTo": 5
+      },
+      "hint": "0.53 mg/kg TBW"
+    },
+    {
+      "name": "Oxytocin",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        3,
+        5,
+        10
+      ],
+      "unit": "IU",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 3
+      },
+      "hint": "3 IU"
+    },
+    {
+      "name": "Carbetocin",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "quickValues": [
+        100
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mcg"
+    },
+    {
+      "name": "Methylergometrine",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.1,
+      "quickValues": [
+        0.2,
+        0.5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 0.2
+      },
+      "hint": "0.2 mg"
+    },
+    {
+      "name": "Carboprost",
+      "min": 0,
+      "max": 0.25,
+      "step": 0.25,
+      "quickValues": [
+        0.25
+      ],
+      "unit": "mg",
+      "routes": [
+        "IM"
+      ],
+      "doseCalc": {
+        "flat": 0.25
+      },
+      "hint": "0.25 mg"
+    },
+    {
+      "name": "Misoprostol",
+      "min": 0,
+      "max": 1000,
+      "step": 200,
+      "quickValues": [
+        200,
+        400,
+        600,
+        800,
+        1000
+      ],
+      "unit": "mcg",
+      "routes": [
+        "PR",
+        "PO",
+        "SL"
+      ],
+      "doseCalc": {
+        "flat": 800
+      },
+      "hint": "800 mcg"
+    },
+    {
+      "name": "Terbutaline",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.05,
+      "quickValues": [
+        0.1,
+        0.25,
+        0.5
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV",
+        "SC"
+      ],
+      "doseCalc": {
+        "flat": 0.25
+      },
+      "hint": "0.25 mg"
+    },
+    {
+      "name": "Regular insulin / Actrapid",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        2,
+        4,
+        6,
+        10
+      ],
+      "unit": "IU",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 4
+      },
+      "hint": "4 IU"
+    },
+    {
+      "name": "Hydrocortisone",
+      "min": 0,
+      "max": 200,
+      "step": 50,
+      "quickValues": [
+        50,
+        100,
+        200
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 100
+      },
+      "hint": "100 mg"
+    },
+    {
+      "name": "Methylprednisolone",
+      "min": 0,
+      "max": 3000,
+      "step": 10,
+      "quickValues": [
+        40,
+        80,
+        125,
+        1000,
+        3000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 40
+      },
+      "hint": "40 mg"
+    },
+    {
+      "name": "Sodium bicarbonate",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "quickValues": [
+        20,
+        40,
+        60,
+        80,
+        100
+      ],
+      "unit": "mEq",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 1,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "1 mEq/kg TBW"
+    },
+    {
+      "name": "Potassium chloride",
+      "min": 0,
+      "max": 40,
+      "step": 5,
+      "quickValues": [
+        10,
+        20,
+        40
+      ],
+      "unit": "mmol",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 20
+      },
+      "hint": "20 mmol"
+    },
+    {
+      "name": "Potassium phosphate",
+      "min": 0,
+      "max": 30,
+      "step": 5,
+      "quickValues": [
+        10,
+        15,
+        30
+      ],
+      "unit": "mmol",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 15
+      },
+      "hint": "15 mmol"
+    },
+    {
+      "name": "Sodium phosphate",
+      "min": 0,
+      "max": 30,
+      "step": 5,
+      "quickValues": [
+        10,
+        15,
+        30
+      ],
+      "unit": "mmol",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 15
+      },
+      "hint": "15 mmol"
+    },
+    {
+      "name": "Sodium chloride hypertonic (3%)",
+      "min": 0,
+      "max": 500,
+      "step": 50,
+      "quickValues": [
+        100,
+        150,
+        250,
+        500
+      ],
+      "unit": "mL",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 150
+      },
+      "hint": "150 mL"
+    },
+    {
+      "name": "Furosemide",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "quickValues": [
+        10,
+        20,
+        40,
+        80
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 20
+      },
+      "hint": "20 mg"
+    },
+    {
+      "name": "Salbutamol / Albuterol",
+      "min": 0,
+      "max": 500,
+      "step": 50,
+      "quickValues": [
+        100,
+        250,
+        500
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 250
+      },
+      "hint": "250 mcg"
+    },
+    {
+      "name": "Aminophylline",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        250,
+        500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 5,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "5 mg/kg TBW"
+    },
+    {
+      "name": "Theophylline",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        250,
+        500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 5,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "5 mg/kg TBW"
+    },
+    {
+      "name": "Acetylcysteine",
+      "min": 0,
+      "max": 10000,
+      "step": 500,
+      "quickValues": [
+        2000,
+        5000,
+        10000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 150,
+        "basis": "TBW",
+        "roundTo": 500
+      },
+      "hint": "150 mg/kg TBW (loading dose)"
+    },
+    {
+      "name": "Naloxone",
+      "min": 0,
+      "max": 2000,
+      "step": 40,
+      "quickValues": [
+        40,
+        100,
+        400,
+        2000
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 40
+      },
+      "hint": "40 mcg"
+    },
+    {
+      "name": "Flumazenil",
+      "min": 0,
+      "max": 1000,
+      "step": 100,
+      "quickValues": [
+        200,
+        500,
+        1000
+      ],
+      "unit": "mcg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 200
+      },
+      "hint": "200 mcg"
+    },
+    {
+      "name": "Dantrolene",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        100,
+        200,
+        400,
+        500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 2.5,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "2.5 mg/kg TBW"
+    },
+    {
+      "name": "Physostigmine",
+      "min": 0,
+      "max": 2,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        2
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 0.5
+      },
+      "hint": "0.5 mg"
+    },
+    {
+      "name": "Pralidoxime",
+      "min": 0,
+      "max": 2000,
+      "step": 250,
+      "quickValues": [
+        1000,
+        2000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 25,
+        "basis": "TBW",
+        "roundTo": 250
+      },
+      "hint": "25 mg/kg TBW"
+    },
+    {
+      "name": "Hyaluronidase",
+      "min": 0,
+      "max": 1500,
+      "step": 150,
+      "quickValues": [
+        150,
+        750,
+        1500
+      ],
+      "unit": "IU",
+      "routes": [
+        "SC",
+        "Local infiltration"
+      ],
+      "doseCalc": {
+        "flat": 150
+      },
+      "hint": "150 IU"
+    },
+    {
+      "name": "Levetiracetam",
+      "min": 0,
+      "max": 4500,
+      "step": 100,
+      "quickValues": [
+        500,
+        1000,
+        1500,
+        4500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 20,
+        "basis": "TBW",
+        "roundTo": 100
+      },
+      "hint": "20 mg/kg TBW"
+    },
+    {
+      "name": "Phenobarbital",
+      "min": 0,
+      "max": 1000,
+      "step": 50,
+      "quickValues": [
+        200,
+        600,
+        1000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 15,
+        "basis": "TBW",
+        "roundTo": 50
+      },
+      "hint": "15 mg/kg TBW"
+    },
+    {
+      "name": "Phenytoin",
+      "min": 0,
+      "max": 1500,
+      "step": 100,
+      "quickValues": [
+        500,
+        1000,
+        1500
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 20,
+        "basis": "TBW",
+        "roundTo": 100
+      },
+      "hint": "20 mg/kg TBW"
+    },
+    {
+      "name": "Valproic acid",
+      "min": 0,
+      "max": 3000,
+      "step": 100,
+      "quickValues": [
+        500,
+        1000,
+        1500,
+        3000
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 20,
+        "basis": "TBW",
+        "roundTo": 100
+      },
+      "hint": "20 mg/kg TBW"
+    },
+    {
+      "name": "Chlorphenamine / Chlorpheniramine",
+      "min": 0,
+      "max": 20,
+      "step": 10,
+      "quickValues": [
+        10,
+        20
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "flat": 10
+      },
+      "hint": "10 mg"
+    },
+    {
+      "name": "Galantamine",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "quickValues": [
+        10,
+        15,
+        20,
+        30
+      ],
+      "unit": "mg",
+      "routes": [
+        "IV"
+      ],
+      "doseCalc": {
+        "perKg": 0.3,
+        "basis": "IBW",
+        "roundTo": 5
+      },
+      "hint": "0.3 mg/kg IBW"
+    }
+  ],
+  "infusions": [
+    {
+      "name": "Propofol",
+      "min": 0,
+      "max": 15,
+      "step": 0.1,
+      "quickValues": [
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 6
+    },
+    {
+      "name": "Ketamine",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "quickValues": [
+        0.1,
+        0.25,
+        0.5,
+        1,
+        2
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 1
+    },
+    {
+      "name": "Esketamine",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "quickValues": [
+        0.1,
+        0.25,
+        0.5,
+        1,
+        2
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.5
+    },
+    {
+      "name": "Dexmedetomidine",
+      "min": 0,
+      "max": 1.5,
+      "step": 0.1,
+      "quickValues": [
+        0.2,
+        0.4,
+        0.6,
+        1,
+        1.4
+      ],
+      "unit": "mcg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 1
+    },
+    {
+      "name": "Fentanyl",
+      "min": 0,
+      "max": 3,
+      "step": 0.1,
+      "quickValues": [
+        0.5,
+        1,
+        1.5,
+        2,
+        3
+      ],
+      "unit": "mcg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.5
+    },
+    {
+      "name": "Sufentanil",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "quickValues": [
+        0.1,
+        0.2,
+        0.3,
+        0.5,
+        0.75
+      ],
+      "unit": "mcg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.1
+    },
+    {
+      "name": "Remifentanil",
+      "min": 0,
+      "max": 1,
+      "step": 0.025,
+      "quickValues": [
+        0.05,
+        0.1,
+        0.15,
+        0.25,
+        0.5
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.1
+    },
+    {
+      "name": "Alfentanil",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "quickValues": [
+        0.25,
+        0.5,
+        0.75,
+        1,
+        1.5
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW"
+    },
+    {
+      "name": "Magnesium sulfate",
+      "min": 0,
+      "max": 2,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        1.5,
+        2
+      ],
+      "unit": "g/hr",
+      "weightBasis": "none",
+      "suggestedRate": 2
+    },
+    {
+      "name": "Lidocaine",
+      "routes": [
+        "IV",
+        "PD",
+        "IT"
+      ],
+      "routeModes": {
+        "IV": {
+          "mode": "rate",
+          "min": 0,
+          "max": 2,
+          "step": 0.1,
+          "quickValues": [
+            0.5,
+            1,
+            1.5,
+            2
+          ],
+          "unit": "mg/kg/hr",
+          "weightBasis": "IBW",
+          "suggestedRate": 1
+        },
+        "PD": {
+          "mode": "concentration-rate",
+          "min": 0,
+          "max": 20,
+          "step": 1,
+          "quickValues": [
+            2,
+            5,
+            8,
+            10,
+            12
+          ],
+          "unit": "mL/hr",
+          "concentrationOptions": [
+            "0.5%",
+            "1%",
+            "1.5%",
+            "2%"
+          ],
+          "suggestedRate": 5,
+          "suggestedConcentration": "1%"
+        },
+        "IT": {
+          "mode": "concentration-rate",
+          "min": 0,
+          "max": 20,
+          "step": 1,
+          "quickValues": [
+            2,
+            5,
+            8,
+            10,
+            12
+          ],
+          "unit": "mL/hr",
+          "concentrationOptions": [
+            "0.5%",
+            "1%",
+            "1.5%",
+            "2%"
+          ],
+          "suggestedRate": 2,
+          "suggestedConcentration": "0.5%"
+        }
+      }
+    },
+    {
+      "name": "Rocuronium",
+      "min": 0,
+      "max": 1,
+      "step": 0.05,
+      "quickValues": [
+        0.3,
+        0.4,
+        0.5,
+        0.6
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.5
+    },
+    {
+      "name": "Vecuronium",
+      "min": 0,
+      "max": 0.2,
+      "step": 0.01,
+      "quickValues": [
+        0.05,
+        0.08,
+        0.1,
+        0.15
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.05
+    },
+    {
+      "name": "Cisatracurium",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.1,
+      "quickValues": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.3
+    },
+    {
+      "name": "Atracurium",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.1,
+      "quickValues": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.3
+    },
+    {
+      "name": "Mivacurium",
+      "min": 0,
+      "max": 15,
+      "step": 1,
+      "quickValues": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 5
+    },
+    {
+      "name": "Phenylephrine",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "quickValues": [
+        0.25,
+        0.5,
+        0.75,
+        1,
+        1.5
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.5
+    },
+    {
+      "name": "Norepinephrine / Noradrenaline",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "quickValues": [
+        0.05,
+        0.1,
+        0.25,
+        0.3,
+        0.5
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.05
+    },
+    {
+      "name": "Epinephrine / Adrenaline",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "quickValues": [
+        0.05,
+        0.1,
+        0.25,
+        0.3,
+        0.5
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.05
+    },
+    {
+      "name": "Metaraminol",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "quickValues": [
+        0.2,
+        0.5,
+        0.8,
+        1
+      ],
+      "unit": "mg/hr",
+      "weightBasis": "none",
+      "suggestedRate": 0.5
+    },
+    {
+      "name": "Dopamine",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        2,
+        5,
+        10,
+        15
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 5
+    },
+    {
+      "name": "Vasopressin",
+      "min": 0,
+      "max": 0.1,
+      "step": 0.01,
+      "quickValues": [
+        0.01,
+        0.02,
+        0.04,
+        0.06
+      ],
+      "unit": "IU/min",
+      "weightBasis": "none",
+      "suggestedRate": 0.02
+    },
+    {
+      "name": "Angiotensin II",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "quickValues": [
+        10,
+        20,
+        40,
+        80
+      ],
+      "unit": "ng/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 20
+    },
+    {
+      "name": "Dobutamine",
+      "min": 0,
+      "max": 20,
+      "step": 0.5,
+      "quickValues": [
+        2.5,
+        5,
+        7.5,
+        10,
+        15
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 5
+    },
+    {
+      "name": "Milrinone",
+      "min": 0,
+      "max": 0.75,
+      "step": 0.05,
+      "quickValues": [
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.75
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.375
+    },
+    {
+      "name": "Levosimendan",
+      "min": 0,
+      "max": 0.2,
+      "step": 0.01,
+      "quickValues": [
+        0.05,
+        0.1,
+        0.15,
+        0.2
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.1
+    },
+    {
+      "name": "Isoproterenol / Isoprenaline",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        2,
+        5
+      ],
+      "unit": "mcg/min",
+      "weightBasis": "none",
+      "suggestedRate": 2
+    },
+    {
+      "name": "Nitroglycerin / Glyceryl trinitrate",
+      "min": 0,
+      "max": 5,
+      "step": 0.1,
+      "quickValues": [
+        0.5,
+        1,
+        2,
+        3,
+        5
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 1
+    },
+    {
+      "name": "Sodium nitroprusside",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "quickValues": [
+        0.3,
+        0.5,
+        1,
+        2,
+        3
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 0.5
+    },
+    {
+      "name": "Nicardipine",
+      "min": 0,
+      "max": 15,
+      "step": 0.5,
+      "quickValues": [
+        2.5,
+        5,
+        7.5,
+        10,
+        15
+      ],
+      "unit": "mg/hr",
+      "weightBasis": "none",
+      "suggestedRate": 5
+    },
+    {
+      "name": "Clevidipine",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "quickValues": [
+        2,
+        4,
+        8,
+        16,
+        32
+      ],
+      "unit": "mg/hr",
+      "weightBasis": "none",
+      "suggestedRate": 4
+    },
+    {
+      "name": "Esmolol",
+      "min": 0,
+      "max": 200,
+      "step": 25,
+      "quickValues": [
+        25,
+        50,
+        100,
+        150,
+        200
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 50
+    },
+    {
+      "name": "Labetalol",
+      "min": 0,
+      "max": 8,
+      "step": 0.5,
+      "quickValues": [
+        1,
+        2,
+        4,
+        8
+      ],
+      "unit": "mg/min",
+      "weightBasis": "none",
+      "suggestedRate": 2
+    },
+    {
+      "name": "Epoprostenol",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "quickValues": [
+        1,
+        2,
+        4,
+        6,
+        10
+      ],
+      "unit": "ng/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 2
+    },
+    {
+      "name": "Iloprost",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "quickValues": [
+        0.5,
+        1,
+        1.5,
+        2
+      ],
+      "unit": "ng/kg/min",
+      "weightBasis": "IBW",
+      "suggestedRate": 1
+    },
+    {
+      "name": "Amiodarone",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "quickValues": [
+        5,
+        10,
+        15,
+        20
+      ],
+      "unit": "mL/hr",
+      "weightBasis": "none",
+      "suggestedRate": 10,
+      "prepStrength": {
+        "mg": 300,
+        "mL": 50
+      }
+    },
+    {
+      "name": "Diltiazem",
+      "min": 0,
+      "max": 15,
+      "step": 1,
+      "quickValues": [
+        5,
+        10,
+        15
+      ],
+      "unit": "mg/hr",
+      "weightBasis": "none",
+      "suggestedRate": 10
+    },
+    {
+      "name": "Octreotide",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "quickValues": [
+        25,
+        50,
+        75,
+        100
+      ],
+      "unit": "mcg/hr",
+      "weightBasis": "none",
+      "suggestedRate": 50
+    },
+    {
+      "name": "Unfractionated heparin",
+      "min": 0,
+      "max": 25,
+      "step": 1,
+      "quickValues": [
+        10,
+        15,
+        18,
+        20
+      ],
+      "unit": "IU/kg/hr",
+      "weightBasis": "TBW"
+    },
+    {
+      "name": "Bivalirudin",
+      "min": 0,
+      "max": 2.5,
+      "step": 0.1,
+      "quickValues": [
+        0.5,
+        1,
+        1.75,
+        2.5
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "TBW",
+      "suggestedRate": 1.75
+    },
+    {
+      "name": "Argatroban",
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "quickValues": [
+        0.5,
+        1,
+        2,
+        5
+      ],
+      "unit": "mcg/kg/min",
+      "weightBasis": "TBW",
+      "suggestedRate": 2
+    },
+    {
+      "name": "Oxytocin",
+      "min": 0,
+      "max": 40,
+      "step": 5,
+      "quickValues": [
+        10,
+        20,
+        30,
+        40
+      ],
+      "unit": "IU/hr",
+      "weightBasis": "none",
+      "suggestedRate": 10
+    },
+    {
+      "name": "Regular insulin / Actrapid",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "quickValues": [
+        1,
+        2,
+        4,
+        6
+      ],
+      "unit": "IU/hr",
+      "weightBasis": "none",
+      "suggestedRate": 2
+    },
+    {
+      "name": "Furosemide",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "quickValues": [
+        2,
+        4,
+        8
+      ],
+      "unit": "mg/hr",
+      "weightBasis": "none"
+    },
+    {
+      "name": "Aminophylline",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "quickValues": [
+        0.3,
+        0.5,
+        0.7
+      ],
+      "unit": "mg/kg/hr",
+      "weightBasis": "TBW"
+    },
+    {
+      "name": "Nimodipine",
+      "min": 0,
+      "max": 2,
+      "step": 0.1,
+      "quickValues": [
+        0.5,
+        1,
+        2
+      ],
+      "unit": "mg/hr",
+      "weightBasis": "none",
+      "suggestedRate": 1
+    }
+  ],
+  "fluids": [
+    {
+      "name": "HES",
+      "mode": "concentration",
+      "min": 0,
+      "max": 2000,
+      "step": 50,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        1500
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "6%",
+        "10%"
+      ],
+      "defaultConcentration": "10%",
+      "category": "Colloids"
+    },
+    {
+      "name": "Gelatin 4%",
+      "min": 0,
+      "max": 2000,
+      "step": 50,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        1500
+      ],
+      "unit": "mL",
+      "category": "Colloids"
+    },
+    {
+      "name": "Albumin 5%",
+      "min": 0,
+      "max": 1000,
+      "step": 50,
+      "quickValues": [
+        100,
+        250,
+        500
+      ],
+      "unit": "mL",
+      "category": "Colloids"
+    },
+    {
+      "name": "Albumin 20%",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        200
+      ],
+      "unit": "mL",
+      "category": "Colloids"
+    },
+    {
+      "name": "Albumin 25%",
+      "min": 0,
+      "max": 200,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        200
+      ],
+      "unit": "mL",
+      "category": "Colloids"
+    },
+    {
+      "name": "Mannitol",
+      "mode": "concentration",
+      "min": 0,
+      "max": 1000,
+      "step": 50,
+      "quickValues": [
+        100,
+        250,
+        500
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "10%",
+        "15%"
+      ],
+      "category": "Other",
+      "suggestedVolume": 50
+    },
+    {
+      "name": "Lipid emulsion 20%",
+      "min": 0,
+      "max": 1000,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        150
+      ],
+      "unit": "mL",
+      "category": "Other",
+      "doseCalc": {
+        "perKg": 1.5,
+        "basis": "TBW",
+        "roundTo": 10
+      },
+      "hint": "1.5 mL/kg TBW"
+    },
+    {
+      "name": "Saline",
+      "mode": "concentration",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "concentrationOptions": [
+        "0.225%",
+        "0.45%",
+        "0.9%",
+        "3%",
+        "20%"
+      ],
+      "defaultConcentration": "0.9%",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Lactated Ringer's / Hartmann's",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Plasma-Lyte",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Ringer's acetate",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Dextrose 5% (D5W)",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Dextrose 5% in 0.9% saline (D5NS)",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Dextrose 5% in 0.45% saline (D5 1/2NS)",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Dextrose 5% in Lactated Ringer's (D5LR)",
+      "min": 0,
+      "max": 2000,
+      "step": 100,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        2000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 500
+    },
+    {
+      "name": "Dextrose 10% (D10W)",
+      "min": 0,
+      "max": 1000,
+      "step": 50,
+      "quickValues": [
+        100,
+        250,
+        500,
+        1000
+      ],
+      "unit": "mL",
+      "category": "Crystalloids",
+      "suggestedVolume": 250
+    },
+    {
+      "name": "Packed red blood cells (PRBC)",
+      "min": 0,
+      "max": 1000,
+      "step": 10,
+      "quickValues": [
+        150,
+        250,
+        350,
+        1000
+      ],
+      "unit": "mL",
+      "category": "Blood products",
+      "suggestedVolume": 250
+    },
+    {
+      "name": "Fresh frozen plasma (FFP)",
+      "min": 0,
+      "max": 1000,
+      "step": 10,
+      "quickValues": [
+        200,
+        250,
+        1000
+      ],
+      "unit": "mL",
+      "category": "Blood products",
+      "suggestedVolume": 250
+    },
+    {
+      "name": "Platelets",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        200,
+        300,
+        500
+      ],
+      "unit": "mL",
+      "category": "Blood products",
+      "suggestedVolume": 300
+    },
+    {
+      "name": "Cryoprecipitate",
+      "min": 0,
+      "max": 250,
+      "step": 10,
+      "quickValues": [
+        50,
+        100,
+        150,
+        250
+      ],
+      "unit": "mL",
+      "category": "Blood products",
+      "suggestedVolume": 100
+    },
+    {
+      "name": "Whole blood",
+      "min": 0,
+      "max": 500,
+      "step": 10,
+      "quickValues": [
+        200,
+        350,
+        500
+      ],
+      "unit": "mL",
+      "category": "Blood products",
+      "suggestedVolume": 350
+    },
+    {
+      "name": "Cell salvage / autologous blood",
+      "min": 0,
+      "max": 1500,
+      "step": 10,
+      "quickValues": [
+        250,
+        500,
+        1000,
+        1500
+      ],
+      "unit": "mL",
+      "category": "Blood products",
+      "suggestedVolume": 500
+    }
+  ]
+}

@@ -1,0 +1,1236 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model User {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  name              String
+  firstName         String         @default("")
+  lastName          String         @default("")
+  title             String         @default("")
+  passwordHash      String
+  role              UserRole       @default(MEMBER)
+  institutionId     String?
+  institution       Institution?   @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
+  cases             Case[]
+  roleRequests      RoleRequest[]
+  transfersSent     CaseTransfer[] @relation("TransfersSent")
+  transfersReceived CaseTransfer[] @relation("TransfersReceived")
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  approvedAt        DateTime?
+  emailVerifiedAt   DateTime?
+  acceptedTermsAt   DateTime?
+  acceptedPrivacyAt DateTime?
+  termsVersion      String?
+  preferences       Json           @default("{}")
+  lastLoginAt       DateTime?
+  // Token-revocation epoch: any JWT (web session or mobile bearer) whose iat
+  // predates this is rejected — set on password reset so old sessions die.
+  passwordChangedAt DateTime?
+  deletedAt         DateTime?
+  createdAt         DateTime       @default(now())
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, usedAt])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, usedAt])
+  @@index([expiresAt])
+}
+
+enum UserRole {
+  MEMBER
+  HEAD_OF_DEPT
+  ADMIN
+  CLINICIAN // legacy
+  RESEARCHER // legacy
+}
+
+model Institution {
+  id      String @id @default(cuid())
+  name    String
+  city    String
+  country String @default("Bulgaria")
+  users   User[] @relation("UserPrimaryInstitution")
+  cases   Case[]
+}
+
+// ─── Case ────────────────────────────────────────────────────────────────────
+
+model Case {
+  id            String       @id @default(cuid())
+  caseCode      String?
+  notes         String?
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  institutionId String?
+  institution   Institution? @relation(fields: [institutionId], references: [id])
+  status        CaseStatus   @default(DRAFT)
+  finalizedAt   DateTime?
+  clientDraftId String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  preop         PreoperativeAssessment?
+  intraop       IntraoperativeRecord?
+  postop        PostoperativeRecord?
+  transfers     CaseTransfer[]
+  lock          CaseLock?
+  events        CaseEvent[]
+  selections    CaseSelection[]
+  complications CaseComplication[]
+  fieldStatuses ClinicalFieldStatus[]
+  fieldChanges  CaseFieldChange[]
+  snapshot      CaseSnapshot?
+
+  @@unique([userId, caseCode])
+  @@unique([userId, clientDraftId])
+  @@index([status])
+  @@index([userId, createdAt])
+}
+
+model CaseLock {
+  caseId    String   @id
+  userId    String
+  deviceId  String
+  expiresAt DateTime
+
+  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model CaseTransfer {
+  id          String         @id @default(cuid())
+  caseId      String
+  case        Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  fromUserId  String
+  fromUser    User           @relation("TransfersSent", fields: [fromUserId], references: [id])
+  toUserId    String
+  toUser      User           @relation("TransfersReceived", fields: [toUserId], references: [id])
+  initiatedBy String
+  status      TransferStatus @default(PENDING)
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+  // Case codes are per-user sequences, so a transferred case may have to be
+  // renumbered into the recipient's sequence. The code it carried beforehand is
+  // kept here — otherwise the paper record and the database disagree with no
+  // way to reconcile them.
+  previousCaseCode String?
+
+  @@index([status])
+  @@index([toUserId, status])
+}
+
+enum TransferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum CaseStatus {
+  DRAFT
+  IN_PROGRESS
+  AWAITING_REVIEW
+  COMPLETE
+}
+
+// ─── Custom terms (free-text entries added by clinicians) ─────────────────────
+
+model RoleRequest {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      RequestStatus @default(PENDING)
+  requestedAt DateTime      @default(now())
+  resolvedAt  DateTime?
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ICD-10 vocabulary (seeded from WHO ICD-10 + official BG MZ labels)
+model Icd10Code {
+  code     String         @id // e.g. "I21"
+  labelEn  String
+  labelBg  String?
+  synonyms Icd10Synonym[]
+}
+
+model Icd10Synonym {
+  id        String    @id @default(cuid())
+  icd10Code String
+  icd10     Icd10Code @relation(fields: [icd10Code], references: [code], onDelete: Cascade)
+  synonym   String
+
+  @@index([icd10Code])
+}
+
+// LOINC codes for the 67-test canonical lab library (seeded once, not full LOINC import)
+model LabLoinc {
+  name          String @id // exact name from lab library
+  loincCode     String
+  unitCanon     String
+  referenceLow  Float?
+  referenceHigh Float?
+}
+
+// ATC drug classification tree (seeded from Athena CONCEPT.csv, vocab ATC)
+model Atc {
+  code       String  @id // e.g. "N01AB"
+  name       String
+  level      Int // 1-5
+  parentCode String?
+
+  @@index([parentCode])
+  @@index([level])
+}
+
+// Drug registry (seeded from drugs.json, searchable by name/INN/ATC)
+model Drug {
+  id            String          @id @default(cuid())
+  name          String
+  inn           String?
+  atcCode       String?
+  form          String?
+  strength      String?
+  optionLibrary OptionLibrary[]
+
+  @@index([name])
+  @@index([inn])
+  @@index([atcCode])
+}
+
+// Shared selectable option catalog for intraop/preop pill-button pickers
+// (position, technique, vascular access, airway management, monitoring,
+// premedication/intraop drugs, infusions, inhalational agents, fluids,
+// clinical events) — one master library both web and mobile read from,
+// instead of each app hardcoding its own copies.
+enum LibraryCategory {
+  POSITION
+  AIRWAY_MANAGEMENT
+  VASCULAR_ACCESS
+  TECHNIQUE
+  MONITORING
+  PREMED_DRUG
+  INTRAOP_EVENT
+  INTRAOP_DRUG
+  INTRAOP_INFUSION
+  INHALATIONAL_AGENT
+  INTRAOP_FLUID
+
+  // Preop/postop categorical pickers
+  SEX
+  BLOOD_GROUP
+  NECK_MOBILITY
+  MALLAMPATI
+  UPPER_LIP_BITE
+  CORMACK_LEHANE
+  DISPOSITION
+  HANDOVER_ITEM
+
+  // Preop/postop numeric range specs — one row per category, range/step/unit in metadata
+  AGE_RANGE
+  HEIGHT_RANGE
+  WEIGHT_RANGE
+  BP_SYSTOLIC_RANGE
+  BP_DIASTOLIC_RANGE
+  HEART_RATE_RANGE
+  SPO2_RANGE
+  TEMPERATURE_RANGE
+  RESPIRATORY_RATE_RANGE
+  MOUTH_OPENING_RANGE
+  THYROMENTAL_RANGE
+  ALDRETE_SUBSCORE_RANGE
+  PAIN_NRS_RANGE
+}
+
+model OptionLibrary {
+  id          String          @id @default(cuid())
+  category    LibraryCategory
+  value       String // stable code written into CaseEvent/CaseSelection, e.g. "SUPINE", "PROPOFOL"
+  labelEn     String
+  labelBg     String?
+  group       String? // e.g. premed category "Anxiolytics", drug category "Induction"
+  parentId    String? // self-relation for tree categories (TECHNIQUE, VASCULAR_ACCESS)
+  parent      OptionLibrary?  @relation("LibraryTree", fields: [parentId], references: [id])
+  children    OptionLibrary[] @relation("LibraryTree")
+  drugId      String? // optional FK into Drug for ATC/INN
+  drug        Drug?           @relation(fields: [drugId], references: [id])
+  color       String?
+  description String?
+  sortOrder   Int             @default(0)
+  active      Boolean         @default(true)
+  metadata    Json? // category-specific extras: doseHints, allowedUnits, defaultUnit, etc.
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([category, value])
+  @@index([category, active, sortOrder])
+  @@index([parentId])
+}
+
+enum ConceptMappingStatus {
+  MAPPED
+  SOURCE_ONLY
+  UNMAPPED
+}
+
+enum ClinicalFieldPresence {
+  PRESENT
+  ABSENT
+  UNKNOWN
+  NOT_APPLICABLE
+  NOT_DOCUMENTED
+}
+
+model ConceptMap {
+  id                 String               @id @default(cuid())
+  domain             String
+  sourceVocabulary   String
+  sourceCode         String
+  sourceLabelEn      String?
+  sourceLabelBg      String?
+  standardVocabulary String?
+  standardConceptId  Int?
+  standardLabel      String?
+  mappingStatus      ConceptMappingStatus @default(SOURCE_ONLY)
+  sourceVersion      String?
+  mappingMethod      String?
+  mappingConfidence  Float?
+  reviewed           Boolean              @default(false)
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  mappingNotes       String?
+  athenaVersion      String?
+  active             Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@unique([domain, sourceVocabulary, sourceCode])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+  @@index([mappingStatus])
+  @@index([reviewed])
+}
+
+model OmopVocabulary {
+  vocabularyId      String   @id
+  vocabularyName    String?
+  vocabularyReference String?
+  vocabularyVersion String?
+  vocabularyConceptId Int?
+  importedAt        DateTime @default(now())
+}
+
+model OmopDomain {
+  domainId        String  @id
+  domainName      String?
+  domainConceptId Int?
+}
+
+model OmopConcept {
+  conceptId       Int      @id
+  conceptName     String
+  domainId        String
+  vocabularyId    String
+  conceptClassId  String
+  standardConcept String?
+  conceptCode     String
+  validStartDate  DateTime?
+  validEndDate    DateTime?
+  invalidReason   String?
+  importedAt      DateTime @default(now())
+
+  @@index([vocabularyId, conceptCode])
+  @@index([domainId])
+  @@index([standardConcept])
+  @@index([conceptName])
+}
+
+model OmopConceptRelationship {
+  id             String   @id @default(cuid())
+  conceptId1     Int
+  conceptId2     Int
+  relationshipId String
+  validStartDate DateTime?
+  validEndDate   DateTime?
+  invalidReason  String?
+  importedAt     DateTime @default(now())
+
+  @@unique([conceptId1, conceptId2, relationshipId])
+  @@index([conceptId1, relationshipId])
+  @@index([conceptId2, relationshipId])
+}
+
+model OmopConceptAncestor {
+  id                    String   @id @default(cuid())
+  ancestorConceptId      Int
+  descendantConceptId    Int
+  minLevelsOfSeparation  Int?
+  maxLevelsOfSeparation  Int?
+  importedAt             DateTime @default(now())
+
+  @@unique([ancestorConceptId, descendantConceptId])
+  @@index([ancestorConceptId])
+  @@index([descendantConceptId])
+}
+
+model OmopConceptSynonym {
+  id                String   @id @default(cuid())
+  conceptId          Int
+  conceptSynonymName String
+  languageConceptId  Int?
+  importedAt         DateTime @default(now())
+
+  @@index([conceptId])
+  @@index([conceptSynonymName])
+}
+
+model OmopVocabularyImport {
+  id              String   @id @default(cuid())
+  sourceDirectory String
+  vocabularyVersion String?
+  importedTables  Json
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  status          String   @default("started")
+  error           String?
+
+  @@index([status])
+  @@index([startedAt])
+}
+
+model ClinicalFieldStatus {
+  id            String                @id @default(cuid())
+  caseId        String
+  case          Case                  @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  section       String
+  fieldKey      String
+  presence      ClinicalFieldPresence
+  source        String                @default("sync")
+  sourceVersion String?
+  updatedAt     DateTime              @updatedAt
+  createdAt     DateTime              @default(now())
+
+  @@unique([caseId, section, fieldKey])
+  @@index([caseId, section])
+  @@index([presence])
+}
+
+// Per-field preop/postop audit log (Theme D)
+model CaseFieldChange {
+  id       String   @id @default(cuid())
+  caseId   String
+  case     Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  section  String // "preop" | "postop"
+  field    String
+  oldValue String?
+  newValue String?
+  userId   String
+  at       DateTime @default(now())
+
+  @@index([caseId])
+  @@index([caseId, section])
+}
+
+// Immutable snapshot written on finalization (Theme E)
+model CaseSnapshot {
+  id            String   @id @default(cuid())
+  caseId        String   @unique
+  case          Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  schemaVersion String   @default("3.0.0")
+  snapshotJson  Json
+  finalizedAt   DateTime @default(now())
+}
+
+model RevokedToken {
+  jti       String   @id
+  revokedAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime @default(now())
+
+  @@index([windowStart])
+}
+
+// Immutable, event-sourced clinical events. Written in parallel with the legacy
+// IntraoperativeRecord.keyEvents.log JSON (dual-write) — this table is the
+// append-only audit trail and the future source of truth for the intraop chart.
+model CaseEvent {
+  id                String   @id @default(cuid())
+  caseId            String
+  case              Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId            String?
+  logicalId         String   @default("") // stable client event id; versions share it
+  version           Int      @default(1)
+  status            String   @default("active") // active | superseded | deleted
+  type              String
+  timestamp         DateTime
+  label             String?
+  value             String?
+  unit              String?
+  // Typed vital values (populated when type = "vital") so vitals are queryable as columns
+  systolic          Int?
+  diastolic         Int?
+  heartRate         Int?
+  spO2              Float?
+  etco2             Float?
+  temp              Float?
+  bgl               Float?
+  bglLoincCode      String?
+  bglUnitCanon      String?
+  // Typed gas settings (populated when type = "gas_start" | "gas_change")
+  fgfLitersPerMin   Float?
+  carrierGas        String?
+  fio2Percent       Float?
+  fiAirPercent      Float?
+  fiN2OPercent      Float?
+  // Coded drug fields (populated when type = "drug")
+  atcCode           String?
+  drugId            String?
+  inn               String?
+  drugRoute         String?
+  infId             String?
+  fluidId           String?
+  rate              String?
+  concentration     String?
+  volume            String?
+  fluidCategory     String?
+  agentPercent      Float?
+  clinicalEventCode String?
+  metadataJson      Json?
+  source            String   @default("mobile")
+  sourceVersion     String?
+  schemaVersion     String?
+  idempotencyKey    String   @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([caseId, timestamp])
+  @@index([caseId, status])
+  // Created by 20260625003000_normalized_remaining_clinical_rows but never
+  // reflected back into this schema, so every diff since has proposed dropping
+  // them. Declared here to match the database rather than lose the indexes.
+  @@index([infId])
+  @@index([fluidId])
+  @@index([clinicalEventCode])
+  @@index([caseId, logicalId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  // Deliberately NOT a foreign key. Audit rows must outlive the account they
+  // describe — a retention purge that hard-deletes a user must not cascade away
+  // the evidence of what that user did, and SetNull would erase who acted.
+  userId    String
+  action    String
+  entityId  String
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  // "Everything that happened to this case" was a full table scan.
+  @@index([entityId, createdAt])
+}
+
+model CustomTerm {
+  id            String   @id @default(cuid())
+  code          String   @unique // "0000000", "0000001", …
+  term          String
+  termType      String // "procedure" | "diagnosis" | "medication" | "allergy"
+  institutionId String? // null = legacy global; set = institution-scoped
+  createdAt     DateTime @default(now())
+
+  // Dedupe was read-then-write, which races under concurrent first use of the
+  // same term. Let the database be the arbiter. NULL institutionId rows are not
+  // covered by this (Postgres treats NULLs as distinct) — that is the legacy
+  // global scope and is intentionally left alone.
+  @@unique([institutionId, termType, term])
+}
+
+// ─── Preoperative ────────────────────────────────────────────────────────────
+
+model PreoperativeAssessment {
+  id     String @id @default(cuid())
+  caseId String @unique
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  ageYears  Int?
+  sex       Sex
+  heightCm  Float?
+  weightKg  Float?
+  bmi       Float?
+  bloodType BloodType?
+  rhFactor  RhFactor?
+
+  diagnosis          String
+  diagnosesJson      Json?
+  plannedProcedure   String
+  proceduresJson     Json?
+  icdCode            String?
+  teamNotes          String?
+  physicalExamReport String?
+  notes              String?
+
+  // Comorbidities as ICD-10 tagged list: [{label, sub, system}]
+  comorbidities Json @default("[]")
+
+  // Safety-critical fields kept explicit
+  allergies                Boolean @default(false)
+  allergyDetails           String?
+  latexAllergy             Boolean @default(false)
+  currentMedications       String?
+  familyAnesthesiaProblems Boolean @default(false)
+  familyAnesthesiaDetails  String?
+  dentalProsthetics        Boolean @default(false)
+  looseTeeth               Boolean @default(false)
+  smoking                  Boolean @default(false)
+  substanceAbuse           Boolean @default(false)
+
+  bpSystolic                  Int?
+  bpDiastolic                 Int?
+  heartRate                   Int?
+  heartArrhythmia             Boolean @default(false)
+  spO2                        Float?
+  temperature                 Float?
+  respiratoryRate             Int?
+  bpUnobtainable              Boolean @default(false)
+  heartRateUnobtainable       Boolean @default(false)
+  spO2Unobtainable            Boolean @default(false)
+  temperatureUnobtainable     Boolean @default(false)
+  respiratoryRateUnobtainable Boolean @default(false)
+
+  mallampati             MallampatiClass?
+  mouthOpeningCm         Float?
+  thyromental            Float?
+  neckMobility           NeckMobility?
+  upperLipBiteTest       UpperLipBiteTest?
+  retrognathia           Boolean           @default(false)
+  prominentIncisors      Boolean           @default(false)
+  facialHair             Boolean           @default(false)
+  difficultAirwayHistory Boolean           @default(false)
+  difficultAirwayNotes   String?
+  cormackLehane          CormackLehane?
+  airwayUnobtainable     Boolean           @default(false)
+
+  asaScore         ASAScore?
+  elective         Boolean   @default(false)
+  emergencySurgery Boolean   @default(false)
+  highRiskSurgery  Boolean   @default(false)
+
+  // Individual RCRI inputs — stored so the form can be restored accurately
+  rcriIschemicHeart Boolean @default(false)
+  rcriCHF           Boolean @default(false)
+  rcriCVD           Boolean @default(false)
+  rcriInsulinDM     Boolean @default(false)
+  rcriCreatinine    Boolean @default(false)
+
+  // Computed risk scores
+  rcriScore     Int?
+  gutaScore     Float?
+  apfelScore    Int?
+  stopBangScore Int?
+
+  // Individual Apfel inputs
+  apfelPONVHistory   Boolean @default(false)
+  apfelPostopOpioids Boolean @default(false)
+
+  // Individual STOP-BANG inputs
+  stopbangSnoring  Boolean @default(false)
+  stopbangTired    Boolean @default(false)
+  stopbangObserved Boolean @default(false)
+  stopbangBP       Boolean @default(false)
+  stopbangNeck     Boolean @default(false)
+
+  labResults Json @default("[]")
+
+  aiOptIn Boolean @default(false)
+
+  // Normalised mirrors of the JSON arrays above (queryable; written best-effort)
+  diagnoses       PreopDiagnosis[]
+  procedureRows   PreopProcedure[]
+  comorbidityRows Comorbidity[]
+  labRows         LabResult[]
+  medications     Medication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  syncRevision Int @default(0)
+}
+
+// ─── Intraoperative ──────────────────────────────────────────────────────────
+
+model IntraoperativeRecord {
+  id     String @id @default(cuid())
+  caseId String @unique
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  monthYear       String?
+  durationMinutes Int?
+
+  // Legacy time-only columns. These store a bare local wall clock on a dummy
+  // date (2000-01-01T08:00:00Z means "08:00", nothing more) with no record of
+  // which timezone it was, so they cannot be placed on a real timeline. Kept
+  // read-only for rows written before startedAt/endedAt existed; never written
+  // for new records. `startTime` was non-nullable, which forced the code to
+  // fake "not started yet" as midnight — a Date is always truthy, so every
+  // `if (startTime)` guard was defeated and the UI locked to 00:00.
+  startTime       DateTime?
+  endTime         DateTime?
+
+  // True UTC instants, plus the IANA zone they were entered in (e.g.
+  // "Europe/Sofia"). CaseEvent.timestamp is already an instant, so this puts
+  // start/end on the same footing as the events they bracket — comparable
+  // across sites and against the event stream. Local wall clock stays exactly
+  // derivable for display from the instant + zone.
+  startedAt       DateTime?
+  endedAt         DateTime?
+  timezone        String?
+
+  positions Json @default("[]")
+
+  techniques        Json           @default("[]")
+  airwayDevice      AirwayDevice?
+  tubeSize          Float? // legacy: shared by LMA/Oral/Nasal ETT before per-device columns existed; kept for old rows, no longer written
+  cuffed            Boolean? // legacy: see tubeSize
+  peepCmH2O         Float?
+  ippv              Boolean        @default(false)
+  jetVentilation    Boolean        @default(false)
+  fob               Boolean        @default(false)
+  airwayTools       Json           @default("[]")
+  airwayNotes       String?
+  cormackLehane     CormackLehane?
+  airwayDevices     Json           @default("[]")
+  ventilationModes  Json           @default("[]")
+  lmaSize           Float?
+  oralTubeSize      Float?
+  oralCuffed        Boolean?
+  nasalTubeSize     Float?
+  nasalCuffed       Boolean?
+  dltType           String?
+  dltSide           String?
+  dltSize           Float?
+  endobronchialSize Float?
+
+  volatileAgent    VolatileAgent?
+  plexusBlock      PlexusBlock?
+  cvkSite          CVKSite?
+  arterialLineSite ArterialLineSite?
+
+  ecg              Boolean @default(false)
+  urinaryCatheter  Boolean @default(false)
+  stomachTube      Boolean @default(false)
+  spO2Monitor      Boolean @default(true)
+  invasiveBP       Boolean @default(false)
+  cvpMonitor       Boolean @default(false)
+  bglMonitor       Boolean @default(false)
+  bloodGasMonitor  Boolean @default(false)
+  neuroMonitor     Boolean @default(false)
+  nbpMonitor       Boolean @default(true)
+  etco2Monitor     Boolean @default(false)
+  tempMonitor      Boolean @default(false)
+  paCatheter       Boolean @default(false)
+  tee              Boolean @default(false)
+  bis              Boolean @default(false)
+  entropyMonitor   Boolean @default(false)
+  nirsMonitor      Boolean @default(false)
+  evokedPotentials Boolean @default(false)
+  tofMonitor       Boolean @default(false)
+
+  vascularAccesses Json @default("[]")
+
+  premedicationEvening String?
+  premedicationMorning String?
+
+  drugsAdministered Json @default("[]")
+
+  crystalloidsMl    Int?
+  colloidsMl        Int?
+  bloodMl           Int?
+  bloodProductsNote String?
+  urineMl           Int?
+
+  timeSeriesData Json @default("[]")
+  keyEvents      Json @default("[]")
+
+  complications String?
+
+  // Normalised mirror of vascularAccesses JSON (queryable; written best-effort)
+  vascularAccessRows VascularAccess[]
+  premedicationRows  PremedicationAdministration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  syncRevision Int @default(0)
+}
+
+// ─── Postoperative ───────────────────────────────────────────────────────────
+
+model PostoperativeRecord {
+  id     String @id @default(cuid())
+  caseId String @unique
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  aldreteActivity      Int?
+  aldreteRespiration   Int?
+  aldreteCirculation   Int?
+  aldreteConsciousness Int?
+  aldreteSpO2          Int?
+  aldreteTotal         Int?
+
+  recoveryBpSystolic              Int?
+  recoveryBpDiastolic             Int?
+  recoveryHeartRate               Int?
+  recoverySpO2                    Float?
+  painScoreNRS                    Int?
+  ponv                            Boolean @default(false)
+  temperatureCelsius              Float?
+  recoveryBpUnobtainable          Boolean @default(false)
+  recoveryHeartRateUnobtainable   Boolean @default(false)
+  recoverySpO2Unobtainable        Boolean @default(false)
+  recoveryTemperatureUnobtainable Boolean @default(false)
+
+  complications    String?
+  disposition      Disposition?
+  dispositionNotes String?
+  handoverItems    Json         @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  syncRevision Int @default(0)
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+  // Distinct from OTHER: "not recorded" is not a finding. Conflating the two
+  // corrupts any denominator a researcher computes, and OMOP has a separate
+  // unknown concept for exactly this reason.
+  UNKNOWN
+}
+
+enum BloodType {
+  A
+  B
+  AB
+  O
+}
+
+enum RhFactor {
+  POSITIVE
+  NEGATIVE
+}
+
+enum MallampatiClass {
+  I
+  II
+  III
+  IV
+}
+
+enum NeckMobility {
+  FULL
+  LIMITED
+  FIXED
+}
+
+enum UpperLipBiteTest {
+  CLASS_I
+  CLASS_II
+  CLASS_III
+}
+
+enum CormackLehane {
+  I
+  IIa
+  IIb
+  III
+  IV
+}
+
+enum ASAScore {
+  I
+  II
+  III
+  IV
+  V
+  VI
+}
+
+enum PatientPosition {
+  SUPINE
+  PRONE
+  LEFT_LATERAL
+  RIGHT_LATERAL
+  LITHOTOMY
+  GYNECOLOGICAL
+  TRENDELENBURG
+  REVERSE_TRENDELENBURG
+  FOWLER
+  SITTING
+  BEACH_CHAIR
+  JACKKNIFE
+  LLOYD_DAVIES
+  KNEE_CHEST
+  LATERAL_DECUBITUS
+}
+
+enum AnesthesiaTechnique {
+  GENERAL_INHALATION
+  GENERAL_TIVA
+  GENERAL_COMBINED
+  SPINAL
+  EPIDURAL
+  COMBINED_SPINAL_EPIDURAL
+  PERIPHERAL_NERVE_BLOCK
+  LOCAL
+  SEDATION
+}
+
+enum AirwayDevice {
+  FACE_MASK
+  LMA
+  ORAL_ETT
+  NASAL_ETT
+  SURGICAL_AIRWAY
+}
+
+enum VolatileAgent {
+  SEVOFLURANE
+  DESFLURANE
+  ISOFLURANE
+}
+
+enum CVKSite {
+  INTERNAL_JUGULAR
+  EXTERNAL_JUGULAR
+  SUBCLAVIAN
+  FEMORAL
+}
+
+enum ArterialLineSite {
+  RADIAL
+  DORSALIS_PEDIS
+  FEMORAL
+  BRACHIAL
+}
+
+enum PlexusBlock {
+  AXILLARY
+  INTERSCALENE
+  SUPRACLAVICULAR
+  INFRACLAVICULAR
+  FEMORAL
+  SCIATIC
+  POPLITEAL
+  TAP
+  ERECTOR_SPINAE
+}
+
+enum Disposition {
+  WARD
+  PACU
+  ICU
+}
+
+enum MedicationKind {
+  CURRENT
+  ALLERGY
+}
+
+// ─── Normalised clinical/research rows ───────────────────────────────────────
+// These mirror JSON arrays on the section records as queryable rows. They are
+// written best-effort alongside the JSON (which stays authoritative), so a sync
+// failure never blocks a clinical save. caseId is denormalised for research joins.
+
+model PreopDiagnosis {
+  id                String                 @id @default(cuid())
+  preopId           String
+  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId            String
+  code              String?
+  label             String
+  labelEn           String?
+  labelBg           String?
+  system            String?
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
+  source            String                 @default("sync")
+  sourceVersion     String?
+  ordinal           Int                    @default(0)
+  createdAt         DateTime               @default(now())
+
+  @@index([caseId])
+  @@index([preopId])
+  @@index([code])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+model PreopProcedure {
+  id                String                 @id @default(cuid())
+  preopId           String
+  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId            String
+  code              String?
+  group             String?
+  domain            String?
+  description       String?
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
+  source            String                 @default("sync")
+  sourceVersion     String?
+  ordinal           Int                    @default(0)
+  createdAt         DateTime               @default(now())
+
+  @@index([caseId])
+  @@index([preopId])
+  @@index([code])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+model Comorbidity {
+  id                String                 @id @default(cuid())
+  preopId           String
+  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId            String
+  label             String
+  labelEn           String?
+  labelBg           String?
+  code              String?
+  icd10Code         String? // ICD-10 code (Gap 2: comorbidities coded same as diagnoses)
+  system            String?
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
+  source            String                 @default("sync")
+  sourceVersion     String?
+  ordinal           Int                    @default(0)
+  createdAt         DateTime               @default(now())
+
+  @@index([caseId])
+  @@index([preopId])
+  @@index([code])
+  @@index([icd10Code])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+model LabResult {
+  id                String                 @id @default(cuid())
+  preopId           String
+  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId            String
+  test              String
+  value             String?
+  valueNum          Float? // parsed numeric value in canonical unit
+  unit              String?
+  unitCanon         String? // canonical unit from LabLoinc
+  loincCode         String? // LOINC code for this test
+  referenceLow      Float?
+  referenceHigh     Float?
+  abnormalFlag      String? // "low" | "normal" | "high" | "critical"
+  takenAt           DateTime?
+  source            String? // "manual" | "ai-scan" | "import"
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
+  sourceVersion     String?
+  ordinal           Int                    @default(0)
+  createdAt         DateTime               @default(now())
+
+  @@index([caseId])
+  @@index([preopId])
+  @@index([test])
+  @@index([loincCode])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+// Preop medications as coded rows (Theme C3; currentMedications JSON kept for backwards compat)
+model Medication {
+  id                String                 @id @default(cuid())
+  preopId           String
+  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId            String
+  kind              MedicationKind         @default(CURRENT)
+  drugId            String? // FK to Drug if matched
+  nameRaw           String // raw label as entered
+  inn               String?
+  atcCode           String?
+  dose              String?
+  route             String?
+  frequency         String?
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
+  source            String                 @default("sync")
+  sourceVersion     String?
+  ordinal           Int                    @default(0)
+  createdAt         DateTime               @default(now())
+
+  @@index([caseId])
+  @@index([preopId])
+  @@index([kind])
+  @@index([caseId, kind])
+  @@index([preopId, kind])
+  @@index([atcCode])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+model VascularAccess {
+  id                String               @id @default(cuid())
+  intraopId         String
+  intraop           IntraoperativeRecord @relation(fields: [intraopId], references: [id], onDelete: Cascade)
+  caseId            String
+  site              String?
+  siteLabel         String?
+  size              String?
+  sizeUnit          String?
+  depthCm           String?
+  lumens            String?
+  preexisting       Boolean              @default(false)
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
+  source            String               @default("sync")
+  sourceVersion     String?
+  ordinal           Int                  @default(0)
+  createdAt         DateTime             @default(now())
+
+  @@index([caseId])
+  @@index([intraopId])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+model PremedicationAdministration {
+  id                String               @id @default(cuid())
+  intraopId         String
+  intraop           IntraoperativeRecord @relation(fields: [intraopId], references: [id], onDelete: Cascade)
+  caseId            String
+  phase             String // "evening" | "morning"
+  drugId            String?
+  nameRaw           String
+  inn               String?
+  atcCode           String?
+  dose              String?
+  route             String?
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
+  source            String               @default("sync")
+  sourceVersion     String?
+  ordinal           Int                  @default(0)
+  createdAt         DateTime             @default(now())
+
+  @@index([caseId])
+  @@index([intraopId])
+  @@index([phase])
+  @@index([atcCode])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+model CaseComplication {
+  id                String               @id @default(cuid())
+  caseId            String
+  case              Case                 @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  section           String // "intraop" | "postop"
+  label             String
+  note              String?
+  timestamp         DateTime?
+  source            String?
+  eventId           String?
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
+  sourceVersion     String?
+  ordinal           Int                  @default(0)
+  createdAt         DateTime             @default(now())
+
+  @@index([caseId])
+  @@index([section])
+  @@index([label])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+// Generic store for controlled-vocabulary multi-selects (positions, techniques,
+// airway devices/tools, ventilation modes, handover items).
+model CaseSelection {
+  id                String               @id @default(cuid())
+  caseId            String
+  case              Case                 @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  section           String // "intraop" | "postop"
+  category          String // "position" | "technique" | "airwayTool" | "airwayDevice" | "ventilationMode" | "handoverItem"
+  value             String
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
+  source            String               @default("sync")
+  sourceVersion     String?
+  ordinal           Int                  @default(0)
+  createdAt         DateTime             @default(now())
+
+  @@index([caseId])
+  @@index([category, value])
+  @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
