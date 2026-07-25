@@ -86,6 +86,9 @@ export interface OmopBundle {
     data_dictionary_version: string
     case_status_filter: string[]
     date_range: { from: string; to: string } | null
+    matching_case_count: number
+    exported_case_count: number
+    complete: boolean
     included_case_count: number
     excluded_case_count: number
     app_git_commit: string
@@ -552,6 +555,8 @@ export interface ExportContext {
   userRole: string
   statusFilter: string[]
   excludedCaseCount: number
+  matchingCaseCount?: number
+  complete?: boolean
   gitCommit: string
   forcedOverride: boolean
 }
@@ -1043,6 +1048,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       data_dictionary_version: DICTIONARY_VERSION,
       case_status_filter:      ctx?.statusFilter ?? [],
       date_range:              dateRange,
+      matching_case_count:     ctx?.matchingCaseCount ?? cases.length,
+      exported_case_count:     cases.length,
+      complete:                ctx?.complete ?? true,
       included_case_count:     cases.length,
       excluded_case_count:     ctx?.excludedCaseCount ?? 0,
       app_git_commit:          ctx?.gitCommit ?? "untracked",

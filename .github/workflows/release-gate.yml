@@ -1,0 +1,177 @@
+name: Cross-repository release gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      core_ref:
+        description: lospor-core branch, tag, or SHA
+        required: true
+        default: main
+      api_ref:
+        description: lospor-api branch, tag, or SHA
+        required: true
+        default: main
+      web_ref:
+        description: lospor-app branch, tag, or SHA
+        required: true
+        default: main
+      mobile_ref:
+        description: lospor-mobile branch, tag, or SHA
+        required: true
+        default: main
+      docs_ref:
+        description: lospor-docs branch, tag, or SHA
+        required: true
+        default: main
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+      LOSPOR_AUTH_SECRET: release-gate-only-secret
+      NEXTAUTH_SECRET: release-gate-only-secret
+      NEXTAUTH_URL: http://localhost:3000
+      LOSPOR_WEB_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      LOSPOR_API_INTERNAL_URL: http://localhost:3002
+      EXPO_PUBLIC_API_BASE: http://localhost:3002
+      AUTH_EMAIL_TEST_LINKS: "true"
+      BREVO_API_KEY: ""
+      E2E_DISABLE_MOBILE_REDIRECT: "true"
+      LOSPOR_POSTGRES_INTEGRATION: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: kaloyandjunow-prog/lospor-core
+          ref: ${{ inputs.core_ref }}
+          path: lospor-core
+      - uses: actions/checkout@v4
+        with:
+          repository: kaloyandjunow-prog/lospor-api
+          ref: ${{ inputs.api_ref }}
+          path: lospor-api
+      - uses: actions/checkout@v4
+        with:
+          repository: kaloyandjunow-prog/lospor-app
+          ref: ${{ inputs.web_ref }}
+          path: lospor-app
+      - uses: actions/checkout@v4
+        with:
+          repository: kaloyandjunow-prog/lospor-mobile
+          ref: ${{ inputs.mobile_ref }}
+          path: lospor-mobile
+      - uses: actions/checkout@v4
+        with:
+          repository: kaloyandjunow-prog/lospor-docs
+          ref: ${{ inputs.docs_ref }}
+          path: lospor-docs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Clean installs
+        run: |
+          npm --prefix lospor-core ci
+          npm --prefix lospor-api ci
+          npm --prefix lospor-app ci
+          npm --prefix lospor-mobile ci
+          npm --prefix lospor-docs ci
+
+      - name: Pack selected Core and install it in every consumer
+        shell: bash
+        run: |
+          CORE_PACKAGE="$(cd lospor-core && npm pack --silent)"
+          CORE_TARBALL="$PWD/lospor-core/$CORE_PACKAGE"
+          npm --prefix lospor-api install --no-save "$CORE_TARBALL"
+          npm --prefix lospor-app install --no-save "$CORE_TARBALL"
+          npm --prefix lospor-mobile install --no-save "$CORE_TARBALL"
+
+      - name: Core verification
+        run: |
+          npm --prefix lospor-core run typecheck
+          npm --prefix lospor-core run verify:boundaries
+          npm --prefix lospor-core test
+
+      - name: Database migration
+        working-directory: lospor-api
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+
+      - name: API verification
+        working-directory: lospor-api
+        run: |
+          npm run openapi:generate
+          git diff --exit-code -- src/generated/openapi.json src/generated/openapi-internal.json
+          npm run verify:boundaries
+          npx tsc --noEmit --pretty false
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Web verification
+        working-directory: lospor-app
+        run: |
+          npx tsc --noEmit --pretty false
+          npm run verify:boundaries
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Mobile and PWA verification
+        working-directory: lospor-mobile
+        run: |
+          npm run typecheck
+          npm run check:shared-core
+          npm test
+          npm run lint:strict
+          npm run export:web
+          npx expo export --platform android --clear
+
+      - name: Documentation build
+        working-directory: lospor-docs
+        run: npm run build
+
+      - name: Install Playwright
+        run: npm --prefix lospor-app exec playwright install --with-deps chromium
+
+      - name: Seed end-to-end account
+        run: npm --prefix lospor-api run e2e:seed
+
+      - name: Browser critical flows
+        working-directory: lospor-app
+        run: npm run e2e
+
+      - name: PWA offline recovery
+        working-directory: lospor-mobile
+        run: npm run e2e:pwa
+
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-gate-browser-diagnostics
+          path: |
+            lospor-app/playwright-report
+            lospor-app/test-results
+            lospor-mobile/playwright-report
+            lospor-mobile/test-results
+          if-no-files-found: ignore

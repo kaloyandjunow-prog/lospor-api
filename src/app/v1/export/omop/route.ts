@@ -7,6 +7,7 @@ import { mapCasesToOmop } from "@/lib/omop-mapper"
 import { redactText, deepRedactPII } from "@/lib/pii-check"
 
 const VALID_STATUSES = new Set<string>(Object.values(CaseStatus))
+const EXPORT_CASE_LIMIT = 5000
 
 type ExportRow = Prisma.CaseGetPayload<{ select: typeof CASE_SELECT }>
 
@@ -200,27 +201,41 @@ export async function GET(req: NextRequest) {
     ? { id: caseId }
     : { status: { in: allowedStatuses } }
 
-  const [cases, excludedCount] = await Promise.all([
-    prisma.case.findMany({
-      where,
-      select: CASE_SELECT,
-      orderBy: { createdAt: "asc" },
-      take: 5000,
-    }),
+  const [matchingCount, excludedCount] = await Promise.all([
+    prisma.case.count({ where }),
     caseId ? Promise.resolve(0) : prisma.case.count({
       where: { status: { notIn: allowedStatuses } },
     }),
   ])
 
-  if (caseId && cases.length === 0) {
+  if (caseId && matchingCount === 0) {
     return NextResponse.json({ error: "Case not found" }, { status: 404 })
   }
+  if (matchingCount > EXPORT_CASE_LIMIT) {
+    return NextResponse.json({
+      error: `Export contains ${matchingCount} matching cases; narrow the export before retrying`,
+      code: "EXPORT_LIMIT_EXCEEDED",
+      matchingCases: matchingCount,
+      exportedCases: 0,
+      exportLimit: EXPORT_CASE_LIMIT,
+      complete: false,
+    }, { status: 422 })
+  }
+
+  const cases = await prisma.case.findMany({
+    where,
+    select: CASE_SELECT,
+    orderBy: { createdAt: "asc" },
+    take: EXPORT_CASE_LIMIT,
+  })
 
   const bundle = mapCasesToOmop(cases.map(redactExportRow), {
     userId:            user.id,
     userRole:          user.role ?? "unknown",
     statusFilter:      caseId ? [] : allowedStatuses,
     excludedCaseCount: excludedCount,
+    matchingCaseCount: matchingCount,
+    complete:           cases.length === matchingCount,
     gitCommit:         process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA ?? "untracked",
     forcedOverride:    force,
   })
@@ -269,6 +284,9 @@ function bundleToCsv(bundle: ReturnType<typeof mapCasesToOmop>): string {
     ["data_dictionary_version", bundle.metadata.data_dictionary_version],
     ["case_status_filter",      JSON.stringify(bundle.metadata.case_status_filter)],
     ["date_range",              JSON.stringify(bundle.metadata.date_range)],
+    ["matching_case_count",     String(bundle.metadata.matching_case_count)],
+    ["exported_case_count",     String(bundle.metadata.exported_case_count)],
+    ["complete",                String(bundle.metadata.complete)],
     ["included_case_count",     String(bundle.metadata.included_case_count)],
     ["excluded_case_count",     String(bundle.metadata.excluded_case_count)],
     ["app_git_commit",          bundle.metadata.app_git_commit],

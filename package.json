@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -40,6 +40,7 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@sparticuz/chromium": "^149.0.0",
+    "archiver": "^8.0.0",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.3",
     "next": "16.2.11",
@@ -52,6 +53,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/archiver": "^8.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",

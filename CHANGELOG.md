@@ -1,5 +1,22 @@
 # Changelog - LOSPOR API
 
+## [7.0.1] - 2026-07-25
+
+- Case editing leases now use one atomic PostgreSQL compare-and-set operation,
+  so simultaneous devices cannot both be told they own the same lock.
+- OMOP exports refuse batches above 5000 cases with an explicit incomplete
+  response instead of silently truncating valid-looking research data.
+- Personal account exports are complete streamed ZIP archives with manifests,
+  cursor-paged cases, audit history, role requests, and transfer history.
+- OpenAPI now explicitly contracts every supported route, admin operation,
+  health endpoint, and internal job; route/contract drift fails generation.
+- Email-verification links now return users to the configured web application
+  after the dedicated API verifies the token, instead of redirecting to a
+  nonexistent page on the API host.
+- CI now runs migrations and lock concurrency tests against PostgreSQL, with a
+  selectable cross-repository release gate for Core, API, web, PWA/mobile, and
+  docs.
+
 ## [7.0.0] - 2026-07-25
 
 ### Added

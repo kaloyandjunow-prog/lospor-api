@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { hashAuthToken } from "@/lib/auth-email-tokens"
+import { appUrl } from "@/lib/transactional-email"
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token") ?? ""
   if (token.length < 20) {
-    return NextResponse.redirect(new URL("/verify-email?status=invalid", req.url))
+    return NextResponse.redirect(appUrl("/verify-email?status=invalid"))
   }
 
   const now = new Date()
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   })
 
   if (!verificationToken || verificationToken.usedAt || verificationToken.expiresAt < now || verificationToken.user.deletedAt) {
-    return NextResponse.redirect(new URL("/verify-email?status=invalid", req.url))
+    return NextResponse.redirect(appUrl("/verify-email?status=invalid"))
   }
 
   await prisma.$transaction([
@@ -36,5 +37,5 @@ export async function GET(req: NextRequest) {
     }),
   ])
 
-  return NextResponse.redirect(new URL("/verify-email?status=verified", req.url))
+  return NextResponse.redirect(appUrl("/verify-email?status=verified"))
 }

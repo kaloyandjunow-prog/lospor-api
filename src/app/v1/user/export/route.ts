@@ -1,58 +1,202 @@
+import { ZipArchive } from "archiver"
+import { PassThrough, Readable } from "node:stream"
 import { NextRequest, NextResponse } from "next/server"
+import type { Prisma } from "@/generated/prisma/client"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
+
+export const runtime = "nodejs"
+
+const PAGE_SIZE = 250
+const EXPORT_FORMAT_VERSION = "1.0"
+
+const CASE_EXPORT_INCLUDE = {
+  institution: { select: { id: true, name: true, city: true, country: true } },
+  preop: {
+    include: {
+      diagnoses: { orderBy: { ordinal: "asc" as const } },
+      procedureRows: { orderBy: { ordinal: "asc" as const } },
+      comorbidityRows: { orderBy: { ordinal: "asc" as const } },
+      labRows: { orderBy: { ordinal: "asc" as const } },
+      medications: { orderBy: [{ kind: "asc" as const }, { ordinal: "asc" as const }] },
+    },
+  },
+  intraop: {
+    include: {
+      vascularAccessRows: { orderBy: { ordinal: "asc" as const } },
+      premedicationRows: {
+        orderBy: [{ phase: "asc" as const }, { ordinal: "asc" as const }],
+      },
+    },
+  },
+  postop: true,
+  transfers: { orderBy: { createdAt: "asc" as const } },
+  events: { orderBy: [{ timestamp: "asc" as const }, { id: "asc" as const }] },
+  selections: {
+    orderBy: [
+      { section: "asc" as const },
+      { category: "asc" as const },
+      { ordinal: "asc" as const },
+    ],
+  },
+  complications: {
+    orderBy: [{ section: "asc" as const }, { ordinal: "asc" as const }],
+  },
+  fieldStatuses: { orderBy: [{ section: "asc" as const }, { fieldKey: "asc" as const }] },
+  fieldChanges: { orderBy: [{ at: "asc" as const }, { id: "asc" as const }] },
+  snapshot: true,
+} satisfies Prisma.CaseInclude
+
+function lines<T>(rows: T[]): string {
+  return rows.map(row => `${JSON.stringify(row)}\n`).join("")
+}
+
+async function* caseLines(userId: string): AsyncGenerator<string> {
+  let cursor: string | undefined
+  for (;;) {
+    const rows = await prisma.case.findMany({
+      where: { userId },
+      include: CASE_EXPORT_INCLUDE,
+      orderBy: { id: "asc" },
+      take: PAGE_SIZE,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    })
+    if (rows.length === 0) return
+    yield lines(rows)
+    cursor = rows.at(-1)?.id
+  }
+}
+
+async function* auditLines(userId: string): AsyncGenerator<string> {
+  let cursor: string | undefined
+  for (;;) {
+    const rows = await prisma.auditLog.findMany({
+      where: { userId },
+      orderBy: { id: "asc" },
+      take: PAGE_SIZE,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    })
+    if (rows.length === 0) return
+    yield lines(rows)
+    cursor = rows.at(-1)?.id
+  }
+}
+
+async function* roleRequestLines(userId: string): AsyncGenerator<string> {
+  let cursor: string | undefined
+  for (;;) {
+    const rows = await prisma.roleRequest.findMany({
+      where: { userId },
+      orderBy: { id: "asc" },
+      take: PAGE_SIZE,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    })
+    if (rows.length === 0) return
+    yield lines(rows)
+    cursor = rows.at(-1)?.id
+  }
+}
+
+async function* transferLines(userId: string): AsyncGenerator<string> {
+  let cursor: string | undefined
+  for (;;) {
+    const rows = await prisma.caseTransfer.findMany({
+      where: { OR: [{ fromUserId: userId }, { toUserId: userId }, { initiatedBy: userId }] },
+      orderBy: { id: "asc" },
+      take: PAGE_SIZE,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    })
+    if (rows.length === 0) return
+    yield lines(rows)
+    cursor = rows.at(-1)?.id
+  }
+}
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  // Fix 6: Support optional pagination via ?skip=0&take=5000 (capped at 5000)
-  const url = new URL(req.url)
-  const skip = Math.max(0, Number(url.searchParams.get("skip") ?? "0"))
-  const takeRaw = Number(url.searchParams.get("take") ?? "5000")
-  const take = Number.isFinite(takeRaw) ? Math.min(5000, Math.max(1, takeRaw)) : 5000
-
-  const [account, cases, auditLog] = await Promise.all([
+  const [account, caseCount, auditCount, roleRequestCount, transferCount] = await Promise.all([
     prisma.user.findUnique({
       where: { id: user.id },
       select: {
-        id: true, email: true, name: true, firstName: true, lastName: true,
-        title: true, role: true, institutionId: true, createdAt: true,
-        approvedAt: true, acceptedTermsAt: true, termsVersion: true,
-        lastLoginAt: true, deletedAt: true,
-        // passwordHash intentionally excluded
+        id: true,
+        email: true,
+        name: true,
+        firstName: true,
+        lastName: true,
+        title: true,
+        role: true,
+        institutionId: true,
+        institution: { select: { id: true, name: true, city: true, country: true } },
+        preferences: true,
+        createdAt: true,
+        approvedAt: true,
+        emailVerifiedAt: true,
+        acceptedTermsAt: true,
+        acceptedPrivacyAt: true,
+        termsVersion: true,
+        lastLoginAt: true,
+        passwordChangedAt: true,
+        deletedAt: true,
       },
     }),
-    prisma.case.findMany({
-      where:   { userId: user.id },
-      include: { preop: true, intraop: true, postop: true },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take,
-    }),
-    prisma.auditLog.findMany({
-      where:   { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 1000,
+    prisma.case.count({ where: { userId: user.id } }),
+    prisma.auditLog.count({ where: { userId: user.id } }),
+    prisma.roleRequest.count({ where: { userId: user.id } }),
+    prisma.caseTransfer.count({
+      where: { OR: [{ fromUserId: user.id }, { toUserId: user.id }, { initiatedBy: user.id }] },
     }),
   ])
 
-  // Fix 5: Reject export requests from soft-deleted accounts
-  if (account?.deletedAt) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!account) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (account.deletedAt) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const exportDate = new Date().toISOString().split("T")[0]
-  const payload = {
-    exportedAt: new Date().toISOString(),
-    exportNote: "This is a copy of all data LOSPOR holds about your account under GDPR Article 15.",
-    user: account,
-    cases,
-    auditLog,
+  const generatedAt = new Date()
+  const manifest = {
+    format: "LOSPOR personal data export",
+    formatVersion: EXPORT_FORMAT_VERSION,
+    appVersion: "7.0.1",
+    generatedAt: generatedAt.toISOString(),
+    complete: true,
+    files: {
+      "account.json": { records: 1 },
+      "cases.ndjson": { records: caseCount },
+      "audit-log.ndjson": { records: auditCount },
+      "role-requests.ndjson": { records: roleRequestCount },
+      "case-transfers.ndjson": { records: transferCount },
+    },
+    intentionallyExcluded: [
+      "password hashes",
+      "email-verification and password-reset tokens",
+      "session and token-revocation secrets",
+      "rate-limit records",
+      "temporary case-editing locks",
+    ],
   }
 
-  return new Response(JSON.stringify(payload, null, 2), {
+  const archive = new ZipArchive({ zlib: { level: 6 } })
+  const output = new PassThrough()
+  archive.on("warning", (error: Error) => {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") output.destroy(error)
+  })
+  archive.on("error", (error: Error) => output.destroy(error))
+  archive.pipe(output)
+
+  archive.append(`${JSON.stringify(manifest, null, 2)}\n`, { name: "manifest.json" })
+  archive.append(`${JSON.stringify(account, null, 2)}\n`, { name: "account.json" })
+  archive.append(Readable.from(caseLines(user.id)), { name: "cases.ndjson" })
+  archive.append(Readable.from(auditLines(user.id)), { name: "audit-log.ndjson" })
+  archive.append(Readable.from(roleRequestLines(user.id)), { name: "role-requests.ndjson" })
+  archive.append(Readable.from(transferLines(user.id)), { name: "case-transfers.ndjson" })
+  void archive.finalize().catch((error: Error) => output.destroy(error))
+
+  const date = generatedAt.toISOString().slice(0, 10)
+  return new Response(Readable.toWeb(output) as ReadableStream, {
     headers: {
-      "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="lospor-export-${exportDate}.json"`,
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="lospor-export-${date}.zip"`,
+      "Cache-Control": "private, no-store",
     },
   })
 }

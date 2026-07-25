@@ -239,7 +239,7 @@ describe("account email auth flows", () => {
     const res = await GET(new NextRequest(`http://localhost/api/auth/verify-email?token=${token}`))
 
     expect(res.status).toBe(307)
-    expect(res.headers.get("location")).toBe("http://localhost/verify-email?status=verified")
+    expect(res.headers.get("location")).toBe("http://localhost:3000/verify-email?status=verified")
     expect(mocks.emailVerificationFindUnique).toHaveBeenCalledWith({
       where: { tokenHash: hashAuthToken(token) },
       include: { user: true },

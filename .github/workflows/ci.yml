@@ -8,6 +8,20 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
@@ -22,9 +36,13 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npx prisma validate
+      - run: npx prisma migrate deploy
       - run: npm run openapi:generate
+      - run: git diff --exit-code -- src/generated/openapi.json src/generated/openapi-internal.json
       - run: npm run verify:boundaries
       - run: npx tsc --noEmit --pretty false
       - run: npm run lint
       - run: npm test
+        env:
+          LOSPOR_POSTGRES_INTEGRATION: "true"
       - run: npm run build
