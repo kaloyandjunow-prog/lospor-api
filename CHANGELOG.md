@@ -13,6 +13,8 @@
 - Email-verification links now return users to the configured web application
   after the dedicated API verifies the token, instead of redirecting to a
   nonexistent page on the API host.
+- Vercel preview builds no longer require production database credentials or
+  run database migrations; production deployments still run `migrate deploy`.
 - CI now runs migrations and lock concurrency tests against PostgreSQL, with a
   selectable cross-repository release gate for Core, API, web, PWA/mobile, and
   docs.
