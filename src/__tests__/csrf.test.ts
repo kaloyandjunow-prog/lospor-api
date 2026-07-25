@@ -18,17 +18,17 @@ afterEach(() => {
 
 describe("cookie-authenticated API write CSRF guard", () => {
   it("rejects hostile-origin cookie writes", () => {
-    vi.stubEnv("NEXTAUTH_URL", "https://app.lospor.org")
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
     expect(validateCookieWriteOrigin(req("POST", { origin: "https://evil.example" }))).toBe("fail")
   })
 
   it("accepts same-origin cookie writes", () => {
-    vi.stubEnv("NEXTAUTH_URL", "https://app.lospor.org")
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
     expect(validateCookieWriteOrigin(req("PATCH", { origin: "https://app.lospor.org" }))).toBe("pass")
   })
 
   it("accepts bearer-token mobile writes", () => {
-    vi.stubEnv("NEXTAUTH_URL", "https://app.lospor.org")
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
     expect(validateCookieWriteOrigin(req("POST", {
       origin: "https://pwa.lospor.org",
       authorization: "Bearer token",
@@ -36,7 +36,7 @@ describe("cookie-authenticated API write CSRF guard", () => {
   })
 
   it("does not require an origin for reads", () => {
-    vi.stubEnv("NEXTAUTH_URL", "https://app.lospor.org")
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
     expect(validateCookieWriteOrigin(req("GET", {}))).toBe("pass")
   })
 })

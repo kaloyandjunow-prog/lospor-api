@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
+
+vi.mock("server-only", () => ({}))
 
 const runPostgres = process.env.LOSPOR_POSTGRES_INTEGRATION === "true"
 
