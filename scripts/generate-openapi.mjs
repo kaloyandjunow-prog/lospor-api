@@ -91,7 +91,7 @@ const document = {
   openapi: "3.1.0",
   info: {
     title: "LOSPOR API",
-    version: "7.0.0-dev.0",
+    version: "7.0.0",
     description:
       "First-party V1 contract for LOSPOR web, native mobile, and PWA clients.",
   },
