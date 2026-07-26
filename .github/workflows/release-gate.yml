@@ -170,7 +170,10 @@ jobs:
         run: npm run build
 
       - name: Install Playwright
-        run: npm --prefix lospor-app exec playwright install --with-deps chromium
+        run: |
+          npm --prefix lospor-app exec playwright install --with-deps chromium
+          npm --prefix lospor-browser exec playwright install chromium
+          npm --prefix lospor-mobile exec playwright install chromium
 
       - name: Seed end-to-end account
         run: npm --prefix lospor-api run e2e:seed
