@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
   const manifest = {
     format: "LOSPOR personal data export",
     formatVersion: EXPORT_FORMAT_VERSION,
-    appVersion: "7.0.1",
+    appVersion: "7.1.0",
     generatedAt: generatedAt.toISOString(),
     complete: true,
     files: {

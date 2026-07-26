@@ -13,6 +13,9 @@ afterEach(() => {
   vi.unstubAllEnvs()
   delete process.env.NEXTAUTH_URL
   delete process.env.NEXT_PUBLIC_APP_URL
+  delete process.env.LOSPOR_DATABASE_URL
+  delete process.env.CORS_ALLOW_ORIGIN
+  delete process.env.CORS_ALLOW_ORIGINS
   delete process.env.VERCEL_URL
 })
 
@@ -25,6 +28,36 @@ describe("cookie-authenticated API write CSRF guard", () => {
   it("accepts same-origin cookie writes", () => {
     vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
     expect(validateCookieWriteOrigin(req("PATCH", { origin: "https://app.lospor.org" }))).toBe("pass")
+  })
+
+  it("accepts the configured Database Browser origin", () => {
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
+    vi.stubEnv("LOSPOR_DATABASE_URL", "https://database.lospor.org")
+    expect(validateCookieWriteOrigin(req("POST", {
+      origin: "https://database.lospor.org",
+    }))).toBe("pass")
+  })
+
+  it("accepts the local Database Browser on a private LAN address", () => {
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
+    expect(validateCookieWriteOrigin(req("POST", {
+      origin: "http://192.168.0.101:3003",
+    }))).toBe("pass")
+  })
+
+  it("does not allow the private-LAN exception in production", () => {
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
+    expect(validateCookieWriteOrigin(req("POST", {
+      origin: "http://192.168.0.101:3003",
+    }))).toBe("fail")
+  })
+
+  it("rejects a hostile origin", () => {
+    vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
+    expect(validateCookieWriteOrigin(req("POST", {
+      origin: "https://evil.example",
+    }))).toBe("fail")
   })
 
   it("accepts bearer-token mobile writes", () => {

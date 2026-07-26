@@ -217,6 +217,50 @@ export const schemas = {
     exportLimit: { type: "integer", const: 5000 },
     complete: { type: "boolean", const: false },
   }, ["error", "code", "matchingCases", "exportedCases", "exportLimit", "complete"]),
+  ResearchCohort: object({
+    version: { type: "integer", const: 1 },
+    filters: { type: "object", additionalProperties: true },
+  }, ["version", "filters"]),
+  ResearchQueryRequest: object({
+    cohort: ref("ResearchCohort"),
+    savedCohortId: { type: "string", minLength: 1 },
+    pagination: ref("Pagination"),
+    metrics: { type: "array", items: { type: "string" } },
+    distributions: { type: "array", items: { type: "string" } },
+    sort: { type: "object", additionalProperties: true },
+  }, ["cohort"]),
+  ResearchComparisonRequest: object({
+    left: ref("ResearchCohort"),
+    right: ref("ResearchCohort"),
+    metrics: { type: "array", items: { type: "string" } },
+  }, ["left", "right"]),
+  ResearchBenchmarkRequest: object({
+    cohort: ref("ResearchCohort"),
+    interval: { type: "string", enum: ["month", "quarter", "year"] },
+    metric: { type: "string" },
+    institutionIds: { type: "array", items: { type: "string" } },
+  }, ["cohort", "interval", "metric"]),
+  SavedResearchCohortRequest: object({
+    name: { type: "string", minLength: 1, maxLength: 120 },
+    description: nullable({ type: "string", maxLength: 500 }),
+    visibility: { type: "string", enum: ["PRIVATE", "INSTITUTION"] },
+    institutionId: nullable({ type: "string" }),
+    definition: ref("ResearchCohort"),
+  }, ["name", "definition"]),
+  ResearchExportRequest: object({
+    name: { type: "string", minLength: 1, maxLength: 120 },
+    format: { type: "string", enum: ["csv", "json", "omop-csv", "omop-json"] },
+    definition: ref("ResearchCohort"),
+  }, ["name", "format", "definition"]),
+  ResearchGrantRequest: object({
+    userId: { type: "string" },
+    institutionId: nullable({ type: "string" }),
+    allInstitutions: { type: "boolean" },
+    canInspectCases: { type: "boolean" },
+    canExport: { type: "boolean" },
+    canExportOmop: { type: "boolean" },
+    expiresAt: nullable({ type: "string", format: "date-time" }),
+  }, ["userId"]),
   JsonObject: { type: "object", additionalProperties: true },
 }
 
@@ -395,6 +439,25 @@ add("GET", "/v1/export/omop", "Download an OMOP CDM export", {
   exportLimit: true,
 })
 
+add("GET", "/v1/research/metadata", "Read research capabilities, scope, and permissions", { result: ref("JsonObject"), tag: "research" })
+add("POST", "/v1/research/query", "Run a structured research cohort query", { requestBody: body(ref("ResearchQueryRequest")), result: ref("JsonObject"), tag: "research" })
+add("POST", "/v1/research/compare", "Compare two research cohorts", { requestBody: body(ref("ResearchComparisonRequest")), result: ref("JsonObject"), tag: "research" })
+add("POST", "/v1/research/benchmarks", "Calculate cohort trends and institutional benchmarks", { requestBody: body(ref("ResearchBenchmarkRequest")), result: ref("JsonObject"), tag: "research" })
+add("GET", "/v1/research/quality", "Read research data-quality indicators", { result: ref("JsonObject"), tag: "research" })
+add("GET", "/v1/research/cases/{id}", "Read a safe pseudonymous research case", { parameters: [id], result: ref("JsonObject"), tag: "research" })
+add("GET", "/v1/research/cohorts", "List visible saved research cohorts", { result: arrayOf("JsonObject"), tag: "research" })
+add("POST", "/v1/research/cohorts", "Save a research cohort", { requestBody: body(ref("SavedResearchCohortRequest")), status: 201, result: ref("JsonObject"), tag: "research" })
+add("GET", "/v1/research/cohorts/{id}", "Read a saved research cohort", { parameters: [id], result: ref("JsonObject"), tag: "research" })
+add("PATCH", "/v1/research/cohorts/{id}", "Update an owned saved research cohort", { parameters: [id], requestBody: body(ref("SavedResearchCohortRequest")), result: ref("JsonObject"), tag: "research" })
+add("DELETE", "/v1/research/cohorts/{id}", "Delete an owned saved research cohort", { parameters: [id], result: ref("Message"), tag: "research" })
+add("GET", "/v1/research/exports", "List research export history", { result: arrayOf("JsonObject"), tag: "research" })
+add("POST", "/v1/research/exports", "Create a governed research export", { requestBody: body(ref("ResearchExportRequest")), status: 201, result: ref("JsonObject"), tag: "research" })
+add("GET", "/v1/research/exports/{id}/download", "Regenerate and download a complete research export", { parameters: [id], response: response("Research export file", { type: "string", format: "binary" }, "application/octet-stream"), tag: "research" })
+add("GET", "/v1/research/grants", "List research access grants", { result: arrayOf("JsonObject"), tag: "research" })
+add("POST", "/v1/research/grants", "Create a research access grant", { requestBody: body(ref("ResearchGrantRequest")), status: 201, result: ref("JsonObject"), tag: "research" })
+add("PATCH", "/v1/research/grants/{id}", "Update a research access grant", { parameters: [id], requestBody: body(ref("ResearchGrantRequest")), result: ref("JsonObject"), tag: "research" })
+add("DELETE", "/v1/research/grants/{id}", "Revoke a research access grant", { parameters: [id], result: ref("Message"), tag: "research" })
+
 add("GET", "/v1/admin/users", "List users for administration", { parameters: [query("pending", { type: "boolean" })], result: arrayOf("User"), stability: "admin" })
 add("PATCH", "/v1/admin/users/{id}", "Update a user role or institution", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("User"), stability: "admin" })
 add("DELETE", "/v1/admin/users/{id}", "Delete a user account", { parameters: [id], result: ref("Message"), stability: "admin" })
@@ -439,7 +502,7 @@ export function buildDocument({ includeInternal = false } = {}) {
     openapi: "3.1.0",
     info: {
       title: includeInternal ? "LOSPOR API - internal inventory" : "LOSPOR API",
-      version: "7.0.1",
+      version: "7.1.0",
       description: includeInternal
         ? "Complete server contract, including secret maintenance jobs."
         : "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations.",

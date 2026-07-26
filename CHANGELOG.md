@@ -1,5 +1,23 @@
 # Changelog - LOSPOR API
 
+## [7.1.0] - 2026-07-27
+
+### Added
+
+- Governed `/v1/research/*` endpoints for cohorts, comparison, quality,
+  benchmarks, pseudonymous case review, exports, saved cohorts, and access
+  grants, with complete OpenAPI coverage and audit logging.
+- Additive persistence for research grants, saved cohort definitions, and
+  export history.
+
+### Changed
+
+- Research and clinical DTOs carry stable codes with canonical bilingual
+  display metadata from Core.
+- CSRF and CORS policy supports the explicitly configured standalone Database
+  origin without weakening production origin checks.
+- The cross-repository release gate now verifies the standalone Browser.
+
 ## [7.0.1] - 2026-07-25
 
 - Case editing leases now use one atomic PostgreSQL compare-and-set operation,

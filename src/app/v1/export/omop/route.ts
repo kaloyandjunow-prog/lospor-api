@@ -17,7 +17,7 @@ type ExportRow = Prisma.CaseGetPayload<{ select: typeof CASE_SELECT }>
 // diagnosesJson, proceduresJson, labRows) are left untouched: they're
 // structured vocabulary entries, and blanket-redacting them would corrupt
 // legitimate two-word diagnosis/institution labels via the name-pattern check.
-function redactExportRow(c: ExportRow) {
+export function redactExportRow(c: ExportRow) {
   return {
     ...c,
     preop: c.preop ? {
@@ -54,7 +54,7 @@ function redactExportRow(c: ExportRow) {
   }
 }
 
-const CASE_SELECT = {
+export const CASE_SELECT = {
   id: true, caseCode: true, createdAt: true, status: true,
   institutionId: true,
   user: { select: { institution: { select: { name: true } } } },
@@ -270,7 +270,7 @@ export async function GET(req: NextRequest) {
 }
 
 /** Flatten the OMOP bundle to a simple newline-delimited multi-table CSV */
-function bundleToCsv(bundle: ReturnType<typeof mapCasesToOmop>): string {
+export function bundleToCsv(bundle: ReturnType<typeof mapCasesToOmop>): string {
   const sections: string[] = []
   const metadataRows = [
     ["export_id",               bundle.metadata.export_id],

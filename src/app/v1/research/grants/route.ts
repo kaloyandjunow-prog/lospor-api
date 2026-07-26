@@ -1,0 +1,76 @@
+import { NextResponse, after } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { logAudit } from "@/lib/audit"
+import { authorizeResearchRequest, researchRouteError } from "@/lib/research/request"
+import { researchGrantCreateSchema } from "@/lib/research/schemas"
+
+export async function GET(request: Request) {
+  const auth = await authorizeResearchRequest(request, "manageAccess")
+  if ("response" in auth) return auth.response
+  try {
+    const grants = await prisma.researchAccessGrant.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } },
+        institution: { select: { id: true, name: true } },
+        grantedBy: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    })
+    return NextResponse.json(grants)
+  } catch (error) {
+    return researchRouteError(error)
+  }
+}
+
+export async function POST(request: Request) {
+  const auth = await authorizeResearchRequest(request, "manageAccess")
+  if ("response" in auth) return auth.response
+  try {
+    const parsed = researchGrantCreateSchema.safeParse(await request.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid research grant", code: "INVALID_RESEARCH_GRANT", details: parsed.error.flatten() },
+        { status: 400 },
+      )
+    }
+    const target = await prisma.user.findUnique({
+      where: { id: parsed.data.userId },
+      select: { id: true, role: true },
+    })
+    if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 })
+    if (target.role !== "RESEARCHER") {
+      return NextResponse.json(
+        { error: "The account must have the RESEARCHER role", code: "RESEARCHER_ROLE_REQUIRED" },
+        { status: 422 },
+      )
+    }
+    const grant = await prisma.researchAccessGrant.create({
+      data: {
+        userId: parsed.data.userId,
+        institutionId: parsed.data.allInstitutions
+          ? null
+          : parsed.data.institutionId ?? null,
+        allInstitutions: parsed.data.allInstitutions,
+        canInspectCases: parsed.data.canInspectCases,
+        canExport: parsed.data.canExport,
+        canExportOmop: parsed.data.canExportOmop,
+        expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
+        grantedById: auth.context.user.id,
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } },
+        institution: { select: { id: true, name: true } },
+      },
+    })
+    after(() => logAudit(auth.context.user.id, "RESEARCH_GRANT_CREATE", grant.id, {
+      targetUserId: grant.userId,
+      institutionId: grant.institutionId,
+      allInstitutions: grant.allInstitutions,
+      canExport: grant.canExport,
+      canExportOmop: grant.canExportOmop,
+    }))
+    return NextResponse.json(grant, { status: 201 })
+  } catch (error) {
+    return researchRouteError(error)
+  }
+}

@@ -10,34 +10,38 @@ datasource db {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 model User {
-  id                String         @id @default(cuid())
-  email             String         @unique
-  name              String
-  firstName         String         @default("")
-  lastName          String         @default("")
-  title             String         @default("")
-  passwordHash      String
-  role              UserRole       @default(MEMBER)
-  institutionId     String?
-  institution       Institution?   @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
-  cases             Case[]
-  roleRequests      RoleRequest[]
-  transfersSent     CaseTransfer[] @relation("TransfersSent")
-  transfersReceived CaseTransfer[] @relation("TransfersReceived")
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  name                    String
+  firstName               String                   @default("")
+  lastName                String                   @default("")
+  title                   String                   @default("")
+  passwordHash            String
+  role                    UserRole                 @default(MEMBER)
+  institutionId           String?
+  institution             Institution?             @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
+  cases                   Case[]
+  roleRequests            RoleRequest[]
+  transfersSent           CaseTransfer[]           @relation("TransfersSent")
+  transfersReceived       CaseTransfer[]           @relation("TransfersReceived")
   emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens PasswordResetToken[]
-  approvedAt        DateTime?
-  emailVerifiedAt   DateTime?
-  acceptedTermsAt   DateTime?
-  acceptedPrivacyAt DateTime?
-  termsVersion      String?
-  preferences       Json           @default("{}")
-  lastLoginAt       DateTime?
+  researchCohorts         ResearchCohort[]         @relation("ResearchCohortOwner")
+  researchExports         ResearchExport[]         @relation("ResearchExportOwner")
+  researchAccessGrants    ResearchAccessGrant[]    @relation("ResearchAccessSubject")
+  researchGrantsIssued    ResearchAccessGrant[]    @relation("ResearchAccessGrantor")
+  passwordResetTokens     PasswordResetToken[]
+  approvedAt              DateTime?
+  emailVerifiedAt         DateTime?
+  acceptedTermsAt         DateTime?
+  acceptedPrivacyAt       DateTime?
+  termsVersion            String?
+  preferences             Json                     @default("{}")
+  lastLoginAt             DateTime?
   // Token-revocation epoch: any JWT (web session or mobile bearer) whose iat
   // predates this is rejected — set on password reset so old sessions die.
-  passwordChangedAt DateTime?
-  deletedAt         DateTime?
-  createdAt         DateTime       @default(now())
+  passwordChangedAt       DateTime?
+  deletedAt               DateTime?
+  createdAt               DateTime                 @default(now())
 }
 
 model EmailVerificationToken {
@@ -75,12 +79,15 @@ enum UserRole {
 }
 
 model Institution {
-  id      String @id @default(cuid())
-  name    String
-  city    String
-  country String @default("Bulgaria")
-  users   User[] @relation("UserPrimaryInstitution")
-  cases   Case[]
+  id                   String                @id @default(cuid())
+  name                 String
+  city                 String
+  country              String                @default("Bulgaria")
+  users                User[]                @relation("UserPrimaryInstitution")
+  cases                Case[]
+  researchCohorts      ResearchCohort[]
+  researchExports      ResearchExport[]
+  researchAccessGrants ResearchAccessGrant[]
 }
 
 // ─── Case ────────────────────────────────────────────────────────────────────
@@ -129,17 +136,17 @@ model CaseLock {
 }
 
 model CaseTransfer {
-  id          String         @id @default(cuid())
-  caseId      String
-  case        Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  fromUserId  String
-  fromUser    User           @relation("TransfersSent", fields: [fromUserId], references: [id])
-  toUserId    String
-  toUser      User           @relation("TransfersReceived", fields: [toUserId], references: [id])
-  initiatedBy String
-  status      TransferStatus @default(PENDING)
-  createdAt   DateTime       @default(now())
-  resolvedAt  DateTime?
+  id               String         @id @default(cuid())
+  caseId           String
+  case             Case           @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  fromUserId       String
+  fromUser         User           @relation("TransfersSent", fields: [fromUserId], references: [id])
+  toUserId         String
+  toUser           User           @relation("TransfersReceived", fields: [toUserId], references: [id])
+  initiatedBy      String
+  status           TransferStatus @default(PENDING)
+  createdAt        DateTime       @default(now())
+  resolvedAt       DateTime?
   // Case codes are per-user sequences, so a transferred case may have to be
   // renumbered into the recipient's sequence. The code it carried beforehand is
   // kept here — otherwise the paper record and the database disagree with no
@@ -346,12 +353,12 @@ model ConceptMap {
 }
 
 model OmopVocabulary {
-  vocabularyId      String   @id
-  vocabularyName    String?
+  vocabularyId        String   @id
+  vocabularyName      String?
   vocabularyReference String?
-  vocabularyVersion String?
+  vocabularyVersion   String?
   vocabularyConceptId Int?
-  importedAt        DateTime @default(now())
+  importedAt          DateTime @default(now())
 }
 
 model OmopDomain {
@@ -361,7 +368,7 @@ model OmopDomain {
 }
 
 model OmopConcept {
-  conceptId       Int      @id
+  conceptId       Int       @id
   conceptName     String
   domainId        String
   vocabularyId    String
@@ -371,7 +378,7 @@ model OmopConcept {
   validStartDate  DateTime?
   validEndDate    DateTime?
   invalidReason   String?
-  importedAt      DateTime @default(now())
+  importedAt      DateTime  @default(now())
 
   @@index([vocabularyId, conceptCode])
   @@index([domainId])
@@ -380,14 +387,14 @@ model OmopConcept {
 }
 
 model OmopConceptRelationship {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   conceptId1     Int
   conceptId2     Int
   relationshipId String
   validStartDate DateTime?
   validEndDate   DateTime?
   invalidReason  String?
-  importedAt     DateTime @default(now())
+  importedAt     DateTime  @default(now())
 
   @@unique([conceptId1, conceptId2, relationshipId])
   @@index([conceptId1, relationshipId])
@@ -396,11 +403,11 @@ model OmopConceptRelationship {
 
 model OmopConceptAncestor {
   id                    String   @id @default(cuid())
-  ancestorConceptId      Int
-  descendantConceptId    Int
-  minLevelsOfSeparation  Int?
-  maxLevelsOfSeparation  Int?
-  importedAt             DateTime @default(now())
+  ancestorConceptId     Int
+  descendantConceptId   Int
+  minLevelsOfSeparation Int?
+  maxLevelsOfSeparation Int?
+  importedAt            DateTime @default(now())
 
   @@unique([ancestorConceptId, descendantConceptId])
   @@index([ancestorConceptId])
@@ -408,7 +415,7 @@ model OmopConceptAncestor {
 }
 
 model OmopConceptSynonym {
-  id                String   @id @default(cuid())
+  id                 String   @id @default(cuid())
   conceptId          Int
   conceptSynonymName String
   languageConceptId  Int?
@@ -419,14 +426,14 @@ model OmopConceptSynonym {
 }
 
 model OmopVocabularyImport {
-  id              String   @id @default(cuid())
-  sourceDirectory String
+  id                String    @id @default(cuid())
+  sourceDirectory   String
   vocabularyVersion String?
-  importedTables  Json
-  startedAt       DateTime @default(now())
-  completedAt     DateTime?
-  status          String   @default("started")
-  error           String?
+  importedTables    Json
+  startedAt         DateTime  @default(now())
+  completedAt       DateTime?
+  status            String    @default("started")
+  error             String?
 
   @@index([status])
   @@index([startedAt])
@@ -693,9 +700,9 @@ model PreoperativeAssessment {
   labRows         LabResult[]
   medications     Medication[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  syncRevision Int @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  syncRevision Int      @default(0)
 }
 
 // ─── Intraoperative ──────────────────────────────────────────────────────────
@@ -715,17 +722,17 @@ model IntraoperativeRecord {
   // for new records. `startTime` was non-nullable, which forced the code to
   // fake "not started yet" as midnight — a Date is always truthy, so every
   // `if (startTime)` guard was defeated and the UI locked to 00:00.
-  startTime       DateTime?
-  endTime         DateTime?
+  startTime DateTime?
+  endTime   DateTime?
 
   // True UTC instants, plus the IANA zone they were entered in (e.g.
   // "Europe/Sofia"). CaseEvent.timestamp is already an instant, so this puts
   // start/end on the same footing as the events they bracket — comparable
   // across sites and against the event stream. Local wall clock stays exactly
   // derivable for display from the instant + zone.
-  startedAt       DateTime?
-  endedAt         DateTime?
-  timezone        String?
+  startedAt DateTime?
+  endedAt   DateTime?
+  timezone  String?
 
   positions Json @default("[]")
 
@@ -799,9 +806,9 @@ model IntraoperativeRecord {
   vascularAccessRows VascularAccess[]
   premedicationRows  PremedicationAdministration[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  syncRevision Int @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  syncRevision Int      @default(0)
 }
 
 // ─── Postoperative ───────────────────────────────────────────────────────────
@@ -835,9 +842,9 @@ model PostoperativeRecord {
   dispositionNotes String?
   handoverItems    Json         @default("[]")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  syncRevision Int @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  syncRevision Int      @default(0)
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
@@ -1233,4 +1240,77 @@ model CaseSelection {
   @@index([category, value])
   @@index([sourceVocabulary, sourceCode])
   @@index([standardConceptId])
+}
+
+enum ResearchCohortVisibility {
+  PRIVATE
+  INSTITUTION
+}
+
+enum ResearchExportStatus {
+  PENDING
+  RUNNING
+  COMPLETE
+  FAILED
+}
+
+model ResearchAccessGrant {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation("ResearchAccessSubject", fields: [userId], references: [id], onDelete: Cascade)
+  institutionId   String?
+  institution     Institution? @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  allInstitutions Boolean      @default(false)
+  canInspectCases Boolean      @default(true)
+  canExport       Boolean      @default(false)
+  canExportOmop   Boolean      @default(false)
+  grantedById     String
+  grantedBy       User         @relation("ResearchAccessGrantor", fields: [grantedById], references: [id], onDelete: Restrict)
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userId, revokedAt])
+  @@index([institutionId])
+  @@index([expiresAt])
+}
+
+model ResearchCohort {
+  id            String                   @id @default(cuid())
+  ownerId       String
+  owner         User                     @relation("ResearchCohortOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  institutionId String?
+  institution   Institution?             @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  name          String
+  description   String?
+  visibility    ResearchCohortVisibility @default(PRIVATE)
+  definition    Json
+  lastRunAt     DateTime?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@index([ownerId, updatedAt])
+  @@index([institutionId, visibility])
+}
+
+model ResearchExport {
+  id            String               @id @default(cuid())
+  ownerId       String
+  owner         User                 @relation("ResearchExportOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  institutionId String?
+  institution   Institution?         @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  name          String
+  format        String
+  status        ResearchExportStatus @default(PENDING)
+  definition    Json
+  rowCount      Int?
+  checksum      String?
+  error         String?
+  createdAt     DateTime             @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+
+  @@index([ownerId, createdAt])
+  @@index([status, createdAt])
 }
