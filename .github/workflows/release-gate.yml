@@ -19,6 +19,10 @@ on:
         description: lospor-mobile branch, tag, or SHA
         required: true
         default: main
+      browser_ref:
+        description: lospor-browser branch, tag, or SHA
+        required: true
+        default: main
       docs_ref:
         description: lospor-docs branch, tag, or SHA
         required: true
@@ -80,6 +84,11 @@ jobs:
           path: lospor-mobile
       - uses: actions/checkout@v4
         with:
+          repository: kaloyandjunow-prog/lospor-browser
+          ref: ${{ inputs.browser_ref }}
+          path: lospor-browser
+      - uses: actions/checkout@v4
+        with:
           repository: kaloyandjunow-prog/lospor-docs
           ref: ${{ inputs.docs_ref }}
           path: lospor-docs
@@ -93,6 +102,7 @@ jobs:
           npm --prefix lospor-api ci
           npm --prefix lospor-app ci
           npm --prefix lospor-mobile ci
+          npm --prefix lospor-browser ci
           npm --prefix lospor-docs ci
 
       - name: Pack selected Core and install it in every consumer
@@ -103,6 +113,7 @@ jobs:
           npm --prefix lospor-api install --no-save "$CORE_TARBALL"
           npm --prefix lospor-app install --no-save "$CORE_TARBALL"
           npm --prefix lospor-mobile install --no-save "$CORE_TARBALL"
+          npm --prefix lospor-browser install --no-save "$CORE_TARBALL"
 
       - name: Core verification
         run: |
@@ -146,6 +157,14 @@ jobs:
           npm run export:web
           npx expo export --platform android --clear
 
+      - name: Database Browser verification
+        working-directory: lospor-browser
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+          npm run build
+
       - name: Documentation build
         working-directory: lospor-docs
         run: npm run build
@@ -158,6 +177,10 @@ jobs:
 
       - name: Browser critical flows
         working-directory: lospor-app
+        run: npm run e2e
+
+      - name: Database Browser smoke
+        working-directory: lospor-browser
         run: npm run e2e
 
       - name: PWA offline recovery
@@ -174,4 +197,6 @@ jobs:
             lospor-app/test-results
             lospor-mobile/playwright-report
             lospor-mobile/test-results
+            lospor-browser/playwright-report
+            lospor-browser/test-results
           if-no-files-found: ignore
