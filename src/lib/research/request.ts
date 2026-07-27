@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server"
-import type { ResearchPermissionSet } from "@lospor/core/research"
+import type { ResearchDataAction, ResearchPermissionSet } from "@lospor/core/research"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { resolveResearchContext, type ResearchContext } from "./access"
+import {
+  researchContextForAction,
+  resolveResearchContext,
+  type ResearchContext,
+} from "./access"
+
+function actionForPermission(permission: keyof ResearchPermissionSet): ResearchDataAction {
+  if (permission === "inspectCases") return "inspectCases"
+  if (permission === "export") return "export"
+  if (permission === "exportOmop") return "exportOmop"
+  return "query"
+}
 
 export async function authorizeResearchRequest(
   request: Request,
@@ -33,7 +44,7 @@ export async function authorizeResearchRequest(
       ),
     }
   }
-  return { context }
+  return { context: researchContextForAction(context, actionForPermission(permission)) }
 }
 
 export function researchRouteError(error: unknown): NextResponse {

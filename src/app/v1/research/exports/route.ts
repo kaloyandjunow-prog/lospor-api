@@ -5,6 +5,7 @@ import { researchExportCreateSchema } from "@/lib/research/schemas"
 import {
   createResearchExport,
   listResearchExports,
+  processResearchExport,
 } from "@/lib/research/exports"
 
 export async function GET(request: Request) {
@@ -41,8 +42,13 @@ export async function POST(request: Request) {
     after(() => logAudit(auth.context.user.id, "RESEARCH_EXPORT_CREATE", record.id, {
       format: record.format,
     }))
-    return NextResponse.json(record, { status: 201 })
+    after(() => processResearchExport(record.id).catch(error => {
+      console.error("[LOSPOR] research export generation failed", error)
+    }))
+    return NextResponse.json(record, { status: 202 })
   } catch (error) {
     return researchRouteError(error)
   }
 }
+
+export const maxDuration = 300

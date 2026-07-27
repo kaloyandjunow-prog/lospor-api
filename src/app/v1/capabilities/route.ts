@@ -4,7 +4,7 @@ import { CLINICAL_CATALOG_VERSION } from "@lospor/core/catalog"
 export function GET() {
   return NextResponse.json({
     apiVersion: "1",
-    serviceVersion: process.env.npm_package_version ?? "7.1.0",
+    serviceVersion: process.env.npm_package_version ?? "7.2.0",
     catalogVersion: CLINICAL_CATALOG_VERSION,
     minimumSupportedClients: {
       web: "6.0.0",

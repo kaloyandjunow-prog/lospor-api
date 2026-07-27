@@ -14,7 +14,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }))
 
-import { resolveResearchContext } from "./access"
+import { researchContextForAction, resolveResearchContext } from "./access"
 import { compileResearchWhere } from "./cohort-where"
 import { researchCohortSchema, researchQuerySchema } from "./schemas"
 import { distribution, metric } from "./mappers"
@@ -49,7 +49,7 @@ describe("research access and query contracts", () => {
     expect(context).toMatchObject({
       scopeKind: "INSTITUTION",
       institutionIds: ["inst-1"],
-      caseScope: { institutionId: "inst-1" },
+      caseScope: { institutionId: { in: ["inst-1"] } },
       permissions: { query: true, inspectCases: true, export: true, exportOmop: false },
     })
   })
@@ -84,7 +84,54 @@ describe("research access and query contracts", () => {
     expect(researchQuerySchema.safeParse({
       cohort: { version: 1, filters: {} },
       sql: "select * from User",
+
     }).success).toBe(false)
+  })
+  it("keeps every permission inside the institutions that granted it", async () => {
+    findGrants.mockResolvedValue([
+      {
+        institution: { id: "inst-1", name: "Hospital A" },
+        allInstitutions: false,
+        canInspectCases: true,
+        canExport: true,
+        canExportOmop: false,
+      },
+      {
+        institution: { id: "inst-2", name: "Hospital B" },
+        allInstitutions: false,
+        canInspectCases: false,
+        canExport: false,
+        canExportOmop: false,
+      },
+    ])
+    const context = await resolveResearchContext({ ...baseUser, role: "RESEARCHER" })
+    expect(context?.actionScopes.query.institutionIds).toEqual(["inst-1", "inst-2"])
+    expect(context?.actionScopes.inspectCases.institutionIds).toEqual(["inst-1"])
+    expect(context?.actionScopes.export.institutionIds).toEqual(["inst-1"])
+    expect(context?.actionScopes.exportOmop.institutionIds).toEqual([])
+  })
+
+  it("does not let a narrow export grant inherit an all-institutions query scope", async () => {
+    findGrants.mockResolvedValue([
+      {
+        institution: null,
+        allInstitutions: true,
+        canInspectCases: false,
+        canExport: false,
+        canExportOmop: false,
+      },
+      {
+        institution: { id: "inst-2", name: "Hospital B" },
+        allInstitutions: false,
+        canInspectCases: false,
+        canExport: true,
+        canExportOmop: true,
+      },
+    ])
+    const context = await resolveResearchContext({ ...baseUser, role: "RESEARCHER" })
+    expect(context?.actionScopes.query.allInstitutions).toBe(true)
+    expect(researchContextForAction(context!, "export").institutionIds).toEqual(["inst-2"])
+    expect(researchContextForAction(context!, "exportOmop").institutionIds).toEqual(["inst-2"])
   })
 
   it("compiles clinical filters into fixed Prisma predicates", async () => {
@@ -104,7 +151,7 @@ describe("research access and query contracts", () => {
 
     expect(where).toEqual({
       AND: expect.arrayContaining([
-        { institutionId: "inst-1" },
+        { institutionId: { in: ["inst-1"] } },
         { preop: { is: expect.objectContaining({
           ageYears: { gte: 40, lte: 70 },
           emergencySurgery: false,
@@ -127,17 +174,23 @@ describe("research access and query contracts", () => {
   })
 
   it("suppresses small metric and distribution cells", () => {
-    expect(metric("ponvRate", 25, 4, { numerator: 1, unit: "percent" })).toMatchObject({
+    expect(metric("ponvRate", 83.3, 6, { binary: true, numerator: 5, unit: "percent" })).toMatchObject({
+      value: null,
+      suppressed: true,
+    })
+    expect(metric("ponvRate", 25, 4, { binary: true, numerator: 1, unit: "percent" })).toMatchObject({
       value: null,
       suppressed: true,
     })
     const buckets = new Map([
+      ["ICU", { label: "ICU", cases: new Set(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]) }],
       ["PACU", { label: "PACU", cases: new Set(["1", "2", "3", "4"]) }],
       ["WARD", { label: "Ward", cases: new Set(["1", "2", "3", "4", "5"]) }],
     ])
-    expect(distribution("disposition", buckets, 9).buckets).toEqual(expect.arrayContaining([
+    expect(distribution("disposition", buckets).buckets).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: "PACU", count: null, suppressed: true }),
-      expect.objectContaining({ key: "WARD", count: 5, suppressed: false }),
+      expect.objectContaining({ key: "WARD", count: null, suppressed: true }),
+      expect.objectContaining({ key: "ICU", count: 10, suppressed: false }),
     ]))
   })
 })

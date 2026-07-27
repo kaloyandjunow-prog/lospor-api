@@ -58,6 +58,7 @@ debug.log
 /playwright/.cache/
 /e2e/.auth/
 .tmp-*.png
+/.data/
 
 # Claude Code worktrees and session artefacts
 .claude/

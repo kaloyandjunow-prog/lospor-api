@@ -4687,9 +4687,26 @@ export const ResearchExportScalarFieldEnum = {
   format: 'format',
   status: 'status',
   definition: 'definition',
+  definitionHash: 'definitionHash',
+  snapshotRevisions: 'snapshotRevisions',
+  snapshotHash: 'snapshotHash',
+  snapshotCaseCount: 'snapshotCaseCount',
+  scopeInstitutionIds: 'scopeInstitutionIds',
+  asOf: 'asOf',
+  sourceVersion: 'sourceVersion',
+  sourceCommit: 'sourceCommit',
   rowCount: 'rowCount',
   checksum: 'checksum',
+  artifactKey: 'artifactKey',
+  artifactFilename: 'artifactFilename',
+  artifactContentType: 'artifactContentType',
+  artifactByteSize: 'artifactByteSize',
   error: 'error',
+  attemptCount: 'attemptCount',
+  leaseOwner: 'leaseOwner',
+  leaseExpiresAt: 'leaseExpiresAt',
+  generatedAt: 'generatedAt',
+  legacy: 'legacy',
   createdAt: 'createdAt',
   startedAt: 'startedAt',
   completedAt: 'completedAt'
@@ -5162,6 +5179,20 @@ export type EnumResearchExportStatusFieldRefInput<$PrismaModel> = FieldRefInputT
  * Reference to a field of type 'ResearchExportStatus[]'
  */
 export type ListEnumResearchExportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ResearchExportStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt[]'
+ */
+export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
     
 
 /**

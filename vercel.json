@@ -4,6 +4,10 @@
     {
       "path": "/v1/internal/purge-deleted",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/v1/internal/research-exports/process",
+      "schedule": "10 3 * * *"
     }
   ]
 }

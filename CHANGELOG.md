@@ -1,5 +1,29 @@
 # Changelog - LOSPOR API
 
+## [7.2.0] - 2026-07-27
+
+### Fixed
+
+- Research permissions retain action-specific institution scopes, preventing
+  inspection or export rights from escaping through a broader query grant.
+- Aggregate-only requests never query or return pseudonymous case rows.
+- Query, comparison, benchmark, distribution, and quality responses apply one
+  small-cell policy using valid denominators and complementary binary counts.
+
+### Added
+
+- Immutable background research exports with transactionally captured and
+  hashed case revisions, visible source-drift failure, checksummed artifacts,
+  filesystem and S3-compatible storage adapters, lease recovery, failure-
+  isolated bounded workers, and separate-table OMOP CSV ZIP files.
+- Typed research OpenAPI request/response contracts and real PostgreSQL tests
+  for lock concurrency, mixed institutional grants, revocation, and immutable
+  artifact downloads.
+
+### Changed
+
+- Reusable OMOP selection/redaction logic now lives in the API service layer.
+
 ## [7.1.0] - 2026-07-27
 
 ### Added

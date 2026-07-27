@@ -1,6 +1,7 @@
 import type {
   ResearchBenchmarkRequest,
   ResearchBenchmarkResponse,
+  ResearchCaseQueryResponse,
   ResearchComparisonRequest,
   ResearchComparisonResponse,
   ResearchDistributionId,
@@ -18,14 +19,21 @@ import {
   RESEARCH_EXPORT_FORMATS,
   RESEARCH_METRIC_IDS,
   RESEARCH_MIN_CELL_SIZE,
+  discloseResearchCount,
   normalizeResearchCohort,
   researchPercent,
+  shouldSuppressResearchBinary,
   shouldSuppressResearchCell,
 } from "@lospor/core/research"
 import type { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
 import { compileResearchWhere } from "./cohort-where"
-import { metadataScope, type ResearchContext } from "./access"
+import {
+  canInspectEntireQueryScope,
+  metadataScope,
+  metadataScopes,
+  type ResearchContext,
+} from "./access"
 import {
   readAllResearchSummaries,
   readResearchCases,
@@ -61,10 +69,11 @@ export async function researchMetadata(context: ResearchContext): Promise<Resear
     apiVersion: RESEARCH_API_VERSION,
     source: "LOSPOR",
     sourceLabel: "LOSPOR normalized clinical database",
-    sourceVersion: "7.1.0",
+    sourceVersion: "7.2.0",
     generatedAt: new Date().toISOString(),
     dataFreshnessAt: latest._max.updatedAt?.toISOString() ?? null,
     scope: metadataScope(context),
+    scopes: metadataScopes(context),
     permissions: context.permissions,
     suppressionThreshold: RESEARCH_MIN_CELL_SIZE,
     defaultCohort: normalizeResearchCohort(),
@@ -84,22 +93,42 @@ export async function runResearchQuery(
   const distributionIds = request.distributions?.length
     ? request.distributions
     : DEFAULT_DISTRIBUTIONS
-  const cases = await readResearchCases(where, request.pagination, request.sort)
+  const total = await prisma.case.count({ where })
+  const allowExact = canInspectEntireQueryScope(context)
   const [metrics, distributions] = await Promise.all([
-    readResearchMetrics(where, metricIds),
+    readResearchMetrics(where, metricIds, allowExact),
     Promise.all(distributionIds.map(id =>
-      readResearchDistribution(where, id, cases.total))),
+      readResearchDistribution(where, id))),
   ])
 
   return {
     apiVersion: RESEARCH_API_VERSION,
     source: "LOSPOR",
     cohort,
-    matchingCases: cases.total,
+    matchingCases: allowExact ? total : null,
+    matchingCaseCount: discloseResearchCount(total, allowExact),
     metrics,
     distributions,
-    cases: cases.cases,
-    pagination: cases.pagination,
+    cases: [],
+    pagination: null,
+    generatedAt: new Date().toISOString(),
+  }
+}
+
+export async function runResearchCaseQuery(
+  request: ResearchQueryRequest,
+  context: ResearchContext,
+): Promise<ResearchCaseQueryResponse> {
+  const cohort = normalizeResearchCohort(request.cohort)
+  const where = await compileResearchWhere(cohort, context)
+  const result = await readResearchCases(where, request.pagination, request.sort)
+  return {
+    apiVersion: RESEARCH_API_VERSION,
+    source: "LOSPOR",
+    cohort,
+    matchingCases: result.total,
+    cases: result.cases,
+    pagination: result.pagination,
     generatedAt: new Date().toISOString(),
   }
 }
@@ -124,17 +153,20 @@ export async function compareResearchCohorts(
     compileResearchWhere(normalizeResearchCohort(request.left), context),
     compileResearchWhere(normalizeResearchCohort(request.right), context),
   ])
+  const allowExact = canInspectEntireQueryScope(context)
   const [leftCount, rightCount, leftMetrics, rightMetrics] = await Promise.all([
     prisma.case.count({ where: leftWhere }),
     prisma.case.count({ where: rightWhere }),
-    readResearchMetrics(leftWhere, requested),
-    readResearchMetrics(rightWhere, requested),
+    readResearchMetrics(leftWhere, requested, allowExact),
+    readResearchMetrics(rightWhere, requested, allowExact),
   ])
   const rightById = new Map(rightMetrics.map(item => [item.id, item]))
 
   return {
-    leftCount,
-    rightCount,
+    leftCount: allowExact ? leftCount : null,
+    rightCount: allowExact ? rightCount : null,
+    leftCaseCount: discloseResearchCount(leftCount, allowExact),
+    rightCaseCount: discloseResearchCount(rightCount, allowExact),
     metrics: leftMetrics.flatMap(left => {
       const right = rightById.get(left.id)
       return right
@@ -152,28 +184,60 @@ function benchmarkPeriod(date: string, interval: ResearchBenchmarkRequest["inter
   return `${year}-${String(month).padStart(2, "0")}`
 }
 
+function previousBenchmarkPeriod(
+  period: string,
+  interval: ResearchBenchmarkRequest["interval"],
+): string {
+  if (interval === "year") return String(Number(period) - 1)
+  if (interval === "quarter") {
+    const [yearText, quarterText] = period.split("-Q")
+    const year = Number(yearText)
+    const quarter = Number(quarterText)
+    return quarter === 1 ? `${year - 1}-Q4` : `${year}-Q${quarter - 1}`
+  }
+  const [yearText, monthText] = period.split("-")
+  const date = new Date(Date.UTC(Number(yearText), Number(monthText) - 2, 1))
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`
+}
+
 function benchmarkValue(
   metricId: ResearchMetricId,
   cases: Awaited<ReturnType<typeof readAllResearchSummaries>>,
-): number | null {
-  if (metricId === "caseCount") return cases.length
+): { value: number | null; validCount: number; numerator?: number } {
+  if (metricId === "caseCount") {
+    return { value: cases.length, validCount: cases.length }
+  }
   if (metricId === "meanAgeYears") {
     const values = cases.flatMap(item => item.ageYears === null ? [] : [item.ageYears])
-    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null
+    return {
+      value: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null,
+      validCount: values.length,
+    }
   }
   if (metricId === "meanDurationMinutes") {
     const values = cases.flatMap(item => item.durationMinutes === null ? [] : [item.durationMinutes])
-    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null
+    return {
+      value: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null,
+      validCount: values.length,
+    }
   }
   if (metricId === "complicationRate") {
-    return researchPercent(cases.filter(item => item.complications > 0).length, cases.length)
+    const numerator = cases.filter(item => item.complications > 0).length
+    return {
+      value: researchPercent(numerator, cases.length),
+      validCount: cases.length,
+      numerator,
+    }
   }
   if (metricId === "fieldCompleteness") {
-    return cases.length
-      ? cases.reduce((sum, item) => sum + item.completeness, 0) / cases.length
-      : null
+    return {
+      value: cases.length
+        ? cases.reduce((sum, item) => sum + item.completeness, 0) / cases.length
+        : null,
+      validCount: cases.length,
+    }
   }
-  return null
+  return { value: null, validCount: 0 }
 }
 
 export async function benchmarkResearchCohort(
@@ -212,25 +276,56 @@ export async function benchmarkResearchCohort(
     groups.set(key, group)
   }
 
+  const allowExact = canInspectEntireQueryScope(context)
+  const basePoints = [...groups.entries()]
+    .map(([key, cases]) => {
+      const [period, institutionId] = key.split("::")
+      const result = benchmarkValue(request.metric, cases)
+      const suppressed = !allowExact && (result.numerator !== undefined
+        ? shouldSuppressResearchBinary(result.numerator, result.validCount)
+        : shouldSuppressResearchCell(result.validCount))
+      const hideCountValue = request.metric === "caseCount" && !allowExact
+      return {
+        period,
+        scopeKey: institutionId,
+        ...(institutionId !== "none" ? {
+          institutionId,
+          institutionLabel: names.get(institutionId) ?? "Institution",
+        } : {}),
+        value: suppressed || hideCountValue ? null : result.value,
+        caseCount: suppressed || !allowExact ? null : cases.length,
+        caseCountDisclosure: discloseResearchCount(cases.length, allowExact),
+        previousValue: null as number | null,
+        absoluteChange: null as number | null,
+        relativeChangePercent: null as number | null,
+        suppressed,
+      }
+    })
+    .sort((a, b) => a.period.localeCompare(b.period))
+  const byPeriod = new Map(basePoints.map(point => [
+    `${point.period}::${point.scopeKey}`,
+    point,
+  ]))
+  const points = basePoints.map(point => {
+    if (!request.compareWithPreviousPeriod) return point
+    const previous = byPeriod.get(
+      `${previousBenchmarkPeriod(point.period, request.interval)}::${point.scopeKey}`,
+    )
+    const previousValue = previous?.value ?? null
+    if (point.value === null || previousValue === null) {
+      return { ...point, previousValue }
+    }
+    const absoluteChange = Math.round((point.value - previousValue) * 100) / 100
+    const relativeChangePercent = previousValue === 0
+      ? null
+      : Math.round(((point.value - previousValue) / Math.abs(previousValue)) * 1000) / 10
+    return { ...point, previousValue, absoluteChange, relativeChangePercent }
+  }).map(({ scopeKey: _scopeKey, ...point }) => point)
+
   return {
     metric: request.metric,
     interval: request.interval,
-    points: [...groups.entries()]
-      .map(([key, cases]) => {
-        const [period, institutionId] = key.split("::")
-        const suppressed = shouldSuppressResearchCell(cases.length)
-        return {
-          period,
-          ...(institutionId !== "none" ? {
-            institutionId,
-            institutionLabel: names.get(institutionId) ?? "Institution",
-          } : {}),
-          value: suppressed ? null : benchmarkValue(request.metric, cases),
-          caseCount: suppressed ? null : cases.length,
-          suppressed,
-        }
-      })
-      .sort((a, b) => a.period.localeCompare(b.period)),
+    points,
     generatedAt: new Date().toISOString(),
   }
 }
@@ -243,6 +338,7 @@ async function qualityMapping(
   domain: string,
   delegate: MappingDelegate,
   where: object,
+  allowExact: boolean,
 ): Promise<ResearchQualityMapping> {
   const rows = await delegate.groupBy({
     by: ["mappingStatus"],
@@ -254,12 +350,16 @@ async function qualityMapping(
   const mapped = count("MAPPED")
   const sourceOnly = count("SOURCE_ONLY")
   const unmapped = count("UNMAPPED")
+  const total = mapped + sourceOnly + unmapped
+  const suppressed = !allowExact && [mapped, sourceOnly, unmapped]
+    .some(value => shouldSuppressResearchCell(value))
   return {
     domain,
-    mapped,
-    sourceOnly,
-    unmapped,
-    coverage: researchPercent(mapped, mapped + sourceOnly + unmapped) ?? 0,
+    mapped: allowExact ? mapped : null,
+    sourceOnly: allowExact ? sourceOnly : null,
+    unmapped: allowExact ? unmapped : null,
+    coverage: suppressed ? null : researchPercent(mapped, total),
+    suppressed,
   }
 }
 
@@ -267,6 +367,7 @@ export async function researchQuality(
   context: ResearchContext,
 ): Promise<ResearchQualityResponse> {
   const scope = context.caseScope
+  const allowExact = canInspectEntireQueryScope(context)
   const [cases, fields, mappings] = await Promise.all([
     prisma.case.findMany({
       where: scope,
@@ -285,13 +386,13 @@ export async function researchQuality(
       orderBy: [{ section: "asc" }, { fieldKey: "asc" }],
     }),
     Promise.all([
-      qualityMapping("diagnosis", prisma.preopDiagnosis as unknown as MappingDelegate, { preop: { case: scope } }),
-      qualityMapping("procedure", prisma.preopProcedure as unknown as MappingDelegate, { preop: { case: scope } }),
-      qualityMapping("comorbidity", prisma.comorbidity as unknown as MappingDelegate, { preop: { case: scope } }),
-      qualityMapping("laboratory", prisma.labResult as unknown as MappingDelegate, { preop: { case: scope } }),
-      qualityMapping("medication", prisma.medication as unknown as MappingDelegate, { preop: { case: scope } }),
-      qualityMapping("complication", prisma.caseComplication as unknown as MappingDelegate, { case: scope }),
-      qualityMapping("selection", prisma.caseSelection as unknown as MappingDelegate, { case: scope }),
+      qualityMapping("diagnosis", prisma.preopDiagnosis as unknown as MappingDelegate, { preop: { case: scope } }, allowExact),
+      qualityMapping("procedure", prisma.preopProcedure as unknown as MappingDelegate, { preop: { case: scope } }, allowExact),
+      qualityMapping("comorbidity", prisma.comorbidity as unknown as MappingDelegate, { preop: { case: scope } }, allowExact),
+      qualityMapping("laboratory", prisma.labResult as unknown as MappingDelegate, { preop: { case: scope } }, allowExact),
+      qualityMapping("medication", prisma.medication as unknown as MappingDelegate, { preop: { case: scope } }, allowExact),
+      qualityMapping("complication", prisma.caseComplication as unknown as MappingDelegate, { case: scope }, allowExact),
+      qualityMapping("selection", prisma.caseSelection as unknown as MappingDelegate, { case: scope }, allowExact),
     ]),
   ])
   const grouped = new Map<string, { section: string; field: string; present: number; absent: number; notApplicable: number }>()
@@ -310,27 +411,43 @@ export async function researchQuality(
     grouped.set(key, item)
   }
   const finalized = cases.filter(item => item.status === "COMPLETE")
+  const snapshotCount = finalized.filter(item => !!item.snapshot).length
+  const relationalDriftCount = finalized.filter(item =>
+    item.snapshot && item.updatedAt > item.snapshot.finalizedAt).length
+  const impossibleTimelineCount = cases.filter(item =>
+    item.intraop?.startedAt &&
+    item.intraop?.endedAt &&
+    item.intraop.endedAt < item.intraop.startedAt).length
+  const finalizedSuppressed = !allowExact && shouldSuppressResearchBinary(finalized.length, cases.length)
+  const snapshotSuppressed = !allowExact && shouldSuppressResearchBinary(snapshotCount, finalized.length)
+  const driftSuppressed = !allowExact && shouldSuppressResearchBinary(relationalDriftCount, finalized.length)
+  const timelineSuppressed = !allowExact && shouldSuppressResearchBinary(impossibleTimelineCount, cases.length)
 
   return {
-    totalCases: cases.length,
-    finalizedCases: finalized.length,
-    snapshotCoverage: researchPercent(
-      finalized.filter(item => !!item.snapshot).length,
-      finalized.length,
-    ) ?? 0,
-    relationalDriftCases: finalized.filter(item =>
-      item.snapshot && item.updatedAt > item.snapshot.finalizedAt).length,
-    impossibleTimelineCases: cases.filter(item =>
-      item.intraop?.startedAt &&
-      item.intraop?.endedAt &&
-      item.intraop.endedAt < item.intraop.startedAt).length,
-    fields: [...grouped.values()].map(item => ({
-      ...item,
-      completeness: researchPercent(
-        item.present + item.notApplicable,
-        item.present + item.notApplicable + item.absent,
-      ) ?? 0,
-    })),
+    totalCases: allowExact ? cases.length : null,
+    totalCaseCount: discloseResearchCount(cases.length, allowExact),
+    finalizedCases: allowExact && !finalizedSuppressed ? finalized.length : null,
+    snapshotCoverage: snapshotSuppressed
+      ? null
+      : researchPercent(snapshotCount, finalized.length),
+    relationalDriftCases: allowExact && !driftSuppressed ? relationalDriftCount : null,
+    impossibleTimelineCases: allowExact && !timelineSuppressed ? impossibleTimelineCount : null,
+    suppressed: finalizedSuppressed || snapshotSuppressed || driftSuppressed || timelineSuppressed,
+    fields: [...grouped.values()].map(item => {
+      const denominator = item.present + item.notApplicable + item.absent
+      const complete = item.present + item.notApplicable
+      const suppressed = !allowExact && [item.present, item.notApplicable, item.absent]
+        .some(value => shouldSuppressResearchCell(value))
+      return {
+        section: item.section,
+        field: item.field,
+        present: allowExact ? item.present : null,
+        absent: allowExact ? item.absent : null,
+        notApplicable: allowExact ? item.notApplicable : null,
+        completeness: suppressed ? null : researchPercent(complete, denominator),
+        suppressed,
+      }
+    }),
     mappings,
     generatedAt: new Date().toISOString(),
   }

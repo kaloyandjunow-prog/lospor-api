@@ -8,6 +8,7 @@ import type {
 } from "@lospor/core/research"
 import {
   researchPercent,
+  shouldSuppressResearchBinary,
   shouldSuppressResearchCell,
 } from "@lospor/core/research"
 import type { Prisma } from "@/generated/prisma/client"
@@ -431,15 +432,21 @@ export function metric(
   options: {
     numerator?: number
     unit?: ResearchMetric["unit"]
-    neverSuppress?: boolean
+    binary?: boolean
+    hideExact?: boolean
   } = {},
 ): ResearchMetric {
-  const suppressed = !options.neverSuppress && shouldSuppressResearchCell(denominator)
+  const suppressed = options.binary && options.numerator !== undefined
+    ? shouldSuppressResearchBinary(options.numerator, denominator)
+    : shouldSuppressResearchCell(denominator)
+  const hidden = suppressed || options.hideExact === true
   return {
     id,
-    value: suppressed ? null : value,
-    ...(options.numerator !== undefined ? { numerator: options.numerator } : {}),
-    denominator,
+    value: hidden ? null : value,
+    ...(options.numerator !== undefined
+      ? { numerator: hidden ? null : options.numerator }
+      : {}),
+    denominator: hidden ? null : denominator,
     ...(options.unit ? { unit: options.unit } : {}),
     suppressed,
   }
@@ -453,21 +460,33 @@ export function distribution(
     labelBg?: string | null
     cases: Set<string>
   }>,
-  denominator: number,
 ): ResearchDistribution {
+  const entries = [...counts.entries()]
+  const validCases = new Set(entries.flatMap(([, item]) => [...item.cases]))
+  const primarySuppressed = new Set(
+    entries
+      .filter(([, item]) => shouldSuppressResearchCell(item.cases.size))
+      .map(([key]) => key),
+  )
+  if (primarySuppressed.size > 0) {
+    const secondary = entries
+      .filter(([key, item]) => !primarySuppressed.has(key) && item.cases.size > 0)
+      .sort((left, right) => left[1].cases.size - right[1].cases.size)[0]
+    if (secondary) primarySuppressed.add(secondary[0])
+  }
   return {
     id,
-    buckets: [...counts.entries()]
+    buckets: entries
       .map(([key, item]) => {
         const count = item.cases.size
-        const suppressed = shouldSuppressResearchCell(count)
+        const suppressed = primarySuppressed.has(key)
         return {
           key,
           label: item.label,
           labelEn: item.labelEn ?? item.label,
           labelBg: item.labelBg ?? null,
           count: suppressed ? null : count,
-          percent: suppressed ? null : researchPercent(count, denominator),
+          percent: suppressed ? null : researchPercent(count, validCases.size),
           suppressed,
         }
       })

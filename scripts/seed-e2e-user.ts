@@ -5,7 +5,7 @@
 // Usage: npx tsx scripts/seed-e2e-user.ts   (uses .env DATABASE_URL = dev DB)
 import "dotenv/config"
 import bcrypt from "bcryptjs"
-import { E2E_EMAIL, E2E_PASSWORD } from "../e2e/credentials"
+import { E2E_EMAIL, E2E_PASSWORD, E2E_RESEARCH_EMAIL } from "../e2e/credentials"
 
 const PROD_PROJECT_REF = "yzqszvlvccyufrkbuhtv" // never seed E2E data here
 
@@ -37,6 +37,30 @@ async function main() {
       },
     })
     console.log(`E2E user ready: ${user.email} (id ${user.id}, institution ${inst.id})`)
+    const researchEmail = E2E_RESEARCH_EMAIL.trim().toLowerCase()
+    const researcher = await prisma.user.upsert({
+      where: { email: researchEmail },
+      update: {
+        passwordHash, approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
+        acceptedPrivacyAt: now, role: "RESEARCHER", institutionId: null,
+      },
+      create: {
+        email: researchEmail, name: "E2E Aggregate Researcher", firstName: "Aggregate",
+        lastName: "Researcher", title: "Dr", passwordHash, role: "RESEARCHER",
+        approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
+        acceptedPrivacyAt: now, termsVersion: "e2e",
+      },
+    })
+    await prisma.researchAccessGrant.deleteMany({ where: { userId: researcher.id } })
+    await prisma.researchAccessGrant.create({ data: {
+      userId: researcher.id,
+      institutionId: inst.id,
+      grantedById: user.id,
+      canInspectCases: false,
+      canExport: false,
+      canExportOmop: false,
+    } })
+    console.log(`E2E aggregate researcher ready: ${researcher.email} (id ${researcher.id})`)
   } finally {
     await prisma.$disconnect()
   }
