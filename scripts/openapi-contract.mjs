@@ -217,29 +217,273 @@ export const schemas = {
     exportLimit: { type: "integer", const: 5000 },
     complete: { type: "boolean", const: false },
   }, ["error", "code", "matchingCases", "exportedCases", "exportLimit", "complete"]),
+  ResearchNumberRange: object({
+    min: { type: "number" },
+    max: { type: "number" },
+  }),
+  ResearchDateRange: object({
+    from: { type: "string", format: "date" },
+    to: { type: "string", format: "date" },
+  }),
+  ResearchCohortFilters: object({
+    statuses: { type: "array", items: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE"] } },
+    finalized: ref("ResearchDateRange"),
+    ageYears: ref("ResearchNumberRange"),
+    bmi: ref("ResearchNumberRange"),
+    durationMinutes: ref("ResearchNumberRange"),
+    aldreteTotal: ref("ResearchNumberRange"),
+    painScore: ref("ResearchNumberRange"),
+    sex: { type: "array", items: { type: "string" } },
+    asa: { type: "array", items: { type: "string" } },
+    emergency: { type: "boolean" },
+    highRisk: { type: "boolean" },
+    ponv: { type: "boolean" },
+    diagnosisCodes: { type: "array", items: { type: "string" } },
+    diagnosisText: { type: "string" },
+    comorbidityCodes: { type: "array", items: { type: "string" } },
+    comorbidityText: { type: "string" },
+    procedureCodes: { type: "array", items: { type: "string" } },
+    procedureText: { type: "string" },
+    procedureGroups: { type: "array", items: { type: "string" } },
+    techniques: { type: "array", items: { type: "string" } },
+    positions: { type: "array", items: { type: "string" } },
+    airwayDevices: { type: "array", items: { type: "string" } },
+    monitoring: { type: "array", items: { type: "string" } },
+    medications: { type: "array", items: { type: "string" } },
+    atcCodes: { type: "array", items: { type: "string" } },
+    complications: { type: "array", items: { type: "string" } },
+    dispositions: { type: "array", items: { type: "string" } },
+    mappingStatuses: { type: "array", items: { type: "string" } },
+    minimumCompleteness: { type: "number", minimum: 0, maximum: 100 },
+  }),
   ResearchCohort: object({
     version: { type: "integer", const: 1 },
-    filters: { type: "object", additionalProperties: true },
+    filters: ref("ResearchCohortFilters"),
   }, ["version", "filters"]),
   ResearchQueryRequest: object({
     cohort: ref("ResearchCohort"),
+  ResearchPaginationRequest: object({
+    skip: { type: "integer", minimum: 0, default: 0 },
+    take: { type: "integer", minimum: 1, maximum: 200, default: 50 },
+  }),
+  ResearchPagination: object({
+    total: { type: "integer", minimum: 0 },
+    skip: { type: "integer", minimum: 0 },
+    take: { type: "integer", minimum: 1, maximum: 200 },
+    hasMore: { type: "boolean" },
+  }, ["total", "skip", "take", "hasMore"]),
+  ResearchSort: object({
+    field: { type: "string", enum: ["finalizedAt", "ageYears", "durationMinutes", "asa"] },
+    direction: { type: "string", enum: ["asc", "desc"] },
+  }, ["field", "direction"]),
     savedCohortId: { type: "string", minLength: 1 },
-    pagination: ref("Pagination"),
-    metrics: { type: "array", items: { type: "string" } },
-    distributions: { type: "array", items: { type: "string" } },
-    sort: { type: "object", additionalProperties: true },
+    pagination: ref("ResearchPaginationRequest"),
+    metrics: { type: "array", items: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] } },
+    distributions: { type: "array", items: { type: "string", enum: ["sex", "asa", "status", "procedure", "diagnosis", "technique", "airway", "disposition", "complication"] } },
+    sort: ref("ResearchSort"),
   }, ["cohort"]),
+  ResearchCountDisclosure: object({
+    value: nullable({ type: "integer", minimum: 0 }),
+    lowerBound: { type: "integer", minimum: 0 },
+    upperBound: nullable({ type: "integer", minimum: 0 }),
+    exact: { type: "boolean" },
+    suppressed: { type: "boolean" },
+  }, ["value", "lowerBound", "upperBound", "exact", "suppressed"]),
+  ResearchMetric: object({
+    id: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] },
+    value: nullable({ type: "number" }),
+    numerator: nullable({ type: "number" }),
+    denominator: nullable({ type: "number" }),
+    unit: { type: "string", enum: ["count", "percent", "years", "kg/m2", "minutes", "score"] },
+    suppressed: { type: "boolean" },
+  }, ["id", "value", "suppressed"]),
+  ResearchDistributionBucket: object({
+    key: { type: "string" },
+    label: { type: "string" },
+    labelEn: { type: "string" },
+    labelBg: nullable({ type: "string" }),
+    count: nullable({ type: "integer", minimum: 0 }),
+    percent: nullable({ type: "number" }),
+    suppressed: { type: "boolean" },
+  }, ["key", "label", "count", "percent", "suppressed"]),
+  ResearchDistribution: object({
+    id: { type: "string", enum: ["sex", "asa", "status", "procedure", "diagnosis", "technique", "airway", "disposition", "complication"] },
+    buckets: arrayOf("ResearchDistributionBucket"),
+  }, ["id", "buckets"]),
+  ResearchCaseSummary: object({
+    id: { type: "string" },
+    researchId: { type: "string" },
+    status: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE"] },
+    period: nullable({ type: "string", pattern: "^[0-9]{4}-[0-9]{2}$" }),
+    ageYears: nullable({ type: "number" }),
+    sex: nullable({ type: "string" }),
+    asa: nullable({ type: "string" }),
+    diagnosis: nullable({ type: "string" }),
+    diagnosisCode: nullable({ type: "string" }),
+    diagnosisLabelEn: nullable({ type: "string" }),
+    diagnosisLabelBg: nullable({ type: "string" }),
+    procedure: nullable({ type: "string" }),
+    procedureCode: nullable({ type: "string" }),
+    procedureLabelEn: nullable({ type: "string" }),
+    procedureLabelBg: nullable({ type: "string" }),
+    durationMinutes: nullable({ type: "number" }),
+    technique: { type: "array", items: { type: "string" } },
+    disposition: nullable({ type: "string" }),
+    complications: { type: "integer", minimum: 0 },
+    completeness: { type: "number", minimum: 0, maximum: 100 },
+  }, ["id", "researchId", "status", "period", "ageYears", "sex", "asa", "diagnosis", "diagnosisCode", "procedure", "procedureCode", "durationMinutes", "technique", "disposition", "complications", "completeness"]),
+  ResearchQueryResponse: object({
+    apiVersion: { type: "integer", const: 1 },
+    source: { type: "string", enum: ["LOSPOR", "OMOP"] },
+    cohort: ref("ResearchCohort"),
+    matchingCases: nullable({ type: "integer", minimum: 0 }),
+    matchingCaseCount: ref("ResearchCountDisclosure"),
+    metrics: arrayOf("ResearchMetric"),
+    distributions: arrayOf("ResearchDistribution"),
+    cases: arrayOf("ResearchCaseSummary"),
+    pagination: nullable(ref("ResearchPagination")),
+    generatedAt: { type: "string", format: "date-time" },
+  }, ["apiVersion", "source", "cohort", "matchingCases", "matchingCaseCount", "metrics", "distributions", "cases", "pagination", "generatedAt"]),
+  ResearchCaseQueryResponse: object({
+    apiVersion: { type: "integer", const: 1 },
+    source: { type: "string", enum: ["LOSPOR", "OMOP"] },
+    cohort: ref("ResearchCohort"),
+    matchingCases: { type: "integer", minimum: 0 },
+    cases: arrayOf("ResearchCaseSummary"),
+    pagination: ref("ResearchPagination"),
+    generatedAt: { type: "string", format: "date-time" },
+  }, ["apiVersion", "source", "cohort", "matchingCases", "cases", "pagination", "generatedAt"]),
+  ResearchCaseDetail: {
+    allOf: [
+      ref("ResearchCaseSummary"),
+      {
+        type: "object",
+        properties: {
+          demographics: { type: "object", additionalProperties: true },
+          diagnoses: { type: "array", items: { type: "object", additionalProperties: true } },
+          comorbidities: { type: "array", items: { type: "object", additionalProperties: true } },
+          procedures: { type: "array", items: { type: "object", additionalProperties: true } },
+          medications: { type: "array", items: { type: "object", additionalProperties: true } },
+          labs: { type: "array", items: { type: "object", additionalProperties: true } },
+          intraoperative: { type: "object", additionalProperties: true },
+          postoperative: { type: "object", additionalProperties: true },
+          timeline: { type: "array", items: { type: "object", additionalProperties: true } },
+          quality: { type: "object", additionalProperties: true },
+        },
+        additionalProperties: false,
+      },
+    ],
+  },
   ResearchComparisonRequest: object({
     left: ref("ResearchCohort"),
     right: ref("ResearchCohort"),
-    metrics: { type: "array", items: { type: "string" } },
+    metrics: { type: "array", items: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] } },
   }, ["left", "right"]),
+  ResearchComparisonMetric: object({
+    id: { type: "string" },
+    left: ref("ResearchMetric"),
+    right: ref("ResearchMetric"),
+    absoluteDifference: nullable({ type: "number" }),
+    relativeDifferencePercent: nullable({ type: "number" }),
+  }, ["id", "left", "right", "absoluteDifference", "relativeDifferencePercent"]),
+  ResearchComparisonResponse: object({
+    leftCount: nullable({ type: "integer", minimum: 0 }),
+    rightCount: nullable({ type: "integer", minimum: 0 }),
+    leftCaseCount: ref("ResearchCountDisclosure"),
+    rightCaseCount: ref("ResearchCountDisclosure"),
+    metrics: arrayOf("ResearchComparisonMetric"),
+    generatedAt: { type: "string", format: "date-time" },
+  }, ["leftCount", "rightCount", "leftCaseCount", "rightCaseCount", "metrics", "generatedAt"]),
+  ResearchBenchmarkPoint: object({
+    period: { type: "string" }, institutionId: { type: "string" }, institutionLabel: { type: "string" },
+    value: nullable({ type: "number" }), caseCount: nullable({ type: "integer", minimum: 0 }),
+    caseCountDisclosure: ref("ResearchCountDisclosure"), previousValue: nullable({ type: "number" }),
+    absoluteChange: nullable({ type: "number" }), relativeChangePercent: nullable({ type: "number" }), suppressed: { type: "boolean" },
+  }, ["period", "value", "caseCount", "caseCountDisclosure", "previousValue", "absoluteChange", "relativeChangePercent", "suppressed"]),
   ResearchBenchmarkRequest: object({
     cohort: ref("ResearchCohort"),
     interval: { type: "string", enum: ["month", "quarter", "year"] },
-    metric: { type: "string" },
+    metric: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] },
     institutionIds: { type: "array", items: { type: "string" } },
+    compareWithPreviousPeriod: { type: "boolean" },
   }, ["cohort", "interval", "metric"]),
+  ResearchBenchmarkResponse: object({
+    metric: { type: "string" },
+    interval: { type: "string", enum: ["month", "quarter", "year"] },
+    points: arrayOf("ResearchBenchmarkPoint"),
+    generatedAt: { type: "string", format: "date-time" },
+  }, ["metric", "interval", "points", "generatedAt"]),
+  ResearchQualityField: object({
+    section: { type: "string" }, field: { type: "string" },
+    present: nullable({ type: "integer", minimum: 0 }), absent: nullable({ type: "integer", minimum: 0 }),
+    notApplicable: nullable({ type: "integer", minimum: 0 }), completeness: nullable({ type: "number" }),
+    suppressed: { type: "boolean" },
+  }, ["section", "field", "present", "absent", "notApplicable", "completeness", "suppressed"]),
+  ResearchQualityMapping: object({
+    domain: { type: "string" }, mapped: nullable({ type: "integer", minimum: 0 }),
+    sourceOnly: nullable({ type: "integer", minimum: 0 }), unmapped: nullable({ type: "integer", minimum: 0 }),
+    coverage: nullable({ type: "number" }), suppressed: { type: "boolean" },
+  }, ["domain", "mapped", "sourceOnly", "unmapped", "coverage", "suppressed"]),
+  ResearchQualityResponse: object({
+    totalCases: nullable({ type: "integer", minimum: 0 }),
+    totalCaseCount: ref("ResearchCountDisclosure"),
+    finalizedCases: nullable({ type: "integer", minimum: 0 }),
+    snapshotCoverage: nullable({ type: "number" }),
+    relationalDriftCases: nullable({ type: "integer", minimum: 0 }),
+    impossibleTimelineCases: nullable({ type: "integer", minimum: 0 }),
+    suppressed: { type: "boolean" },
+    fields: arrayOf("ResearchQualityField"), mappings: arrayOf("ResearchQualityMapping"),
+    generatedAt: { type: "string", format: "date-time" },
+  }, ["totalCases", "totalCaseCount", "finalizedCases", "snapshotCoverage", "relationalDriftCases", "impossibleTimelineCases", "suppressed", "fields", "mappings", "generatedAt"]),
+  ResearchPermissionSet: object({
+    query: { type: "boolean" }, inspectCases: { type: "boolean" }, compare: { type: "boolean" },
+    benchmark: { type: "boolean" }, savePrivateCohorts: { type: "boolean" },
+    shareInstitutionCohorts: { type: "boolean" }, export: { type: "boolean" },
+    exportOmop: { type: "boolean" }, manageAccess: { type: "boolean" },
+  }, ["query", "inspectCases", "compare", "benchmark", "savePrivateCohorts", "shareInstitutionCohorts", "export", "exportOmop", "manageAccess"]),
+  ResearchScope: object({
+    kind: { type: "string", enum: ["OWN", "INSTITUTION", "GRANT", "ALL"] },
+    institutionIds: { type: "array", items: { type: "string" } },
+    institutionLabels: { type: "array", items: { type: "string" } },
+  }, ["kind", "institutionIds", "institutionLabels"]),
+  ResearchActionScopes: object({
+    query: ref("ResearchScope"), inspectCases: ref("ResearchScope"),
+    export: ref("ResearchScope"), exportOmop: ref("ResearchScope"),
+  }, ["query", "inspectCases", "export", "exportOmop"]),
+  ResearchMetadata: object({
+    apiVersion: { type: "integer", const: 1 }, source: { type: "string", enum: ["LOSPOR", "OMOP"] },
+    sourceLabel: { type: "string" }, sourceVersion: { type: "string" },
+    generatedAt: { type: "string", format: "date-time" },
+    dataFreshnessAt: nullable({ type: "string", format: "date-time" }),
+    scope: ref("ResearchScope"), scopes: ref("ResearchActionScopes"),
+    permissions: ref("ResearchPermissionSet"), suppressionThreshold: { type: "integer", minimum: 1 },
+    defaultCohort: ref("ResearchCohort"),
+    supportedMetrics: { type: "array", items: { type: "string" } },
+    supportedDistributions: { type: "array", items: { type: "string" } },
+    supportedExports: { type: "array", items: { type: "string", enum: ["csv", "json", "omop-csv", "omop-json"] } },
+  }, ["apiVersion", "source", "sourceLabel", "sourceVersion", "generatedAt", "dataFreshnessAt", "scope", "scopes", "permissions", "suppressionThreshold", "defaultCohort", "supportedMetrics", "supportedDistributions", "supportedExports"]),
+  SavedResearchCohort: object({
+    id: { type: "string" }, name: { type: "string" }, description: nullable({ type: "string" }),
+    visibility: { type: "string", enum: ["PRIVATE", "INSTITUTION"] }, definition: ref("ResearchCohort"),
+    ownerId: { type: "string" }, institutionId: nullable({ type: "string" }),
+    createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    lastRunAt: nullable({ type: "string", format: "date-time" }),
+  }, ["id", "name", "description", "visibility", "definition", "ownerId", "institutionId", "createdAt", "updatedAt", "lastRunAt"]),
+  ResearchExportRecord: object({
+    id: { type: "string" }, name: { type: "string" },
+    format: { type: "string", enum: ["csv", "json", "omop-csv", "omop-json"] },
+    status: { type: "string", enum: ["PENDING", "RUNNING", "COMPLETE", "FAILED"] },
+    definition: ref("ResearchCohort"), rowCount: nullable({ type: "integer", minimum: 0 }),
+    checksum: nullable({ type: "string" }), error: nullable({ type: "string" }), filename: nullable({ type: "string" }),
+    contentType: nullable({ type: "string" }), byteSize: nullable({ type: "integer", minimum: 0 }),
+    asOf: nullable({ type: "string", format: "date-time" }),
+    definitionHash: nullable({ type: "string" }), snapshotHash: nullable({ type: "string" }),
+    matchingCases: nullable({ type: "integer", minimum: 0 }),
+    sourceCommit: nullable({ type: "string" }),
+    sourceVersion: nullable({ type: "string" }), generatedAt: nullable({ type: "string", format: "date-time" }),
+    legacy: { type: "boolean" }, createdAt: { type: "string", format: "date-time" },
+    completedAt: nullable({ type: "string", format: "date-time" }),
+  }, ["id", "name", "format", "status", "definition", "rowCount", "checksum", "error", "filename", "asOf", "definitionHash", "snapshotHash", "matchingCases", "sourceCommit", "contentType", "byteSize", "sourceVersion", "generatedAt", "legacy", "createdAt", "completedAt"]),
   SavedResearchCohortRequest: object({
     name: { type: "string", minLength: 1, maxLength: 120 },
     description: nullable({ type: "string", maxLength: 500 }),
@@ -247,6 +491,13 @@ export const schemas = {
     institutionId: nullable({ type: "string" }),
     definition: ref("ResearchCohort"),
   }, ["name", "definition"]),
+  SavedResearchCohortPatch: object({
+    name: { type: "string", minLength: 1, maxLength: 120 },
+    description: nullable({ type: "string", maxLength: 500 }),
+    visibility: { type: "string", enum: ["PRIVATE", "INSTITUTION"] },
+    institutionId: nullable({ type: "string" }),
+    definition: ref("ResearchCohort"),
+  }),
   ResearchExportRequest: object({
     name: { type: "string", minLength: 1, maxLength: 120 },
     format: { type: "string", enum: ["csv", "json", "omop-csv", "omop-json"] },
@@ -261,6 +512,36 @@ export const schemas = {
     canExportOmop: { type: "boolean" },
     expiresAt: nullable({ type: "string", format: "date-time" }),
   }, ["userId"]),
+  ResearchGrantPatch: object({
+    canInspectCases: { type: "boolean" },
+    canExport: { type: "boolean" },
+    canExportOmop: { type: "boolean" },
+    expiresAt: nullable({ type: "string", format: "date-time" }),
+    revoked: { type: "boolean" },
+  }),
+  ResearchGrant: {
+    type: "object",
+    properties: {
+      id: { type: "string" }, userId: { type: "string" }, institutionId: nullable({ type: "string" }),
+      allInstitutions: { type: "boolean" }, canInspectCases: { type: "boolean" },
+      canExport: { type: "boolean" }, canExportOmop: { type: "boolean" },
+      expiresAt: nullable({ type: "string", format: "date-time" }),
+      revokedAt: nullable({ type: "string", format: "date-time" }),
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+      user: { type: "object", additionalProperties: true },
+      institution: nullable({ type: "object", additionalProperties: true }),
+      grantedBy: { type: "object", additionalProperties: true },
+    },
+    required: [
+      "id", "userId", "institutionId", "allInstitutions", "canInspectCases",
+      "canExport", "canExportOmop", "expiresAt", "revokedAt", "createdAt", "updatedAt",
+    ],
+    additionalProperties: true,
+  },
+  ResearchExportWorkerResponse: object({
+    processed: { type: "integer", minimum: 0 }, failed: { type: "integer", minimum: 0 }, ids: { type: "array", items: { type: "string" } },
+  }, ["processed", "failed", "ids"]),
   JsonObject: { type: "object", additionalProperties: true },
 }
 
@@ -439,24 +720,26 @@ add("GET", "/v1/export/omop", "Download an OMOP CDM export", {
   exportLimit: true,
 })
 
-add("GET", "/v1/research/metadata", "Read research capabilities, scope, and permissions", { result: ref("JsonObject"), tag: "research" })
-add("POST", "/v1/research/query", "Run a structured research cohort query", { requestBody: body(ref("ResearchQueryRequest")), result: ref("JsonObject"), tag: "research" })
-add("POST", "/v1/research/compare", "Compare two research cohorts", { requestBody: body(ref("ResearchComparisonRequest")), result: ref("JsonObject"), tag: "research" })
-add("POST", "/v1/research/benchmarks", "Calculate cohort trends and institutional benchmarks", { requestBody: body(ref("ResearchBenchmarkRequest")), result: ref("JsonObject"), tag: "research" })
-add("GET", "/v1/research/quality", "Read research data-quality indicators", { result: ref("JsonObject"), tag: "research" })
-add("GET", "/v1/research/cases/{id}", "Read a safe pseudonymous research case", { parameters: [id], result: ref("JsonObject"), tag: "research" })
-add("GET", "/v1/research/cohorts", "List visible saved research cohorts", { result: arrayOf("JsonObject"), tag: "research" })
-add("POST", "/v1/research/cohorts", "Save a research cohort", { requestBody: body(ref("SavedResearchCohortRequest")), status: 201, result: ref("JsonObject"), tag: "research" })
-add("GET", "/v1/research/cohorts/{id}", "Read a saved research cohort", { parameters: [id], result: ref("JsonObject"), tag: "research" })
-add("PATCH", "/v1/research/cohorts/{id}", "Update an owned saved research cohort", { parameters: [id], requestBody: body(ref("SavedResearchCohortRequest")), result: ref("JsonObject"), tag: "research" })
-add("DELETE", "/v1/research/cohorts/{id}", "Delete an owned saved research cohort", { parameters: [id], result: ref("Message"), tag: "research" })
-add("GET", "/v1/research/exports", "List research export history", { result: arrayOf("JsonObject"), tag: "research" })
-add("POST", "/v1/research/exports", "Create a governed research export", { requestBody: body(ref("ResearchExportRequest")), status: 201, result: ref("JsonObject"), tag: "research" })
-add("GET", "/v1/research/exports/{id}/download", "Regenerate and download a complete research export", { parameters: [id], response: response("Research export file", { type: "string", format: "binary" }, "application/octet-stream"), tag: "research" })
-add("GET", "/v1/research/grants", "List research access grants", { result: arrayOf("JsonObject"), tag: "research" })
-add("POST", "/v1/research/grants", "Create a research access grant", { requestBody: body(ref("ResearchGrantRequest")), status: 201, result: ref("JsonObject"), tag: "research" })
-add("PATCH", "/v1/research/grants/{id}", "Update a research access grant", { parameters: [id], requestBody: body(ref("ResearchGrantRequest")), result: ref("JsonObject"), tag: "research" })
-add("DELETE", "/v1/research/grants/{id}", "Revoke a research access grant", { parameters: [id], result: ref("Message"), tag: "research" })
+add("GET", "/v1/research/metadata", "Read research capabilities, action scopes, and permissions", { result: ref("ResearchMetadata"), errors: [401, 403, 500], tag: "research" })
+add("POST", "/v1/research/query", "Run an aggregate-only structured research cohort query", { requestBody: body(ref("ResearchQueryRequest")), result: ref("ResearchQueryResponse"), errors: [400, 401, 403, 500], tag: "research" })
+add("POST", "/v1/research/cases/query", "List pseudonymous case rows inside the case-inspection scope", { requestBody: body(ref("ResearchQueryRequest")), result: ref("ResearchCaseQueryResponse"), errors: [400, 401, 403, 500], tag: "research" })
+add("POST", "/v1/research/compare", "Compare two research cohorts with disclosure control", { requestBody: body(ref("ResearchComparisonRequest")), result: ref("ResearchComparisonResponse"), errors: [400, 401, 403, 500], tag: "research" })
+add("POST", "/v1/research/benchmarks", "Calculate disclosure-controlled cohort trends and benchmarks", { requestBody: body(ref("ResearchBenchmarkRequest")), result: ref("ResearchBenchmarkResponse"), errors: [400, 401, 403, 500], tag: "research" })
+add("GET", "/v1/research/quality", "Read disclosure-controlled research data-quality indicators", { result: ref("ResearchQualityResponse"), errors: [401, 403, 500], tag: "research" })
+add("GET", "/v1/research/cases/{id}", "Read a safe pseudonymous research case", { parameters: [id], result: ref("ResearchCaseDetail"), errors: [401, 403, 404, 500], tag: "research" })
+add("GET", "/v1/research/cohorts", "List visible saved research cohorts", { result: arrayOf("SavedResearchCohort"), errors: [401, 403, 500], tag: "research" })
+add("POST", "/v1/research/cohorts", "Save a research cohort", { requestBody: body(ref("SavedResearchCohortRequest")), status: 201, result: ref("SavedResearchCohort"), errors: [400, 401, 403, 500], tag: "research" })
+add("GET", "/v1/research/cohorts/{id}", "Read a saved research cohort", { parameters: [id], result: ref("SavedResearchCohort"), errors: [401, 403, 404, 500], tag: "research" })
+add("PATCH", "/v1/research/cohorts/{id}", "Update an owned saved research cohort", { parameters: [id], requestBody: body(ref("SavedResearchCohortPatch")), result: ref("SavedResearchCohort"), errors: [400, 401, 403, 404, 409, 500], tag: "research" })
+add("DELETE", "/v1/research/cohorts/{id}", "Delete an owned saved research cohort", { parameters: [id], result: ref("Message"), errors: [401, 403, 404, 500], tag: "research" })
+add("GET", "/v1/research/exports", "List immutable research export history", { result: arrayOf("ResearchExportRecord"), errors: [401, 403, 500], tag: "research" })
+add("POST", "/v1/research/exports", "Queue an immutable governed research export", { requestBody: body(ref("ResearchExportRequest")), status: 202, result: ref("ResearchExportRecord"), errors: [400, 401, 403, 422, 500], tag: "research" })
+add("GET", "/v1/research/exports/{id}", "Read immutable research export status", { parameters: [id], result: ref("ResearchExportRecord"), errors: [401, 403, 404, 500], tag: "research" })
+add("GET", "/v1/research/exports/{id}/download", "Stream a completed immutable research export artifact", { parameters: [id], response: response("Research export file", { type: "string", format: "binary" }, "application/octet-stream", { "Content-Disposition": { schema: { type: "string" } }, "Content-Length": { schema: { type: "integer", minimum: 0 } }, "X-LOSPOR-Export-Complete": { schema: { type: "boolean" } }, "X-LOSPOR-Export-Rows": { schema: { type: "integer", minimum: 0 } }, "X-LOSPOR-Export-As-Of": { schema: { type: "string", format: "date-time" } }, "X-LOSPOR-Export-Snapshot-SHA256": { schema: { type: "string" } }, "X-LOSPOR-Export-SHA256": { schema: { type: "string" } } }), errors: [401, 403, 404, 409, 410, 422, 500, 503], tag: "research" })
+add("GET", "/v1/research/grants", "List research access grants", { result: arrayOf("ResearchGrant"), errors: [401, 403, 500], tag: "research" })
+add("POST", "/v1/research/grants", "Create a research access grant", { requestBody: body(ref("ResearchGrantRequest")), status: 201, result: ref("ResearchGrant"), errors: [400, 401, 403, 404, 409, 422, 500], tag: "research" })
+add("PATCH", "/v1/research/grants/{id}", "Update a research access grant", { parameters: [id], requestBody: body(ref("ResearchGrantPatch")), result: ref("ResearchGrant"), errors: [400, 401, 403, 404, 409, 422, 500], tag: "research" })
+add("DELETE", "/v1/research/grants/{id}", "Revoke a research access grant", { parameters: [id], result: ref("Message"), errors: [401, 403, 404, 500], tag: "research" })
 
 add("GET", "/v1/admin/users", "List users for administration", { parameters: [query("pending", { type: "boolean" })], result: arrayOf("User"), stability: "admin" })
 add("PATCH", "/v1/admin/users/{id}", "Update a user role or institution", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("User"), stability: "admin" })
@@ -480,6 +763,21 @@ add("GET", "/v1/internal/purge-deleted", "Purge accounts past the retention peri
   stability: "internal",
   tag: "internal",
 })
+add("GET", "/v1/internal/research-exports/process", "Process queued research exports", {
+  parameters: [header("authorization", { type: "string" }, true)],
+  result: ref("ResearchExportWorkerResponse"),
+  errors: [401, 500, 503],
+  stability: "internal",
+  tag: "internal",
+})
+add("POST", "/v1/internal/research-exports/process", "Process queued research exports", {
+  parameters: [header("authorization", { type: "string" }, true)],
+  result: ref("ResearchExportWorkerResponse"),
+  errors: [401, 500, 503],
+  stability: "internal",
+  tag: "internal",
+})
+
 
 export const contractEntries = [...contracts.entries()]
 export const contractKeys = new Set(contracts.keys())
@@ -502,7 +800,7 @@ export function buildDocument({ includeInternal = false } = {}) {
     openapi: "3.1.0",
     info: {
       title: includeInternal ? "LOSPOR API - internal inventory" : "LOSPOR API",
-      version: "7.1.0",
+      version: "7.2.0",
       description: includeInternal
         ? "Complete server contract, including secret maintenance jobs."
         : "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations.",

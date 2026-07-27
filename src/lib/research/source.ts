@@ -1,6 +1,7 @@
 import type {
   ResearchBenchmarkRequest,
   ResearchBenchmarkResponse,
+  ResearchCaseQueryResponse,
   ResearchComparisonRequest,
   ResearchComparisonResponse,
   ResearchMetadata,
@@ -14,6 +15,7 @@ import {
   compareResearchCohorts,
   researchMetadata,
   researchQuality,
+  runResearchCaseQuery,
   runResearchQuery,
 } from "./service"
 
@@ -21,6 +23,7 @@ export interface ResearchDataSource {
   readonly kind: "LOSPOR" | "OMOP"
   metadata(context: ResearchContext): Promise<ResearchMetadata>
   query(request: ResearchQueryRequest, context: ResearchContext): Promise<ResearchQueryResponse>
+  caseQuery(request: ResearchQueryRequest, context: ResearchContext): Promise<ResearchCaseQueryResponse>
   compare(request: ResearchComparisonRequest, context: ResearchContext): Promise<ResearchComparisonResponse>
   benchmark(request: ResearchBenchmarkRequest, context: ResearchContext): Promise<ResearchBenchmarkResponse>
   quality(context: ResearchContext): Promise<ResearchQualityResponse>
@@ -30,6 +33,7 @@ const losporSource: ResearchDataSource = {
   kind: "LOSPOR",
   metadata: researchMetadata,
   query: runResearchQuery,
+  caseQuery: runResearchCaseQuery,
   compare: compareResearchCohorts,
   benchmark: benchmarkResearchCohort,
   quality: researchQuality,

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LOSPOR API",
-    "version": "7.1.0",
+    "version": "7.2.0",
     "description": "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations."
   },
   "servers": [
@@ -6654,7 +6654,7 @@
     "/v1/research/metadata": {
       "get": {
         "operationId": "get_v1_research_metadata",
-        "summary": "Read research capabilities, scope, and permissions",
+        "summary": "Read research capabilities, action scopes, and permissions",
         "tags": [
           "research"
         ],
@@ -6666,17 +6666,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
+                  "$ref": "#/components/schemas/ResearchMetadata"
                 }
               }
             }
@@ -6693,46 +6683,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -6757,7 +6707,7 @@
     "/v1/research/query": {
       "post": {
         "operationId": "post_v1_research_query",
-        "summary": "Run a structured research cohort query",
+        "summary": "Run an aggregate-only structured research cohort query",
         "tags": [
           "research"
         ],
@@ -6779,7 +6729,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/ResearchQueryResponse"
                 }
               }
             }
@@ -6814,8 +6764,51 @@
               }
             }
           },
-          "404": {
-            "description": "Resource not found",
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/research/cases/query": {
+      "post": {
+        "operationId": "post_v1_research_cases_query",
+        "summary": "List pseudonymous case rows inside the case-inspection scope",
+        "tags": [
+          "research"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchQueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchCaseQueryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -6824,8 +6817,8 @@
               }
             }
           },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
@@ -6834,18 +6827,8 @@
               }
             }
           },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
+          "403": {
+            "description": "Insufficient access",
             "content": {
               "application/json": {
                 "schema": {
@@ -6870,7 +6853,7 @@
     "/v1/research/compare": {
       "post": {
         "operationId": "post_v1_research_compare",
-        "summary": "Compare two research cohorts",
+        "summary": "Compare two research cohorts with disclosure control",
         "tags": [
           "research"
         ],
@@ -6892,7 +6875,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/ResearchComparisonResponse"
                 }
               }
             }
@@ -6919,46 +6902,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -6983,7 +6926,7 @@
     "/v1/research/benchmarks": {
       "post": {
         "operationId": "post_v1_research_benchmarks",
-        "summary": "Calculate cohort trends and institutional benchmarks",
+        "summary": "Calculate disclosure-controlled cohort trends and benchmarks",
         "tags": [
           "research"
         ],
@@ -7005,7 +6948,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/ResearchBenchmarkResponse"
                 }
               }
             }
@@ -7032,46 +6975,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7096,7 +6999,7 @@
     "/v1/research/quality": {
       "get": {
         "operationId": "get_v1_research_quality",
-        "summary": "Read research data-quality indicators",
+        "summary": "Read disclosure-controlled research data-quality indicators",
         "tags": [
           "research"
         ],
@@ -7108,17 +7011,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
+                  "$ref": "#/components/schemas/ResearchQualityResponse"
                 }
               }
             }
@@ -7135,46 +7028,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7221,17 +7074,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
+                  "$ref": "#/components/schemas/ResearchCaseDetail"
                 }
               }
             }
@@ -7258,36 +7101,6 @@
           },
           "404": {
             "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7326,18 +7139,8 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/JsonObject"
+                    "$ref": "#/components/schemas/SavedResearchCohort"
                   }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -7354,46 +7157,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7438,7 +7201,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/SavedResearchCohort"
                 }
               }
             }
@@ -7465,46 +7228,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7551,17 +7274,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
+                  "$ref": "#/components/schemas/SavedResearchCohort"
                 }
               }
             }
@@ -7588,36 +7301,6 @@
           },
           "404": {
             "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7661,7 +7344,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SavedResearchCohortRequest"
+                "$ref": "#/components/schemas/SavedResearchCohortPatch"
               }
             }
           }
@@ -7672,7 +7355,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/SavedResearchCohort"
                 }
               }
             }
@@ -7719,26 +7402,6 @@
           },
           "409": {
             "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7788,16 +7451,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Authentication required",
             "content": {
@@ -7820,36 +7473,6 @@
           },
           "404": {
             "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7874,7 +7497,7 @@
     "/v1/research/exports": {
       "get": {
         "operationId": "get_v1_research_exports",
-        "summary": "List research export history",
+        "summary": "List immutable research export history",
         "tags": [
           "research"
         ],
@@ -7888,18 +7511,8 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/JsonObject"
+                    "$ref": "#/components/schemas/ResearchExportRecord"
                   }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -7916,46 +7529,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -7978,7 +7551,7 @@
       },
       "post": {
         "operationId": "post_v1_research_exports",
-        "summary": "Create a governed research export",
+        "summary": "Queue an immutable governed research export",
         "tags": [
           "research"
         ],
@@ -7995,12 +7568,12 @@
           }
         },
         "responses": {
-          "201": {
+          "202": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/ResearchExportRecord"
                 }
               }
             }
@@ -8035,26 +7608,6 @@
               }
             }
           },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "422": {
             "description": "Request is valid but cannot be completed",
             "content": {
@@ -8065,8 +7618,71 @@
               }
             }
           },
-          "429": {
-            "description": "Rate limit exceeded",
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/research/exports/{id}": {
+      "get": {
+        "operationId": "get_v1_research_exports_id",
+        "summary": "Read immutable research export status",
+        "tags": [
+          "research"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchExportRecord"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -8091,7 +7707,7 @@
     "/v1/research/exports/{id}/download": {
       "get": {
         "operationId": "get_v1_research_exports_id_download",
-        "summary": "Regenerate and download a complete research export",
+        "summary": "Stream a completed immutable research export artifact",
         "tags": [
           "research"
         ],
@@ -8117,14 +7733,44 @@
                   "format": "binary"
                 }
               }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
+            },
+            "headers": {
+              "Content-Disposition": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiError"
+                  "type": "string"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-LOSPOR-Export-Complete": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "X-LOSPOR-Export-Rows": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-LOSPOR-Export-As-Of": {
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "X-LOSPOR-Export-Snapshot-SHA256": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-LOSPOR-Export-SHA256": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -8169,6 +7815,16 @@
               }
             }
           },
+          "410": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Request is valid but cannot be completed",
             "content": {
@@ -8179,8 +7835,8 @@
               }
             }
           },
-          "429": {
-            "description": "Rate limit exceeded",
+          "500": {
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -8189,7 +7845,7 @@
               }
             }
           },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -8219,18 +7875,8 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/JsonObject"
+                    "$ref": "#/components/schemas/ResearchGrant"
                   }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -8247,46 +7893,6 @@
           },
           "403": {
             "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -8331,7 +7937,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/ResearchGrant"
                 }
               }
             }
@@ -8388,16 +7994,6 @@
           },
           "422": {
             "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -8443,7 +8039,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ResearchGrantRequest"
+                "$ref": "#/components/schemas/ResearchGrantPatch"
               }
             }
           }
@@ -8454,7 +8050,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonObject"
+                  "$ref": "#/components/schemas/ResearchGrant"
                 }
               }
             }
@@ -8511,16 +8107,6 @@
           },
           "422": {
             "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -8570,16 +8156,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Authentication required",
             "content": {
@@ -8602,36 +8178,6 @@
           },
           "404": {
             "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -10685,6 +10231,181 @@
         ],
         "additionalProperties": false
       },
+      "ResearchNumberRange": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResearchDateRange": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResearchCohortFilters": {
+        "type": "object",
+        "properties": {
+          "statuses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "IN_PROGRESS",
+                "AWAITING_REVIEW",
+                "COMPLETE"
+              ]
+            }
+          },
+          "finalized": {
+            "$ref": "#/components/schemas/ResearchDateRange"
+          },
+          "ageYears": {
+            "$ref": "#/components/schemas/ResearchNumberRange"
+          },
+          "bmi": {
+            "$ref": "#/components/schemas/ResearchNumberRange"
+          },
+          "durationMinutes": {
+            "$ref": "#/components/schemas/ResearchNumberRange"
+          },
+          "aldreteTotal": {
+            "$ref": "#/components/schemas/ResearchNumberRange"
+          },
+          "painScore": {
+            "$ref": "#/components/schemas/ResearchNumberRange"
+          },
+          "sex": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "asa": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "emergency": {
+            "type": "boolean"
+          },
+          "highRisk": {
+            "type": "boolean"
+          },
+          "ponv": {
+            "type": "boolean"
+          },
+          "diagnosisCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "diagnosisText": {
+            "type": "string"
+          },
+          "comorbidityCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "comorbidityText": {
+            "type": "string"
+          },
+          "procedureCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "procedureText": {
+            "type": "string"
+          },
+          "procedureGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "techniques": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "airwayDevices": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "monitoring": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "medications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "atcCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "complications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dispositions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mappingStatuses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minimumCompleteness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "additionalProperties": false
+      },
       "ResearchCohort": {
         "type": "object",
         "properties": {
@@ -10693,8 +10414,7 @@
             "const": 1
           },
           "filters": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/ResearchCohortFilters"
           }
         },
         "required": [
@@ -10709,34 +10429,722 @@
           "cohort": {
             "$ref": "#/components/schemas/ResearchCohort"
           },
+          "ResearchPaginationRequest": {
+            "type": "object",
+            "properties": {
+              "skip": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              },
+              "take": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200,
+                "default": 50
+              }
+            },
+            "additionalProperties": false
+          },
+          "ResearchPagination": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "skip": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "take": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200
+              },
+              "hasMore": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "total",
+              "skip",
+              "take",
+              "hasMore"
+            ],
+            "additionalProperties": false
+          },
+          "ResearchSort": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "enum": [
+                  "finalizedAt",
+                  "ageYears",
+                  "durationMinutes",
+                  "asa"
+                ]
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "direction"
+            ],
+            "additionalProperties": false
+          },
           "savedCohortId": {
             "type": "string",
             "minLength": 1
           },
           "pagination": {
-            "$ref": "#/components/schemas/Pagination"
+            "$ref": "#/components/schemas/ResearchPaginationRequest"
           },
           "metrics": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "caseCount",
+                "meanAgeYears",
+                "meanBmi",
+                "meanDurationMinutes",
+                "emergencyRate",
+                "highRiskRate",
+                "complicationRate",
+                "ponvRate",
+                "meanAldrete",
+                "meanPainScore",
+                "mappingCoverage",
+                "fieldCompleteness"
+              ]
             }
           },
           "distributions": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "sex",
+                "asa",
+                "status",
+                "procedure",
+                "diagnosis",
+                "technique",
+                "airway",
+                "disposition",
+                "complication"
+              ]
             }
           },
           "sort": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/ResearchSort"
           }
         },
         "required": [
           "cohort"
         ],
         "additionalProperties": false
+      },
+      "ResearchCountDisclosure": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lowerBound": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "upperBound": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exact": {
+            "type": "boolean"
+          },
+          "suppressed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value",
+          "lowerBound",
+          "upperBound",
+          "exact",
+          "suppressed"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchMetric": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "caseCount",
+              "meanAgeYears",
+              "meanBmi",
+              "meanDurationMinutes",
+              "emergencyRate",
+              "highRiskRate",
+              "complicationRate",
+              "ponvRate",
+              "meanAldrete",
+              "meanPainScore",
+              "mappingCoverage",
+              "fieldCompleteness"
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "numerator": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "denominator": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "count",
+              "percent",
+              "years",
+              "kg/m2",
+              "minutes",
+              "score"
+            ]
+          },
+          "suppressed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "value",
+          "suppressed"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchDistributionBucket": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "labelEn": {
+            "type": "string"
+          },
+          "labelBg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suppressed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "count",
+          "percent",
+          "suppressed"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchDistribution": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "sex",
+              "asa",
+              "status",
+              "procedure",
+              "diagnosis",
+              "technique",
+              "airway",
+              "disposition",
+              "complication"
+            ]
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchDistributionBucket"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "buckets"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchCaseSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "researchId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "IN_PROGRESS",
+              "AWAITING_REVIEW",
+              "COMPLETE"
+            ]
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ageYears": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sex": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "asa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnosis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnosisCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnosisLabelEn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnosisLabelBg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "procedure": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "procedureCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "procedureLabelEn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "procedureLabelBg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationMinutes": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "technique": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disposition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "complications": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completeness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "id",
+          "researchId",
+          "status",
+          "period",
+          "ageYears",
+          "sex",
+          "asa",
+          "diagnosis",
+          "diagnosisCode",
+          "procedure",
+          "procedureCode",
+          "durationMinutes",
+          "technique",
+          "disposition",
+          "complications",
+          "completeness"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchQueryResponse": {
+        "type": "object",
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "LOSPOR",
+              "OMOP"
+            ]
+          },
+          "cohort": {
+            "$ref": "#/components/schemas/ResearchCohort"
+          },
+          "matchingCases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "matchingCaseCount": {
+            "$ref": "#/components/schemas/ResearchCountDisclosure"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchMetric"
+            }
+          },
+          "distributions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchDistribution"
+            }
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchCaseSummary"
+            }
+          },
+          "pagination": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchPagination"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "apiVersion",
+          "source",
+          "cohort",
+          "matchingCases",
+          "matchingCaseCount",
+          "metrics",
+          "distributions",
+          "cases",
+          "pagination",
+          "generatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchCaseQueryResponse": {
+        "type": "object",
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "LOSPOR",
+              "OMOP"
+            ]
+          },
+          "cohort": {
+            "$ref": "#/components/schemas/ResearchCohort"
+          },
+          "matchingCases": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchCaseSummary"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/ResearchPagination"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "apiVersion",
+          "source",
+          "cohort",
+          "matchingCases",
+          "cases",
+          "pagination",
+          "generatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchCaseDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ResearchCaseSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "demographics": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "diagnoses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "comorbidities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "procedures": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "medications": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "labs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "intraoperative": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "postoperative": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "timeline": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "quality": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
       },
       "ResearchComparisonRequest": {
         "type": "object",
@@ -10750,13 +11158,203 @@
           "metrics": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "caseCount",
+                "meanAgeYears",
+                "meanBmi",
+                "meanDurationMinutes",
+                "emergencyRate",
+                "highRiskRate",
+                "complicationRate",
+                "ponvRate",
+                "meanAldrete",
+                "meanPainScore",
+                "mappingCoverage",
+                "fieldCompleteness"
+              ]
             }
           }
         },
         "required": [
           "left",
           "right"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchComparisonMetric": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "left": {
+            "$ref": "#/components/schemas/ResearchMetric"
+          },
+          "right": {
+            "$ref": "#/components/schemas/ResearchMetric"
+          },
+          "absoluteDifference": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "relativeDifferencePercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "left",
+          "right",
+          "absoluteDifference",
+          "relativeDifferencePercent"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "leftCount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rightCount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "leftCaseCount": {
+            "$ref": "#/components/schemas/ResearchCountDisclosure"
+          },
+          "rightCaseCount": {
+            "$ref": "#/components/schemas/ResearchCountDisclosure"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchComparisonMetric"
+            }
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "leftCount",
+          "rightCount",
+          "leftCaseCount",
+          "rightCaseCount",
+          "metrics",
+          "generatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchBenchmarkPoint": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "institutionId": {
+            "type": "string"
+          },
+          "institutionLabel": {
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "caseCount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "caseCountDisclosure": {
+            "$ref": "#/components/schemas/ResearchCountDisclosure"
+          },
+          "previousValue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "absoluteChange": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "relativeChangePercent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suppressed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "period",
+          "value",
+          "caseCount",
+          "caseCountDisclosure",
+          "previousValue",
+          "absoluteChange",
+          "relativeChangePercent",
+          "suppressed"
         ],
         "additionalProperties": false
       },
@@ -10775,9 +11373,359 @@
             ]
           },
           "metric": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "caseCount",
+              "meanAgeYears",
+              "meanBmi",
+              "meanDurationMinutes",
+              "emergencyRate",
+              "highRiskRate",
+              "complicationRate",
+              "ponvRate",
+              "meanAldrete",
+              "meanPainScore",
+              "mappingCoverage",
+              "fieldCompleteness"
+            ]
           },
           "institutionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "compareWithPreviousPeriod": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cohort",
+          "interval",
+          "metric"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchBenchmarkResponse": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string"
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "month",
+              "quarter",
+              "year"
+            ]
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchBenchmarkPoint"
+            }
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "metric",
+          "interval",
+          "points",
+          "generatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchQualityField": {
+        "type": "object",
+        "properties": {
+          "section": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "present": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "absent": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notApplicable": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "completeness": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suppressed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "section",
+          "field",
+          "present",
+          "absent",
+          "notApplicable",
+          "completeness",
+          "suppressed"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchQualityMapping": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "mapped": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sourceOnly": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unmapped": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suppressed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "domain",
+          "mapped",
+          "sourceOnly",
+          "unmapped",
+          "coverage",
+          "suppressed"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchQualityResponse": {
+        "type": "object",
+        "properties": {
+          "totalCases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totalCaseCount": {
+            "$ref": "#/components/schemas/ResearchCountDisclosure"
+          },
+          "finalizedCases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshotCoverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "relationalDriftCases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "impossibleTimelineCases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suppressed": {
+            "type": "boolean"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchQualityField"
+            }
+          },
+          "mappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResearchQualityMapping"
+            }
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "totalCases",
+          "totalCaseCount",
+          "finalizedCases",
+          "snapshotCoverage",
+          "relationalDriftCases",
+          "impossibleTimelineCases",
+          "suppressed",
+          "fields",
+          "mappings",
+          "generatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchPermissionSet": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "boolean"
+          },
+          "inspectCases": {
+            "type": "boolean"
+          },
+          "compare": {
+            "type": "boolean"
+          },
+          "benchmark": {
+            "type": "boolean"
+          },
+          "savePrivateCohorts": {
+            "type": "boolean"
+          },
+          "shareInstitutionCohorts": {
+            "type": "boolean"
+          },
+          "export": {
+            "type": "boolean"
+          },
+          "exportOmop": {
+            "type": "boolean"
+          },
+          "manageAccess": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "query",
+          "inspectCases",
+          "compare",
+          "benchmark",
+          "savePrivateCohorts",
+          "shareInstitutionCohorts",
+          "export",
+          "exportOmop",
+          "manageAccess"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchScope": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "OWN",
+              "INSTITUTION",
+              "GRANT",
+              "ALL"
+            ]
+          },
+          "institutionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "institutionLabels": {
             "type": "array",
             "items": {
               "type": "string"
@@ -10785,9 +11733,412 @@
           }
         },
         "required": [
-          "cohort",
-          "interval",
-          "metric"
+          "kind",
+          "institutionIds",
+          "institutionLabels"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchActionScopes": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/ResearchScope"
+          },
+          "inspectCases": {
+            "$ref": "#/components/schemas/ResearchScope"
+          },
+          "export": {
+            "$ref": "#/components/schemas/ResearchScope"
+          },
+          "exportOmop": {
+            "$ref": "#/components/schemas/ResearchScope"
+          }
+        },
+        "required": [
+          "query",
+          "inspectCases",
+          "export",
+          "exportOmop"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchMetadata": {
+        "type": "object",
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "LOSPOR",
+              "OMOP"
+            ]
+          },
+          "sourceLabel": {
+            "type": "string"
+          },
+          "sourceVersion": {
+            "type": "string"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataFreshnessAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ResearchScope"
+          },
+          "scopes": {
+            "$ref": "#/components/schemas/ResearchActionScopes"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/ResearchPermissionSet"
+          },
+          "suppressionThreshold": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "defaultCohort": {
+            "$ref": "#/components/schemas/ResearchCohort"
+          },
+          "supportedMetrics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supportedDistributions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supportedExports": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "csv",
+                "json",
+                "omop-csv",
+                "omop-json"
+              ]
+            }
+          }
+        },
+        "required": [
+          "apiVersion",
+          "source",
+          "sourceLabel",
+          "sourceVersion",
+          "generatedAt",
+          "dataFreshnessAt",
+          "scope",
+          "scopes",
+          "permissions",
+          "suppressionThreshold",
+          "defaultCohort",
+          "supportedMetrics",
+          "supportedDistributions",
+          "supportedExports"
+        ],
+        "additionalProperties": false
+      },
+      "SavedResearchCohort": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "PRIVATE",
+              "INSTITUTION"
+            ]
+          },
+          "definition": {
+            "$ref": "#/components/schemas/ResearchCohort"
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "institutionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastRunAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "visibility",
+          "definition",
+          "ownerId",
+          "institutionId",
+          "createdAt",
+          "updatedAt",
+          "lastRunAt"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchExportRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "csv",
+              "json",
+              "omop-csv",
+              "omop-json"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "COMPLETE",
+              "FAILED"
+            ]
+          },
+          "definition": {
+            "$ref": "#/components/schemas/ResearchCohort"
+          },
+          "rowCount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checksum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contentType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "byteSize": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "asOf": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "definitionHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshotHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "matchingCases": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sourceCommit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sourceVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legacy": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "status",
+          "definition",
+          "rowCount",
+          "checksum",
+          "error",
+          "filename",
+          "asOf",
+          "definitionHash",
+          "snapshotHash",
+          "matchingCases",
+          "sourceCommit",
+          "contentType",
+          "byteSize",
+          "sourceVersion",
+          "generatedAt",
+          "legacy",
+          "createdAt",
+          "completedAt"
         ],
         "additionalProperties": false
       },
@@ -10835,6 +12186,48 @@
           "name",
           "definition"
         ],
+        "additionalProperties": false
+      },
+      "SavedResearchCohortPatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "PRIVATE",
+              "INSTITUTION"
+            ]
+          },
+          "institutionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "definition": {
+            "$ref": "#/components/schemas/ResearchCohort"
+          }
+        },
         "additionalProperties": false
       },
       "ResearchExportRequest": {
@@ -10907,6 +12300,156 @@
         },
         "required": [
           "userId"
+        ],
+        "additionalProperties": false
+      },
+      "ResearchGrantPatch": {
+        "type": "object",
+        "properties": {
+          "canInspectCases": {
+            "type": "boolean"
+          },
+          "canExport": {
+            "type": "boolean"
+          },
+          "canExportOmop": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revoked": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResearchGrant": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "institutionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "allInstitutions": {
+            "type": "boolean"
+          },
+          "canInspectCases": {
+            "type": "boolean"
+          },
+          "canExport": {
+            "type": "boolean"
+          },
+          "canExportOmop": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "institution": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "grantedBy": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "institutionId",
+          "allInstitutions",
+          "canInspectCases",
+          "canExport",
+          "canExportOmop",
+          "expiresAt",
+          "revokedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": true
+      },
+      "ResearchExportWorkerResponse": {
+        "type": "object",
+        "properties": {
+          "processed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "processed",
+          "failed",
+          "ids"
         ],
         "additionalProperties": false
       },

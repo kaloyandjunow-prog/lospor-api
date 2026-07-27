@@ -123,6 +123,7 @@ async function completenessCounts(where: Prisma.CaseWhereInput) {
 export async function readResearchMetrics(
   where: Prisma.CaseWhereInput,
   requested: ResearchMetricId[],
+  allowExactCounts = false,
 ): Promise<ResearchMetric[]> {
   const total = await prisma.case.count({ where })
   const requestedSet = new Set(requested)
@@ -131,8 +132,11 @@ export async function readResearchMetrics(
     intraopAverage,
     postopAverage,
     emergencies,
+    emergencyObserved,
     highRisk,
+    highRiskObserved,
     ponv,
+    postopObserved,
     complicationCases,
     mappings,
     fields,
@@ -140,18 +144,24 @@ export async function readResearchMetrics(
     prisma.preoperativeAssessment.aggregate({
       where: { case: where },
       _avg: { ageYears: true, bmi: true },
+      _count: { ageYears: true, bmi: true },
     }),
     prisma.intraoperativeRecord.aggregate({
       where: { case: where },
       _avg: { durationMinutes: true },
+      _count: { durationMinutes: true },
     }),
     prisma.postoperativeRecord.aggregate({
       where: { case: where },
       _avg: { aldreteTotal: true, painScoreNRS: true },
+      _count: { aldreteTotal: true, painScoreNRS: true },
     }),
     prisma.case.count({ where: { AND: [where, { preop: { is: { emergencySurgery: true } } }] } }),
+    prisma.case.count({ where: { AND: [where, { preop: { isNot: null } }] } }),
     prisma.case.count({ where: { AND: [where, { preop: { is: { highRiskSurgery: true } } }] } }),
+    prisma.case.count({ where: { AND: [where, { preop: { isNot: null } }] } }),
     prisma.case.count({ where: { AND: [where, { postop: { is: { ponv: true } } }] } }),
+    prisma.case.count({ where: { AND: [where, { postop: { isNot: null } }] } }),
     countDistinctComplicationCases(where),
     mappingCounts(where),
     completenessCounts(where),
@@ -160,35 +170,41 @@ export async function readResearchMetrics(
   const mappingTotal = [...mappings.values()].reduce((sum, count) => sum + count, 0)
 
   const all: ResearchMetric[] = [
-    metric("caseCount", total, total, { unit: "count", neverSuppress: true }),
-    metric("meanAgeYears", preopAverage._avg.ageYears, total, { unit: "years" }),
-    metric("meanBmi", preopAverage._avg.bmi, total, { unit: "kg/m2" }),
-    metric("meanDurationMinutes", intraopAverage._avg.durationMinutes, total, { unit: "minutes" }),
-    metric("emergencyRate", researchPercent(emergencies, total), total, {
+    metric("caseCount", total, total, { unit: "count", hideExact: !allowExactCounts }),
+    metric("meanAgeYears", preopAverage._avg.ageYears, preopAverage._count.ageYears, { unit: "years" }),
+    metric("meanBmi", preopAverage._avg.bmi, preopAverage._count.bmi, { unit: "kg/m2" }),
+    metric("meanDurationMinutes", intraopAverage._avg.durationMinutes, intraopAverage._count.durationMinutes, { unit: "minutes" }),
+    metric("emergencyRate", researchPercent(emergencies, emergencyObserved), emergencyObserved, {
       numerator: emergencies,
       unit: "percent",
+      binary: true,
     }),
-    metric("highRiskRate", researchPercent(highRisk, total), total, {
+    metric("highRiskRate", researchPercent(highRisk, highRiskObserved), highRiskObserved, {
       numerator: highRisk,
       unit: "percent",
+      binary: true,
     }),
     metric("complicationRate", researchPercent(complicationCases, total), total, {
       numerator: complicationCases,
       unit: "percent",
+      binary: true,
     }),
-    metric("ponvRate", researchPercent(ponv, total), total, {
+    metric("ponvRate", researchPercent(ponv, postopObserved), postopObserved, {
       numerator: ponv,
       unit: "percent",
+      binary: true,
     }),
-    metric("meanAldrete", postopAverage._avg.aldreteTotal, total, { unit: "score" }),
-    metric("meanPainScore", postopAverage._avg.painScoreNRS, total, { unit: "score" }),
-    metric("mappingCoverage", researchPercent(mapped, mappingTotal), total, {
+    metric("meanAldrete", postopAverage._avg.aldreteTotal, postopAverage._count.aldreteTotal, { unit: "score" }),
+    metric("meanPainScore", postopAverage._avg.painScoreNRS, postopAverage._count.painScoreNRS, { unit: "score" }),
+    metric("mappingCoverage", researchPercent(mapped, mappingTotal), mappingTotal, {
       numerator: mapped,
       unit: "percent",
+      binary: true,
     }),
-    metric("fieldCompleteness", researchPercent(fields.complete, fields.total), total, {
+    metric("fieldCompleteness", researchPercent(fields.complete, fields.total), fields.total, {
       numerator: fields.complete,
       unit: "percent",
+      binary: true,
     }),
   ]
   return all.filter(item => requestedSet.has(item.id))
@@ -221,7 +237,6 @@ function addBucket(
 export async function readResearchDistribution(
   where: Prisma.CaseWhereInput,
   id: ResearchDistributionId,
-  denominator: number,
 ): Promise<ResearchDistribution> {
   const buckets = new Map<string, {
     label: string
@@ -296,7 +311,7 @@ export async function readResearchDistribution(
     for (const row of rows) addBucket(buckets, row.sourceCode ?? row.label, row.label, row.caseId)
   }
 
-  return distribution(id, buckets, denominator)
+  return distribution(id, buckets)
 }
 
 export async function readAllResearchSummaries(

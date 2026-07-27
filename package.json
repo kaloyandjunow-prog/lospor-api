@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -19,6 +19,7 @@
     "seed:concept-maps": "tsx scripts/seed-concept-maps.ts",
     "data-quality": "tsx scripts/data-quality-report.ts",
     "db:studio": "prisma studio",
+    "research-exports:work": "tsx scripts/process-research-exports.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e:seed": "tsx scripts/seed-e2e-user.ts",
@@ -36,7 +37,9 @@
     "serialize-javascript": "^7.0.6"
   },
   "dependencies": {
-    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v7.1.0",
+    "@aws-sdk/client-s3": "^3.1095.0",
+    "@aws-sdk/lib-storage": "^3.1095.0",
+    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v7.2.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@sparticuz/chromium": "^149.0.0",

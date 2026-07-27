@@ -28,7 +28,7 @@ import { deriveQualityStatus } from "@lospor/core/omop"
 
 let _counter = 1
 function nextId() { return _counter++ }
-function resetIds() { _counter = 1 }
+function resetIds(start = 1) { _counter = start }
 
 // Optional deployment-wide salt. Keep it stable: changing it changes every
 // pseudonym, so two exports taken either side of a change cannot be related.
@@ -559,10 +559,13 @@ export interface ExportContext {
   complete?: boolean
   gitCommit: string
   forcedOverride: boolean
+  exportId?: string
+  generatedAt?: string
+  rowIdStart?: number
 }
 
 export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundle {
-  resetIds()
+  resetIds(ctx?.rowIdStart ?? 1)
 
   const persons: OmopPerson[] = []
   const observationPeriods: OmopObservationPeriod[] = []
@@ -1030,15 +1033,16 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
   }
   const qualityWarnings = buildQualityWarnings(cases, mappingSummary)
 
+  const caseDates = cases.map(row => row.createdAt.getTime())
   const dateRange = cases.length
-    ? { from: cases[0].createdAt.toISOString(), to: cases[cases.length - 1].createdAt.toISOString() }
+    ? { from: new Date(Math.min(...caseDates)).toISOString(), to: new Date(Math.max(...caseDates)).toISOString() }
     : null
 
   return {
     metadata: {
-      export_id:               crypto.randomUUID(),
+      export_id:               ctx?.exportId ?? crypto.randomUUID(),
       omop_cdm_version:        "5.4",
-      generated_at:            new Date().toISOString(),
+      generated_at:            ctx?.generatedAt ?? new Date().toISOString(),
       generated_by_user_id:    ctx?.userId ?? "unknown",
       generated_by_role:       ctx?.userRole ?? "unknown",
       source:                  "LOSPOR",

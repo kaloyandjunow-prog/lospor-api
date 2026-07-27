@@ -1304,13 +1304,31 @@ model ResearchExport {
   format        String
   status        ResearchExportStatus @default(PENDING)
   definition    Json
+  definitionHash String?
+  snapshotRevisions Json?
+  snapshotHash  String?
+  snapshotCaseCount Int?
+  scopeInstitutionIds String[]       @default([])
+  asOf          DateTime?
+  sourceVersion String?
+  sourceCommit  String?
   rowCount      Int?
   checksum      String?
+  artifactKey   String?
+  artifactFilename String?
+  artifactContentType String?
+  artifactByteSize BigInt?
   error         String?
+  attemptCount  Int                  @default(0)
+  leaseOwner    String?
+  leaseExpiresAt DateTime?
+  generatedAt   DateTime?
+  legacy        Boolean              @default(false)
   createdAt     DateTime             @default(now())
   startedAt     DateTime?
   completedAt   DateTime?
 
   @@index([ownerId, createdAt])
   @@index([status, createdAt])
+  @@index([status, leaseExpiresAt])
 }
