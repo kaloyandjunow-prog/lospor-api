@@ -31,7 +31,7 @@ import {
   mapResearchSummary,
 } from "./mappers"
 
-const SOURCE_VERSION = "7.2.0"
+const SOURCE_VERSION = "7.2.1"
 const EXPORT_PAGE_SIZE = 250
 const EXPORT_LEASE_MS = 5 * 60 * 1000
 

@@ -69,7 +69,7 @@ export async function researchMetadata(context: ResearchContext): Promise<Resear
     apiVersion: RESEARCH_API_VERSION,
     source: "LOSPOR",
     sourceLabel: "LOSPOR normalized clinical database",
-    sourceVersion: "7.2.0",
+    sourceVersion: "7.2.1",
     generatedAt: new Date().toISOString(),
     dataFreshnessAt: latest._max.updatedAt?.toISOString() ?? null,
     scope: metadataScope(context),

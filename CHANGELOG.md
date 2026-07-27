@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [7.2.1] - 2026-07-27
+
+### Security
+
+- Updated Next.js and its PostCSS/Sharp runtime chain to patched versions.
+- Refreshed transitive dependencies so the API reports zero npm audit findings.
+- Moved CI and the cross-repository release gate to Node.js 24 actions.
+
 ## [7.2.0] - 2026-07-27
 
 ### Fixed

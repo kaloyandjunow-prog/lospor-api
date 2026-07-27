@@ -62,39 +62,39 @@ jobs:
       LOSPOR_POSTGRES_INTEGRATION: "true"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-core
           ref: ${{ inputs.core_ref }}
           path: lospor-core
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-api
           ref: ${{ inputs.api_ref }}
           path: lospor-api
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-app
           ref: ${{ inputs.web_ref }}
           path: lospor-app
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-mobile
           ref: ${{ inputs.mobile_ref }}
           path: lospor-mobile
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-browser
           ref: ${{ inputs.browser_ref }}
           path: lospor-browser
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-docs
           ref: ${{ inputs.docs_ref }}
           path: lospor-docs
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Clean installs
         run: |
@@ -192,7 +192,7 @@ jobs:
 
       - name: Upload browser diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-gate-browser-diagnostics
           path: |

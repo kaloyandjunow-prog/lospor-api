@@ -800,7 +800,7 @@ export function buildDocument({ includeInternal = false } = {}) {
     openapi: "3.1.0",
     info: {
       title: includeInternal ? "LOSPOR API - internal inventory" : "LOSPOR API",
-      version: "7.2.0",
+      version: "7.2.1",
       description: includeInternal
         ? "Complete server contract, including secret maintenance jobs."
         : "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations.",
