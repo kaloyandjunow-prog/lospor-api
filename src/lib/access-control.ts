@@ -8,6 +8,7 @@ type AuthUser = {
 
 type CaseAccessRecord = {
   userId: string
+  institutionId?: string | null
   user?: { institutionId?: string | null } | null
 }
 
@@ -25,9 +26,26 @@ export function canAccessCase(user: AuthUser, record: CaseAccessRecord): boolean
   if (user.role === "ADMIN") return true
   if (record.userId === user.id) return true
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
-    return record.user?.institutionId === user.institutionId
+    return (record.institutionId ?? record.user?.institutionId) === user.institutionId
   }
   return false
+}
+
+export async function canAccessCaseWithOwnerFallback(
+  db: Pick<Prisma.TransactionClient, "user">,
+  user: AuthUser,
+  record: CaseAccessRecord,
+): Promise<boolean> {
+  if (canAccessCase(user, record)) return true
+  if (user.role !== "HEAD_OF_DEPT" || !user.institutionId || record.institutionId != null) {
+    return false
+  }
+
+  const owner = await db.user.findUnique({
+    where: { id: record.userId },
+    select: { institutionId: true },
+  })
+  return owner?.institutionId === user.institutionId
 }
 
 export function caseWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereInput {

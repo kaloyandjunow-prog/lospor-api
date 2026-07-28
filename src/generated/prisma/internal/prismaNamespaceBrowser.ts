@@ -182,6 +182,9 @@ export const CaseScalarFieldEnum = {
   status: 'status',
   finalizedAt: 'finalizedAt',
   clientDraftId: 'clientDraftId',
+  clinicalRevision: 'clinicalRevision',
+  eventRevision: 'eventRevision',
+  relationalRevision: 'relationalRevision',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -988,6 +991,7 @@ export const ResearchExportScalarFieldEnum = {
   snapshotRevisions: 'snapshotRevisions',
   snapshotHash: 'snapshotHash',
   snapshotCaseCount: 'snapshotCaseCount',
+  revisionManifestVersion: 'revisionManifestVersion',
   scopeInstitutionIds: 'scopeInstitutionIds',
   asOf: 'asOf',
   sourceVersion: 'sourceVersion',
@@ -998,6 +1002,9 @@ export const ResearchExportScalarFieldEnum = {
   artifactFilename: 'artifactFilename',
   artifactContentType: 'artifactContentType',
   artifactByteSize: 'artifactByteSize',
+  artifactExpiresAt: 'artifactExpiresAt',
+  artifactDeletedAt: 'artifactDeletedAt',
+  workingArtifactKeys: 'workingArtifactKeys',
   error: 'error',
   attemptCount: 'attemptCount',
   leaseOwner: 'leaseOwner',

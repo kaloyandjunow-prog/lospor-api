@@ -18,11 +18,20 @@ The API listens on `http://localhost:3002`. Liveness is available at
 under `/v1`.
 
 The V7 local extraction uses the existing development database. Do not point
-this repository at the production database.
+this repository at the production database. `DATABASE_URL` may use the normal
+application pool; `DIRECT_URL` must be a direct/session PostgreSQL connection
+that supports transactions and row locks used by clinical finalization.
 
 The generated OpenAPI document is available at `/openapi.json`. V7 initially
 accepts first-party LOSPOR clients only; third-party credentials and scopes are
 not enabled.
+
+Research exports require finalized-only cohorts. Configure either private
+filesystem storage for local/self-hosted development or S3-compatible object
+storage for serverless deployments. `RESEARCH_EXPORT_RETENTION_DAYS` defaults
+to 30. Run `npm run research-exports:work` on a schedule: it generates queued
+exports, removes abandoned working files, and deletes expired artifacts while
+retaining checksums and export history.
 
 ## Verification
 

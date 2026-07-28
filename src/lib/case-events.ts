@@ -22,8 +22,8 @@ import type {
 // reading keyEvents unchanged — only the thing that fills it changed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Accepts both a transaction client (inside $transaction) and a plain PrismaClient
-// so callers that skip transactions for pgbouncer compatibility can pass prisma directly.
+// Clinical routes pass a transaction client. The structural fallback keeps pure
+// projection tests and migration utilities decoupled from the full Prisma client.
 type Tx = Prisma.TransactionClient | { caseEvent: Prisma.TransactionClient["caseEvent"]; intraoperativeRecord: Prisma.TransactionClient["intraoperativeRecord"] }
 
 export type { LogEvent }

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@/generated/prisma/client"
+import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { generateCaseCode, isPrismaUniqueError } from "@/lib/case-code"
 
 export type TransferOutcome = {
@@ -27,10 +27,58 @@ export type TransferOutcome = {
  * Everything runs in one transaction, including superseding any other pending
  * transfer, so a case can never end up half-moved.
  */
+export async function transferCaseOwnershipInTransaction(
+  tx: Prisma.TransactionClient,
+  caseId: string,
+  toUserId: string,
+  opts: { supersedePending?: boolean; acceptTransferId?: string } = {},
+): Promise<TransferOutcome> {
+  const current = await tx.case.findUniqueOrThrow({
+    where: { id: caseId },
+    select: { caseCode: true },
+  })
+  const recipient = await tx.user.findUniqueOrThrow({
+    where: { id: toUserId },
+    select: { institutionId: true },
+  })
+
+  let caseCode = current.caseCode
+  let previousCaseCode: string | null = null
+  if (caseCode) {
+    const clash = await tx.case.findFirst({
+      where: { userId: toUserId, caseCode, id: { not: caseId } },
+      select: { id: true },
+    })
+    if (clash) {
+      previousCaseCode = caseCode
+      caseCode = await generateCaseCode(toUserId, tx)
+    }
+  }
+
+  if (opts.supersedePending) {
+    await tx.caseTransfer.updateMany({
+      where: { caseId, status: "PENDING" },
+      data: { status: "DECLINED", resolvedAt: new Date() },
+    })
+  }
+  if (opts.acceptTransferId) {
+    await tx.caseTransfer.update({
+      where: { id: opts.acceptTransferId },
+      data: { status: "ACCEPTED", resolvedAt: new Date(), previousCaseCode },
+    })
+  }
+
+  await tx.case.update({
+    where: { id: caseId },
+    data: { userId: toUserId, institutionId: recipient.institutionId, caseCode },
+  })
+
+  return { previousCaseCode, caseCode, institutionId: recipient.institutionId }
+}
+
+/** Standalone/script wrapper. API routes use the in-transaction variant after
+ * locking the parent case row with withLockedCaseTransaction. */
 export async function transferCaseOwnership(
-  /** Passed in rather than imported: `@/lib/prisma` is server-only, and this
-   *  has to be exercisable from a script against a real database — the bug it
-   *  guards exists purely because of a unique constraint. */
   db: PrismaClient,
   caseId: string,
   toUserId: string,
@@ -38,53 +86,11 @@ export async function transferCaseOwnership(
 ): Promise<TransferOutcome> {
   for (let attempt = 0; ; attempt++) {
     try {
-      return await db.$transaction(async tx => {
-        const [current, recipient] = await Promise.all([
-          tx.case.findUniqueOrThrow({ where: { id: caseId }, select: { caseCode: true } }),
-          tx.user.findUniqueOrThrow({ where: { id: toUserId }, select: { institutionId: true } }),
-        ])
-
-        // Renumber only when the recipient genuinely holds this code already;
-        // most transfers keep their original code, which matters because the
-        // code is written on the printed record by hand.
-        let caseCode = current.caseCode
-        let previousCaseCode: string | null = null
-        if (caseCode) {
-          const clash = await tx.case.findFirst({
-            where: { userId: toUserId, caseCode, id: { not: caseId } },
-            select: { id: true },
-          })
-          if (clash) {
-            previousCaseCode = caseCode
-            caseCode = await generateCaseCode(toUserId, tx)
-          }
-        }
-
-        if (opts.supersedePending) {
-          await tx.caseTransfer.updateMany({
-            where: { caseId, status: "PENDING" },
-            data: { status: "DECLINED", resolvedAt: new Date() },
-          })
-        }
-        if (opts.acceptTransferId) {
-          await tx.caseTransfer.update({
-            where: { id: opts.acceptTransferId },
-            data: { status: "ACCEPTED", resolvedAt: new Date(), previousCaseCode },
-          })
-        }
-
-        await tx.case.update({
-          where: { id: caseId },
-          data: { userId: toUserId, institutionId: recipient.institutionId, caseCode },
-        })
-
-        return { previousCaseCode, caseCode, institutionId: recipient.institutionId }
-      })
-    } catch (e) {
-      // Another case can claim the freshly-computed code between our read and
-      // our write. Recompute and retry, as the create path already does.
-      if (isPrismaUniqueError(e, "caseCode") && attempt < 4) continue
-      throw e
+      return await db.$transaction(tx =>
+        transferCaseOwnershipInTransaction(tx, caseId, toUserId, opts))
+    } catch (error) {
+      if (isPrismaUniqueError(error, "caseCode") && attempt < 4) continue
+      throw error
     }
   }
 }

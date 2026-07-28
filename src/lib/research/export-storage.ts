@@ -1,5 +1,5 @@
 import { createReadStream, createWriteStream } from "node:fs"
-import { mkdir, rm, stat } from "node:fs/promises"
+import { mkdir, readdir, rm, rmdir, stat } from "node:fs/promises"
 import { dirname, resolve, sep } from "node:path"
 import { PassThrough, Readable } from "node:stream"
 import { finished } from "node:stream/promises"
@@ -52,7 +52,28 @@ class FileResearchExportStorage implements ResearchExportStorage {
   }
 
   async remove(key: string): Promise<void> {
-    await rm(safeLocalPath(this.root, key), { force: true })
+    const target = safeLocalPath(this.root, key)
+    await rm(target, { force: true })
+
+    const root = resolve(this.root)
+    let current = dirname(target)
+    while (current !== root && current.startsWith(`${root}${sep}`)) {
+      try {
+        // Avoid accumulating empty export/lease/spool directories on local and
+        // self-hosted filesystems. A concurrent artifact keeps its directory.
+        if ((await readdir(current)).length > 0) return
+        await rmdir(current)
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code
+        if (code === "ENOENT") {
+          current = dirname(current)
+          continue
+        }
+        if (code === "ENOTEMPTY" || code === "EEXIST") return
+        throw error
+      }
+      current = dirname(current)
+    }
   }
 }
 

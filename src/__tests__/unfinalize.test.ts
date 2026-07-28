@@ -11,8 +11,14 @@ vi.mock("next/server", async importOriginal => {
   return { ...actual, after: vi.fn() }
 })
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: getAuthUserMock }))
-vi.mock("@/lib/prisma", () => ({
-  prisma: { case: { findUnique: findUniqueMock, update: updateMock } },
+vi.mock("@/lib/clinical-transaction", () => ({
+  CaseWriteError: class CaseWriteError extends Error {
+    constructor(readonly code: string, readonly status: number, message: string) {
+      super(message)
+    }
+  },
+  withLockedCaseTransaction: vi.fn((_caseId: string, operation: (tx: unknown) => Promise<unknown>) =>
+    operation({ case: { findUnique: findUniqueMock, update: updateMock } })),
 }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock }))
 

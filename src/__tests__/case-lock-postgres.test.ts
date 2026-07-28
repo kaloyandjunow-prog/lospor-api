@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
+import { config as loadDotenv } from "dotenv"
 
 vi.mock("server-only", () => ({}))
 
 const runPostgres = process.env.LOSPOR_POSTGRES_INTEGRATION === "true"
+if (runPostgres && !process.env.DATABASE_URL) loadDotenv({ quiet: true })
 
 describe.skipIf(!runPostgres)("case lock PostgreSQL compare-and-set", () => {
   let prisma: typeof import("@/lib/prisma").prisma

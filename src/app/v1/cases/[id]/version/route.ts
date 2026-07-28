@@ -27,7 +27,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     where: caseWhereForUser(user, id),
     select: {
       updatedAt: true,
-      status:    true,
+      status: true,
+      clinicalRevision: true,
+      eventRevision: true,
+      relationalRevision: true,
       preop:   { select: { updatedAt: true, syncRevision: true } },
       intraop: { select: { updatedAt: true, syncRevision: true } },
       postop:  { select: { updatedAt: true, syncRevision: true } },
@@ -37,7 +40,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({
     updatedAt:        found.updatedAt,
-    status:           found.status,
+    status: found.status,
+    clinicalRevision: found.clinicalRevision,
+    eventRevision: found.eventRevision,
+    relationalRevision: found.relationalRevision,
     preopUpdatedAt:   found.preop?.updatedAt ?? null,
     intraopUpdatedAt: found.intraop?.updatedAt ?? null,
     postopUpdatedAt:  found.postop?.updatedAt ?? null,

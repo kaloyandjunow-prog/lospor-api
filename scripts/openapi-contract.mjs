@@ -120,10 +120,17 @@ export const schemas = {
   }, ["id"]),
   CaseVersion: object({
     updatedAt: { type: "string", format: "date-time" },
-    preopRevision: { type: "integer" },
-    intraopRevision: { type: "integer" },
-    postopRevision: { type: "integer" },
-  }),
+    status: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE"] },
+    clinicalRevision: { type: "integer", minimum: 0 },
+    eventRevision: { type: "integer", minimum: 0 },
+    relationalRevision: { type: "integer", minimum: 0 },
+    preopUpdatedAt: nullable({ type: "string", format: "date-time" }),
+    intraopUpdatedAt: nullable({ type: "string", format: "date-time" }),
+    postopUpdatedAt: nullable({ type: "string", format: "date-time" }),
+    preopRevision: nullable({ type: "integer", minimum: 0 }),
+    intraopRevision: nullable({ type: "integer", minimum: 0 }),
+    postopRevision: nullable({ type: "integer", minimum: 0 }),
+  }, ["updatedAt", "status", "clinicalRevision", "eventRevision", "relationalRevision", "preopUpdatedAt", "intraopUpdatedAt", "postopUpdatedAt", "preopRevision", "intraopRevision", "postopRevision"]),
   LockRequest: object({ deviceId: { type: "string", minLength: 1, maxLength: 256 } }, ["deviceId"]),
   LockReleaseRequest: object({
     deviceId: { type: "string", minLength: 1, maxLength: 256 },
@@ -481,9 +488,12 @@ export const schemas = {
     matchingCases: nullable({ type: "integer", minimum: 0 }),
     sourceCommit: nullable({ type: "string" }),
     sourceVersion: nullable({ type: "string" }), generatedAt: nullable({ type: "string", format: "date-time" }),
+    revisionManifestVersion: { type: "integer", minimum: 1 },
+    expiresAt: nullable({ type: "string", format: "date-time" }),
+    artifactAvailable: { type: "boolean" },
     legacy: { type: "boolean" }, createdAt: { type: "string", format: "date-time" },
     completedAt: nullable({ type: "string", format: "date-time" }),
-  }, ["id", "name", "format", "status", "definition", "rowCount", "checksum", "error", "filename", "asOf", "definitionHash", "snapshotHash", "matchingCases", "sourceCommit", "contentType", "byteSize", "sourceVersion", "generatedAt", "legacy", "createdAt", "completedAt"]),
+  }, ["id", "name", "format", "status", "definition", "rowCount", "checksum", "error", "filename", "asOf", "definitionHash", "snapshotHash", "matchingCases", "sourceCommit", "contentType", "byteSize", "sourceVersion", "generatedAt", "revisionManifestVersion", "expiresAt", "artifactAvailable", "legacy", "createdAt", "completedAt"]),
   SavedResearchCohortRequest: object({
     name: { type: "string", minLength: 1, maxLength: 120 },
     description: nullable({ type: "string", maxLength: 500 }),
@@ -501,7 +511,7 @@ export const schemas = {
   ResearchExportRequest: object({
     name: { type: "string", minLength: 1, maxLength: 120 },
     format: { type: "string", enum: ["csv", "json", "omop-csv", "omop-json"] },
-    definition: ref("ResearchCohort"),
+    definition: { ...ref("ResearchCohort"), description: "Must select finalized cases only (statuses = [COMPLETE])." },
   }, ["name", "format", "definition"]),
   ResearchGrantRequest: object({
     userId: { type: "string" },
@@ -539,9 +549,17 @@ export const schemas = {
     ],
     additionalProperties: true,
   },
+  ResearchExportCleanup: object({
+    expiredArtifacts: { type: "integer", minimum: 0 },
+    workingArtifacts: { type: "integer", minimum: 0 },
+    failures: { type: "integer", minimum: 0 },
+  }, ["expiredArtifacts", "workingArtifacts", "failures"]),
   ResearchExportWorkerResponse: object({
-    processed: { type: "integer", minimum: 0 }, failed: { type: "integer", minimum: 0 }, ids: { type: "array", items: { type: "string" } },
-  }, ["processed", "failed", "ids"]),
+    processed: { type: "integer", minimum: 0 },
+    failed: { type: "integer", minimum: 0 },
+    ids: { type: "array", items: { type: "string" } },
+    cleanup: ref("ResearchExportCleanup"),
+  }, ["processed", "failed", "ids", "cleanup"]),
   JsonObject: { type: "object", additionalProperties: true },
 }
 
@@ -733,7 +751,7 @@ add("GET", "/v1/research/cohorts/{id}", "Read a saved research cohort", { parame
 add("PATCH", "/v1/research/cohorts/{id}", "Update an owned saved research cohort", { parameters: [id], requestBody: body(ref("SavedResearchCohortPatch")), result: ref("SavedResearchCohort"), errors: [400, 401, 403, 404, 409, 500], tag: "research" })
 add("DELETE", "/v1/research/cohorts/{id}", "Delete an owned saved research cohort", { parameters: [id], result: ref("Message"), errors: [401, 403, 404, 500], tag: "research" })
 add("GET", "/v1/research/exports", "List immutable research export history", { result: arrayOf("ResearchExportRecord"), errors: [401, 403, 500], tag: "research" })
-add("POST", "/v1/research/exports", "Queue an immutable governed research export", { requestBody: body(ref("ResearchExportRequest")), status: 202, result: ref("ResearchExportRecord"), errors: [400, 401, 403, 422, 500], tag: "research" })
+add("POST", "/v1/research/exports", "Queue an immutable finalized-case research export", { requestBody: body(ref("ResearchExportRequest")), status: 202, result: ref("ResearchExportRecord"), errors: [400, 401, 403, 422, 500], tag: "research" })
 add("GET", "/v1/research/exports/{id}", "Read immutable research export status", { parameters: [id], result: ref("ResearchExportRecord"), errors: [401, 403, 404, 500], tag: "research" })
 add("GET", "/v1/research/exports/{id}/download", "Stream a completed immutable research export artifact", { parameters: [id], response: response("Research export file", { type: "string", format: "binary" }, "application/octet-stream", { "Content-Disposition": { schema: { type: "string" } }, "Content-Length": { schema: { type: "integer", minimum: 0 } }, "X-LOSPOR-Export-Complete": { schema: { type: "boolean" } }, "X-LOSPOR-Export-Rows": { schema: { type: "integer", minimum: 0 } }, "X-LOSPOR-Export-As-Of": { schema: { type: "string", format: "date-time" } }, "X-LOSPOR-Export-Snapshot-SHA256": { schema: { type: "string" } }, "X-LOSPOR-Export-SHA256": { schema: { type: "string" } } }), errors: [401, 403, 404, 409, 410, 422, 500, 503], tag: "research" })
 add("GET", "/v1/research/grants", "List research access grants", { result: arrayOf("ResearchGrant"), errors: [401, 403, 500], tag: "research" })
@@ -800,7 +818,7 @@ export function buildDocument({ includeInternal = false } = {}) {
     openapi: "3.1.0",
     info: {
       title: includeInternal ? "LOSPOR API - internal inventory" : "LOSPOR API",
-      version: "7.2.1",
+      version: "7.3.0",
       description: includeInternal
         ? "Complete server contract, including secret maintenance jobs."
         : "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations.",

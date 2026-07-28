@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto"
 import { once } from "node:events"
-import { PassThrough, Transform, type Writable } from "node:stream"
+import { Readable, Transform, type Writable } from "node:stream"
 import { finished } from "node:stream/promises"
 import { ZipArchive } from "archiver"
 import type {
@@ -10,8 +10,9 @@ import type {
 } from "@lospor/core/research"
 import { normalizeResearchCohort } from "@lospor/core/research"
 import { deriveQualityStatus } from "@lospor/core/omop"
-import type { Prisma } from "@/generated/prisma/client"
+import { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
+import { withDirectTransaction } from "@/lib/clinical-transaction"
 import {
   mapCasesToOmop,
   type ExportQualityWarning,
@@ -31,9 +32,20 @@ import {
   mapResearchSummary,
 } from "./mappers"
 
-const SOURCE_VERSION = "7.2.1"
+const SOURCE_VERSION = "7.3.0"
 const EXPORT_PAGE_SIZE = 250
 const EXPORT_LEASE_MS = 5 * 60 * 1000
+const DEFAULT_EXPORT_RETENTION_DAYS = 30
+
+function exportRetentionDays(): number {
+  const configured = Number.parseInt(process.env.RESEARCH_EXPORT_RETENTION_DAYS ?? "", 10)
+  if (!Number.isFinite(configured)) return DEFAULT_EXPORT_RETENTION_DAYS
+  return Math.min(3650, Math.max(1, configured))
+}
+
+function artifactExpiry(completedAt: Date): Date {
+  return new Date(completedAt.getTime() + exportRetentionDays() * 24 * 60 * 60 * 1000)
+}
 
 type ExportRecordRow = {
   id: string
@@ -48,11 +60,15 @@ type ExportRecordRow = {
   asOf: Date | null
   sourceCommit: string | null
   snapshotRevisions: Prisma.JsonValue | null
+  revisionManifestVersion: number
   checksum: string | null
   error: string | null
+  artifactKey: string | null
   artifactFilename: string | null
   artifactContentType: string | null
   artifactByteSize: bigint | null
+  artifactExpiresAt: Date | null
+  artifactDeletedAt: Date | null
   sourceVersion: string | null
   generatedAt: Date | null
   legacy: boolean
@@ -60,9 +76,17 @@ type ExportRecordRow = {
   completedAt: Date | null
 }
 
-type SnapshotRevision = { id: string; updatedAt: Date }
-type StoredSnapshotRevision = { id: string; updatedAt: string }
-type SnapshotPage = { revisions: SnapshotRevision[]; rowIdStart: number }
+type SnapshotRevision = {
+  id: string
+  updatedAt: Date
+  clinicalRevision: number
+  eventRevision: number
+  relationalRevision: number
+  preopRevision: number | null
+  intraopRevision: number | null
+  postopRevision: number | null
+}
+type StoredSnapshotRevision = Omit<SnapshotRevision, "updatedAt"> & { updatedAt: string }
 
 export class ResearchExportError extends Error {
   constructor(
@@ -80,7 +104,14 @@ export class ResearchExportQualityError extends ResearchExportError {
   }
 }
 
-function mapExportRecord(record: ExportRecordRow): ResearchExportRecord {
+type ExportRecordResponse = ResearchExportRecord
+
+function mapExportRecord(record: ExportRecordRow): ExportRecordResponse {
+  const now = Date.now()
+  const artifactAvailable = record.status === "COMPLETE" &&
+    !!record.artifactKey &&
+    !record.artifactDeletedAt &&
+    (!record.artifactExpiresAt || record.artifactExpiresAt.getTime() > now)
   return {
     id: record.id,
     name: record.name,
@@ -100,6 +131,9 @@ function mapExportRecord(record: ExportRecordRow): ResearchExportRecord {
     byteSize: record.artifactByteSize == null ? null : Number(record.artifactByteSize),
     sourceVersion: record.sourceVersion,
     generatedAt: record.generatedAt?.toISOString() ?? null,
+    revisionManifestVersion: record.revisionManifestVersion,
+    expiresAt: record.artifactExpiresAt?.toISOString() ?? null,
+    artifactAvailable,
     legacy: record.legacy,
     createdAt: record.createdAt.toISOString(),
     completedAt: record.completedAt?.toISOString() ?? null,
@@ -114,9 +148,10 @@ function hashDefinition(definition: ResearchCohortDefinition): string {
 function hashSnapshot(revisions: SnapshotRevision[]): string {
   const hash = createHash("sha256")
   for (const revision of revisions) {
-    hash.update(revision.id)
-    hash.update("\0")
-    hash.update(revision.updatedAt.toISOString())
+    hash.update(JSON.stringify({
+      ...revision,
+      updatedAt: revision.updatedAt.toISOString(),
+    }))
     hash.update("\n")
   }
   return hash.digest("hex")
@@ -124,12 +159,26 @@ function hashSnapshot(revisions: SnapshotRevision[]): string {
 
 function storedSnapshot(revisions: SnapshotRevision[]): StoredSnapshotRevision[] {
   return revisions.map(revision => ({
-    id: revision.id,
+    ...revision,
     updatedAt: revision.updatedAt.toISOString(),
   }))
 }
 
+function parseRequiredRevision(value: unknown): number | null {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null
+}
+
+function parseSectionRevision(value: unknown): number | null | "invalid" {
+  if (value === null) return null
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : "invalid"
+}
+
 function parseSnapshot(record: ClaimedExport): SnapshotRevision[] {
+  if (record.revisionManifestVersion !== 2) {
+    throw new ResearchExportError("RESEARCH_EXPORT_MANIFEST_LEGACY", 410, "Legacy export manifests must be recreated")
+  }
   if (!Array.isArray(record.snapshotRevisions)) {
     throw new ResearchExportError("RESEARCH_EXPORT_SNAPSHOT_MISSING", 409, "Export revision manifest is missing")
   }
@@ -139,11 +188,30 @@ function parseSnapshot(record: ClaimedExport): SnapshotRevision[] {
     }
     const id = "id" in item ? item.id : null
     const updatedAt = "updatedAt" in item ? item.updatedAt : null
-    const parsed = typeof updatedAt === "string" ? new Date(updatedAt) : new Date(Number.NaN)
-    if (typeof id !== "string" || !id || !Number.isFinite(parsed.getTime())) {
+    const parsedAt = typeof updatedAt === "string" ? new Date(updatedAt) : new Date(Number.NaN)
+    const clinicalRevision = parseRequiredRevision("clinicalRevision" in item ? item.clinicalRevision : null)
+    const eventRevision = parseRequiredRevision("eventRevision" in item ? item.eventRevision : null)
+    const relationalRevision = parseRequiredRevision("relationalRevision" in item ? item.relationalRevision : null)
+    const preopRevision = parseSectionRevision("preopRevision" in item ? item.preopRevision : "invalid")
+    const intraopRevision = parseSectionRevision("intraopRevision" in item ? item.intraopRevision : "invalid")
+    const postopRevision = parseSectionRevision("postopRevision" in item ? item.postopRevision : "invalid")
+    if (
+      typeof id !== "string" || !id || !Number.isFinite(parsedAt.getTime()) ||
+      clinicalRevision === null || eventRevision === null || relationalRevision === null ||
+      preopRevision === "invalid" || intraopRevision === "invalid" || postopRevision === "invalid"
+    ) {
       throw new ResearchExportError("RESEARCH_EXPORT_SNAPSHOT_INVALID", 409, "Export revision manifest is invalid")
     }
-    return { id, updatedAt: parsed }
+    return {
+      id,
+      updatedAt: parsedAt,
+      clinicalRevision,
+      eventRevision,
+      relationalRevision,
+      preopRevision,
+      intraopRevision,
+      postopRevision,
+    }
   })
   if (record.snapshotCaseCount !== revisions.length || record.snapshotHash !== hashSnapshot(revisions)) {
     throw new ResearchExportError("RESEARCH_EXPORT_SNAPSHOT_MISMATCH", 409, "Export revision manifest integrity check failed")
@@ -205,10 +273,18 @@ export async function createResearchExport(
 ) {
   const actionContext = scopedContext(context, input.format)
   const definition = normalizeResearchCohort(input.definition)
+  const statuses = definition.filters.statuses ?? []
+  if (statuses.length !== 1 || statuses[0] !== "COMPLETE") {
+    throw new ResearchExportError(
+      "RESEARCH_EXPORT_FINALIZED_ONLY",
+      422,
+      "Research exports require a finalized-only cohort",
+    )
+  }
   const scopeInstitutionIds = [...actionContext.institutionIds].sort()
   const cohortWhere = await compileResearchWhere(definition, actionContext)
 
-  return prisma.$transaction(async transaction => {
+  return withDirectTransaction(async transaction => {
     const asOf = new Date()
     const where: Prisma.CaseWhereInput = {
       AND: [
@@ -230,6 +306,7 @@ export async function createResearchExport(
         snapshotRevisions: storedSnapshot(revisions) as unknown as Prisma.InputJsonValue,
         snapshotHash: hashSnapshot(revisions),
         snapshotCaseCount: revisions.length,
+        revisionManifestVersion: 2,
         scopeInstitutionIds,
         asOf,
         sourceVersion: SOURCE_VERSION,
@@ -345,7 +422,10 @@ function snapshotManifest(record: ClaimedExport) {
   return { definition, revisions: parseSnapshot(record) }
 }
 
-type SnapshotReader = Pick<Prisma.TransactionClient, "case">
+type SnapshotReader = Pick<
+  Prisma.TransactionClient,
+  "case" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord"
+>
 
 async function readSnapshotRevisions(
   where: Prisma.CaseWhereInput,
@@ -356,21 +436,68 @@ async function readSnapshotRevisions(
   while (true) {
     const page = await client.case.findMany({
       where,
-      select: { id: true, updatedAt: true },
+      select: {
+        id: true,
+        updatedAt: true,
+        clinicalRevision: true,
+        eventRevision: true,
+        relationalRevision: true,
+      },
       orderBy: { id: "asc" },
       take: 1000,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     })
     if (!page.length) break
-    revisions.push(...page)
+
+    const caseIds = page.map(row => row.id)
+    const preopRows = await client.preoperativeAssessment.findMany({
+      where: { caseId: { in: caseIds } },
+      select: { caseId: true, syncRevision: true },
+    })
+    const intraopRows = await client.intraoperativeRecord.findMany({
+      where: { caseId: { in: caseIds } },
+      select: { caseId: true, syncRevision: true },
+    })
+    const postopRows = await client.postoperativeRecord.findMany({
+      where: { caseId: { in: caseIds } },
+      select: { caseId: true, syncRevision: true },
+    })
+    const preopByCase = new Map(preopRows.map(row => [row.caseId, row.syncRevision]))
+    const intraopByCase = new Map(intraopRows.map(row => [row.caseId, row.syncRevision]))
+    const postopByCase = new Map(postopRows.map(row => [row.caseId, row.syncRevision]))
+
+    revisions.push(...page.map(row => ({
+      id: row.id,
+      updatedAt: row.updatedAt,
+      clinicalRevision: row.clinicalRevision,
+      eventRevision: row.eventRevision,
+      relationalRevision: row.relationalRevision,
+      preopRevision: preopByCase.get(row.id) ?? null,
+      intraopRevision: intraopByCase.get(row.id) ?? null,
+      postopRevision: postopByCase.get(row.id) ?? null,
+    })))
     cursor = page.at(-1)?.id
   }
   return revisions
 }
-
 function revisionWhere(revisions: SnapshotRevision[]): Prisma.CaseWhereInput {
   return {
-    OR: revisions.map(revision => ({ id: revision.id, updatedAt: revision.updatedAt })),
+    OR: revisions.map(revision => ({
+      id: revision.id,
+      updatedAt: revision.updatedAt,
+      clinicalRevision: revision.clinicalRevision,
+      eventRevision: revision.eventRevision,
+      relationalRevision: revision.relationalRevision,
+      preop: revision.preopRevision === null
+        ? { is: null }
+        : { is: { syncRevision: revision.preopRevision } },
+      intraop: revision.intraopRevision === null
+        ? { is: null }
+        : { is: { syncRevision: revision.intraopRevision } },
+      postop: revision.postopRevision === null
+        ? { is: null }
+        : { is: { syncRevision: revision.postopRevision } },
+    })),
   }
 }
 
@@ -620,107 +747,222 @@ function latest(current: string | null, next: string): string {
   if (current === null) return next
   return next > current ? next : current
 }
+type OmopSpoolFormat = "csv" | "json"
+type OmopSpoolSink = {
+  key: string
+  sink: Awaited<ReturnType<ReturnType<typeof researchExportStorage>["create"]>>
+  first: boolean
+}
+
+type OmopPreparedExport = {
+  keys: Record<OmopTableName, string>
+  metadata: OmopBundle["metadata"]
+}
+
+function workingArtifactKeys(value: Prisma.JsonValue | null | undefined): string[] {
+  return Array.isArray(value)
+    ? value.filter((key): key is string => typeof key === "string" && key.length > 0)
+    : []
+}
+
+async function removeArtifactKeys(keys: readonly string[]): Promise<void> {
+  const storage = researchExportStorage()
+  for (const key of new Set(keys)) await storage.remove(key)
+}
+
+async function persistWorkingKeys(record: ClaimedExport, keys: readonly string[]): Promise<void> {
+  const updated = await prisma.researchExport.updateMany({
+    where: { id: record.id, status: "RUNNING", leaseOwner: record.leaseOwner },
+    data: { workingArtifactKeys: [...keys] },
+  })
+  if (updated.count !== 1) {
+    throw new ResearchExportError("RESEARCH_EXPORT_LEASE_LOST", 409, "Export worker lease was lost")
+  }
+}
+
 async function prepareOmopExport(
   record: ClaimedExport,
   definition: ResearchCohortDefinition,
   revisions: SnapshotRevision[],
-): Promise<{ pages: SnapshotPage[]; metadata: OmopBundle["metadata"] }> {
-  const pages: SnapshotPage[] = []
-  const warnings = new Map<string, ExportQualityWarning>()
-  const tableCounts: OmopBundle["metadata"]["table_counts"] = {
-    person: 0,
-    observation_period: 0,
-    visit_occurrence: 0,
-    condition_occurrence: 0,
-    drug_exposure: 0,
-    measurement: 0,
-    procedure_occurrence: 0,
-    observation: 0,
-  }
-  const mappingSummary = { mapped_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
-  let baseMetadata: OmopBundle["metadata"] | null = null
-  let rowIdStart = 1
-  let rangeFrom: string | null = null
-  let rangeTo: string | null = null
-
-  for (let offset = 0; offset < revisions.length; offset += EXPORT_PAGE_SIZE) {
-    const pageRevisions = revisions.slice(offset, offset + EXPORT_PAGE_SIZE)
-    const cases = await fetchOmopPage(pageRevisions)
-    const bundle = mapCasesToOmop(
-      cases,
-      omopExportContext(record, definition, revisions.length, rowIdStart),
-    )
-    baseMetadata ??= bundle.metadata
-    pages.push({ revisions: pageRevisions, rowIdStart })
-    rowIdStart += sequentialOmopRows(bundle)
-    for (const table of OMOP_TABLES) tableCounts[table] += bundle[table].length
-    mappingSummary.mapped_rows += bundle.metadata.mapping_summary.mapped_rows
-    mappingSummary.source_only_rows += bundle.metadata.mapping_summary.source_only_rows
-    mappingSummary.unmapped_rows += bundle.metadata.mapping_summary.unmapped_rows
-    for (const warning of bundle.metadata.quality_warnings) mergeQualityWarning(warnings, warning)
-    if (bundle.metadata.date_range) {
-      rangeFrom = earliest(rangeFrom, bundle.metadata.date_range.from)
-      rangeTo = latest(rangeTo, bundle.metadata.date_range.to)
+  format: OmopSpoolFormat,
+): Promise<OmopPreparedExport> {
+  const storage = researchExportStorage()
+  const extension = format === "csv" ? "csv" : "json-fragment"
+  const contentType = format === "csv" ? "text/csv; charset=utf-8" : "application/octet-stream"
+  const sinks = {} as Record<OmopTableName, OmopSpoolSink>
+  try {
+    for (const table of OMOP_TABLES) {
+      const key = `${record.id}/${record.leaseOwner}/spool/${table}.${extension}`
+      sinks[table] = {
+        key,
+        sink: await storage.create(key, contentType),
+        first: true,
+      }
+      sinks[table].sink.done.catch(() => undefined)
     }
-    await renewLease(record)
+  } catch (error) {
+    const created = Object.values(sinks)
+    for (const item of created) item.sink.writable.destroy()
+    await Promise.all(created.map(item => item.sink.done.catch(() => undefined)))
+    await removeArtifactKeys(created.map(item => item.key)).catch(() => undefined)
+    throw error
   }
+  const keys = Object.fromEntries(OMOP_TABLES.map(table => [table, sinks[table].key])) as Record<OmopTableName, string>
 
-  if (!baseMetadata) {
-    const empty = mapCasesToOmop([], omopExportContext(record, definition, 0, 1))
-    baseMetadata = empty.metadata
-    for (const warning of empty.metadata.quality_warnings) mergeQualityWarning(warnings, warning)
+  try {
+    await persistWorkingKeys(record, Object.values(keys))
+    if (format === "csv") {
+      for (const table of OMOP_TABLES) {
+        await writeChunk(sinks[table].sink.writable, `${OMOP_COLUMNS[table].join(",")}\n`)
+      }
+    }
+
+    const warnings = new Map<string, ExportQualityWarning>()
+    const tableCounts: OmopBundle["metadata"]["table_counts"] = {
+      person: 0,
+      observation_period: 0,
+      visit_occurrence: 0,
+      condition_occurrence: 0,
+      drug_exposure: 0,
+      measurement: 0,
+      procedure_occurrence: 0,
+      observation: 0,
+    }
+    const mappingSummary = { mapped_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
+    let baseMetadata: OmopBundle["metadata"] | null = null
+    let rowIdStart = 1
+    let rangeFrom: string | null = null
+    let rangeTo: string | null = null
+
+    for (let offset = 0; offset < revisions.length; offset += EXPORT_PAGE_SIZE) {
+      const pageRevisions = revisions.slice(offset, offset + EXPORT_PAGE_SIZE)
+      const cases = await fetchOmopPage(pageRevisions)
+      const bundle = mapCasesToOmop(
+        cases,
+        omopExportContext(record, definition, revisions.length, rowIdStart),
+      )
+      baseMetadata ??= bundle.metadata
+      rowIdStart += sequentialOmopRows(bundle)
+
+      for (const table of OMOP_TABLES) {
+        const rows = bundle[table] as unknown as Record<string, unknown>[]
+        tableCounts[table] += rows.length
+        for (const row of rows) {
+          if (format === "csv") {
+            const columns = OMOP_COLUMNS[table]
+            await writeChunk(
+              sinks[table].sink.writable,
+              `${columns.map(column => csvEscape(row[column])).join(",")}\n`,
+            )
+          } else {
+            await writeChunk(
+              sinks[table].sink.writable,
+              `${sinks[table].first ? "" : ","}${JSON.stringify(row)}`,
+            )
+            sinks[table].first = false
+          }
+        }
+      }
+
+      mappingSummary.mapped_rows += bundle.metadata.mapping_summary.mapped_rows
+      mappingSummary.source_only_rows += bundle.metadata.mapping_summary.source_only_rows
+      mappingSummary.unmapped_rows += bundle.metadata.mapping_summary.unmapped_rows
+      for (const warning of bundle.metadata.quality_warnings) mergeQualityWarning(warnings, warning)
+      if (bundle.metadata.date_range) {
+        rangeFrom = earliest(rangeFrom, bundle.metadata.date_range.from)
+        rangeTo = latest(rangeTo, bundle.metadata.date_range.to)
+      }
+      await renewLease(record)
+    }
+
+    if (!baseMetadata) {
+      const empty = mapCasesToOmop([], omopExportContext(record, definition, 0, 1))
+      baseMetadata = empty.metadata
+      for (const warning of empty.metadata.quality_warnings) mergeQualityWarning(warnings, warning)
+    }
+
+    for (const table of OMOP_TABLES) {
+      if (!sinks[table].sink.writable.writableEnded) sinks[table].sink.writable.end()
+    }
+    await Promise.all(OMOP_TABLES.map(table => sinks[table].sink.done))
+
+    const qualityWarnings = [...warnings.values()]
+    const metadata: OmopBundle["metadata"] = {
+      ...baseMetadata,
+      export_id: record.id,
+      generated_at: record.generatedAt?.toISOString() ?? baseMetadata.generated_at,
+      date_range: rangeFrom && rangeTo ? { from: rangeFrom, to: rangeTo } : null,
+      matching_case_count: revisions.length,
+      exported_case_count: revisions.length,
+      complete: true,
+      included_case_count: revisions.length,
+      excluded_case_count: 0,
+      case_count: revisions.length,
+      mapping_summary: mappingSummary,
+      table_counts: tableCounts,
+      quality_warnings: qualityWarnings,
+      data_quality_status: deriveQualityStatus(qualityWarnings),
+    }
+    if (metadata.data_quality_status === "FAIL") {
+      throw new ResearchExportQualityError(
+        qualityWarnings.filter(warning => warning.severity === "error"),
+      )
+    }
+    return { keys, metadata }
+  } catch (error) {
+    for (const table of OMOP_TABLES) {
+      sinks[table].sink.writable.destroy()
+    }
+    await Promise.all(OMOP_TABLES.map(table => sinks[table].sink.done.catch(() => undefined)))
+    try {
+      await removeArtifactKeys(Object.values(keys))
+      await clearWorkingArtifactKeys(record)
+    } catch (cleanupError) {
+      console.error("[research export] failed to clean OMOP spools", record.id, cleanupError)
+    }
+    throw error
   }
-  const qualityWarnings = [...warnings.values()]
-  const metadata: OmopBundle["metadata"] = {
-    ...baseMetadata,
-    export_id: record.id,
-    generated_at: record.generatedAt?.toISOString() ?? baseMetadata.generated_at,
-    date_range: rangeFrom && rangeTo ? { from: rangeFrom, to: rangeTo } : null,
-    matching_case_count: revisions.length,
-    exported_case_count: revisions.length,
-    complete: true,
-    included_case_count: revisions.length,
-    excluded_case_count: 0,
-    case_count: revisions.length,
-    mapping_summary: mappingSummary,
-    table_counts: tableCounts,
-    quality_warnings: qualityWarnings,
-    data_quality_status: deriveQualityStatus(qualityWarnings),
-  }
-  if (metadata.data_quality_status === "FAIL") {
-    throw new ResearchExportQualityError(
-      qualityWarnings.filter(warning => warning.severity === "error"),
-    )
-  }
-  return { pages, metadata }
 }
 
-async function eachOmopTableRow(
+function frozenOmopMetadata(
   record: ClaimedExport,
-  definition: ResearchCohortDefinition,
-  matchingCases: number,
-  pages: SnapshotPage[],
-  table: OmopTableName,
-  visit: (row: Record<string, unknown>) => Promise<void>,
-): Promise<void> {
-  for (const page of pages) {
-    const cases = await fetchOmopPage(page.revisions)
-    const bundle = mapCasesToOmop(
-      cases,
-      omopExportContext(record, definition, matchingCases, page.rowIdStart),
-    )
-    for (const row of bundle[table] as unknown as Record<string, unknown>[]) await visit(row)
-    await renewLease(record)
+  metadata: OmopBundle["metadata"],
+) {
+  return {
+    ...metadata,
+    definition_hash: record.definitionHash,
+    as_of: record.asOf?.toISOString(),
+    snapshot_hash: record.snapshotHash,
+    revision_manifest_version: record.revisionManifestVersion,
+  }
+}
+
+async function nodeReadableForArtifact(key: string): Promise<Readable> {
+  const artifact = await researchExportStorage().open(key)
+  const reader = artifact.stream.getReader()
+  return Readable.from((async function* () {
+    while (true) {
+      const chunk = await reader.read()
+      if (chunk.done) return
+      yield Buffer.from(chunk.value)
+    }
+  })())
+}
+
+async function copyStoredArtifact(output: Writable, key: string): Promise<void> {
+  const artifact = await researchExportStorage().open(key)
+  const reader = artifact.stream.getReader()
+  while (true) {
+    const chunk = await reader.read()
+    if (chunk.done) return
+    await writeChunk(output, Buffer.from(chunk.value))
   }
 }
 
 async function writeOmopZip(
   output: Writable,
   record: ClaimedExport,
-  definition: ResearchCohortDefinition,
-  revisions: SnapshotRevision[],
-  pages: SnapshotPage[],
-  metadata: OmopBundle["metadata"],
+  prepared: OmopPreparedExport,
 ): Promise<void> {
   const archive = new ZipArchive({ zlib: { level: 6 } })
   const archiveFailure = new Promise<never>((_resolve, reject) => {
@@ -731,22 +973,13 @@ async function writeOmopZip(
   })
 
   archive.pipe(output)
-  archive.append(JSON.stringify({
-    ...metadata,
-    definition_hash: record.definitionHash,
-    as_of: record.asOf?.toISOString(),
-    snapshot_hash: record.snapshotHash,
-  }, null, 2), { name: "manifest.json" })
-
+  archive.append(JSON.stringify(frozenOmopMetadata(record, prepared.metadata), null, 2), {
+    name: "manifest.json",
+  })
   for (const table of OMOP_TABLES) {
-    const entry = new PassThrough()
-    archive.append(entry, { name: `${table}.csv` })
-    const columns = OMOP_COLUMNS[table]
-    await writeChunk(entry, `${columns.join(",")}\n`)
-    await eachOmopTableRow(record, definition, revisions.length, pages, table, async row => {
-      await writeChunk(entry, `${columns.map(column => csvEscape(row[column])).join(",")}\n`)
+    archive.append(await nodeReadableForArtifact(prepared.keys[table]), {
+      name: `${table}.csv`,
     })
-    entry.end()
   }
   await Promise.race([archive.finalize(), archiveFailure])
 }
@@ -754,24 +987,12 @@ async function writeOmopZip(
 async function writeOmopJson(
   output: Writable,
   record: ClaimedExport,
-  definition: ResearchCohortDefinition,
-  revisions: SnapshotRevision[],
-  pages: SnapshotPage[],
-  metadata: OmopBundle["metadata"],
+  prepared: OmopPreparedExport,
 ): Promise<void> {
-  await writeChunk(output, `{"metadata":${JSON.stringify({
-    ...metadata,
-    definition_hash: record.definitionHash,
-    as_of: record.asOf?.toISOString(),
-    snapshot_hash: record.snapshotHash,
-  })}`)
+  await writeChunk(output, `{"metadata":${JSON.stringify(frozenOmopMetadata(record, prepared.metadata))}`)
   for (const table of OMOP_TABLES) {
     await writeChunk(output, `,"${table}":[`)
-    let first = true
-    await eachOmopTableRow(record, definition, revisions.length, pages, table, async row => {
-      await writeChunk(output, `${first ? "" : ","}${JSON.stringify(row)}`)
-      first = false
-    })
+    await copyStoredArtifact(output, prepared.keys[table])
     await writeChunk(output, "]")
   }
   await writeChunk(output, "}")
@@ -784,6 +1005,23 @@ function failureMessage(error: unknown): string {
   return (error instanceof Error ? error.message : "Export failed").slice(0, 2000)
 }
 
+async function clearWorkingArtifactKeys(record: ClaimedExport): Promise<void> {
+  const updated = await prisma.researchExport.updateMany({
+    where: { id: record.id, status: "RUNNING", leaseOwner: record.leaseOwner },
+    data: { workingArtifactKeys: Prisma.DbNull },
+  })
+  if (updated.count !== 1) {
+    throw new ResearchExportError("RESEARCH_EXPORT_LEASE_LOST", 409, "Export worker lease was lost")
+  }
+}
+
+async function cleanupStaleWorkingArtifacts(record: ClaimedExport): Promise<void> {
+  const keys = workingArtifactKeys(record.workingArtifactKeys)
+  if (!keys.length) return
+  await removeArtifactKeys(keys)
+  await clearWorkingArtifactKeys(record)
+}
+
 export async function processResearchExport(exportId?: string): Promise<ResearchExportRecord | null> {
   const record = await claimResearchExport(exportId)
   if (!record) return null
@@ -792,7 +1030,9 @@ export async function processResearchExport(exportId?: string): Promise<Research
   }
 
   let artifactKey: string | null = null
+  let spoolKeys: string[] = []
   try {
+    await cleanupStaleWorkingArtifacts(record)
     await workerContext(record)
     const snapshot = snapshotManifest(record)
     const revisions = snapshot.revisions
@@ -803,14 +1043,26 @@ export async function processResearchExport(exportId?: string): Promise<Research
     let artifact: { checksum: string; byteSize: number }
 
     if (format === "csv" || format === "json") {
+      await persistWorkingKeys(record, [artifactKey])
       artifact = await writeArtifact(artifactKey, record.artifactContentType, output =>
         writeSummaryArtifact(output, format, record, revisions))
     } else {
-      const omop = await prepareOmopExport(record, snapshot.definition, revisions)
+      const spoolFormat: OmopSpoolFormat = format === "omop-csv" ? "csv" : "json"
+      const prepared = await prepareOmopExport(
+        record,
+        snapshot.definition,
+        revisions,
+        spoolFormat,
+      )
+      spoolKeys = Object.values(prepared.keys)
+      await persistWorkingKeys(record, [...spoolKeys, artifactKey])
       artifact = await writeArtifact(artifactKey, record.artifactContentType, output =>
         format === "omop-csv"
-          ? writeOmopZip(output, record, snapshot.definition, revisions, omop.pages, omop.metadata)
-          : writeOmopJson(output, record, snapshot.definition, revisions, omop.pages, omop.metadata))
+          ? writeOmopZip(output, record, prepared)
+          : writeOmopJson(output, record, prepared))
+      await removeArtifactKeys(spoolKeys)
+      spoolKeys = []
+      await persistWorkingKeys(record, [artifactKey])
     }
 
     const completedAt = new Date()
@@ -822,6 +1074,9 @@ export async function processResearchExport(exportId?: string): Promise<Research
         checksum: artifact.checksum,
         artifactKey,
         artifactByteSize: BigInt(artifact.byteSize),
+        artifactExpiresAt: artifactExpiry(completedAt),
+        artifactDeletedAt: null,
+        workingArtifactKeys: Prisma.DbNull,
         completedAt,
         leaseOwner: null,
         leaseExpiresAt: null,
@@ -834,7 +1089,23 @@ export async function processResearchExport(exportId?: string): Promise<Research
     const stored = await prisma.researchExport.findUnique({ where: { id: record.id } })
     return stored ? mapExportRecord(stored) : null
   } catch (error) {
-    if (artifactKey) await researchExportStorage().remove(artifactKey).catch(() => undefined)
+    let workingArtifactsCleaned = true
+    if (artifactKey) {
+      try {
+        await researchExportStorage().remove(artifactKey)
+      } catch (cleanupError) {
+        workingArtifactsCleaned = false
+        console.error("[research export] failed to clean final working artifact", record.id, cleanupError)
+      }
+    }
+    if (spoolKeys.length) {
+      try {
+        await removeArtifactKeys(spoolKeys)
+      } catch (cleanupError) {
+        workingArtifactsCleaned = false
+        console.error("[research export] failed to clean OMOP spools", record.id, cleanupError)
+      }
+    }
     await prisma.researchExport.updateMany({
       where: { id: record.id, status: "RUNNING", leaseOwner: record.leaseOwner },
       data: {
@@ -845,12 +1116,85 @@ export async function processResearchExport(exportId?: string): Promise<Research
         artifactByteSize: null,
         checksum: null,
         rowCount: null,
+        ...(workingArtifactsCleaned ? { workingArtifactKeys: Prisma.DbNull } : {}),
         leaseOwner: null,
         leaseExpiresAt: null,
       },
     }).catch(() => undefined)
     throw error
   }
+}
+
+export type ResearchExportCleanupResult = {
+  expiredArtifacts: number
+  workingArtifacts: number
+  failures: number
+}
+
+export async function cleanupResearchExportArtifacts(limit = 100): Promise<ResearchExportCleanupResult> {
+  const cappedLimit = Math.min(500, Math.max(1, limit))
+  const now = new Date()
+  const result: ResearchExportCleanupResult = {
+    expiredArtifacts: 0,
+    workingArtifacts: 0,
+    failures: 0,
+  }
+
+  const expired = await prisma.researchExport.findMany({
+    where: {
+      status: "COMPLETE",
+      artifactKey: { not: null },
+      artifactDeletedAt: null,
+      artifactExpiresAt: { lte: now },
+    },
+    select: { id: true, artifactKey: true },
+    orderBy: { artifactExpiresAt: "asc" },
+    take: cappedLimit,
+  })
+  for (const record of expired) {
+    try {
+      await researchExportStorage().remove(record.artifactKey!)
+      const updated = await prisma.researchExport.updateMany({
+        where: { id: record.id, artifactKey: record.artifactKey, artifactDeletedAt: null },
+        data: { artifactKey: null, artifactDeletedAt: new Date() },
+      })
+      result.expiredArtifacts += updated.count
+    } catch (error) {
+      result.failures += 1
+      console.error("[research export cleanup] expired artifact", record.id, error)
+    }
+  }
+
+  const abandoned = await prisma.researchExport.findMany({
+    where: {
+      workingArtifactKeys: { not: Prisma.DbNull },
+      OR: [
+        { status: "FAILED" },
+        { status: "PENDING" },
+        { status: "RUNNING", leaseExpiresAt: { lte: now } },
+      ],
+    },
+    select: { id: true, workingArtifactKeys: true },
+    orderBy: { createdAt: "asc" },
+    take: cappedLimit,
+  })
+  for (const record of abandoned) {
+    const keys = workingArtifactKeys(record.workingArtifactKeys)
+    if (!keys.length) continue
+    try {
+      await removeArtifactKeys(keys)
+      const updated = await prisma.researchExport.updateMany({
+        where: { id: record.id, workingArtifactKeys: { not: Prisma.DbNull } },
+        data: { workingArtifactKeys: Prisma.DbNull },
+      })
+      result.workingArtifacts += updated.count
+    } catch (error) {
+      result.failures += 1
+      console.error("[research export cleanup] working artifacts", record.id, error)
+    }
+  }
+
+  return result
 }
 
 async function ownedExport(context: ResearchContext, exportId: string) {
@@ -873,18 +1217,28 @@ export async function getResearchExport(context: ResearchContext, exportId: stri
 
 export async function openResearchExport(context: ResearchContext, exportId: string) {
   const record = await ownedExport(context, exportId)
+  if (record.status === "PENDING" || record.status === "RUNNING") {
+    throw new ResearchExportError("RESEARCH_EXPORT_NOT_READY", 409, "Export is still being generated")
+  }
+  if (record.status === "FAILED") {
+    throw new ResearchExportError("RESEARCH_EXPORT_FAILED", 422, record.error ?? "Export failed")
+  }
+  if (
+    record.artifactDeletedAt ||
+    (record.artifactExpiresAt && record.artifactExpiresAt.getTime() <= Date.now())
+  ) {
+    throw new ResearchExportError(
+      "RESEARCH_EXPORT_ARTIFACT_EXPIRED",
+      410,
+      "This export artifact has expired; create a new export",
+    )
+  }
   if (record.legacy || !record.artifactKey) {
     throw new ResearchExportError(
       "RESEARCH_EXPORT_LEGACY",
       410,
       "This export predates immutable artifacts and must be recreated",
     )
-  }
-  if (record.status === "PENDING" || record.status === "RUNNING") {
-    throw new ResearchExportError("RESEARCH_EXPORT_NOT_READY", 409, "Export is still being generated")
-  }
-  if (record.status === "FAILED") {
-    throw new ResearchExportError("RESEARCH_EXPORT_FAILED", 422, record.error ?? "Export failed")
   }
   if (!record.artifactFilename || !record.artifactContentType || !record.checksum) {
     throw new ResearchExportError("RESEARCH_EXPORT_ARTIFACT_INVALID", 503, "Export artifact metadata is incomplete")

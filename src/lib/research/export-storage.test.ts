@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, readdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -55,6 +55,7 @@ describe("research export filesystem storage", () => {
 
     await storage.remove("export-1/file.json")
     await expect(storage.open("export-1/file.json")).rejects.toBeDefined()
+    await expect(readdir(root)).resolves.toEqual([])
   })
 
   it("rejects keys that escape the configured artifact root", async () => {

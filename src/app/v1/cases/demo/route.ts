@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma }  from "@/lib/prisma"
+import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
@@ -21,7 +22,8 @@ export async function GET(req: NextRequest) {
   if (existing) {
     if (existing.status === "IN_PROGRESS") return NextResponse.json({ id: existing.id })
     // Stale COMPLETE demo — delete and recreate
-    await prisma.case.delete({ where: { id: existing.id } })
+    await withLockedCaseTransaction(existing.id, tx =>
+      tx.case.delete({ where: { id: existing.id } }))
   }
 
   // Create a realistic demo case: colectomy, 70yo male, colon cancer, 3h case

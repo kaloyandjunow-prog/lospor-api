@@ -1,6 +1,6 @@
 import type { PrismaClient, Prisma } from "@/generated/prisma/client"
 
-type Db = PrismaClient
+type Db = PrismaClient | Prisma.TransactionClient
 
 // ── Theme D: per-field preop/postop change log ────────────────────────────────
 // Called best-effort after the save transaction commits. Never throws.
@@ -63,13 +63,13 @@ export async function writeSnapshotAsync(db: Db, caseId: string): Promise<void> 
 }
 
 async function writeSnapshot(db: Db, caseId: string): Promise<void> {
-  const c = await db.case.findUnique({
-    where: { id: caseId },
-    include: { preop: true, intraop: true, postop: true },
-  })
+  const c = await db.case.findUnique({ where: { id: caseId } })
   if (!c) return
+  const preop = await db.preoperativeAssessment.findUnique({ where: { caseId } })
+  const intraop = await db.intraoperativeRecord.findUnique({ where: { caseId } })
+  const postop = await db.postoperativeRecord.findUnique({ where: { caseId } })
 
-  const snapshotJson = c as unknown as Prisma.InputJsonValue
+  const snapshotJson = { ...c, preop, intraop, postop } as unknown as Prisma.InputJsonValue
   await db.caseSnapshot.upsert({
     where:  { caseId },
     update: { snapshotJson, finalizedAt: new Date() },

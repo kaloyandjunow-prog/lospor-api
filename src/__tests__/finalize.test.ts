@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const getAuthUserMock = vi.fn()
 const findUniqueMock  = vi.fn()
+const findPreopMock   = vi.fn()
+const findIntraopMock = vi.fn()
+const findPostopMock  = vi.fn()
 const updateMock      = vi.fn()
 const writeSnapshotAsyncMock = vi.fn()
 const canAccessCaseMock = vi.fn()
@@ -13,14 +16,23 @@ vi.mock("next/server", async importOriginal => {
   return { ...actual, after: vi.fn() }
 })
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: getAuthUserMock }))
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    case: { findUnique: findUniqueMock, update: updateMock },
+vi.mock("@/lib/clinical-transaction", () => ({
+  CaseWriteError: class CaseWriteError extends Error {
+    constructor(readonly code: string, readonly status: number, message: string) {
+      super(message)
+    }
   },
+  withLockedCaseTransaction: vi.fn((_caseId: string, operation: (tx: unknown) => Promise<unknown>) =>
+    operation({
+      case: { findUnique: findUniqueMock, update: updateMock },
+      preoperativeAssessment: { findUnique: findPreopMock },
+      intraoperativeRecord: { findUnique: findIntraopMock },
+      postoperativeRecord: { findUnique: findPostopMock },
+    })),
 }))
 vi.mock("@/lib/case-audit", () => ({ writeSnapshotAsync: writeSnapshotAsyncMock }))
 vi.mock("@/lib/relational-sync", () => ({ syncCaseRelational: syncCaseRelationalMock }))
-vi.mock("@/lib/access-control", () => ({ canAccessCase: canAccessCaseMock }))
+vi.mock("@/lib/access-control", () => ({ canAccessCaseWithOwnerFallback: canAccessCaseMock }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock }))
 
 const VALID_CASE = {
@@ -54,8 +66,15 @@ describe("POST /api/cases/:id/finalize", () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     getAuthUserMock.mockResolvedValue({ id: "user-1", role: "MEMBER", institutionId: "inst-1" })
-    canAccessCaseMock.mockReturnValue(true)
-    findUniqueMock.mockResolvedValue(VALID_CASE)
+    canAccessCaseMock.mockResolvedValue(true)
+    findUniqueMock.mockResolvedValue({
+      userId: VALID_CASE.userId,
+      status: VALID_CASE.status,
+      institutionId: "inst-1",
+    })
+    findPreopMock.mockResolvedValue(VALID_CASE.preop)
+    findIntraopMock.mockResolvedValue(VALID_CASE.intraop)
+    findPostopMock.mockResolvedValue(VALID_CASE.postop)
     syncCaseRelationalMock.mockResolvedValue(undefined)
     writeSnapshotAsyncMock.mockResolvedValue(undefined)
     updateMock.mockResolvedValue({ id: "case-1", status: "COMPLETE" })
@@ -70,15 +89,33 @@ describe("POST /api/cases/:id/finalize", () => {
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "COMPLETE" }) }))
   })
 
+  it("accepts the current startedAt and endedAt fields", async () => {
+    findIntraopMock.mockResolvedValue({
+      ...VALID_CASE.intraop,
+      startedAt: new Date("2026-01-01T08:00:00Z"),
+      endedAt: new Date("2026-01-01T10:00:00Z"),
+      startTime: null,
+      endTime: null,
+    })
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(200)
+    expect(findIntraopMock.mock.calls[0]?.[0]).toMatchObject({
+      select: {
+        startedAt: true,
+        endedAt: true,
+      },
+    })
+  })
+
   it("returns 403 when user does not own the case", async () => {
-    canAccessCaseMock.mockReturnValue(false)
+    canAccessCaseMock.mockResolvedValue(false)
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(403)
     expect(writeSnapshotAsyncMock).not.toHaveBeenCalled()
   })
 
   it("returns 422 when preop is missing", async () => {
-    findUniqueMock.mockResolvedValue({ ...VALID_CASE, preop: null })
+    findPreopMock.mockResolvedValue(null)
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(422)
     const body = await res.json()
@@ -86,7 +123,7 @@ describe("POST /api/cases/:id/finalize", () => {
   })
 
   it("returns 422 when intraop has no startTime", async () => {
-    findUniqueMock.mockResolvedValue({ ...VALID_CASE, intraop: { ...VALID_CASE.intraop, startTime: null } })
+    findIntraopMock.mockResolvedValue({ ...VALID_CASE.intraop, startTime: null })
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(422)
     const body = await res.json()
@@ -94,7 +131,7 @@ describe("POST /api/cases/:id/finalize", () => {
   })
 
   it("returns 422 when intraop has no technique", async () => {
-    findUniqueMock.mockResolvedValue({ ...VALID_CASE, intraop: { ...VALID_CASE.intraop, techniques: [] } })
+    findIntraopMock.mockResolvedValue({ ...VALID_CASE.intraop, techniques: [] })
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(422)
     const body = await res.json()
@@ -102,10 +139,8 @@ describe("POST /api/cases/:id/finalize", () => {
   })
 
   it("returns 422 when postop has no Aldrete subscore", async () => {
-    findUniqueMock.mockResolvedValue({
-      ...VALID_CASE,
-      postop: { aldreteActivity: null, aldreteRespiration: null, aldreteCirculation: null, aldreteConsciousness: null, aldreteSpO2: null, disposition: "WARD" },
-    })
+    findPostopMock.mockResolvedValue({ aldreteActivity: null, aldreteRespiration: null, aldreteCirculation: null, aldreteConsciousness: null, aldreteSpO2: null, disposition: "WARD" })
+
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(422)
     const body = await res.json()
@@ -113,23 +148,21 @@ describe("POST /api/cases/:id/finalize", () => {
   })
 
   it("returns 422 when postop has no disposition", async () => {
-    findUniqueMock.mockResolvedValue({
-      ...VALID_CASE,
-      postop: { ...VALID_CASE.postop, disposition: null },
-    })
+    findPostopMock.mockResolvedValue({ ...VALID_CASE.postop, disposition: null })
+
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(422)
     const body = await res.json()
     expect(body.reason).toBe("missing_disposition")
   })
 
-  it("writes snapshot before updating status", async () => {
+  it("writes the COMPLETE state before snapshotting inside one transaction", async () => {
     const order: string[] = []
     syncCaseRelationalMock.mockImplementation(() => { order.push("sync"); return Promise.resolve() })
     writeSnapshotAsyncMock.mockImplementation(() => { order.push("snapshot"); return Promise.resolve() })
     updateMock.mockImplementation(() => { order.push("update"); return Promise.resolve({ id: "case-1", status: "COMPLETE" }) })
     await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
-    expect(order).toEqual(["sync", "snapshot", "update"])
+    expect(order).toEqual(["sync", "update", "snapshot"])
   })
 
   it("blocks finalization when relational sync fails", async () => {
@@ -143,7 +176,7 @@ describe("POST /api/cases/:id/finalize", () => {
   })
 
   it("returns 409 when case is already COMPLETE", async () => {
-    findUniqueMock.mockResolvedValue({ ...VALID_CASE, status: "COMPLETE" })
+    findUniqueMock.mockResolvedValue({ userId: VALID_CASE.userId, status: "COMPLETE", institutionId: "inst-1" })
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(409)
     expect(writeSnapshotAsyncMock).not.toHaveBeenCalled()

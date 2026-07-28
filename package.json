@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "7.2.1",
+  "version": "7.3.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -42,9 +42,9 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1095.0",
     "@aws-sdk/lib-storage": "^3.1095.0",
-    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v7.2.0",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v7.3.0",
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
     "@sparticuz/chromium": "^149.0.0",
     "archiver": "^8.0.0",
     "bcryptjs": "^3.0.3",
@@ -69,7 +69,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.2.12",
-    "prisma": "^7.8.0",
+    "prisma": "7.9.1",
     "tsx": "^4.23.1",
     "typescript": "^5",
     "vitest": "^4.1.9"

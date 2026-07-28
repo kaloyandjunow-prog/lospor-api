@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { processResearchExport } from "@/lib/research/exports"
+import { cleanupResearchExportArtifacts, processResearchExport } from "@/lib/research/exports"
 
 function requestedLimit(): number {
   const argument = process.argv.find(value => value.startsWith("--limit="))?.split("=")[1]
@@ -8,6 +8,8 @@ function requestedLimit(): number {
 }
 
 async function main() {
+  const cleanup = await cleanupResearchExportArtifacts(500)
+  console.log("Research export cleanup", cleanup)
   const ids: string[] = []
   let failed = 0
   for (let index = 0; index < requestedLimit(); index += 1) {

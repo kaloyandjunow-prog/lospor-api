@@ -1,5 +1,22 @@
 # Changelog - LOSPOR API
 
+## [7.3.0] - 2026-07-28
+
+### Fixed
+
+- Database row locks now serialize case finalization with all section and event
+  writes, preventing completed cases from diverging from their snapshots.
+- Research export manifests track parent, event, relational, and section
+  revisions so child-row changes cannot pass snapshot validation.
+
+### Changed
+
+- Research exports accept finalized-only cohorts, map each OMOP page once, and
+  remove private working files after artifact generation.
+- Generated artifacts expire after the configured retention period while their
+  immutable checksum, row count, source version, and audit history remain.
+- Prisma runtime, PostgreSQL adapter, and generator are pinned to 7.9.1.
+
 ## [7.2.1] - 2026-07-27
 
 ### Security

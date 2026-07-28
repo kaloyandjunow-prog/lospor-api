@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest"
-import { canAccessCase, caseWhereForUser, colleagueWhereForUser } from "@/lib/access-control"
+import { describe, expect, it, vi } from "vitest"
+import { canAccessCase, canAccessCaseWithOwnerFallback, caseWhereForUser, colleagueWhereForUser } from "@/lib/access-control"
 
 describe("access control helpers", () => {
   it("falls back to own cases for a head of department without an institution", () => {
@@ -16,6 +16,24 @@ describe("access control helpers", () => {
     expect(caseWhereForUser(user)).toEqual({ user: { institutionId: "inst-1" } })
     expect(canAccessCase(user, { userId: "other", user: { institutionId: "inst-1" } })).toBe(true)
     expect(canAccessCase(user, { userId: "other", user: { institutionId: "inst-2" } })).toBe(false)
+    expect(canAccessCase(user, { userId: "other", institutionId: "inst-1" })).toBe(true)
+    expect(canAccessCase(user, { userId: "other", institutionId: "inst-2" })).toBe(false)
+  })
+
+  it("resolves legacy case institution ownership sequentially when the case field is empty", async () => {
+    const findUnique = vi.fn().mockResolvedValue({ institutionId: "inst-1" })
+    const db = { user: { findUnique } } as never
+    const user = { id: "hod-1", role: "HEAD_OF_DEPT", institutionId: "inst-1" }
+
+    await expect(canAccessCaseWithOwnerFallback(
+      db,
+      user,
+      { userId: "other", institutionId: null },
+    )).resolves.toBe(true)
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: "other" },
+      select: { institutionId: true },
+    })
   })
 
   it("does not return colleagues for a head of department without an institution", () => {

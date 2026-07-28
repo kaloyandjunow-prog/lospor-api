@@ -17,8 +17,21 @@ function delegate(): Delegate {
 }
 
 function makeDb(caseRow: Record<string, unknown>) {
+  const { preop, intraop, postop, ...caseRecord } = caseRow
   return {
-    case: { findUnique: vi.fn().mockResolvedValue(caseRow) },
+    case: {
+      findUnique: vi.fn().mockResolvedValue(caseRecord),
+      update: vi.fn().mockResolvedValue({}),
+    },
+    preoperativeAssessment: {
+      findUnique: vi.fn().mockResolvedValue(preop ?? null),
+    },
+    intraoperativeRecord: {
+      findUnique: vi.fn().mockResolvedValue(intraop ?? null),
+    },
+    postoperativeRecord: {
+      findUnique: vi.fn().mockResolvedValue(postop ?? null),
+    },
     conceptMap: {
       findMany: vi.fn().mockResolvedValue([
         { domain: "condition", sourceVocabulary: "ICD10", sourceCode: "K35", standardConceptId: 12345, mappingStatus: "MAPPED" },
@@ -223,6 +236,10 @@ describe("syncCaseRelational", () => {
 
     await syncCaseRelational(db as never, "case-1")
 
+    expect(db.case.update).toHaveBeenCalledWith({
+      where: { id: "case-1" },
+      data: { relationalRevision: { increment: 1 } },
+    })
     expect(db.preopDiagnosis.deleteMany).toHaveBeenCalledWith({ where: { preopId: "preop-1" } })
     expect(db.preopDiagnosis.createMany).toHaveBeenCalledWith({
       data: [

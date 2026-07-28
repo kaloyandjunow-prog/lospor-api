@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit"
 import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
 import { parseLenient, type RejectedField } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
-import { syncCaseRelationalSafe } from "@/lib/relational-sync"
+import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { caseWhereForUser } from "@/lib/access-control"
 import { generateCaseCode, isPrismaUniqueError } from "@/lib/case-code"
 import { corsHeaders } from "@/lib/cors"
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
     }
 
     after(() => logAudit(userId, "CASE_CREATE", caseRecord.id))
-    after(() => syncCaseRelationalSafe(prisma, caseRecord.id, userId))
+    after(() => syncCaseRelationalLockedSafe(caseRecord.id, userId))
     return NextResponse.json({
       id: caseRecord.id,
       caseCode: caseRecord.caseCode,
