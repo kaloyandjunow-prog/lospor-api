@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import { dirname, join, relative, resolve } from "node:path"
 import document from "@/generated/openapi.json"
 import internalDocument from "@/generated/openapi-internal.json"
+import { API_RELEASE_VERSION } from "@/lib/api-version"
 
 const methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 const appRoot = resolve(process.cwd(), "src", "app")
@@ -25,7 +26,10 @@ type ContractOperation = {
 }
 
 type ContractPathItem = Partial<Record<Lowercase<(typeof methods)[number]>, ContractOperation>>
-type ContractDocument = { paths: Record<string, ContractPathItem> }
+type ContractDocument = {
+  info: { version: string }
+  paths: Record<string, ContractPathItem>
+}
 
 const publicContract = document as unknown as ContractDocument
 const internalContract = internalDocument as unknown as ContractDocument
@@ -51,6 +55,11 @@ function operations() {
 }
 
 describe("OpenAPI contract", () => {
+  it("publishes the API package release version", () => {
+    expect(publicContract.info.version).toBe(API_RELEASE_VERSION)
+    expect(internalContract.info.version).toBe(API_RELEASE_VERSION)
+  })
+
   it("has an explicit contract for every implemented HTTP operation", () => {
     for (const { method, path } of operations()) {
       const operation = internalContract.paths[path]
