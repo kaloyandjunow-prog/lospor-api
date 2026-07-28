@@ -1,4 +1,5 @@
-import type { PrismaClient } from "@/generated/prisma/client"
+import type { Prisma, PrismaClient } from "@/generated/prisma/client"
+import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
 // Mirror the JSON clinical arrays into queryable research rows.
 //
@@ -11,7 +12,7 @@ import type { PrismaClient } from "@/generated/prisma/client"
 // JSON stays the source of truth. Takes db as a parameter so backfill
 // scripts can reuse without importing server-only modules.
 
-type Db = PrismaClient
+type Db = PrismaClient | Prisma.TransactionClient
 // JSON columns are untyped by definition — items are read defensively via
 // optional chaining throughout this file, so Record<string, unknown> carries
 // the same runtime behavior as `any` did, just without silencing real typos.
@@ -332,53 +333,60 @@ function fieldStatus(caseId: string, section: string, fieldKey: string, value: u
 }
 
 export async function syncCaseRelational(db: Db, caseId: string): Promise<void> {
-  const [c, loincMap, concepts] = await Promise.all([
-    db.case.findUnique({
-      where: { id: caseId },
-      select: {
-        status: true,
-        preop:   { select: {
-          id: true,
-          ageYears: true, sex: true, heightCm: true, weightKg: true, bmi: true, bloodType: true, rhFactor: true,
-          diagnosesJson: true, proceduresJson: true, comorbidities: true, labResults: true,
-          currentMedications: true, allergies: true, allergyDetails: true, latexAllergy: true,
-          familyAnesthesiaProblems: true, familyAnesthesiaDetails: true, dentalProsthetics: true, looseTeeth: true,
-          smoking: true, substanceAbuse: true, bpSystolic: true, bpDiastolic: true, heartRate: true, spO2: true,
-          temperature: true, respiratoryRate: true, bpUnobtainable: true, heartRateUnobtainable: true,
-          spO2Unobtainable: true, temperatureUnobtainable: true, respiratoryRateUnobtainable: true,
-          mallampati: true, mouthOpeningCm: true, thyromental: true, neckMobility: true, upperLipBiteTest: true,
-          retrognathia: true, prominentIncisors: true, facialHair: true, difficultAirwayHistory: true,
-          difficultAirwayNotes: true, cormackLehane: true, airwayUnobtainable: true, asaScore: true,
-          elective: true, emergencySurgery: true, highRiskSurgery: true, rcriIschemicHeart: true, rcriCHF: true,
-          rcriCVD: true, rcriInsulinDM: true, rcriCreatinine: true, rcriScore: true, gutaScore: true,
-          apfelScore: true, apfelPONVHistory: true, apfelPostopOpioids: true, stopBangScore: true,
-          stopbangSnoring: true, stopbangTired: true, stopbangObserved: true, stopbangBP: true, stopbangNeck: true,
-          teamNotes: true, physicalExamReport: true, notes: true, aiOptIn: true,
-        } },
-        intraop: { select: {
-          id: true, startTime: true, endTime: true, durationMinutes: true, monthYear: true,
-          vascularAccesses: true, positions: true, techniques: true, airwayTools: true, airwayDevices: true, ventilationModes: true,
-          airwayDevice: true, airwayNotes: true, cormackLehane: true, peepCmH2O: true, ippv: true, jetVentilation: true, fob: true,
-          premedicationEvening: true, premedicationMorning: true, drugsAdministered: true,
-          crystalloidsMl: true, colloidsMl: true, bloodMl: true, bloodProductsNote: true, urineMl: true,
-          timeSeriesData: true, keyEvents: true, complications: true,
-          ecg: true, spO2Monitor: true, nbpMonitor: true, etco2Monitor: true, tempMonitor: true, invasiveBP: true, cvpMonitor: true,
-          bglMonitor: true, bloodGasMonitor: true, neuroMonitor: true, paCatheter: true, tee: true, bis: true, entropyMonitor: true,
-          nirsMonitor: true, evokedPotentials: true, tofMonitor: true, urinaryCatheter: true, stomachTube: true,
-        } },
-        postop:  { select: {
-          id: true, aldreteActivity: true, aldreteRespiration: true, aldreteCirculation: true, aldreteConsciousness: true,
-          aldreteSpO2: true, aldreteTotal: true, recoveryBpSystolic: true, recoveryBpDiastolic: true,
-          recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true, painScoreNRS: true, ponv: true,
-          recoveryBpUnobtainable: true, recoveryHeartRateUnobtainable: true, recoverySpO2Unobtainable: true,
-          recoveryTemperatureUnobtainable: true, disposition: true, dispositionNotes: true, handoverItems: true, complications: true,
-        } },
-      },
-    }),
-    getLoincMap(db),
-    getConceptMap(db),
-  ])
-  if (!c) return
+  const caseRecord = await db.case.findUnique({
+    where: { id: caseId },
+    select: { status: true },
+  })
+  if (!caseRecord) return
+
+  const preop = await db.preoperativeAssessment.findUnique({
+    where: { caseId },
+    select: {
+      id: true,
+      ageYears: true, sex: true, heightCm: true, weightKg: true, bmi: true, bloodType: true, rhFactor: true,
+      diagnosesJson: true, proceduresJson: true, comorbidities: true, labResults: true,
+      currentMedications: true, allergies: true, allergyDetails: true, latexAllergy: true,
+      familyAnesthesiaProblems: true, familyAnesthesiaDetails: true, dentalProsthetics: true, looseTeeth: true,
+      smoking: true, substanceAbuse: true, bpSystolic: true, bpDiastolic: true, heartRate: true, spO2: true,
+      temperature: true, respiratoryRate: true, bpUnobtainable: true, heartRateUnobtainable: true,
+      spO2Unobtainable: true, temperatureUnobtainable: true, respiratoryRateUnobtainable: true,
+      mallampati: true, mouthOpeningCm: true, thyromental: true, neckMobility: true, upperLipBiteTest: true,
+      retrognathia: true, prominentIncisors: true, facialHair: true, difficultAirwayHistory: true,
+      difficultAirwayNotes: true, cormackLehane: true, airwayUnobtainable: true, asaScore: true,
+      elective: true, emergencySurgery: true, highRiskSurgery: true, rcriIschemicHeart: true, rcriCHF: true,
+      rcriCVD: true, rcriInsulinDM: true, rcriCreatinine: true, rcriScore: true, gutaScore: true,
+      apfelScore: true, apfelPONVHistory: true, apfelPostopOpioids: true, stopBangScore: true,
+      stopbangSnoring: true, stopbangTired: true, stopbangObserved: true, stopbangBP: true, stopbangNeck: true,
+      teamNotes: true, physicalExamReport: true, notes: true, aiOptIn: true,
+    },
+  })
+  const intraop = await db.intraoperativeRecord.findUnique({
+    where: { caseId },
+    select: {
+      id: true, startedAt: true, endedAt: true, startTime: true, endTime: true, durationMinutes: true, monthYear: true,
+      vascularAccesses: true, positions: true, techniques: true, airwayTools: true, airwayDevices: true, ventilationModes: true,
+      airwayDevice: true, airwayNotes: true, cormackLehane: true, peepCmH2O: true, ippv: true, jetVentilation: true, fob: true,
+      premedicationEvening: true, premedicationMorning: true, drugsAdministered: true,
+      crystalloidsMl: true, colloidsMl: true, bloodMl: true, bloodProductsNote: true, urineMl: true,
+      timeSeriesData: true, keyEvents: true, complications: true,
+      ecg: true, spO2Monitor: true, nbpMonitor: true, etco2Monitor: true, tempMonitor: true, invasiveBP: true, cvpMonitor: true,
+      bglMonitor: true, bloodGasMonitor: true, neuroMonitor: true, paCatheter: true, tee: true, bis: true, entropyMonitor: true,
+      nirsMonitor: true, evokedPotentials: true, tofMonitor: true, urinaryCatheter: true, stomachTube: true,
+    },
+  })
+  const postop = await db.postoperativeRecord.findUnique({
+    where: { caseId },
+    select: {
+      id: true, aldreteActivity: true, aldreteRespiration: true, aldreteCirculation: true, aldreteConsciousness: true,
+      aldreteSpO2: true, aldreteTotal: true, recoveryBpSystolic: true, recoveryBpDiastolic: true,
+      recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true, painScoreNRS: true, ponv: true,
+      recoveryBpUnobtainable: true, recoveryHeartRateUnobtainable: true, recoverySpO2Unobtainable: true,
+      recoveryTemperatureUnobtainable: true, disposition: true, dispositionNotes: true, handoverItems: true, complications: true,
+    },
+  })
+  const loincMap = await getLoincMap(db)
+  const concepts = await getConceptMap(db)
+  const c = { ...caseRecord, preop, intraop, postop }
   const statuses: ReturnType<typeof fieldStatus>[] = [
     fieldStatus(caseId, "case", "status", c.status),
   ]
@@ -492,8 +500,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       ...monitoring,
     ]
     statuses.push(
-      fieldStatus(caseId, "intraop", "startTime", it.startTime),
-      fieldStatus(caseId, "intraop", "endTime", it.endTime),
+      fieldStatus(caseId, "intraop", "startTime", it.startedAt ?? it.startTime),
+      fieldStatus(caseId, "intraop", "endTime", it.endedAt ?? it.endTime),
       fieldStatus(caseId, "intraop", "durationMinutes", it.durationMinutes),
       fieldStatus(caseId, "intraop", "monthYear", it.monthYear),
       fieldStatus(caseId, "intraop", "vascularAccesses", it.vascularAccesses),
@@ -570,6 +578,39 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
   // available guard; a duplicate row is safe to skip since this table is a
   // rebuildable research mirror, not source-of-truth data.
   await db.clinicalFieldStatus.createMany({ data: statuses, skipDuplicates: true })
+  await db.case.update({
+    where: { id: caseId },
+    data: { relationalRevision: { increment: 1 } },
+  })
+}
+
+export async function syncCaseRelationalLocked(
+  caseId: string,
+  options: { allowCompleted?: boolean } = {},
+): Promise<void> {
+  await withLockedCaseTransaction(caseId, async tx => {
+    const record = await tx.case.findUnique({
+      where: { id: caseId },
+      select: { status: true },
+    })
+    if (!record) return
+    if (record.status === "COMPLETE" && !options.allowCompleted) return
+    await syncCaseRelational(tx, caseId)
+  })
+}
+
+export function syncCaseRelationalLockedSafe(
+  caseId: string,
+  userId?: string,
+): Promise<void> {
+  return syncCaseRelationalLocked(caseId).catch(err => {
+    console.error("[relational-sync]", caseId, err)
+    if (userId) {
+      import("@/lib/audit").then(({ logAudit }) =>
+        logAudit(userId, "RELATIONAL_SYNC_FAILED", caseId, { error: String(err?.message ?? err) })
+      ).catch(() => {})
+    }
+  })
 }
 
 // userId is optional context for the audit trail only — sync itself is not

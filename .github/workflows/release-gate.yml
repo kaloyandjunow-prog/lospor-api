@@ -1,6 +1,8 @@
 name: Cross-repository release gate
 
 on:
+  push:
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       core_ref:
@@ -62,35 +64,67 @@ jobs:
       LOSPOR_POSTGRES_INTEGRATION: "true"
 
     steps:
+      - name: Checkout release manifest
+        uses: actions/checkout@v6
+        with:
+          path: release-config
+
+      - name: Resolve release refs
+        id: release_refs
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          CORE_INPUT: ${{ inputs.core_ref }}
+          API_INPUT: ${{ inputs.api_ref }}
+          WEB_INPUT: ${{ inputs.web_ref }}
+          MOBILE_INPUT: ${{ inputs.mobile_ref }}
+          BROWSER_INPUT: ${{ inputs.browser_ref }}
+          DOCS_INPUT: ${{ inputs.docs_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            printf 'core_ref=%s\n' "$CORE_INPUT" >> "$GITHUB_OUTPUT"
+            printf 'api_ref=%s\n' "$API_INPUT" >> "$GITHUB_OUTPUT"
+            printf 'web_ref=%s\n' "$WEB_INPUT" >> "$GITHUB_OUTPUT"
+            printf 'mobile_ref=%s\n' "$MOBILE_INPUT" >> "$GITHUB_OUTPUT"
+            printf 'browser_ref=%s\n' "$BROWSER_INPUT" >> "$GITHUB_OUTPUT"
+            printf 'docs_ref=%s\n' "$DOCS_INPUT" >> "$GITHUB_OUTPUT"
+          else
+            manifest="release-config/release-manifest.json"
+            for repo in core api web mobile browser docs; do
+              ref="$(jq -er --arg repo "$repo" '.[$repo]' "$manifest")"
+              printf '%s_ref=%s\n' "$repo" "$ref" >> "$GITHUB_OUTPUT"
+            done
+          fi
+
       - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-core
-          ref: ${{ inputs.core_ref }}
+          ref: ${{ steps.release_refs.outputs.core_ref }}
           path: lospor-core
       - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-api
-          ref: ${{ inputs.api_ref }}
+          ref: ${{ steps.release_refs.outputs.api_ref }}
           path: lospor-api
       - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-app
-          ref: ${{ inputs.web_ref }}
+          ref: ${{ steps.release_refs.outputs.web_ref }}
           path: lospor-app
       - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-mobile
-          ref: ${{ inputs.mobile_ref }}
+          ref: ${{ steps.release_refs.outputs.mobile_ref }}
           path: lospor-mobile
       - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-browser
-          ref: ${{ inputs.browser_ref }}
+          ref: ${{ steps.release_refs.outputs.browser_ref }}
           path: lospor-browser
       - uses: actions/checkout@v6
         with:
           repository: kaloyandjunow-prog/lospor-docs
-          ref: ${{ inputs.docs_ref }}
+          ref: ${{ steps.release_refs.outputs.docs_ref }}
           path: lospor-docs
       - uses: actions/setup-node@v6
         with:

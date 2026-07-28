@@ -4,8 +4,13 @@ import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
 import { logAudit } from "@/lib/audit"
 import { addEvent, reconcileFullLog, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
-import { canAccessCase } from "@/lib/access-control"
+import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
+import {
+  CaseWriteError,
+  isCaseFinalizedDatabaseError,
+  withLockedCaseTransaction,
+} from "@/lib/clinical-transaction"
 import { z } from "zod"
 
 const CORS = (req: NextRequest) => corsHeaders(req, "POST, PUT, OPTIONS")
@@ -54,11 +59,7 @@ function revisionFrom(req: NextRequest): number | null | "invalid" {
   return Number.isSafeInteger(value) ? value : "invalid"
 }
 
-async function revisionConflict(id: string) {
-  const intraop = await prisma.intraoperativeRecord.findUnique({
-    where: { caseId: id },
-    select: { updatedAt: true, syncRevision: true },
-  })
+function revisionConflict(intraop: { updatedAt: Date; syncRevision: number } | null) {
   return NextResponse.json({
     error: "conflict",
     section: "intraop",
@@ -68,41 +69,33 @@ async function revisionConflict(id: string) {
   }, { status: 409 })
 }
 
-async function authorize(req: NextRequest, id: string) {
-  const user = await getAuthUser(req)
-  if (!user?.id) return { error: "Unauthorized", status: 401 as const }
-
-  const existing = await prisma.case.findUnique({
-    where: { id },
-    select: {
-      userId: true, status: true,
-      user:    { select: { institutionId: true } },
-      intraop: { select: { keyEvents: true, startTime: true, updatedAt: true, syncRevision: true } },
-    },
-  })
-  if (!existing) return { error: "Not found", status: 404 as const }
-
-  if (!canAccessCase(user, existing)) {
-    return { error: "Forbidden", status: 403 as const }
+class EventRouteResponse extends Error {
+  constructor(readonly response: NextResponse) {
+    super("EVENT_ROUTE_RESPONSE")
   }
-
-  return { user, existing }
 }
 
-// POST — append one event. The CaseEvent rows are the source of truth; the
-// keyEvents cache is rebuilt from them so every existing reader is unchanged.
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const auth = await authorize(req, id)
-  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
-  const { user, existing } = auth
+function eventWriteError(error: unknown, operation: "POST" | "PUT", caseId: string) {
+  if (error instanceof EventRouteResponse) return error.response
+  if (error instanceof CaseWriteError) {
+    return NextResponse.json({ error: error.message }, { status: error.status })
+  }
+  if (isCaseFinalizedDatabaseError(error)) {
+    return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+  }
+  console.error(`[events ${operation}]`, caseId, error)
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+}
 
-  if (existing.status === "COMPLETE") return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+// POST — append one event. The parent case lock covers the source rows, the
+// timetable projection, and the lifecycle promotion as one atomic change.
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser(req)
+  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { id } = await params
+
   const revision = revisionFrom(req)
   if (revision === "invalid") return NextResponse.json({ error: "Invalid intraop revision" }, { status: 400 })
-  if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
-    return revisionConflict(id)
-  }
 
   let event: z.infer<typeof eventSchema>
   try {
@@ -113,80 +106,94 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!event.id) event.id = crypto.randomUUID()
 
   const piiError = piiForEvent(event)
-  if (piiError) {
-    return NextResponse.json(piiErrorBody(piiError), { status: 400 })
-  }
+  if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
 
-  // Resolve Drug.id from ATC code when a drug event arrives without one
+  // Drug vocabulary lookup is read-only and does not need to hold the case lock.
   if (event.type === "drug" && event.atcCode && !event.drugId) {
-    const drug = await prisma.drug.findFirst({ where: { atcCode: String(event.atcCode) }, select: { id: true } })
+    const drug = await prisma.drug.findFirst({
+      where: { atcCode: String(event.atcCode) },
+      select: { id: true },
+    })
     if (drug) event.drugId = drug.id
   }
 
   const source = sourceFrom(req)
-
-  for (let attempt = 0; ; attempt++) {
-    try {
-      // No interactive $transaction — see the identical comment in
-      // case/[id]/route.ts: Supabase's Transaction-mode PgBouncer (port 6543)
-      // cannot sustain interactive transactions across multiple statements
-      // (P2028), which is exactly what was causing 500s here, worse under
-      // load. addEvent/rebuildProjection accept a plain PrismaClient for
-      // this reason (see the Tx type in case-events.ts).
-      const revisionReserved = revision != null && !!existing.intraop
-      if (revisionReserved && !await reserveIntraopRevision(prisma, id, revision)) {
-        return revisionConflict(id)
-      }
-      const added = await addEvent(prisma, id, user.id, event as unknown as LogEvent, source)
-      await rebuildProjection(prisma, id, { revisionAlreadyReserved: revisionReserved })
-
-      if (existing.status === "DRAFT") {
-        await prisma.case.update({ where: { id }, data: { status: "IN_PROGRESS" } })
-      }
-      if (added) {
-        after(() => logAudit(user.id, "CASE_EVENT_ADD", id, { type: event.type, source }))
-      }
-      const intraop = await prisma.intraoperativeRecord.findUnique({ where: { caseId: id }, select: { updatedAt: true, syncRevision: true } })
-      return NextResponse.json({
-        ok: true,
-        id: event.id,
-        intraopUpdatedAt: intraop?.updatedAt,
-        intraopRevision: intraop?.syncRevision,
+  try {
+    const result = await withLockedCaseTransaction(id, async tx => {
+      const caseRecord = await tx.case.findUnique({
+        where: { id },
+        select: { userId: true, status: true, institutionId: true },
       })
-    } catch (e: unknown) {
-      // Serialization failure (P2034) or a unique race (P2002) — retry a few times.
-      if ((e && typeof e === "object" && "code" in e && (e.code === "P2034" || e.code === "P2002")) && attempt < 5) continue
-      console.error("[events POST]", e)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
+      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      if (caseRecord.status === "COMPLETE") {
+        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      }
+      const existingIntraop = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      const existing = { ...caseRecord, intraop: existingIntraop }
+      if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
+        return revisionConflict(existing.intraop)
+      }
+
+      const revisionReserved = revision != null && !!existing.intraop
+      if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
+        const fresh = await tx.intraoperativeRecord.findUnique({
+          where: { caseId: id },
+          select: { updatedAt: true, syncRevision: true },
+        })
+        throw new EventRouteResponse(revisionConflict(fresh))
+      }
+
+      const added = await addEvent(tx, id, user.id, event as unknown as LogEvent, source)
+      await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+      if (existing.status === "DRAFT") {
+        await tx.case.update({ where: { id }, data: { status: "IN_PROGRESS" } })
+      }
+      const intraop = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      return { added, intraop }
+    })
+
+    if (result instanceof Response) return result
+    if (result.added) {
+      after(() => logAudit(user.id, "CASE_EVENT_ADD", id, { type: event.type, source }))
     }
+    return NextResponse.json({
+      ok: true,
+      id: event.id,
+      intraopUpdatedAt: result.intraop?.updatedAt,
+      intraopRevision: result.intraop?.syncRevision,
+    })
+  } catch (error: unknown) {
+    return eventWriteError(error, "POST", id)
   }
 }
 
-// PUT — the client sends its full desired log (after an edit/delete). We
-// reconcile it into append-only versioned rows: changes supersede, removals
-// tombstone. History is never lost.
+// PUT — reconcile the client's full desired log into versioned source rows and
+// rebuild the legacy projection in the same locked transaction.
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser(req)
+  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id } = await params
-  const auth = await authorize(req, id)
-  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
-  const { user, existing } = auth
-  if (existing.status === "COMPLETE") return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
   const source = sourceFrom(req)
 
-  const body = await req.json()
+  const body = await req.json().catch(() => null)
   const rawLog = body?.log
   if (!Array.isArray(rawLog)) return NextResponse.json({ error: "log must be array" }, { status: 400 })
-  // Individual entries were size-capped but the array itself was not, and
-  // reconciling the log costs a round trip per changed event — so a client
-  // could hang the function with one oversized request. The cap is far above
-  // any real case: a 24-hour operation logging an event every 5 seconds would
-  // still fit inside it several times over.
   if (rawLog.length > MAX_LOG_ENTRIES) {
     return NextResponse.json(
       { error: `log too large (${rawLog.length} entries, maximum ${MAX_LOG_ENTRIES})` },
       { status: 413 },
     )
   }
+
   const intraopBase = req.headers.get("x-lospor-intraop-updated-at")
   const revisionRaw = req.headers.get("x-lospor-intraop-revision")
   const intraopRevision = revisionRaw == null
@@ -200,80 +207,85 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (intraopBase && Number.isNaN(new Date(intraopBase).getTime())) {
     return NextResponse.json({ error: "Invalid intraop conflict timestamp" }, { status: 400 })
   }
-  if (intraopRevision == null && !intraopBase && existing.intraop?.updatedAt) {
-    return NextResponse.json({
-      error: "conflict",
-      section: "intraop",
-      reason: "missing_conflict_timestamp",
-      serverVersion: { updatedAt: existing.intraop.updatedAt, revision: existing.intraop.syncRevision },
-    }, { status: 409 })
-  }
-  if (intraopRevision != null && existing.intraop && existing.intraop.syncRevision !== intraopRevision) {
-    return NextResponse.json({
-      error: "conflict",
-      section: "intraop",
-      serverVersion: { updatedAt: existing.intraop.updatedAt, revision: existing.intraop.syncRevision },
-    }, { status: 409 })
-  }
-  if (intraopRevision == null && intraopBase && existing.intraop?.updatedAt && existing.intraop.updatedAt.getTime() > new Date(intraopBase).getTime()) {
-    return NextResponse.json({ error: "conflict", section: "intraop", serverVersion: { updatedAt: existing.intraop.updatedAt, revision: existing.intraop.syncRevision } }, { status: 409 })
-  }
 
-  // Validate + PII-check every entry before it becomes the working set.
   let log: z.infer<typeof eventSchema>[]
   try {
-    log = rawLog.map(e => eventSchema.parse(e))
+    log = rawLog.map(entry => eventSchema.parse(entry))
   } catch {
     return NextResponse.json({ error: "Invalid event in log" }, { status: 400 })
   }
-  for (const ev of log) {
-    const piiError = piiForEvent(ev)
-    if (piiError) {
-      return NextResponse.json(piiErrorBody(piiError), { status: 400 })
-    }
+  for (const event of log) {
+    const piiError = piiForEvent(event)
+    if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
   }
 
-  for (let attempt = 0; ; attempt++) {
-    try {
-      // No interactive $transaction — same PgBouncer constraint as POST above.
-      // reconcileFullLog's reconcile-then-tombstone sequence is the heaviest
-      // statement sequence in this file (one round trip per changed/removed
-      // event), so it was the most likely to hit P2028 — this is what was
-      // actually causing the 500 on event removal specifically. The
-      // check-then-write conflict window this opens is the same accepted
-      // trade-off documented in case/[id]/route.ts.
-      if (intraopBase || intraopRevision != null) {
-        if (intraopRevision != null && existing.intraop) {
-          if (!await reserveIntraopRevision(prisma, id, intraopRevision)) throw new Error("INTRAOP_CONFLICT")
-        } else {
-          const fresh = await prisma.intraoperativeRecord.findUnique({ where: { caseId: id }, select: { updatedAt: true } })
-          if (intraopBase && fresh?.updatedAt && fresh.updatedAt.getTime() > new Date(intraopBase).getTime()) {
-            throw new Error("INTRAOP_CONFLICT")
-          }
-        }
-      }
-      await reconcileFullLog(prisma, id, user.id, log as unknown as LogEvent[], source)
-      await rebuildProjection(prisma, id, { revisionAlreadyReserved: intraopRevision != null && !!existing.intraop })
-
-      after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { count: log.length, source }))
-      const intraop = await prisma.intraoperativeRecord.findUnique({ where: { caseId: id }, select: { updatedAt: true, syncRevision: true } })
-      return NextResponse.json({
-        ok: true,
-        intraopUpdatedAt: intraop?.updatedAt,
-        intraopRevision: intraop?.syncRevision,
+  try {
+    const result = await withLockedCaseTransaction(id, async tx => {
+      const caseRecord = await tx.case.findUnique({
+        where: { id },
+        select: { userId: true, status: true, institutionId: true },
       })
-    } catch (e: unknown) {
-      if (e instanceof Error && e.message === "INTRAOP_CONFLICT") {
-        const intraop = await prisma.intraoperativeRecord.findUnique({ where: { caseId: id }, select: { updatedAt: true, syncRevision: true } })
+      if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
+      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      if (caseRecord.status === "COMPLETE") {
+        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      }
+      const existingIntraop = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      const existing = { ...caseRecord, intraop: existingIntraop }
+      if (intraopRevision == null && !intraopBase && existing.intraop?.updatedAt) {
         return NextResponse.json({
           error: "conflict",
           section: "intraop",
-          serverVersion: intraop?.updatedAt ? { updatedAt: intraop.updatedAt, revision: intraop.syncRevision } : undefined,
+          reason: "missing_conflict_timestamp",
+          serverVersion: {
+            updatedAt: existing.intraop.updatedAt,
+            revision: existing.intraop.syncRevision,
+          },
         }, { status: 409 })
       }
-      if ((e && typeof e === "object" && "code" in e && (e.code === "P2034" || e.code === "P2002")) && attempt < 5) continue
-      console.error("[events PUT]", e)
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-    }
+      if (intraopRevision != null && existing.intraop && existing.intraop.syncRevision !== intraopRevision) {
+        return revisionConflict(existing.intraop)
+      }
+      if (
+        intraopRevision == null &&
+        intraopBase &&
+        existing.intraop?.updatedAt &&
+        existing.intraop.updatedAt.getTime() > new Date(intraopBase).getTime()
+      ) {
+        return revisionConflict(existing.intraop)
+      }
+
+      const revisionReserved = intraopRevision != null && !!existing.intraop
+      if (revisionReserved && !await reserveIntraopRevision(tx, id, intraopRevision)) {
+        const fresh = await tx.intraoperativeRecord.findUnique({
+          where: { caseId: id },
+          select: { updatedAt: true, syncRevision: true },
+        })
+        throw new EventRouteResponse(revisionConflict(fresh))
+      }
+
+      await reconcileFullLog(tx, id, user.id, log as unknown as LogEvent[], source)
+      await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+      const intraop = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      return { intraop }
+    })
+
+    if (result instanceof Response) return result
+    after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { count: log.length, source }))
+    return NextResponse.json({
+      ok: true,
+      intraopUpdatedAt: result.intraop?.updatedAt,
+      intraopRevision: result.intraop?.syncRevision,
+    })
+  } catch (error: unknown) {
+    return eventWriteError(error, "PUT", id)
   }
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
 import { prisma } from "@/lib/prisma"
-import { syncCaseRelational } from "@/lib/relational-sync"
+import { syncCaseRelationalLocked } from "@/lib/relational-sync"
 
 // Repair tool, not a read-only check: re-derives relational rows from the
 // authoritative JSON (delete + recreate, in a transaction) for all cases (or
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   for (const c of cases) {
     try {
-      await syncCaseRelational(prisma, c.id)
+      await syncCaseRelationalLocked(c.id, { allowCompleted: true })
       report.push({ caseId: c.id, status: "repaired" })
     } catch (err: unknown) {
       report.push({ caseId: c.id, status: "error", error: String(err instanceof Error ? err.message : err) })

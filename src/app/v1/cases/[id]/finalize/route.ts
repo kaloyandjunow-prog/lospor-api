@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { prisma } from "@/lib/prisma"
 import { logAudit } from "@/lib/audit"
 import { writeSnapshotAsync } from "@/lib/case-audit"
 import { syncCaseRelational } from "@/lib/relational-sync"
-import { canAccessCase } from "@/lib/access-control"
+import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
+import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
 import {
   evaluateCaseFinalization,
   type ClinicalIssueCode,
@@ -25,6 +25,12 @@ const FINALIZATION_ERRORS: Partial<Record<ClinicalIssueCode, string>> = {
   missing_disposition: "Cannot finalise: patient disposition (Ward/PACU/ICU) must be recorded",
 }
 
+class FinalizeResponse extends Error {
+  constructor(readonly response: NextResponse) {
+    super("FINALIZE_RESPONSE")
+  }
+}
+
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: CORS(req) })
 }
@@ -33,80 +39,97 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const userId = user.id
-
   const { id } = await params
 
-  const c = await prisma.case.findUnique({
-    where: { id },
-    select: {
-      userId: true,
-      status: true,
-      user:   { select: { institutionId: true } },
-      preop:  { select: { id: true } },
-      intraop: {
+  try {
+    const result = await withLockedCaseTransaction(id, async tx => {
+      const caseRecord = await tx.case.findUnique({
+        where: { id },
+        select: { userId: true, status: true, institutionId: true },
+      })
+      if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
+      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      if (caseRecord.status === "COMPLETE") {
+        return NextResponse.json({ error: "Case is already finalised" }, { status: 409 })
+      }
+
+      const preop = await tx.preoperativeAssessment.findUnique({
+        where: { caseId: id },
+        select: { id: true },
+      })
+      const intraop = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
         select: {
           id: true,
+          startedAt: true,
+          endedAt: true,
           startTime: true,
           endTime: true,
           techniques: true,
         },
-      },
-      postop: {
+      })
+      const postop = await tx.postoperativeRecord.findUnique({
+        where: { caseId: id },
         select: {
-          aldreteActivity:      true,
-          aldreteRespiration:   true,
-          aldreteCirculation:   true,
+          aldreteActivity: true,
+          aldreteRespiration: true,
+          aldreteCirculation: true,
           aldreteConsciousness: true,
-          aldreteSpO2:          true,
-          disposition:          true,
+          aldreteSpO2: true,
+          disposition: true,
         },
-      },
-    },
-  })
+      })
+      const readiness = evaluateCaseFinalization({ preop, intraop, postop })
+      if (!readiness.valid) {
+        const blocker = readiness.issues.find(issue => issue.severity === "error")!
+        return NextResponse.json({
+          error: FINALIZATION_ERRORS[blocker.code] ?? "Cannot finalise: required clinical documentation is incomplete",
+          reason: blocker.code,
+        }, { status: 422 })
+      }
 
-  if (!c) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (!canAccessCase(user, c)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  if (c.status === "COMPLETE") return NextResponse.json({ error: "Case is already finalised" }, { status: 409 })
+      try {
+        await syncCaseRelational(tx, id)
+      } catch (error) {
+        console.error("[finalize] relational sync failed", id, error)
+        throw new FinalizeResponse(NextResponse.json(
+          { error: "Failed to reconcile relational clinical rows. Case status unchanged." },
+          { status: 500 },
+        ))
+      }
 
-  const readiness = evaluateCaseFinalization({
-    preop: c.preop,
-    intraop: c.intraop,
-    postop: c.postop,
-  })
-  if (!readiness.valid) {
-    const blocker = readiness.issues.find(issue => issue.severity === "error")!
-    return NextResponse.json({
-      error: FINALIZATION_ERRORS[blocker.code] ?? "Cannot finalise: required clinical documentation is incomplete",
-      reason: blocker.code,
-    }, { status: 422 })
+      const finalizedAt = new Date()
+      await tx.case.update({
+        where: { id },
+        data: { status: "COMPLETE", finalizedAt },
+      })
+
+      try {
+        // The snapshot is written after the COMPLETE transition so it contains
+        // the exact lifecycle state and revisions committed by this transaction.
+        await writeSnapshotAsync(tx, id)
+      } catch (error) {
+        console.error("[finalize] snapshot failed", id, error)
+        throw new FinalizeResponse(NextResponse.json(
+          { error: "Failed to write finalization snapshot. Case status unchanged." },
+          { status: 500 },
+        ))
+      }
+
+      return { from: caseRecord.status, finalizedAt }
+    })
+
+    if (result instanceof Response) return result
+    after(() => logAudit(userId, "CASE_FINALIZED", id, { from: result.from, to: "COMPLETE" }))
+    return NextResponse.json({ id, status: "COMPLETE", finalizedAt: result.finalizedAt })
+  } catch (error: unknown) {
+    if (error instanceof FinalizeResponse) return error.response
+    if (error instanceof CaseWriteError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    console.error("[finalize] transaction failed", id, error)
+    return NextResponse.json({ error: "Failed to finalise case. Case status unchanged." }, { status: 500 })
   }
-
-  // Reconcile the relational mirror before locking the case, so the snapshot
-  // and any subsequent OMOP export agree with the queryable rows.
-  try {
-    await syncCaseRelational(prisma, id)
-  } catch (err) {
-    console.error("[finalize] relational sync failed", id, err)
-    return NextResponse.json({ error: "Failed to reconcile relational clinical rows. Case status unchanged." }, { status: 500 })
-  }
-
-  // Write the immutable snapshot first (upsert = idempotent). If this throws,
-  // the case status is not changed — caller can retry.
-  try {
-    await writeSnapshotAsync(prisma, id)
-  } catch (err) {
-    console.error("[finalize] snapshot failed", id, err)
-    return NextResponse.json({ error: "Failed to write finalization snapshot. Case status unchanged." }, { status: 500 })
-  }
-
-  // Commit the status change only after the snapshot is safely written.
-  const finalizedAt = new Date()
-  await prisma.case.update({
-    where: { id },
-    data: { status: "COMPLETE", finalizedAt },
-  })
-
-  after(() => logAudit(userId, "CASE_FINALIZED", id, { from: c.status, to: "COMPLETE" }))
-
-  return NextResponse.json({ id, status: "COMPLETE", finalizedAt })
 }

@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { z } from "zod"
 
-import { canAccessCase } from "@/lib/access-control"
+import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
 import { logAudit } from "@/lib/audit"
 import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
 import { corsHeaders } from "@/lib/cors"
+import {
+  CaseWriteError,
+  isCaseFinalizedDatabaseError,
+  withLockedCaseTransaction,
+} from "@/lib/clinical-transaction"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { prisma } from "@/lib/prisma"
 
 const CORS = (req: NextRequest) => corsHeaders(req, "PUT, DELETE, OPTIONS")
 
@@ -34,33 +38,13 @@ function revisionFrom(req: NextRequest): number | null | "invalid" {
   return Number.isSafeInteger(value) ? value : "invalid"
 }
 
-async function authorize(req: NextRequest, caseId: string) {
-  const user = await getAuthUser(req)
-  if (!user?.id) return { error: "Unauthorized", status: 401 as const }
-  const existing = await prisma.case.findUnique({
-    where: { id: caseId },
-    select: {
-      userId: true,
-      status: true,
-      user: { select: { institutionId: true } },
-      intraop: { select: { updatedAt: true, syncRevision: true } },
-    },
-  })
-  if (!existing) return { error: "Not found", status: 404 as const }
-  if (!canAccessCase(user, existing)) return { error: "Forbidden", status: 403 as const }
-  if (existing.status === "COMPLETE") return { error: "Case is finalised", status: 403 as const }
-  return { user, existing }
-}
-
-function conflict(existing: { intraop: { updatedAt: Date; syncRevision: number } | null }, revision: number | null) {
-  if (revision == null || !existing.intraop || existing.intraop.syncRevision === revision) return null
+function conflict(intraop: { updatedAt: Date; syncRevision: number } | null) {
   return NextResponse.json({
     error: "conflict",
     section: "intraop",
-    serverVersion: {
-      updatedAt: existing.intraop.updatedAt,
-      revision: existing.intraop.syncRevision,
-    },
+    serverVersion: intraop
+      ? { updatedAt: intraop.updatedAt, revision: intraop.syncRevision }
+      : undefined,
   }, { status: 409 })
 }
 
@@ -70,37 +54,26 @@ function sourceFrom(req: NextRequest): string {
   return req.headers.get("authorization")?.startsWith("Bearer ") ? "mobile" : "web"
 }
 
-async function freshRevision(caseId: string) {
-  return prisma.intraoperativeRecord.findUnique({
-    where: { caseId },
-    select: { updatedAt: true, syncRevision: true },
-  })
-}
-
-async function reserveRevision(caseId: string, revision: number | null, hasIntraop: boolean) {
-  if (revision == null || !hasIntraop) return { reserved: false as const }
-  if (await reserveIntraopRevision(prisma, caseId, revision)) return { reserved: true as const }
-  const fresh = await freshRevision(caseId)
-  return {
-    response: NextResponse.json({
-      error: "conflict",
-      section: "intraop",
-      serverVersion: fresh ? { updatedAt: fresh.updatedAt, revision: fresh.syncRevision } : undefined,
-    }, { status: 409 }),
+function eventItemError(error: unknown, operation: "PUT" | "DELETE", caseId: string) {
+  if (error instanceof CaseWriteError) {
+    return NextResponse.json({ error: error.message }, { status: error.status })
   }
+  if (isCaseFinalizedDatabaseError(error)) {
+    return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+  }
+  console.error(`[event ${operation}]`, caseId, error)
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 })
 }
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; eventId: string }> },
 ) {
+  const user = await getAuthUser(req)
+  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id, eventId } = await params
-  const auth = await authorize(req, id)
-  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const revision = revisionFrom(req)
   if (revision === "invalid") return NextResponse.json({ error: "Invalid intraop revision" }, { status: 400 })
-  const stale = conflict(auth.existing, revision)
-  if (stale) return stale
 
   let parsed: z.infer<typeof eventSchema>
   try {
@@ -112,40 +85,114 @@ export async function PUT(
   const piiError = checkEventPII(event)
   if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
 
-  const reservation = await reserveRevision(id, revision, !!auth.existing.intraop)
-  if ("response" in reservation) return reservation.response
-  await addEvent(prisma, id, auth.user.id, event as LogEvent, sourceFrom(req))
-  await rebuildProjection(prisma, id, { revisionAlreadyReserved: reservation.reserved })
-  after(() => logAudit(auth.user.id, "CASE_EVENT_EDIT", id, { eventId }))
-  const fresh = await freshRevision(id)
-  return NextResponse.json({
-    ok: true,
-    intraopUpdatedAt: fresh?.updatedAt,
-    intraopRevision: fresh?.syncRevision,
-  })
+  try {
+    const result = await withLockedCaseTransaction(id, async tx => {
+      const caseRecord = await tx.case.findUnique({
+        where: { id },
+        select: { userId: true, status: true, institutionId: true },
+      })
+      if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
+      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      if (caseRecord.status === "COMPLETE") {
+        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      }
+      const existingIntraop = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      const existing = { ...caseRecord, intraop: existingIntraop }
+      if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
+        return conflict(existing.intraop)
+      }
+
+      const revisionReserved = revision != null && !!existing.intraop
+      if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
+        const fresh = await tx.intraoperativeRecord.findUnique({
+          where: { caseId: id },
+          select: { updatedAt: true, syncRevision: true },
+        })
+        return conflict(fresh)
+      }
+      await addEvent(tx, id, user.id, event as LogEvent, sourceFrom(req))
+      await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+      const fresh = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      return { fresh }
+    })
+
+    if (result instanceof Response) return result
+    after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { eventId }))
+    return NextResponse.json({
+      ok: true,
+      intraopUpdatedAt: result.fresh?.updatedAt,
+      intraopRevision: result.fresh?.syncRevision,
+    })
+  } catch (error: unknown) {
+    return eventItemError(error, "PUT", id)
+  }
 }
 
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; eventId: string }> },
 ) {
+  const user = await getAuthUser(req)
+  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id, eventId } = await params
-  const auth = await authorize(req, id)
-  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const revision = revisionFrom(req)
   if (revision === "invalid") return NextResponse.json({ error: "Invalid intraop revision" }, { status: 400 })
-  const stale = conflict(auth.existing, revision)
-  if (stale) return stale
 
-  const reservation = await reserveRevision(id, revision, !!auth.existing.intraop)
-  if ("response" in reservation) return reservation.response
-  const removed = await deleteEvent(prisma, id, eventId)
-  if (removed) await rebuildProjection(prisma, id, { revisionAlreadyReserved: reservation.reserved })
-  after(() => logAudit(auth.user.id, "CASE_EVENT_DELETE", id, { eventId }))
-  const fresh = await freshRevision(id)
-  return NextResponse.json({
-    ok: true,
-    intraopUpdatedAt: fresh?.updatedAt,
-    intraopRevision: fresh?.syncRevision,
-  })
+  try {
+    const result = await withLockedCaseTransaction(id, async tx => {
+      const caseRecord = await tx.case.findUnique({
+        where: { id },
+        select: { userId: true, status: true, institutionId: true },
+      })
+      if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
+      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      if (caseRecord.status === "COMPLETE") {
+        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      }
+      const existingIntraop = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      const existing = { ...caseRecord, intraop: existingIntraop }
+      if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
+        return conflict(existing.intraop)
+      }
+
+      const revisionReserved = revision != null && !!existing.intraop
+      if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
+        const fresh = await tx.intraoperativeRecord.findUnique({
+          where: { caseId: id },
+          select: { updatedAt: true, syncRevision: true },
+        })
+        return conflict(fresh)
+      }
+      const removed = await deleteEvent(tx, id, eventId)
+      if (removed) await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+      const fresh = await tx.intraoperativeRecord.findUnique({
+        where: { caseId: id },
+        select: { updatedAt: true, syncRevision: true },
+      })
+      return { fresh, removed }
+    })
+
+    if (result instanceof Response) return result
+    after(() => logAudit(user.id, "CASE_EVENT_DELETE", id, { eventId, removed: result.removed }))
+    return NextResponse.json({
+      ok: true,
+      intraopUpdatedAt: result.fresh?.updatedAt,
+      intraopRevision: result.fresh?.syncRevision,
+    })
+  } catch (error: unknown) {
+    return eventItemError(error, "DELETE", id)
+  }
 }

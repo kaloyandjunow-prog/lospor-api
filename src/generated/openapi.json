@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LOSPOR API",
-    "version": "7.2.1",
+    "version": "7.3.0",
     "description": "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations."
   },
   "servers": [
@@ -7551,7 +7551,7 @@
       },
       "post": {
         "operationId": "post_v1_research_exports",
-        "summary": "Queue an immutable governed research export",
+        "summary": "Queue an immutable finalized-case research export",
         "tags": [
           "research"
         ],
@@ -9805,16 +9805,107 @@
             "type": "string",
             "format": "date-time"
           },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "IN_PROGRESS",
+              "AWAITING_REVIEW",
+              "COMPLETE"
+            ]
+          },
+          "clinicalRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "eventRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "relationalRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "preopUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intraopUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "postopUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "preopRevision": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "intraopRevision": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "postopRevision": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
+        "required": [
+          "updatedAt",
+          "status",
+          "clinicalRevision",
+          "eventRevision",
+          "relationalRevision",
+          "preopUpdatedAt",
+          "intraopUpdatedAt",
+          "postopUpdatedAt",
+          "preopRevision",
+          "intraopRevision",
+          "postopRevision"
+        ],
         "additionalProperties": false
       },
       "LockRequest": {
@@ -12098,6 +12189,24 @@
               }
             ]
           },
+          "revisionManifestVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "artifactAvailable": {
+            "type": "boolean"
+          },
           "legacy": {
             "type": "boolean"
           },
@@ -12136,6 +12245,9 @@
           "byteSize",
           "sourceVersion",
           "generatedAt",
+          "revisionManifestVersion",
+          "expiresAt",
+          "artifactAvailable",
           "legacy",
           "createdAt",
           "completedAt"
@@ -12248,7 +12360,8 @@
             ]
           },
           "definition": {
-            "$ref": "#/components/schemas/ResearchCohort"
+            "$ref": "#/components/schemas/ResearchCohort",
+            "description": "Must select finalized cases only (statuses = [COMPLETE])."
           }
         },
         "required": [
@@ -12428,6 +12541,29 @@
         ],
         "additionalProperties": true
       },
+      "ResearchExportCleanup": {
+        "type": "object",
+        "properties": {
+          "expiredArtifacts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "workingArtifacts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failures": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "expiredArtifacts",
+          "workingArtifacts",
+          "failures"
+        ],
+        "additionalProperties": false
+      },
       "ResearchExportWorkerResponse": {
         "type": "object",
         "properties": {
@@ -12444,12 +12580,16 @@
             "items": {
               "type": "string"
             }
+          },
+          "cleanup": {
+            "$ref": "#/components/schemas/ResearchExportCleanup"
           }
         },
         "required": [
           "processed",
           "failed",
-          "ids"
+          "ids",
+          "cleanup"
         ],
         "additionalProperties": false
       },

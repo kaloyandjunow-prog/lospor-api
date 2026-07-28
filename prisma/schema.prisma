@@ -93,18 +93,21 @@ model Institution {
 // ─── Case ────────────────────────────────────────────────────────────────────
 
 model Case {
-  id            String       @id @default(cuid())
-  caseCode      String?
-  notes         String?
-  userId        String
-  user          User         @relation(fields: [userId], references: [id])
-  institutionId String?
-  institution   Institution? @relation(fields: [institutionId], references: [id])
-  status        CaseStatus   @default(DRAFT)
-  finalizedAt   DateTime?
-  clientDraftId String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id                 String       @id @default(cuid())
+  caseCode           String?
+  notes              String?
+  userId             String
+  user               User         @relation(fields: [userId], references: [id])
+  institutionId      String?
+  institution        Institution? @relation(fields: [institutionId], references: [id])
+  status             CaseStatus   @default(DRAFT)
+  finalizedAt        DateTime?
+  clientDraftId      String?
+  clinicalRevision   Int          @default(0)
+  eventRevision      Int          @default(0)
+  relationalRevision Int          @default(0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   preop         PreoperativeAssessment?
   intraop       IntraoperativeRecord?
@@ -1295,40 +1298,45 @@ model ResearchCohort {
 }
 
 model ResearchExport {
-  id            String               @id @default(cuid())
-  ownerId       String
-  owner         User                 @relation("ResearchExportOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  institutionId String?
-  institution   Institution?         @relation(fields: [institutionId], references: [id], onDelete: SetNull)
-  name          String
-  format        String
-  status        ResearchExportStatus @default(PENDING)
-  definition    Json
-  definitionHash String?
-  snapshotRevisions Json?
-  snapshotHash  String?
-  snapshotCaseCount Int?
-  scopeInstitutionIds String[]       @default([])
-  asOf          DateTime?
-  sourceVersion String?
-  sourceCommit  String?
-  rowCount      Int?
-  checksum      String?
-  artifactKey   String?
-  artifactFilename String?
-  artifactContentType String?
-  artifactByteSize BigInt?
-  error         String?
-  attemptCount  Int                  @default(0)
-  leaseOwner    String?
-  leaseExpiresAt DateTime?
-  generatedAt   DateTime?
-  legacy        Boolean              @default(false)
-  createdAt     DateTime             @default(now())
-  startedAt     DateTime?
-  completedAt   DateTime?
+  id                      String               @id @default(cuid())
+  ownerId                 String
+  owner                   User                 @relation("ResearchExportOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  institutionId           String?
+  institution             Institution?         @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  name                    String
+  format                  String
+  status                  ResearchExportStatus @default(PENDING)
+  definition              Json
+  definitionHash          String?
+  snapshotRevisions       Json?
+  snapshotHash            String?
+  snapshotCaseCount       Int?
+  revisionManifestVersion Int                  @default(2)
+  scopeInstitutionIds     String[]             @default([])
+  asOf                    DateTime?
+  sourceVersion           String?
+  sourceCommit            String?
+  rowCount                Int?
+  checksum                String?
+  artifactKey             String?
+  artifactFilename        String?
+  artifactContentType     String?
+  artifactByteSize        BigInt?
+  artifactExpiresAt       DateTime?
+  artifactDeletedAt       DateTime?
+  workingArtifactKeys     Json?
+  error                   String?
+  attemptCount            Int                  @default(0)
+  leaseOwner              String?
+  leaseExpiresAt          DateTime?
+  generatedAt             DateTime?
+  legacy                  Boolean              @default(false)
+  createdAt               DateTime             @default(now())
+  startedAt               DateTime?
+  completedAt             DateTime?
 
   @@index([ownerId, createdAt])
   @@index([status, createdAt])
   @@index([status, leaseExpiresAt])
+  @@index([artifactExpiresAt, artifactDeletedAt])
 }

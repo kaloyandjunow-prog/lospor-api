@@ -7,10 +7,10 @@ import { logAudit } from "@/lib/audit"
 import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
 import { parseLenient } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
-import { syncCaseRelationalSafe } from "@/lib/relational-sync"
+import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
 import { rebuildProjection, reconcileFullLog, snapshotLogForReconcile } from "@/lib/case-events"
-import { canAccessCase, caseWhereForUser } from "@/lib/access-control"
+import { canAccessCaseWithOwnerFallback, caseWhereForUser } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import type { CaseDetail, Serialized } from "@/types/case-detail"
 import type { LegacyKeyEvents, LogEvent, ClinicalEvent } from "@/types/timetable"
@@ -21,6 +21,11 @@ import {
 } from "@lospor/core/intraop-engine"
 import { SECTION_REVISION_HEADER } from "@lospor/core/sync"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
+import {
+  CaseWriteError,
+  isCaseFinalizedDatabaseError,
+  withLockedCaseTransaction,
+} from "@/lib/clinical-transaction"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 const REVISION_HEADER = SECTION_REVISION_HEADER
@@ -31,6 +36,12 @@ function readRevision(req: NextRequest, section: keyof typeof REVISION_HEADER): 
   if (!/^\d+$/.test(raw)) return "invalid"
   const value = Number(raw)
   return Number.isSafeInteger(value) ? value : "invalid"
+}
+
+class CaseRouteResponse extends Error {
+  constructor(readonly response: NextResponse) {
+    super("CASE_ROUTE_RESPONSE")
+  }
 }
 
 export async function OPTIONS(req: NextRequest) {
@@ -110,21 +121,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params
 
-  const existing = await prisma.case.findUnique({
-    where: { id },
-    select: {
-      userId: true, status: true, createdAt: true,
-      user:   { select: { institutionId: true } },
-      preop:  true,
-      intraop: { select: { id: true, keyEvents: true, startedAt: true, startTime: true, createdAt: true, updatedAt: true, syncRevision: true } },
-      postop:  true,
-    },
-  })
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (!canAccessCase(user, existing))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  if (existing.status === "COMPLETE") return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
-
   try {
     // Autosave posts whole sections repeatedly, so a single out-of-range value
     // must not discard the rest of the save. Invalid fields are dropped and
@@ -161,7 +157,57 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
-    const differentUser = existing.userId !== userId
+    const piiError = checkClinicalPayloadPII({ preop, intraop, postop, notes })
+    if (piiError) {
+      after(() => logAudit(userId, "PII_BLOCKED", id, { field: piiError.field, reason: piiError.reason }))
+      return NextResponse.json(piiErrorBody(piiError), { status: 400 })
+    }
+
+    const transactionResult = await withLockedCaseTransaction(id, async tx => {
+      const caseRecord = await tx.case.findUnique({
+        where: { id },
+        select: {
+          userId: true,
+          status: true,
+          createdAt: true,
+          institutionId: true,
+        },
+      })
+      if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
+      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      if (caseRecord.status === "COMPLETE") {
+        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      }
+
+      const existingPreop = preop
+        ? await tx.preoperativeAssessment.findUnique({ where: { caseId: id } })
+        : null
+      const existingIntraop = intraop
+        ? await tx.intraoperativeRecord.findUnique({
+            where: { caseId: id },
+            select: {
+              id: true,
+              keyEvents: true,
+              startedAt: true,
+              startTime: true,
+              createdAt: true,
+              updatedAt: true,
+              syncRevision: true,
+            },
+          })
+        : null
+      const existingPostop = postop
+        ? await tx.postoperativeRecord.findUnique({ where: { caseId: id } })
+        : null
+      const existing = {
+        ...caseRecord,
+        preop: existingPreop,
+        intraop: existingIntraop,
+        postop: existingPostop,
+      }
+      const differentUser = existing.userId !== userId
     // Missing-timestamp guard stays scoped to different users: clients that
     // legitimately send no base header (fresh loads, older mobile flows) must
     // not 409 against their own case.
@@ -238,12 +284,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }, { status: 409 })
     }
 
-    const piiError = checkClinicalPayloadPII({ preop, intraop, postop, notes })
-    if (piiError) {
-      after(() => logAudit(userId, "PII_BLOCKED", id, { field: piiError.field, reason: piiError.reason }))
-      return NextResponse.json(piiErrorBody(piiError), { status: 400 })
-    }
-
     // Helper: compute the next status once, reused by both transaction and audit log
     function computeNextStatus(currentStatus: string): CaseStatus | undefined {
       const statusOrder: Record<string, number> = { DRAFT: 0, IN_PROGRESS: 1, AWAITING_REVIEW: 2, COMPLETE: 3 }
@@ -261,18 +301,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return next
     }
 
-    // Conflict detection is done above (lines ~130-150) using the pre-read `existing`
-    // record. We do NOT re-read inside a transaction here because Supabase's
-    // Transaction-mode PgBouncer (port 6543) cannot sustain interactive transactions
-    // across multiple statements → P2028. The outer check already catches the
-    // overwhelming majority of conflicts; the sub-millisecond race window that a
-    // true serialised transaction would close is acceptable for clinical charting.
+      // The parent row is locked before this fresh read. Child-table triggers
+      // acquire the same lock, so revision checks and all section/event writes
+      // serialize with finalization even if a future caller bypasses this route.
     if (preop) {
       // Partial update: only touch fields present in the payload, so a stale
       // or partial save never wipes existing preop data. Create still uses
       // the full mapPreop (with defaults) for brand-new records.
       if (existing.preop) {
-        const updated = await prisma.preoperativeAssessment.updateMany({
+        const updated = await tx.preoperativeAssessment.updateMany({
           where: {
             caseId: id,
             ...(!forceUpdate && preopRevision != null && preopRevision !== "invalid"
@@ -282,15 +319,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           data: { ...mapPreopUpdate(preop), syncRevision: { increment: 1 } },
         })
         if (updated.count === 0) {
-          const current = await prisma.preoperativeAssessment.findUnique({ where: { caseId: id } })
-          return NextResponse.json({
+          const current = await tx.preoperativeAssessment.findUnique({ where: { caseId: id } })
+          throw new CaseRouteResponse(NextResponse.json({
             error: "conflict",
             section: "preop",
             serverVersion: current,
-          }, { status: 409 })
+          }, { status: 409 }))
         }
       } else {
-        await prisma.preoperativeAssessment.create({
+        await tx.preoperativeAssessment.create({
           data: { caseId: id, ...mapPreop(preop), syncRevision: 1 },
         })
       }
@@ -330,7 +367,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         effectiveIntraop = { ...intraop, timetableData: { ...(intraop.timetableData as LegacyKeyEvents), log: mergedLog } }
       }
       if (existing.intraop) {
-        const updated = await prisma.intraoperativeRecord.updateMany({
+        const updated = await tx.intraoperativeRecord.updateMany({
           where: {
             caseId: id,
             ...(!forceUpdate && intraopRevision != null && intraopRevision !== "invalid"
@@ -340,26 +377,26 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           data: { ...mapIntraopUpdate(effectiveIntraop), syncRevision: { increment: 1 } },
         })
         if (updated.count === 0) {
-          const current = await prisma.intraoperativeRecord.findUnique({ where: { caseId: id } })
-          return NextResponse.json({
+          const current = await tx.intraoperativeRecord.findUnique({ where: { caseId: id } })
+          throw new CaseRouteResponse(NextResponse.json({
             error: "conflict",
             section: "intraop",
             serverVersion: current ? { updatedAt: current.updatedAt, revision: current.syncRevision } : undefined,
-          }, { status: 409 })
+          }, { status: 409 }))
         }
       } else {
-        await prisma.intraoperativeRecord.create({
+        await tx.intraoperativeRecord.create({
           data: { caseId: id, ...mapIntraop(effectiveIntraop), syncRevision: 1 },
         })
       }
       if ("timetableData" in effectiveIntraop && effectiveIntraop.timetableData) {
         const keyEvents = effectiveIntraop.timetableData as LegacyKeyEvents
-        const savedTiming = await prisma.intraoperativeRecord.findUnique({
+        const savedTiming = await tx.intraoperativeRecord.findUnique({
           where: { caseId: id },
           select: { startedAt: true },
         })
         const start = savedTiming?.startedAt?.getTime() ?? null
-        const eventRowCount = await prisma.caseEvent.count({ where: { caseId: id } })
+        const eventRowCount = await tx.caseEvent.count({ where: { caseId: id } })
         let projectedLog = Array.isArray(keyEvents.log) && keyEvents.log.length > 0
           ? keyEvents.log
           : eventRowCount === 0
@@ -408,7 +445,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (postop) {
       // Partial update for existing records (see mapPreopUpdate rationale)
       if (existing.postop) {
-        const updated = await prisma.postoperativeRecord.updateMany({
+        const updated = await tx.postoperativeRecord.updateMany({
           where: {
             caseId: id,
             ...(!forceUpdate && postopRevision != null && postopRevision !== "invalid"
@@ -418,24 +455,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           data: { ...mapPostopUpdate(postop), syncRevision: { increment: 1 } },
         })
         if (updated.count === 0) {
-          const current = await prisma.postoperativeRecord.findUnique({ where: { caseId: id } })
-          return NextResponse.json({
+          const current = await tx.postoperativeRecord.findUnique({ where: { caseId: id } })
+          throw new CaseRouteResponse(NextResponse.json({
             error: "conflict",
             section: "postop",
             serverVersion: current,
-          }, { status: 409 })
+          }, { status: 409 }))
         }
       } else {
-        await prisma.postoperativeRecord.create({
+        await tx.postoperativeRecord.create({
           data: { caseId: id, ...mapPostop(postop), syncRevision: 1 },
         })
       }
-    }
-
-    if (preop || intraop || postop) {
-      // Direct child-table updates above provide atomic revision checks. Keep
-      // the parent case clock moving for dashboard/version consumers.
-      await prisma.case.update({ where: { id }, data: { updatedAt: new Date() } })
     }
 
     // Status transition rules:
@@ -446,49 +477,77 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     //   COMPLETE requires POST /api/cases/:id/finalize (not allowed here)
     const finalStatus = computeNextStatus(existing.status)
     if (finalStatus) {
-      await prisma.case.update({
+      await tx.case.update({
         where: { id },
         data: { status: finalStatus },
       })
     }
     if (notes !== undefined) {
       const sanitised = notes == null ? null : notes.trim().slice(0, 1000)
-      await prisma.case.update({ where: { id }, data: { notes: sanitised } })
+      await tx.case.update({ where: { id }, data: { notes: sanitised } })
     }
 
-    after(() => logAudit(userId, "CASE_UPDATE", id, finalStatus ? { from: existing.status, to: finalStatus } : undefined))
-    if (preop)  after(() => writeFieldDiffsSafe(prisma, id, "preop",  existing.preop  ?? {}, preop,  userId))
-    if (postop) after(() => writeFieldDiffsSafe(prisma, id, "postop", existing.postop ?? {}, postop, userId))
-    after(() => syncCaseRelationalSafe(prisma, id, userId))
-    // No in-process event emit here any more: clients poll
-    // GET /api/cases/[id]/version, which works across serverless instances.
-
-    const updated = await prisma.case.findUnique({
+    const updatedCase = await tx.case.findUnique({
       where: { id },
       select: {
         updatedAt: true,
         finalizedAt: true,
-        preop:   { select: { updatedAt: true, syncRevision: true } },
-        postop:  { select: { updatedAt: true, syncRevision: true } },
-        intraop: { select: { updatedAt: true, syncRevision: true } },
+        clinicalRevision: true,
+        eventRevision: true,
+        relationalRevision: true,
       },
     })
+    const updatedPreop = await tx.preoperativeAssessment.findUnique({
+      where: { caseId: id },
+      select: { updatedAt: true, syncRevision: true },
+    })
+    const updatedPostop = await tx.postoperativeRecord.findUnique({
+      where: { caseId: id },
+      select: { updatedAt: true, syncRevision: true },
+    })
+    const updatedIntraop = await tx.intraoperativeRecord.findUnique({
+      where: { caseId: id },
+      select: { updatedAt: true, syncRevision: true },
+    })
+    const updated = updatedCase
+      ? { ...updatedCase, preop: updatedPreop, postop: updatedPostop, intraop: updatedIntraop }
+      : null
+      return { existing, finalStatus, updated }
+    })
+
+    if (transactionResult instanceof Response) return transactionResult
+    const { existing, finalStatus, updated } = transactionResult
+
+    after(() => logAudit(userId, "CASE_UPDATE", id, finalStatus ? { from: existing.status, to: finalStatus } : undefined))
+    if (preop) after(() => writeFieldDiffsSafe(prisma, id, "preop", existing.preop ?? {}, preop, userId))
+    if (postop) after(() => writeFieldDiffsSafe(prisma, id, "postop", existing.postop ?? {}, postop, userId))
+    after(() => syncCaseRelationalLockedSafe(id, userId))
+    // No in-process event emit here any more: clients poll
+    // GET /api/cases/[id]/version, which works across serverless instances.
 
     return NextResponse.json({
       id,
       updatedAt: updated?.updatedAt,
       finalizedAt: updated?.finalizedAt,
+      clinicalRevision: updated?.clinicalRevision,
+      eventRevision: updated?.eventRevision,
+      relationalRevision: updated?.relationalRevision,
       preopUpdatedAt: updated?.preop?.updatedAt,
       postopUpdatedAt: updated?.postop?.updatedAt,
       intraopUpdatedAt: updated?.intraop?.updatedAt,
       preopRevision: updated?.preop?.syncRevision,
       postopRevision: updated?.postop?.syncRevision,
       intraopRevision: updated?.intraop?.syncRevision,
-      // Present only when something was refused — the client must tell the user
-      // rather than let them believe an out-of-range value was stored.
       ...(rejectedFields.length ? { rejectedFields } : {}),
     })
   } catch (err: unknown) {
+    if (err instanceof CaseRouteResponse) return err.response
+    if (err instanceof CaseWriteError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
+    if (isCaseFinalizedDatabaseError(err)) {
+      return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+    }
     if (err instanceof z.ZodError) {
       console.error("[PATCH /api/cases/:id] ZodError:", JSON.stringify(err.issues, null, 2))
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
@@ -502,19 +561,33 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const userId = user.id
-
   const { id } = await params
 
-  const existing = await prisma.case.findUnique({
-    where: { id },
-    select: { userId: true, status: true, user: { select: { institutionId: true } } },
-  })
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (!canAccessCase(user, existing))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  if (existing.status === "COMPLETE") return NextResponse.json({ error: "Cannot delete a completed case" }, { status: 400 })
+  try {
+    const result = await withLockedCaseTransaction(id, async tx => {
+      const existing = await tx.case.findUnique({
+        where: { id },
+        select: { userId: true, status: true, institutionId: true },
+      })
+      if (!existing) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
+      if (!await canAccessCaseWithOwnerFallback(tx, user, existing)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      if (existing.status === "COMPLETE") {
+        return NextResponse.json({ error: "Cannot delete a completed case" }, { status: 400 })
+      }
+      await tx.case.delete({ where: { id } })
+      return null
+    })
+    if (result instanceof Response) return result
+  } catch (err: unknown) {
+    if (err instanceof CaseWriteError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
+    console.error("[DELETE /api/cases/:id]", err)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
 
-  await prisma.case.delete({ where: { id } })
   after(() => logAudit(userId, "CASE_DELETE", id))
   return NextResponse.json({ ok: true })
 }
