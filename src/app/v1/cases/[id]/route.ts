@@ -430,15 +430,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         }
         if (projectedLog && projectedLog.length > 0) {
           try {
-            await reconcileFullLog(prisma, id, userId, projectedLog, "web")
-            await rebuildProjection(prisma, id, { revisionAlreadyReserved: true })
+            await reconcileFullLog(tx, id, userId, projectedLog, "web")
+            await rebuildProjection(tx, id, { revisionAlreadyReserved: true })
           } catch (reconcileErr: unknown) {
             const code = (reconcileErr as { code?: string })?.code
             if (code !== "P2003" && code !== "P2025") throw reconcileErr
             console.warn("[PATCH /api/cases/:id] reconcileFullLog skipped — case deleted mid-save", code)
           }
         } else if (eventRowCount > 0) {
-          await rebuildProjection(prisma, id, { revisionAlreadyReserved: true })
+          await rebuildProjection(tx, id, { revisionAlreadyReserved: true })
         }
       }
     }

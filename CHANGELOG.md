@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [7.3.2] - 2026-07-28
+
+### Fixed
+
+- Web timetable reconciliation and projection now use the same locked database
+  transaction as the section save, preventing self-deadlock and outliving writes.
+- Added a real-PostgreSQL route regression that verifies section data, event
+  rows, projection, and revisions commit together within a bounded time.
 ## [7.3.1] - 2026-07-28
 
 ### Fixed

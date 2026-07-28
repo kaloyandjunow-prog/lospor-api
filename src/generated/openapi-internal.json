@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LOSPOR API - internal inventory",
-    "version": "7.3.1",
+    "version": "7.3.2",
     "description": "Complete server contract, including secret maintenance jobs."
   },
   "servers": [

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LOSPOR API",
-    "version": "7.3.1",
+    "version": "7.3.2",
     "description": "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations."
   },
   "servers": [
