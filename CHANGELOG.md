@@ -1,5 +1,14 @@
 # Changelog - LOSPOR API
 
+## [7.3.1] - 2026-07-28
+
+### Fixed
+
+- API health, capabilities, research metadata, personal archives, research
+  export records, and OpenAPI now derive the release version from one canonical
+  package value.
+- Added regression coverage that prevents public and persisted API metadata
+  from drifting behind future releases.
 ## [7.3.0] - 2026-07-28
 
 ### Fixed

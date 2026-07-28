@@ -1,3 +1,9 @@
+import { readFileSync } from "node:fs"
+
+const API_RELEASE_VERSION = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).version
+
 const ref = name => ({ $ref: `#/components/schemas/${name}` })
 const arrayOf = name => ({ type: "array", items: ref(name) })
 const object = (properties = {}, required = []) => ({
@@ -818,7 +824,7 @@ export function buildDocument({ includeInternal = false } = {}) {
     openapi: "3.1.0",
     info: {
       title: includeInternal ? "LOSPOR API - internal inventory" : "LOSPOR API",
-      version: "7.3.0",
+      version: API_RELEASE_VERSION,
       description: includeInternal
         ? "Complete server contract, including secret maintenance jobs."
         : "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations.",

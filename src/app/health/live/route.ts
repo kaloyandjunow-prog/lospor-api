@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
+import { API_RELEASE_VERSION } from "@/lib/api-version"
 
 export function GET() {
   return NextResponse.json({
     status: "ok",
     service: "lospor-api",
-    version: process.env.npm_package_version ?? "7.2.1",
+    version: API_RELEASE_VERSION,
   })
 }

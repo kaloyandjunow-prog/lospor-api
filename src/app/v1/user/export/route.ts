@@ -2,6 +2,7 @@ import { ZipArchive } from "archiver"
 import { PassThrough, Readable } from "node:stream"
 import { NextRequest, NextResponse } from "next/server"
 import type { Prisma } from "@/generated/prisma/client"
+import { API_RELEASE_VERSION } from "@/lib/api-version"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 
@@ -156,7 +157,7 @@ export async function GET(req: NextRequest) {
   const manifest = {
     format: "LOSPOR personal data export",
     formatVersion: EXPORT_FORMAT_VERSION,
-    appVersion: "7.2.1",
+    appVersion: API_RELEASE_VERSION,
     generatedAt: generatedAt.toISOString(),
     complete: true,
     files: {

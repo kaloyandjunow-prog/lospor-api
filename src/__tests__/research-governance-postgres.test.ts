@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { config as loadDotenv } from "dotenv"
+import { API_RELEASE_VERSION } from "@/lib/api-version"
 
 vi.mock("server-only", () => ({}))
 
@@ -191,6 +192,7 @@ describe.skipIf(!runPostgres)("research governance PostgreSQL integration", () =
 
     const stored = await prisma.researchExport.findUniqueOrThrow({ where: { id: queued.id } })
     expect(stored.revisionManifestVersion).toBe(2)
+    expect(stored.sourceVersion).toBe(API_RELEASE_VERSION)
     expect(stored.snapshotRevisions).toEqual([
       expect.objectContaining({
         id: caseA,

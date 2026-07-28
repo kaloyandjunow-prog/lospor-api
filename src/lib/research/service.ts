@@ -26,6 +26,7 @@ import {
   shouldSuppressResearchCell,
 } from "@lospor/core/research"
 import type { Prisma } from "@/generated/prisma/client"
+import { API_RELEASE_VERSION } from "@/lib/api-version"
 import { prisma } from "@/lib/prisma"
 import { compileResearchWhere } from "./cohort-where"
 import {
@@ -69,7 +70,7 @@ export async function researchMetadata(context: ResearchContext): Promise<Resear
     apiVersion: RESEARCH_API_VERSION,
     source: "LOSPOR",
     sourceLabel: "LOSPOR normalized clinical database",
-    sourceVersion: "7.2.1",
+    sourceVersion: API_RELEASE_VERSION,
     generatedAt: new Date().toISOString(),
     dataFreshnessAt: latest._max.updatedAt?.toISOString() ?? null,
     scope: metadataScope(context),

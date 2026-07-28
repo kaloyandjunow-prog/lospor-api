@@ -11,6 +11,7 @@ import type {
 import { normalizeResearchCohort } from "@lospor/core/research"
 import { deriveQualityStatus } from "@lospor/core/omop"
 import { Prisma } from "@/generated/prisma/client"
+import { API_RELEASE_VERSION } from "@/lib/api-version"
 import { prisma } from "@/lib/prisma"
 import { withDirectTransaction } from "@/lib/clinical-transaction"
 import {
@@ -32,7 +33,6 @@ import {
   mapResearchSummary,
 } from "./mappers"
 
-const SOURCE_VERSION = "7.3.0"
 const EXPORT_PAGE_SIZE = 250
 const EXPORT_LEASE_MS = 5 * 60 * 1000
 const DEFAULT_EXPORT_RETENTION_DAYS = 30
@@ -309,7 +309,7 @@ export async function createResearchExport(
         revisionManifestVersion: 2,
         scopeInstitutionIds,
         asOf,
-        sourceVersion: SOURCE_VERSION,
+        sourceVersion: API_RELEASE_VERSION,
         sourceCommit: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA ?? "untracked",
         artifactFilename: spec.filename,
         artifactContentType: spec.contentType,
