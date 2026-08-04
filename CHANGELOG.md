@@ -1,5 +1,54 @@
 # Changelog - LOSPOR API
 
+## [8.2.0] - 2026-08-05
+
+Security and access-control fixes, and the dose calculation is brought under the
+authoring scope guard.
+
+Requires `@lospor/core` v8.2.0.
+
+**Includes 8.1.0, which was never deployed** — its pull request was not merged,
+so production remained on 8.0.0 with `@lospor/core` v8.0.0. Pediatric mode
+therefore becomes active with this release, given `PEDIATRIC_MODE_ENABLED=true`.
+
+### Fixed
+
+- CORS and CSRF no longer fail open. `allowedCorsOrigin` returns `null` rather
+  than falling back to the first configured origin, and the header is omitted
+  entirely when no origin matches. With no trusted origins configured, CSRF
+  checking now fails closed in production instead of being skipped. Preview
+  deployments are correctly treated as non-production: they set
+  `NODE_ENV=production`, which the old check read as live.
+- Research and OMOP CSV exports neutralise formula cells. A value beginning
+  `=`, `+`, `-`, `@`, tab or carriage return is prefixed with an apostrophe, so
+  a spreadsheet renders it as text instead of executing it.
+- AI request logs no longer carry clinical free text.
+- A case is scoped to the institution it was performed at, not to wherever its
+  author currently works. A head of department moving hospitals previously took
+  visibility of their old cases with them.
+- An unapproved account cannot sign in. Approval was checked nowhere, so it
+  governed only whether someone appeared in colleague lists; and verifying an
+  email address also set `approvedAt`, meaning clicking the link in your own
+  inbox approved your own account. Institution is no longer self-editable
+  through the self-service patch endpoint.
+- The authoring scope guard now covers the dose calculation. It protected drug
+  identity, display names, units, routes, slider bounds and concentrations, but
+  not the arithmetic that turns a weight into milligrams: an institution or a
+  member could multiply a per-kilogram dose tenfold, switch ideal to total body
+  weight, delete a dose ceiling, invent quick doses, stretch an age band to
+  birth or eighteen years, or give an automatic dose to a drug the platform
+  ruleset withheld. All follow the rule the sliders already did — narrow, never
+  widen. A department may still prescribe less, cap harder, remove quick doses,
+  narrow a band and withdraw a drug; and a withheld drug may still be shown for
+  manual entry, because a register has to record a drug that was given.
+
+### Changed
+
+- `PEDIATRIC_DRUG_DOSE` is rejected for authoring; see core v8.2.0. Stored rules
+  of that kind still read, and none exist.
+- Destructive maintenance scripts require `LOSPOR_ALLOW_PROTECTED_DB` to name
+  the target Supabase project before they will touch a protected database.
+
 ## [8.1.0] - 2026-08-04
 
 Pediatric dosing cleared for production.
