@@ -150,3 +150,167 @@ describe("scopeGuardIssues", () => {
     })).toEqual([])
   })
 })
+
+/**
+ * The dose calculation is the arithmetic that turns a patient's weight into the
+ * milligrams the app suggests. The original guard checked drug identity, names,
+ * units, routes, slider bounds and concentrations — but not this, so a head of
+ * department could multiply a per-kilogram dose tenfold, delete a ceiling, or
+ * stretch an age band onto children it was never reviewed for, and the server
+ * accepted it. The rule is the same one the sliders already follow: a lower
+ * layer may prescribe less, never more.
+ */
+const platformRocuronium = {
+  kind: "PEDIATRIC_DRUG_PROFILE",
+  medicationKey: "ROCURONIUM",
+  labelEn: "Rocuronium",
+  labelBg: "Рокурониум",
+  category: "Neuromuscular blockers",
+  unit: "MG",
+  routeUnits: { IV: "MG" },
+  availability: "AUTO",
+  minimumAgeDays: 30,
+  maximumAgeDaysExclusive: 365,
+  profile: {
+    kind: "bolus",
+    mode: "dose",
+    rounding: "nearest_step",
+    quickValues: [1, 2, 5, 10],
+    routes: ["IV"],
+    defaultRoute: "IV",
+    weightBasis: "TBW",
+    doseCalc: { perKg: 0.6, basis: "TBW", cap: 100, roundTo: 0.1, capAtActualWeight: true },
+    routeModes: {
+      IV: { mode: "dose", min: 0, max: 100, step: 0.1, unit: "mg", quickValues: [1, 2, 5, 10] },
+    },
+  },
+} as unknown as ClinicalRulePayload
+
+function pedVariant(change: (draft: Record<string, unknown>) => void): ClinicalRulePayload {
+  const draft = JSON.parse(JSON.stringify(platformRocuronium)) as Record<string, unknown>
+  change(draft)
+  return draft as unknown as ClinicalRulePayload
+}
+
+type Draft = Record<string, unknown>
+const doseCalcOfDraft = (draft: Draft) =>
+  (draft.profile as Draft).doseCalc as Record<string, unknown>
+
+function guard(next: ClinicalRulePayload, scope: "INSTITUTION" | "USER" = "INSTITUTION") {
+  return scopeGuardIssues({ scope, next, baseline: platformRocuronium })
+}
+
+describe("scopeGuardIssues protects the dose calculation", () => {
+  it("accepts the platform rule unchanged at every scope", () => {
+    for (const scope of ["INSTITUTION", "USER"] as const) {
+      expect(guard(platformRocuronium, scope)).toEqual([])
+    }
+  })
+
+  it("blocks raising the per-kilogram dose", () => {
+    const issues = guard(pedVariant(d => { doseCalcOfDraft(d).perKg = 6 }))
+    expect(issues.map(i => i.field)).toContain("routeModes.IV.doseCalc.perKg")
+    expect(issues[0]!.message).toContain("0.6")
+  })
+
+  it("allows lowering the per-kilogram dose — a department may prescribe less", () => {
+    expect(guard(pedVariant(d => { doseCalcOfDraft(d).perKg = 0.3 }))).toEqual([])
+  })
+
+  it("blocks removing the dose ceiling", () => {
+    const issues = guard(pedVariant(d => { delete doseCalcOfDraft(d).cap }))
+    expect(issues.map(i => i.field)).toContain("routeModes.IV.doseCalc.cap")
+  })
+
+  it("blocks raising the dose ceiling but allows lowering it", () => {
+    expect(guard(pedVariant(d => { doseCalcOfDraft(d).cap = 500 }))).not.toEqual([])
+    expect(guard(pedVariant(d => { doseCalcOfDraft(d).cap = 50 }))).toEqual([])
+  })
+
+  it("blocks switching the weight the dose is calculated from", () => {
+    // Ideal and total body weight give different doses; this is not a narrowing
+    // in either direction, so it belongs to the platform layer.
+    const issues = guard(pedVariant(d => {
+      doseCalcOfDraft(d).basis = "IBW"
+      ;(d.profile as Draft).weightBasis = "IBW"
+    }))
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues.some(i => i.message.includes("every dose this profile produces"))).toBe(true)
+  })
+
+  it("blocks switching off the cap at the patient's actual weight", () => {
+    const issues = guard(pedVariant(d => { doseCalcOfDraft(d).capAtActualWeight = false }))
+    expect(issues.map(i => i.field)).toContain("routeModes.IV.doseCalc.capAtActualWeight")
+  })
+
+  it("blocks introducing an automatic dose where the platform left none", () => {
+    const noCalc = JSON.parse(JSON.stringify(platformRocuronium)) as Draft
+    delete (noCalc.profile as Draft).doseCalc
+    const withCalc = pedVariant(() => {})
+    const issues = scopeGuardIssues({
+      scope: "INSTITUTION",
+      next: withCalc,
+      baseline: noCalc as unknown as ClinicalRulePayload,
+    })
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0]!.message).toContain("cannot be introduced")
+  })
+})
+
+describe("scopeGuardIssues protects quick doses and age bands", () => {
+  it("blocks a quick dose that is not in the platform ruleset", () => {
+    const issues = guard(pedVariant(d => {
+      ;((d.profile as Draft).routeModes as Draft).IV = {
+        mode: "dose", min: 0, max: 100, step: 0.1, unit: "mg", quickValues: [1, 2, 5, 999],
+      }
+    }))
+    expect(issues.map(i => i.field)).toContain("routeModes.IV.quickValues")
+    expect(issues[0]!.message).toContain("999")
+  })
+
+  it("allows removing and reordering quick doses", () => {
+    expect(guard(pedVariant(d => {
+      ;((d.profile as Draft).routeModes as Draft).IV = {
+        mode: "dose", min: 0, max: 100, step: 0.1, unit: "mg", quickValues: [5, 2, 1],
+      }
+    }))).toEqual([])
+  })
+
+  it("blocks widening an age band in either direction", () => {
+    expect(guard(pedVariant(d => { d.minimumAgeDays = 0 })).map(i => i.field))
+      .toContain("minimumAgeDays")
+    expect(guard(pedVariant(d => { d.maximumAgeDaysExclusive = 6570 })).map(i => i.field))
+      .toContain("maximumAgeDaysExclusive")
+  })
+
+  it("allows narrowing an age band", () => {
+    expect(guard(pedVariant(d => {
+      d.minimumAgeDays = 60
+      d.maximumAgeDaysExclusive = 300
+    }))).toEqual([])
+  })
+})
+
+describe("scopeGuardIssues protects automatic dosing, not visibility", () => {
+  const withheld = pedVariant(d => { d.availability = "HIDDEN" })
+
+  it("blocks giving an automatic dose to a drug the platform withheld", () => {
+    const issues = scopeGuardIssues({
+      scope: "INSTITUTION",
+      next: pedVariant(d => { d.availability = "AUTO" }),
+      baseline: withheld,
+    })
+    expect(issues.map(i => i.field)).toContain("availability")
+  })
+
+  it("still lets a department withdraw a drug, or show it for manual entry only", () => {
+    // Hiding is the escape hatch institutions rely on; unhiding for manual entry
+    // matters because a register has to record a drug that was actually given.
+    expect(guard(withheld)).toEqual([])
+    expect(scopeGuardIssues({
+      scope: "INSTITUTION",
+      next: pedVariant(d => { d.availability = "MANUAL" }),
+      baseline: withheld,
+    })).toEqual([])
+  })
+})
