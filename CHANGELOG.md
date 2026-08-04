@@ -1,5 +1,28 @@
 # Changelog - LOSPOR API
 
+## [8.1.0] - 2026-08-04
+
+Pediatric dosing cleared for production.
+
+Requires `@lospor/core` v8.1.0, in which `PEDIATRIC_PRODUCTION_READY` is `true`.
+
+### Changed
+
+- Pediatric case mutations are no longer rejected with
+  `503 PEDIATRIC_MODE_DISABLED` once `PEDIATRIC_MODE_ENABLED=true` is set in the
+  production environment. Both are required: the reviewed clinical manifest in
+  core, and the deployment flag. Setting either alone leaves pediatric mode off.
+- `clinicalRulesVersion` stamped on pediatric doses is now
+  `2026.08.04-release.1`, from core — previously it read `…-draft.1`.
+
+### Tests
+
+- The pediatric gate test now passes `productionReady` explicitly for each case,
+  so it pins the gate's logic rather than the current value of the shipped
+  constant, and does not need rewriting whenever the clinical sign-off changes.
+  A separate case records the current sign-off, so reversing it is deliberate
+  and visible.
+
 ## [8.0.0] - 2026-08-04
 
 First stable release. Adds pediatric clinical mode, the clinical-ruleset API,

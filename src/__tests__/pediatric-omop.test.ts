@@ -10,7 +10,7 @@ function pediatricCase(): AnyCase {
     createdAt: new Date("2026-07-29T08:00:00Z"),
     status: "COMPLETE",
     clinicalMode: "PEDIATRIC",
-    clinicalRulesVersion: "2026.07.29-draft.1",
+    clinicalRulesVersion: "2026.08.04-release.1",
     preop: {
       ageYears: 0,
       ageValue: 14,
@@ -51,7 +51,7 @@ describe("pediatric OMOP source preservation", () => {
 
     expect(observations.get("LOSPOR_CLINICAL_MODE")?.value_as_string).toBe("PEDIATRIC")
     expect(observations.get("LOSPOR_CLINICAL_RULES_VERSION")?.value_as_string)
-      .toBe("2026.07.29-draft.1")
+      .toBe("2026.08.04-release.1")
     expect(observations.get("AGE_AT_PROCEDURE_EXACT")?.value_as_string).toBe("14 DAYS")
     expect(observations.get("AGE_AT_PROCEDURE_APPROX_DAYS")?.value_as_string)
       .toBe("14")
