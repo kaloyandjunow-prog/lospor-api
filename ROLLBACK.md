@@ -43,6 +43,34 @@ SELECT count(*) FROM "Case" WHERE "clinicalMode" = 'PEDIATRIC';
 Zero: roll back freely. Non-zero: you are trading those cases' visibility for
 whatever the rollback fixes. Decide deliberately, and tell the department.
 
+## The pre-deployment backup
+
+Taken 2026-08-04, immediately before the v8 deployment, following the existing
+convention in `C:\LOSAR\backups\production\`:
+
+```
+backups/production/2026-08-04_v8.0.0-predeploy/
+  production-full.dump     6,189,067 bytes   custom format, pg_dump 17.10
+  schema-only.sql            234,873 bytes
+  archive-contents.list       52,228 bytes   703 TOC entries, 80 table-data entries
+  backup-manifest.json                       sha256 for each file, per-table row counts
+```
+
+State captured: PostgreSQL 17.6, 142 MB, **36 migrations applied**, latest
+`20260728120000_clinical_serialization_and_export_retention`. `ClinicalPreset`
+was absent, confirming none of the nine v8 migrations had run.
+
+Restore with PostgreSQL 17 `pg_restore`, into an isolated database first — never
+straight over production. Note this is a *logical* backup: restoring it is
+minutes, not seconds, and it does not capture anything written after the
+timestamp above. It is the floor, not a substitute for rolling the code back.
+
+Sanity check against the previous backup (2026-07-28, v7.3.0): one `Case` and its
+`PreoperativeAssessment` are gone (3 → 2), along with 51 `ClinicalFieldStatus`
+rows and all 3 `RateLimit` rows. That is consistent with the daily
+`/v1/internal/purge-deleted` cron hard-deleting one soft-deleted case, plus rate
+limits expiring — expected attrition, not data loss.
+
 ## Rollback targets
 
 | Component | Roll back to |
