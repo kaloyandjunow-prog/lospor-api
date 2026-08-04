@@ -71,6 +71,53 @@ rows and all 3 `RateLimit` rows. That is consistent with the daily
 `/v1/internal/purge-deleted` cron hard-deleting one soft-deleted case, plus rate
 limits expiring — expected attrition, not data loss.
 
+## BLOCKER found by rehearsing the migration (2026-08-04)
+
+The backup was restored into an isolated local PostgreSQL 17.10 cluster and the
+nine v8 migrations were run against it. They apply cleanly and lose no data — all
+46 tables and 253,054 rows survived, only `_prisma_migrations` grew (36 → 45).
+
+But the migrations **seed data**, and that seeding leaves production in a broken
+state for pediatric dosing:
+
+1. `20260730140000_clinical_rule_presets` creates preset `lospor-standard-v1`
+   ("LOSPOR Standard") as `PUBLISHED` with **zero rules**, then backfills every
+   `Institution.clinicalPresetId` to it.
+2. `20260731100000_clinical_ruleset_hierarchy` migrates that into
+   `InstitutionClinicalPresetSelection` — **427 rows, one per institution** — and
+   sets the platform pediatric selection to the same empty preset.
+
+Resolution order in `src/lib/clinical-rules/service.ts` is
+`[user, institution, platform]` with `.find()`, so **an institution selection
+beats the platform selection**. The predicate checks only `status === "PUBLISHED"`
+and `clinicalMode`; it does **not** require the preset to have any rules.
+
+Net effect if v8 is deployed as-is: every institution resolves pediatric dosing
+to a published-but-empty ruleset — no drug profiles, no dose autofill, nothing.
+And publishing a real pediatric ruleset at PLATFORM scope afterwards **will not
+fix it**, because all 427 institution selections still win.
+
+This is invisible on dev: dev has no institution selections at all, and
+`lospor-standard-v1` is not present there (it was deleted at some point, which
+cascaded its selections away). Only production carries the legacy rows.
+
+### Remediation, verified on the restored copy
+
+After `migrate deploy`, and before letting clinicians near pediatric mode:
+
+```sql
+DELETE FROM "InstitutionClinicalPresetSelection"
+WHERE "clinicalMode" = 'PEDIATRIC' AND "presetId" = 'lospor-standard-v1';
+```
+
+Rehearsed: this removed all 427 rows and left institutions falling through to the
+platform selection. Then seed and publish the real pediatric ruleset, point the
+platform selection at it, and verify with
+`npm run clinical-rules:verify-pediatric-v2`.
+
+Do not skip the verify step: an empty ruleset is `PUBLISHED` and looks healthy in
+every status check that only asks whether a preset is selected.
+
 ## Rollback targets
 
 | Component | Roll back to |
