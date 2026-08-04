@@ -38,9 +38,12 @@ export async function pruneRateLimits(now = new Date()): Promise<number> {
  *
  * Deliberately anonymise rather than hard-delete:
  *
- * - **Cases are kept.** They hold no patient identifiers by design, and they are
- *   the register's entire research value. Destroying them because a clinician
- *   closed their account would be the wrong trade.
+ * - **Cases are kept.** They carry no *direct* patient identifiers by design, and
+ *   they are the register's entire research value. Destroying them because a
+ *   clinician closed their account would be the wrong trade. Note this makes
+ *   them pseudonymised, not anonymous: age, sex, institution, precise timestamps
+ *   and free text can still single out an individual, so they remain personal
+ *   data and a data-subject request may still reach them.
  * - **Audit rows are kept and still reference the (now anonymous) id.** That is
  *   why `AuditLog.userId` is deliberately not a foreign key — a purge must not
  *   cascade away the record of what was done.
