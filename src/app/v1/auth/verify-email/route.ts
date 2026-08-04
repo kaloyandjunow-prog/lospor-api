@@ -23,8 +23,11 @@ export async function GET(req: NextRequest) {
     prisma.user.update({
       where: { id: verificationToken.userId },
       data: {
+        // Verification only. This also set approvedAt, which meant clicking the
+        // link in your own inbox approved your own account — the admin approval
+        // queue could never gate anything. Approval is granted by an
+        // administrator through /v1/admin/users/[id]/approve.
         emailVerifiedAt: verificationToken.user.emailVerifiedAt ?? now,
-        approvedAt: verificationToken.user.approvedAt ?? now,
       },
     }),
     prisma.emailVerificationToken.update({
