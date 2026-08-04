@@ -22,8 +22,8 @@ import {
   clinicalRuleKey,
   validateClinicalRuleCollectionForPublication,
   type PediatricDrugPolicyRulePayload,
-} from "../../lospor-core/src/clinical-rules"
-import { createLosporPediatricPlatformDraft } from "../../lospor-core/src/platform-clinical-drafts"
+} from "@lospor/core/clinical-rules"
+import { createLosporPediatricPlatformDraft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 

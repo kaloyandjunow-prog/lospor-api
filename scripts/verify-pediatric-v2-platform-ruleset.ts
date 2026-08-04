@@ -1,8 +1,8 @@
 /** Read-only verification of the published pediatric v2 DEV snapshot. */
 import "dotenv/config"
 import { isDeepStrictEqual } from "node:util"
-import { clinicalRuleKey } from "../../lospor-core/src/clinical-rules"
-import { createLosporPediatricV2Draft } from "../../lospor-core/src/platform-clinical-drafts"
+import { clinicalRuleKey } from "@lospor/core/clinical-rules"
+import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 

@@ -3,7 +3,9 @@ import { basename, extname, join, relative } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..")
-const sourceRoots = ["src"]
+// `scripts` is included because it is type-checked by `next build`: a broken
+// import there fails the deployment exactly as one in `src` would.
+const sourceRoots = ["src", "scripts"]
 const extensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".json"])
 const ignoredDirectories = new Set(["generated", "node_modules", ".next", "dist", "coverage"])
 
@@ -54,6 +56,15 @@ const rules = [
     description: "client framework code does not belong in lospor-api",
     pattern: /(?:from\s+["'](?:react-native|expo(?:\/[^"']*)?)["']|AsyncStorage|indexedDB|localStorage)/,
   },
+  {
+    // Reaching into a sibling repository by relative path resolves only on a
+    // machine where the repos happen to sit side by side. CI and Vercel check
+    // out this repository alone, so it fails there and nowhere else -- a build
+    // break that no amount of local verification can surface. Import the
+    // published package instead: "@lospor/core/clinical-rules".
+    description: "relative import escaping the repository (use @lospor/core/...)",
+    pattern: /(?:from\s+|require\()\s*["'](?:\.\.\/)+lospor-(?:core|app|mobile|browser|docs)\//,
+  },
 ]
 
 async function filesUnder(directory) {
@@ -68,10 +79,15 @@ async function filesUnder(directory) {
   return files
 }
 
+// This file states every forbidden pattern literally, so scanning `scripts`
+// makes it match itself. Skip it rather than contort the patterns.
+const selfPath = fileURLToPath(import.meta.url)
+
 const violations = []
 for (const sourceRoot of sourceRoots) {
   const files = await filesUnder(join(root, sourceRoot))
   for (const file of files) {
+    if (file === selfPath) continue
     if (basename(file) === "option-library-fallback.json") {
       violations.push(`${relative(root, file)}: copied fallback catalog`)
       continue

@@ -17,8 +17,8 @@ import { isDeepStrictEqual } from "node:util"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollectionForPublication,
-} from "../../lospor-core/src/clinical-rules"
-import { createLosporPediatricV2Draft } from "../../lospor-core/src/platform-clinical-drafts"
+} from "@lospor/core/clinical-rules"
+import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 
