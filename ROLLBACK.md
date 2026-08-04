@@ -128,6 +128,22 @@ this stayed hidden.
 
 ## Rollback targets
 
+### Commit anchors captured immediately before the v8 merge
+
+If the Vercel deployment ID is not to hand, redeploying these commits achieves
+the same thing — slower, because it rebuilds, but it needs nothing but git:
+
+| Repo | Production commit before v8 |
+|---|---|
+| lospor-api | `a6a2b73` — "fix: keep timetable writes in locked transaction (#6)" (v7.3.2) |
+| lospor-app | `779d8fa` — "Release Web v7.3.0 clinical serialization (#6)" (v7.3.0) |
+
+Health at that moment: `lospor.org` 200, `/health/ready`
+`{"status":"ready","database":"ok"}`.
+
+Re-deploying `a6a2b73` re-runs `prisma migrate deploy`, which is harmless:
+migrations only move forward, and every v8 migration is already applied.
+
 | Component | Roll back to |
 |---|---|
 | lospor-app | `dpl_Efu1tnvkpkm42zsto2DHz5KRnj35` — v7.3.0, deployed 2026-07-28T03:43:52Z, commit `779d8fa` on `main` |
