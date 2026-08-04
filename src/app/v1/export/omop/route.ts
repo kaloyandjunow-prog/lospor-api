@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { csvCell } from "@/lib/csv-cell"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
 import { prisma } from "@/lib/prisma"
@@ -149,14 +150,10 @@ export function bundleToCsv(bundle: ReturnType<typeof mapCasesToOmop>): string {
     sections.push(headers.join(","))
     for (const row of rows) {
       sections.push(
-        headers.map(h => {
-          const v = row[h]
-          if (v == null) return ""
-          const s = String(v)
-          return s.includes(",") || s.includes('"') || s.includes("\n")
-            ? `"${s.replace(/"/g, '""')}"`
-            : s
-        }).join(",")
+        // Shared with the research export: quotes delimiters and neutralises a
+        // leading formula character, so a dash-led clinical note survives being
+        // opened in a spreadsheet as the text it is.
+        headers.map(h => csvCell(row[h])).join(",")
       )
     }
     sections.push("")

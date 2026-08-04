@@ -1,3 +1,5 @@
+import { isProductionDeployment } from "./cors"
+
 const STATE_CHANGING_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"])
 
 type HeaderSource = { headers: { get(name: string): string | null }; method: string }
@@ -62,7 +64,14 @@ export function validateCookieWriteOrigin(req: HeaderSource): "pass" | "skip" | 
   if (usesBearerAuth(req)) return "pass"
 
   const expected = trustedAppOrigins()
-  if (!expected.length) return "skip"
+  if (!expected.length) {
+    // No trusted origin configured. In production that is a misconfiguration,
+    // not a licence to accept any cookie-authenticated write: skipping here
+    // would leave every state-changing request open to cross-site forgery on a
+    // self-hosted install that forgot the variable. Fail closed and let the
+    // deployment be fixed.
+    return isProductionDeployment() ? "fail" : "skip"
+  }
 
   const isAllowed = (value: string | null) =>
     value !== null && (

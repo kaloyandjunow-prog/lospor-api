@@ -120,9 +120,7 @@ export async function POST(req: NextRequest) {
     clearTimeout(timeout)
   }
 
-  if (!mistralRes.ok) {
-    const errText = await mistralRes.text().catch(() => "")
-    console.error("[ai/read-labs] Mistral error:", mistralRes.status, errText)
+  if (!mistralRes.ok) {    console.error("[ai/read-labs] Mistral error:", mistralRes.status)  // body withheld: provider errors can echo the clinical payload
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 

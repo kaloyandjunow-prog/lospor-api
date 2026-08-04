@@ -37,9 +37,13 @@ describe("CORS config", () => {
     expect(allowedCorsOrigin("https://pwa.lospor.org")).toBe("https://pwa.lospor.org")
   })
 
-  it("falls back to the first configured origin for unknown origins", () => {
+  it("returns no origin for an unknown one, rather than the first configured", () => {
+    // Previously this returned the first allowlisted origin. Harmless in
+    // practice — the browser compares it to the actual origin and refuses — but
+    // it made the response assert an allowance that had not been granted. The
+    // header is now omitted entirely for an origin that is not on the list.
     vi.stubEnv("CORS_ALLOW_ORIGINS", "https://pwa.lospor.org, https://preview.lospor.org")
-    expect(allowedCorsOrigin("https://evil.example.com")).toBe("https://pwa.lospor.org")
+    expect(allowedCorsOrigin("https://evil.example.com")).toBeNull()
   })
 
   it("merges the singular CORS_ALLOW_ORIGIN into the allowlist", () => {

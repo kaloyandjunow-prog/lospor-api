@@ -1,3 +1,4 @@
+import { csvCell } from "@/lib/csv-cell"
 import { createHash, randomUUID } from "node:crypto"
 import { once } from "node:events"
 import { Readable, Transform, type Writable } from "node:stream"
@@ -534,11 +535,8 @@ async function writeChunk(stream: Writable, chunk: string | Buffer): Promise<voi
   if (!stream.write(chunk)) await once(stream, "drain")
 }
 
-function csvEscape(value: unknown): string {
-  if (value == null) return ""
-  const text = Array.isArray(value) ? value.join(" | ") : String(value)
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-}
+// Shared with the OMOP export so both apply the same spreadsheet-safe policy.
+const csvEscape = csvCell
 
 const SUMMARY_COLUMNS = [
   "researchId",
