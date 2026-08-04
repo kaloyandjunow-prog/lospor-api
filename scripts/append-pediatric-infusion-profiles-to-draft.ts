@@ -23,6 +23,7 @@ import { createLosporPediatricPlatformDraft } from "@lospor/core/platform-clinic
 import { PEDIATRIC_INFUSION_PROFILE_RULE_COUNT } from "@lospor/core"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { assertDatabaseWritable } from "./lib/protected-database"
 
 const AUTHORIZATION_VARIABLE = "APPEND_PEDIATRIC_INFUSION_PROFILES_TO_DRAFT"
 const TARGET_PRESET_ID = "lospor-pediatrics-v1"
@@ -38,9 +39,7 @@ if (process.env[AUTHORIZATION_VARIABLE] !== "YES") {
 if (process.env.TARGET_CLINICAL_PRESET_ID !== TARGET_PRESET_ID) {
   throw new Error(`TARGET_CLINICAL_PRESET_ID must be exactly "${TARGET_PRESET_ID}".`)
 }
-if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-  throw new Error("Refusing to append rules in a production-like environment.")
-}
+assertDatabaseWritable("append rules")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const draft = createLosporPediatricPlatformDraft()

@@ -14,15 +14,14 @@ import {
 } from "@lospor/core/clinical-rules"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { assertDatabaseWritable } from "./lib/protected-database"
 
 if (process.env.RESET_DEV_CLINICAL_RULESETS !== "YES") {
   throw new Error(
     'Refusing to replace clinical rulesets. Set RESET_DEV_CLINICAL_RULESETS="YES" explicitly.',
   )
 }
-if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-  throw new Error("Refusing to replace rulesets in a production-like environment.")
-}
+assertDatabaseWritable("replace rulesets")
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required")
 }

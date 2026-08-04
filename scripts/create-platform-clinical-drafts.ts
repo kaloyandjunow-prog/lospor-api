@@ -20,15 +20,14 @@ import {
 } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { assertDatabaseWritable } from "./lib/protected-database"
 
 if (process.env.CREATE_PLATFORM_CLINICAL_DRAFTS !== "YES") {
   throw new Error(
     'Refusing to create platform drafts. Set CREATE_PLATFORM_CLINICAL_DRAFTS="YES" explicitly.',
   )
 }
-if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-  throw new Error("Refusing to create rulesets in a production-like environment.")
-}
+assertDatabaseWritable("create rulesets")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const prisma = new PrismaClient({
