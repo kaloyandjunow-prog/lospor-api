@@ -101,22 +101,30 @@ This is invisible on dev: dev has no institution selections at all, and
 `lospor-standard-v1` is not present there (it was deleted at some point, which
 cascaded its selections away). Only production carries the legacy rows.
 
-### Remediation, verified on the restored copy
+### Fixed in the migration chain, not left as a manual step
 
-After `migrate deploy`, and before letting clinicians near pediatric mode:
+`20260804000000_drop_placeholder_clinical_preset` removes the placeholder: it
+clears the selections at all three scopes and drops the preset itself, but only
+when it is genuinely empty — no rules, no institution overrides, and no
+`CaseEvent` citing it as dose provenance. So it runs as part of
+`prisma migrate deploy` in the production build; there is nothing to remember on
+the night.
 
-```sql
-DELETE FROM "InstitutionClinicalPresetSelection"
-WHERE "clinicalMode" = 'PEDIATRIC' AND "presetId" = 'lospor-standard-v1';
-```
+Rehearsed against a fresh restore of the production backup:
 
-Rehearsed: this removed all 427 rows and left institutions falling through to the
-platform selection. Then seed and publish the real pediatric ruleset, point the
-platform selection at it, and verify with
+- all ten migrations applied, `36 → 46`
+- placeholder preset gone; institution, platform and user selections all **0**
+- clinical data untouched: 2 cases, 85 case events, 17 users, 427 institutions
+- re-running the deletes removes 0 rows, so the migration is safe to replay
+
+After deploying, pediatric mode resolves to **no preset** rather than to an empty
+one. That is the honest state, and it is what lets the real ruleset take effect:
+seed and publish it, select it at PLATFORM scope, then verify with
 `npm run clinical-rules:verify-pediatric-v2`.
 
-Do not skip the verify step: an empty ruleset is `PUBLISHED` and looks healthy in
-every status check that only asks whether a preset is selected.
+Do not skip that verify step. An empty ruleset is `PUBLISHED` and looks healthy
+to any check that only asks whether a preset is selected — which is exactly how
+this stayed hidden.
 
 ## Rollback targets
 

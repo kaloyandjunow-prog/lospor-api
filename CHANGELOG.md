@@ -22,9 +22,21 @@ Requires `@lospor/core` v8.0.0.
 - Guarded scripts to create, publish, verify and prune platform rulesets, each
   refusing to run against a production-like database.
 
+### Fixed
+
+- Removed the `lospor-standard-v1` placeholder preset that the ruleset
+  migrations seeded. It was created `PUBLISHED` with no rules to satisfy the
+  NOT NULL foreign keys being added, then selected for every institution. Since
+  preset resolution takes the first `PUBLISHED` preset from
+  `[user, institution, platform]` and does not check whether it has rules, that
+  left every institution resolving pediatric dosing to an empty ruleset — and a
+  real ruleset published at platform scope could not have overridden it, because
+  institution selections win. Found by restoring the production backup and
+  running the migrations against it.
+
 ### Migrations
 
-Nine migrations, all additive relative to v7.3.2: every `DROP COLUMN` in this
+Ten migrations, all additive relative to v7.3.2: every `DROP COLUMN` in this
 batch removes a column added earlier in the same batch, and no new `NOT NULL`
 column lacks a default. A rollback to v7.3.2 therefore needs no schema
 downgrade -- though cases recorded in pediatric mode will not be understood by
