@@ -38,11 +38,21 @@ describe("cookie-authenticated API write CSRF guard", () => {
     }))).toBe("pass")
   })
 
-  it("accepts the local Database Browser on a private LAN address", () => {
+  it.each(["3000", "3001", "3003"])(
+    "accepts a local LOSPOR client on private LAN port %s",
+    port => {
+      vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
+      expect(validateCookieWriteOrigin(req("POST", {
+        origin: `http://192.168.0.106:${port}`,
+      }))).toBe("pass")
+    },
+  )
+
+  it("rejects an unrelated private-LAN port", () => {
     vi.stubEnv("LOSPOR_WEB_URL", "https://app.lospor.org")
     expect(validateCookieWriteOrigin(req("POST", {
-      origin: "http://192.168.0.101:3003",
-    }))).toBe("pass")
+      origin: "http://192.168.0.106:4999",
+    }))).toBe("fail")
   })
 
   it("does not allow the private-LAN exception in production", () => {

@@ -54,6 +54,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (existing.userId !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
+  if (existing.clinicalMode === "PEDIATRIC") {
+    return NextResponse.json({
+      error: "Pediatric AI treatment and dose advice is disabled",
+      code: "PEDIATRIC_AI_ADVICE_DISABLED",
+    }, { status: 403 })
+  }
+
 
   // Consent check from DB — ignores any client-supplied aiOptIn
   if (!existing.preop?.aiOptIn) {

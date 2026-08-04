@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { CLINICAL_CATALOG_VERSION } from "@lospor/core/catalog"
 import { API_RELEASE_VERSION } from "@/lib/api-version"
+import { pediatricCapabilities } from "@/lib/pediatric-mode"
 
 export function GET() {
   return NextResponse.json({
@@ -22,6 +23,7 @@ export function GET() {
       offlineReplay: true,
       omopExport: true,
       externalClientCredentials: false,
+      pediatricMode: pediatricCapabilities(),
     },
   })
 }

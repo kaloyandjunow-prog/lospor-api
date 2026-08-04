@@ -1,9 +1,12 @@
 /**
- * OMOP CDM v5.4 mapper — export contract `source_version` 3.5.1.
+ * OMOP CDM v5.4 mapper — export contract `source_version` 3.6.0.
  *
  * `source_version` tracks the shape of the export, not the app version: bump it
  * whenever a table or column is added, removed or reinterpreted.
  *
+ * 3.6.0 — preserves pediatric mode, precise age, rule provenance, pediatric
+ *         risk scores, and pediatric recovery scores as source observations.
+ *         No unreviewed standard concept IDs are assigned.
  * 3.5.1 — production export includes real intraoperative start/end instants in
  *         the selected row shape, so visit dates use startedAt/endedAt when
  *         present instead of falling back to legacy wall-clock columns.
@@ -22,6 +25,7 @@
 
 import { createHash } from "node:crypto"
 import { DICTIONARY_VERSION } from "@/lib/data-dictionary"
+import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import { deriveQualityStatus } from "@lospor/core/omop"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -230,6 +234,8 @@ type CaseRow = {
   caseCode: string | null
   createdAt: Date
   status: string
+  clinicalMode?: "ADULT" | "PEDIATRIC"
+  clinicalRulesVersion?: string | null
   institutionId?: string | null
   user?: { institution?: { name: string | null } | null } | null
   events?: {
@@ -240,6 +246,18 @@ type CaseRow = {
     unit: string | null
     rate?: string | null
     concentration?: string | null
+    concentrationValue?: number | null
+    concentrationUnit?: string | null
+    formulation?: string | null
+    calculationBasis?: string | null
+    calculationWeightKg?: number | null
+    calculationMethod?: string | null
+    clinicalRuleKey?: string | null
+    clinicalRuleVersion?: string | null
+    clinicalRuleSourceIds?: unknown
+    clinicalPresetId?: string | null
+    clinicalPresetVersion?: number | null
+    clinicalPresetScope?: string | null
     volume?: string | null
     fluidCategory?: string | null
     agentPercent?: number | null
@@ -279,6 +297,11 @@ type CaseRow = {
   }[]
   preop?: {
     ageYears: number | null
+    ageValue?: number | null
+    ageUnit?: "DAYS" | "MONTHS" | "YEARS" | null
+    ageApproxDays?: number | null
+    bodySurfaceAreaM2?: number | null
+    pediatricFasting?: unknown
     sex: string
     heightCm: number | null
     weightKg: number | null
@@ -304,6 +327,9 @@ type CaseRow = {
     rcriScore: number | null
     apfelScore: number | null
     stopBangScore: number | null
+    povocScore?: number | null
+    povocRiskPercent?: number | null
+    coldsScore?: number | null
     difficultAirwayHistory: boolean
     mallampati: string | null
     labResults: unknown
@@ -422,6 +448,9 @@ type CaseRow = {
     recoverySpO2: number | null
     temperatureCelsius: number | null
     painScoreNRS: number | null
+    pediatricPainScale?: "FLACC" | "FPS_R" | "NRS" | null
+    pediatricPainScore?: number | null
+    paedScore?: number | null
     ponv: boolean
     disposition: string | null
     complications: string | null
@@ -610,7 +639,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // fall through to 0 ("no matching concept"), but they mean different things
     // in the source data and are preserved verbatim in gender_source_value.
     const GENDER_CONCEPT: Record<string, number> = { MALE: 8507, FEMALE: 8532 }
-    const ageAtOp = c.preop?.ageYears ?? null
+    const ageAtOp = c.preop?.ageYears
+      ?? (c.preop?.ageApproxDays != null ? Math.floor(c.preop.ageApproxDays / 365.2425) : null)
     const opYear = startDate ? Number(startDate.substring(0, 4)) : null
     persons.push({
       person_id:            personId,
@@ -651,11 +681,45 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       care_site_source_value: careSite,
     })
 
+    const sourceObservation = (
+      source: string,
+      value: string | number | boolean | null | undefined,
+      date = startDate,
+    ) => {
+      if (value == null || value === "") return
+      observations.push({
+        observation_id: nextId(),
+        person_id: personId,
+        observation_concept_id: 0,
+        observation_date: date,
+        observation_type_concept_id: 32817,
+        value_as_string: String(value),
+        observation_source_value: source,
+        visit_occurrence_id: visitId,
+      })
+    }
+
+    sourceObservation("LOSPOR_CLINICAL_MODE", c.clinicalMode ?? "ADULT")
+    sourceObservation("LOSPOR_CLINICAL_RULES_VERSION", c.clinicalRulesVersion)
+
     const preop = c.preop
 
     // ── Preop vitals -> MEASUREMENT ───────────────────────────────────────────
     if (preop) {
       const vitDate = isoDate(c.createdAt)
+      if (preop.ageValue != null && preop.ageUnit) {
+        sourceObservation("AGE_AT_PROCEDURE_EXACT", `${preop.ageValue} ${preop.ageUnit}`, vitDate)
+      }
+      sourceObservation("AGE_AT_PROCEDURE_APPROX_DAYS", preop.ageApproxDays, vitDate)
+      sourceObservation("BODY_SURFACE_AREA_M2", preop.bodySurfaceAreaM2, vitDate)
+      sourceObservation("POVOC_SCORE", preop.povocScore, vitDate)
+      sourceObservation("POVOC_RISK_PERCENT", preop.povocRiskPercent, vitDate)
+      sourceObservation("COLDS_SCORE", preop.coldsScore, vitDate)
+      sourceObservation(
+        "PEDIATRIC_FASTING_ASSESSMENT",
+        preop.pediatricFasting == null ? null : JSON.stringify(preop.pediatricFasting),
+        vitDate,
+      )
       const vitalMap: [keyof typeof VITAL_CONCEPTS, number | null | undefined][] = [
         ["systolic",        preop.bpSystolic],
         ["diastolic",       preop.bpDiastolic],
@@ -932,6 +996,55 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           route_source_value:         ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV"),
           visit_occurrence_id:        visitId,
         })
+        if (ev.type === "drug") {
+          const concentration = ev.concentration
+            ?? formatCanonicalConcentration(ev.concentrationValue, ev.concentrationUnit)
+          const auditObservations: Array<[string, string | null | undefined]> = [
+            ["LOSPOR_DRUG_CONCENTRATION", concentration],
+            ["LOSPOR_DRUG_FORMULATION", ev.formulation],
+            ["LOSPOR_DOSE_CALCULATION_BASIS", ev.calculationBasis],
+            ["LOSPOR_DOSE_CALCULATION_METHOD", ev.calculationMethod],
+            ["LOSPOR_CLINICAL_RULE_KEY", ev.clinicalRuleKey],
+            ["LOSPOR_CLINICAL_RULE_VERSION", ev.clinicalRuleVersion],
+            ["LOSPOR_CLINICAL_PRESET_ID", ev.clinicalPresetId],
+            ["LOSPOR_CLINICAL_PRESET_VERSION", ev.clinicalPresetVersion == null ? null : String(ev.clinicalPresetVersion)],
+            ["LOSPOR_CLINICAL_PRESET_SCOPE", ev.clinicalPresetScope],
+            [
+              "LOSPOR_CLINICAL_RULE_SOURCE_IDS",
+              Array.isArray(ev.clinicalRuleSourceIds)
+                ? ev.clinicalRuleSourceIds.filter(value => typeof value === "string").join("|")
+                : null,
+            ],
+          ]
+          for (const [source, value] of auditObservations) {
+            if (!value) continue
+            observations.push({
+              observation_id: nextId(),
+              person_id: personId,
+              observation_concept_id: 0,
+              observation_date: isoDate(ev.timestamp),
+              observation_type_concept_id: 32817,
+              value_as_string: value,
+              observation_source_value: source,
+              visit_occurrence_id: visitId,
+            })
+          }
+          if (ev.calculationWeightKg != null) {
+            measurements.push({
+              measurement_id: nextId(),
+              person_id: personId,
+              measurement_concept_id: 0,
+              measurement_date: isoDate(ev.timestamp),
+              measurement_datetime: ev.timestamp.toISOString(),
+              measurement_type_concept_id: 32817,
+              value_as_number: ev.calculationWeightKg,
+              unit_concept_id: 0,
+              unit_source_value: "kg",
+              measurement_source_value: "LOSPOR_DOSE_CALCULATION_WEIGHT_KG",
+              visit_occurrence_id: visitId,
+            })
+          }
+        }
       }
 
       for (const prem of c.intraop.premedicationRows ?? []) {
@@ -1015,7 +1128,12 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       if (c.postop.aldreteConsciousness != null) observations.push({ observation_id: nextId(), person_id: personId, observation_concept_id: 0, observation_date: postDate, observation_type_concept_id: 32817, value_as_string: String(c.postop.aldreteConsciousness), observation_source_value: "ALDRETE_CONSCIOUSNESS", visit_occurrence_id: visitId })
       if (c.postop.aldreteSpO2 != null) observations.push({ observation_id: nextId(), person_id: personId, observation_concept_id: 0, observation_date: postDate, observation_type_concept_id: 32817, value_as_string: String(c.postop.aldreteSpO2), observation_source_value: "ALDRETE_SPO2", visit_occurrence_id: visitId })
       if (c.postop.aldreteTotal != null) observations.push({ observation_id: nextId(), person_id: personId, observation_concept_id: 0, observation_date: postDate, observation_type_concept_id: 32817, value_as_string: String(c.postop.aldreteTotal), observation_source_value: "ALDRETE_TOTAL", visit_occurrence_id: visitId })
-      if (c.postop.painScoreNRS != null) observations.push({ observation_id: nextId(), person_id: personId, observation_concept_id: 3020891, observation_date: postDate, observation_type_concept_id: 32817, value_as_string: String(c.postop.painScoreNRS), observation_source_value: "PAIN_NRS_0_10", visit_occurrence_id: visitId })
+      if (c.postop.pediatricPainScore != null && c.postop.pediatricPainScale) {
+        sourceObservation(`PEDIATRIC_PAIN_${c.postop.pediatricPainScale}_0_10`, c.postop.pediatricPainScore, postDate)
+      } else if (c.postop.painScoreNRS != null) {
+        observations.push({ observation_id: nextId(), person_id: personId, observation_concept_id: 3020891, observation_date: postDate, observation_type_concept_id: 32817, value_as_string: String(c.postop.painScoreNRS), observation_source_value: "PAIN_NRS_0_10", visit_occurrence_id: visitId })
+      }
+      sourceObservation("PAED_SCORE", c.postop.paedScore, postDate)
       if (c.postop.ponv) observations.push({ observation_id: nextId(), person_id: personId, observation_concept_id: 0, observation_date: postDate, observation_type_concept_id: 32817, value_as_string: "true", observation_source_value: "PONV_PRESENT", visit_occurrence_id: visitId })
       if (c.postop.disposition) observations.push({ observation_id: nextId(), person_id: personId, observation_concept_id: 0, observation_date: postDate, observation_type_concept_id: 32817, value_as_string: c.postop.disposition, observation_source_value: "POSTOP_DISPOSITION", visit_occurrence_id: visitId })
     }
@@ -1046,8 +1164,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       generated_by_user_id:    ctx?.userId ?? "unknown",
       generated_by_role:       ctx?.userRole ?? "unknown",
       source:                  "LOSPOR",
-      source_version:          "3.5.1",
-      schema_version:          "3.4.3",
+      source_version:          "3.6.0",
+      schema_version:          "3.5.0",
       concept_map_version:     "local-bilingual-map-v2",
       data_dictionary_version: DICTIONARY_VERSION,
       case_status_filter:      ctx?.statusFilter ?? [],
@@ -1075,7 +1193,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           "rare procedure, complication, and timeline combinations",
         ],
       },
-      note: "OMOP concept IDs are emitted only where LOSPOR has a confident local mapping. Source vocabulary, source code, English/Bulgarian labels, and source-only rows are preserved for research traceability. person_id is a deterministic pseudonym derived from SHA-256 of the internal case ID — no patient names, national IDs, or direct identifiers are stored. PERSON carries an approximate year_of_birth derived from age at operation (month and day are unknown, not defaulted); race and ethnicity are not collected and are emitted as concept 0. OBSERVATION_PERIOD spans the operation only. Intraoperative event timestamps are preserved at exact DateTime precision for clinical sequence analysis — see residual_linkage_risks.",
+      note: "OMOP concept IDs are emitted only where LOSPOR has a confident local mapping. Source vocabulary, source code, English/Bulgarian labels, and source-only rows are preserved for research traceability. Pediatric mode, precise age at procedure, rule provenance, pediatric risk scores, and recovery scores are preserved as source observations with concept_id 0 until reviewed mappings exist. person_id is a deterministic pseudonym derived from SHA-256 of the internal case ID — no patient names, national IDs, or direct identifiers are stored. PERSON carries an approximate year_of_birth derived from age at operation (month and day are unknown, not defaulted); race and ethnicity are not collected and are emitted as concept 0. OBSERVATION_PERIOD spans the operation only. Intraoperative event timestamps are preserved at exact DateTime precision for clinical sequence analysis — see residual_linkage_risks.",
     },
     person:                persons,
     observation_period:    observationPeriods,

@@ -45,7 +45,8 @@ export async function compileResearchWhere(
   const intraop: Prisma.IntraoperativeRecordWhereInput = {}
   const postop: Prisma.PostoperativeRecordWhereInput = {}
   const and: Prisma.CaseWhereInput[] = [context.caseScope]
-
+  if (filters.clinicalModes?.length) and.push({ clinicalMode: { in: filters.clinicalModes } })
+  if (filters.ageDays) preop.ageApproxDays = numberFilter(filters.ageDays)
   if (filters.ageYears) preop.ageYears = numberFilter(filters.ageYears)
   if (filters.bmi) preop.bmi = numberFilter(filters.bmi)
   if (filters.sex?.length) preop.sex = { in: filters.sex as never }

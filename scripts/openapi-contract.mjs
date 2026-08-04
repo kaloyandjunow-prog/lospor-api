@@ -74,16 +74,28 @@ export const schemas = {
   }, ["access_token", "token_type", "expires_in"]),
   SessionResponse: object({ user: ref("User"), expires: { type: "string", format: "date-time" } }),
   CaseSection: { type: "object", additionalProperties: true },
+  PreopCaseSection: {
+    type: "object",
+    properties: {
+      ageValue: nullable({ type: "integer", minimum: 0 }),
+      ageUnit: nullable({ type: "string", enum: ["DAYS", "MONTHS", "YEARS"] }),
+    },
+    additionalProperties: true,
+  },
   CaseCreateRequest: object({
+    clinicalMode: { type: "string", enum: ["ADULT", "PEDIATRIC"], default: "ADULT" },
+    clinicalRulesVersion: nullable({ type: "string" }),
     notes: nullable({ type: "string", maxLength: 1000 }),
-    preop: ref("CaseSection"),
+    preop: ref("PreopCaseSection"),
     intraop: ref("CaseSection"),
     postop: ref("CaseSection"),
   }, ["preop"]),
   CasePatchRequest: object({
     status: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW"] },
     notes: nullable({ type: "string", maxLength: 1000 }),
-    preop: ref("CaseSection"),
+    clinicalMode: { type: "string", enum: ["ADULT", "PEDIATRIC"] },
+    clinicalRulesVersion: nullable({ type: "string" }),
+    preop: ref("PreopCaseSection"),
     intraop: ref("CaseSection"),
     postop: ref("CaseSection"),
     forceUpdate: { type: "boolean" },
@@ -91,10 +103,12 @@ export const schemas = {
   CaseSummary: object({
     id: { type: "string" },
     caseCode: nullable({ type: "string" }),
+    clinicalMode: { type: "string", enum: ["ADULT", "PEDIATRIC"] },
+    clinicalRulesVersion: nullable({ type: "string" }),
     status: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE"] },
     createdAt: { type: "string", format: "date-time" },
     updatedAt: { type: "string", format: "date-time" },
-    preop: nullable(ref("CaseSection")),
+    preop: nullable(ref("PreopCaseSection")),
     intraop: nullable(ref("CaseSection")),
     postop: nullable(ref("CaseSection")),
   }, ["id", "status", "createdAt", "updatedAt"]),
@@ -117,6 +131,8 @@ export const schemas = {
   CaseMutationResponse: object({
     id: { type: "string" },
     caseCode: nullable({ type: "string" }),
+    clinicalMode: { type: "string", enum: ["ADULT", "PEDIATRIC"] },
+    clinicalRulesVersion: nullable({ type: "string" }),
     preopUpdatedAt: { type: "string", format: "date-time" },
     preopRevision: { type: "integer", minimum: 0 },
     rejectedFields: { type: "array", items: object({
@@ -152,7 +168,7 @@ export const schemas = {
   ReleaseResponse: object({ released: { type: "boolean" }, forced: { type: "boolean" } }, ["released"]),
   Event: {
     type: "object",
-    required: ["type"],
+    required: ["type", "ts"],
     properties: {
       id: { type: "string" },
       ts: { type: "string", format: "date-time" },
@@ -163,6 +179,29 @@ export const schemas = {
       unit: { type: "string", maxLength: 40 },
       rate: { oneOf: [{ type: "string" }, { type: "number" }] },
       volume: { oneOf: [{ type: "string" }, { type: "number" }] },
+      category: { type: "string", maxLength: 80 },
+      fluidId: { type: "string", minLength: 1, maxLength: 200 },
+      fluidEntryMode: { type: "string", enum: ["VOLUME", "RATE"] },
+      bagVolumeMl: { type: "number", minimum: 0, maximum: 1000000 },
+      administeredVolumeMl: { type: "number", minimum: 0, maximum: 1000000 },
+      drugRoute: { type: "string", maxLength: 40 },
+      concentration: { type: "string", maxLength: 80 },
+      concentrationValue: { type: "number", minimum: 0 },
+      concentrationUnit: { type: "string", enum: ["PERCENT", "MCG_PER_ML", "MG_PER_ML", "IU_PER_ML", "MMOL_PER_ML", "MEQ_PER_ML"] },
+      formulation: { type: "string", enum: ["HYPOBARIC", "ISOBARIC", "HYPERBARIC"] },
+      calculationBasis: { type: "string", enum: ["FLAT", "NONE", "TBW", "IBW", "BSA_M2"] },
+      calculationWeightKg: { type: "number", exclusiveMinimum: 0 },
+      calculationMethod: { type: "string", minLength: 1, maxLength: 80 },
+      clinicalRuleKey: { type: "string", minLength: 1, maxLength: 240 },
+      clinicalRuleVersion: { type: "string", minLength: 1, maxLength: 160 },
+      clinicalRuleSourceIds: {
+        type: "array",
+        maxItems: 64,
+        items: { type: "string", minLength: 1, maxLength: 240 },
+      },
+      clinicalPresetId: { type: "string", minLength: 1, maxLength: 240 },
+      clinicalPresetVersion: { type: "integer", minimum: 1 },
+      clinicalPresetScope: { type: "string", enum: ["PLATFORM", "INSTITUTION", "USER"] },
     },
     additionalProperties: true,
   },
@@ -201,12 +240,59 @@ export const schemas = {
     active: { type: "boolean" },
     metadata: { type: "object", additionalProperties: true },
   }, ["id", "category", "value", "label"]),
+  PediatricCapabilities: object({
+    enabled: { type: "boolean" },
+    productionReady: { type: "boolean" },
+    minimumClientVersion: { type: "string" },
+    rulesetVersion: { type: "string" },
+  }, ["enabled", "productionReady", "minimumClientVersion", "rulesetVersion"]),
   Capabilities: object({
     apiVersion: { type: "string" },
-    revisionSync: { type: "boolean" },
-    idempotentEvents: { type: "boolean" },
-    caseLocks: { type: "boolean" },
+    serviceVersion: { type: "string" },
+    catalogVersion: { type: "string" },
+    minimumSupportedClients: { type: "object", additionalProperties: { type: "string" } },
+    compatibilityPaths: { type: "object", additionalProperties: { type: "string" } },
+    features: { type: "object", additionalProperties: true },
   }),
+  PediatricCalculationRequest: {
+    oneOf: [
+      object({
+        kind: { type: "string", const: "MOSTELLER_BSA" },
+        inputs: object({
+          heightCm: { type: "number", exclusiveMinimum: 0 },
+          weightKg: { type: "number", exclusiveMinimum: 0 },
+        }, ["heightCm", "weightKg"]),
+      }, ["kind", "inputs"]),
+      object({
+        kind: { type: "string", const: "MAINTENANCE_FLUID" },
+        inputs: object({
+          weightKg: { type: "number", exclusiveMinimum: 0 },
+          age: nullable(object({
+            value: { type: "number", minimum: 0 },
+            unit: { type: "string", enum: ["DAYS", "MONTHS", "YEARS"] },
+          }, ["value", "unit"])),
+        }, ["weightKg"]),
+      }, ["kind", "inputs"]),
+      object({
+        kind: { type: "string", const: "RCUK_RESUSCITATION" },
+        inputs: object({
+          weightKg: { type: "number", exclusiveMinimum: 0 },
+        }, ["weightKg"]),
+      }, ["kind", "inputs"]),
+    ],
+  },
+  PediatricCalculation: object({
+    id: { type: "string" },
+    caseId: { type: "string" },
+    kind: { type: "string", enum: ["MOSTELLER_BSA", "MAINTENANCE_FLUID", "RCUK_RESUSCITATION"] },
+    inputs: { type: "object", additionalProperties: true },
+    outputs: { type: "object", additionalProperties: true },
+    ruleVersion: { type: "string" },
+    sourceRefs: { type: "array", items: { type: "string" } },
+    acceptedBy: nullable({ type: "string" }),
+    acceptedAt: nullable({ type: "string", format: "date-time" }),
+    createdAt: { type: "string", format: "date-time" },
+  }, ["id", "caseId", "kind", "inputs", "outputs", "ruleVersion", "sourceRefs", "createdAt"]),
   RoleRequest: object({
     id: { type: "string" },
     userId: { type: "string" },
@@ -240,7 +326,9 @@ export const schemas = {
   }),
   ResearchCohortFilters: object({
     statuses: { type: "array", items: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE"] } },
+    clinicalModes: { type: "array", items: { type: "string", enum: ["ADULT", "PEDIATRIC"] } },
     finalized: ref("ResearchDateRange"),
+    ageDays: ref("ResearchNumberRange"),
     ageYears: ref("ResearchNumberRange"),
     bmi: ref("ResearchNumberRange"),
     durationMinutes: ref("ResearchNumberRange"),
@@ -286,13 +374,13 @@ export const schemas = {
     hasMore: { type: "boolean" },
   }, ["total", "skip", "take", "hasMore"]),
   ResearchSort: object({
-    field: { type: "string", enum: ["finalizedAt", "ageYears", "durationMinutes", "asa"] },
+    field: { type: "string", enum: ["finalizedAt", "ageYears", "ageDays", "durationMinutes", "asa"] },
     direction: { type: "string", enum: ["asc", "desc"] },
   }, ["field", "direction"]),
     savedCohortId: { type: "string", minLength: 1 },
     pagination: ref("ResearchPaginationRequest"),
-    metrics: { type: "array", items: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] } },
-    distributions: { type: "array", items: { type: "string", enum: ["sex", "asa", "status", "procedure", "diagnosis", "technique", "airway", "disposition", "complication"] } },
+    metrics: { type: "array", items: { type: "string", enum: ["caseCount", "pediatricRate", "meanAgeYears", "meanAgeDays", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] } },
+    distributions: { type: "array", items: { type: "string", enum: ["sex", "asa", "status", "clinicalMode", "procedure", "diagnosis", "technique", "airway", "disposition", "complication"] } },
     sort: ref("ResearchSort"),
   }, ["cohort"]),
   ResearchCountDisclosure: object({
@@ -303,11 +391,11 @@ export const schemas = {
     suppressed: { type: "boolean" },
   }, ["value", "lowerBound", "upperBound", "exact", "suppressed"]),
   ResearchMetric: object({
-    id: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] },
+    id: { type: "string", enum: ["caseCount", "pediatricRate", "meanAgeYears", "meanAgeDays", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] },
     value: nullable({ type: "number" }),
     numerator: nullable({ type: "number" }),
     denominator: nullable({ type: "number" }),
-    unit: { type: "string", enum: ["count", "percent", "years", "kg/m2", "minutes", "score"] },
+    unit: { type: "string", enum: ["count", "percent", "years", "days", "kg/m2", "minutes", "score"] },
     suppressed: { type: "boolean" },
   }, ["id", "value", "suppressed"]),
   ResearchDistributionBucket: object({
@@ -320,14 +408,19 @@ export const schemas = {
     suppressed: { type: "boolean" },
   }, ["key", "label", "count", "percent", "suppressed"]),
   ResearchDistribution: object({
-    id: { type: "string", enum: ["sex", "asa", "status", "procedure", "diagnosis", "technique", "airway", "disposition", "complication"] },
+    id: { type: "string", enum: ["sex", "asa", "status", "clinicalMode", "procedure", "diagnosis", "technique", "airway", "disposition", "complication"] },
     buckets: arrayOf("ResearchDistributionBucket"),
   }, ["id", "buckets"]),
   ResearchCaseSummary: object({
     id: { type: "string" },
     researchId: { type: "string" },
     status: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE"] },
+    clinicalMode: { type: "string", enum: ["ADULT", "PEDIATRIC"] },
+    clinicalRulesVersion: nullable({ type: "string" }),
     period: nullable({ type: "string", pattern: "^[0-9]{4}-[0-9]{2}$" }),
+    ageValue: nullable({ type: "number" }),
+    ageUnit: nullable({ type: "string", enum: ["DAYS", "MONTHS", "YEARS"] }),
+    ageApproxDays: nullable({ type: "number" }),
     ageYears: nullable({ type: "number" }),
     sex: nullable({ type: "string" }),
     asa: nullable({ type: "string" }),
@@ -344,7 +437,7 @@ export const schemas = {
     disposition: nullable({ type: "string" }),
     complications: { type: "integer", minimum: 0 },
     completeness: { type: "number", minimum: 0, maximum: 100 },
-  }, ["id", "researchId", "status", "period", "ageYears", "sex", "asa", "diagnosis", "diagnosisCode", "procedure", "procedureCode", "durationMinutes", "technique", "disposition", "complications", "completeness"]),
+  }, ["id", "researchId", "status", "clinicalMode", "clinicalRulesVersion", "period", "ageValue", "ageUnit", "ageApproxDays", "ageYears", "sex", "asa", "diagnosis", "diagnosisCode", "procedure", "procedureCode", "durationMinutes", "technique", "disposition", "complications", "completeness"]),
   ResearchQueryResponse: object({
     apiVersion: { type: "integer", const: 1 },
     source: { type: "string", enum: ["LOSPOR", "OMOP"] },
@@ -390,7 +483,7 @@ export const schemas = {
   ResearchComparisonRequest: object({
     left: ref("ResearchCohort"),
     right: ref("ResearchCohort"),
-    metrics: { type: "array", items: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] } },
+    metrics: { type: "array", items: { type: "string", enum: ["caseCount", "pediatricRate", "meanAgeYears", "meanAgeDays", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] } },
   }, ["left", "right"]),
   ResearchComparisonMetric: object({
     id: { type: "string" },
@@ -416,7 +509,7 @@ export const schemas = {
   ResearchBenchmarkRequest: object({
     cohort: ref("ResearchCohort"),
     interval: { type: "string", enum: ["month", "quarter", "year"] },
-    metric: { type: "string", enum: ["caseCount", "meanAgeYears", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] },
+    metric: { type: "string", enum: ["caseCount", "pediatricRate", "meanAgeYears", "meanAgeDays", "meanBmi", "meanDurationMinutes", "emergencyRate", "highRiskRate", "complicationRate", "ponvRate", "meanAldrete", "meanPainScore", "mappingCoverage", "fieldCompleteness"] },
     institutionIds: { type: "array", items: { type: "string" } },
     compareWithPreviousPeriod: { type: "boolean" },
   }, ["cohort", "interval", "metric"]),
@@ -664,6 +757,14 @@ add("PATCH", "/v1/cases/{id}", "Save one or more case sections", {
 })
 add("DELETE", "/v1/cases/{id}", "Delete a case", { parameters: [id], result: ref("Message") })
 add("GET", "/v1/cases/{id}/version", "Read current section revisions", { parameters: [id], result: ref("CaseVersion") })
+add("GET", "/v1/cases/{id}/calculations", "List accepted pediatric calculations", { parameters: [id], result: arrayOf("PediatricCalculation") })
+add("POST", "/v1/cases/{id}/calculations", "Recompute and accept a pediatric calculation", {
+  parameters: [id],
+  requestBody: body(ref("PediatricCalculationRequest")),
+  status: 201,
+  result: ref("PediatricCalculation"),
+  errors: [400, 401, 403, 404, 409, 422, 500],
+})
 add("POST", "/v1/cases/{id}/finalize", "Finalize a case and create its immutable snapshot", { parameters: [id], result: ref("CaseDetail") })
 add("POST", "/v1/cases/{id}/unfinalize", "Resume editing a finalized case", { parameters: [id], result: ref("CaseDetail") })
 
@@ -713,6 +814,10 @@ add("GET", "/v1/search/icd10", "Search ICD-10 diagnoses", { parameters: [query("
 add("GET", "/v1/search/procedures", "Search procedure terminology", { parameters: [query("q", { type: "string" }, true)], result: arrayOf("SearchResult") })
 add("GET", "/v1/search/drugs", "Search medication terminology", { parameters: [query("q", { type: "string" }, true)], result: arrayOf("SearchResult") })
 add("GET", "/v1/library/{category}", "Read an option-library category", { parameters: [pathParameter("category")], result: arrayOf("LibraryOption") })
+add("GET", "/v1/clinical/pediatric/rules", "Read pediatric capabilities, reviewed rules, and unavailable calculators", { result: ref("JsonObject"), tag: "clinical" })
+add("GET", "/v1/clinical/rules/runtime", "Read the effective mode-specific personal, institution, or platform ruleset", { parameters: [query("mode", { type: "string", enum: ["ADULT", "PEDIATRIC"] })], result: ref("JsonObject"), errors: [400, 401], tag: "clinical" })
+add("GET", "/v1/clinical/rules/workbench", "Read mode-specific rulesets in the caller's active management scope", { parameters: [query("mode", { type: "string", enum: ["ADULT", "PEDIATRIC"] }), query("scope", { type: "string", enum: ["PLATFORM", "INSTITUTION", "USER"] })], result: ref("JsonObject"), errors: [400, 401, 403, 500], tag: "clinical" })
+add("POST", "/v1/clinical/rules/workbench", "Copy, edit, publish, select, or clear a clinical ruleset", { requestBody: body(ref("JsonObject")), result: ref("JsonObject"), errors: [400, 401, 403, 404, 409, 500], tag: "clinical" })
 
 add("GET", "/v1/user", "Read the current account", { result: ref("User") })
 add("PATCH", "/v1/user", "Update account and clinical preferences", { requestBody: body(ref("JsonObject")), result: ref("User") })
@@ -765,6 +870,8 @@ add("POST", "/v1/research/grants", "Create a research access grant", { requestBo
 add("PATCH", "/v1/research/grants/{id}", "Update a research access grant", { parameters: [id], requestBody: body(ref("ResearchGrantPatch")), result: ref("ResearchGrant"), errors: [400, 401, 403, 404, 409, 422, 500], tag: "research" })
 add("DELETE", "/v1/research/grants/{id}", "Revoke a research access grant", { parameters: [id], result: ref("Message"), errors: [401, 403, 404, 500], tag: "research" })
 
+add("GET", "/v1/admin/clinical-rules", "Compatibility alias for the clinical-rules workbench", { result: ref("JsonObject"), stability: "admin" })
+add("POST", "/v1/admin/clinical-rules", "Compatibility alias for clinical-rules workbench actions", { requestBody: body(ref("JsonObject")), result: ref("JsonObject"), errors: [400, 401, 403, 404, 409, 500], stability: "admin" })
 add("GET", "/v1/admin/users", "List users for administration", { parameters: [query("pending", { type: "boolean" })], result: arrayOf("User"), stability: "admin" })
 add("PATCH", "/v1/admin/users/{id}", "Update a user role or institution", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("User"), stability: "admin" })
 add("DELETE", "/v1/admin/users/{id}", "Delete a user account", { parameters: [id], result: ref("Message"), stability: "admin" })

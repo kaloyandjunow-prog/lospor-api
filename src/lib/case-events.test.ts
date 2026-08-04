@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
-import { projectTimetable, reserveIntraopRevision, sortLogDeterministic } from "./case-events"
+import {
+  CASE_EVENT_SCHEMA_VERSION,
+  caseEventDrugAuditColumns,
+  projectTimetable,
+  reserveIntraopRevision,
+  sortLogDeterministic,
+} from "./case-events"
 import type { LogEvent } from "@/types/timetable"
 
 const START = new Date("2026-01-01T08:00:00.000Z")
@@ -101,8 +107,139 @@ describe("reserveIntraopRevision", () => {
     })
   })
 
+  it("integrates rate fluids by exact timestamps without counting the bag", () => {
+    const exact = (seconds: number) => new Date(START.getTime() + seconds * 1_000).toISOString()
+    const t = projectTimetable([
+      {
+        type: "fluid_start",
+        fluidId: "rate-fluid",
+        name: "Plasma-Lyte",
+        category: "Crystalloids",
+        fluidEntryMode: "RATE",
+        bagVolumeMl: 1_000,
+        rate: "60",
+        unit: "mL/h",
+        ts: exact(0),
+      },
+      {
+        type: "fluid_rate",
+        fluidId: "rate-fluid",
+        rate: "120",
+        unit: "mL/h",
+        ts: exact(450),
+      },
+      {
+        type: "fluid_end",
+        fluidId: "rate-fluid",
+        ts: exact(1_350),
+      },
+    ], START)
+    expect(t.fluids[0]).toMatchObject({
+      fluidEntryMode: "RATE",
+      bagVolumeMl: 1_000,
+      volume: "38",
+      startTs: exact(0),
+      endTs: exact(1_350),
+      rateChanges: [{ col: 1, ts: exact(450), rate: 120, unit: "mL/h" }],
+    })
+  })
+
+  it("uses the end event volume for a legacy partial bag", () => {
+    const t = projectTimetable([
+      {
+        type: "fluid_start",
+        fluidId: "partial-fluid",
+        name: "Ringer",
+        category: "Crystalloids",
+        volume: "500",
+        ts: at(0),
+      },
+      {
+        type: "fluid_end",
+        fluidId: "partial-fluid",
+        volume: "125",
+        ts: at(10),
+      },
+    ], START)
+    expect(t.fluids[0]).toMatchObject({
+      bagVolumeMl: 500,
+      administeredVolumeMl: 125,
+      volume: "125",
+    })
+  })
+
   it("reports a lost claim when another writer advanced first", async () => {
     const tx = { intraoperativeRecord: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) } }
     await expect(reserveIntraopRevision(tx as never, "case-1", 7)).resolves.toBe(false)
+  })
+})
+
+describe("drug route-profile event audit", () => {
+  it("copies the selected formulation, calculation and rule provenance into typed columns", () => {
+    expect(CASE_EVENT_SCHEMA_VERSION).toBe("3.2.0")
+    expect(caseEventDrugAuditColumns({
+      concentrationValue: 0.5,
+      concentrationUnit: "PERCENT",
+      formulation: "HYPERBARIC",
+      calculationBasis: "IBW",
+      calculationWeightKg: 18.25,
+      calculationMethod: "MCLAREN_CDC_2000",
+      clinicalRuleKey: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575",
+      clinicalRuleVersion: "rules.v2.7",
+      clinicalRuleSourceIds: ["user-preset", "institution-preset", "platform-preset"],
+      clinicalPresetId: "user-preset",
+      clinicalPresetVersion: 7,
+      clinicalPresetScope: "USER",
+    })).toEqual({
+      concentrationValue: 0.5,
+      concentrationUnit: "PERCENT",
+      formulation: "HYPERBARIC",
+      calculationBasis: "IBW",
+      calculationWeightKg: 18.25,
+      calculationMethod: "MCLAREN_CDC_2000",
+      clinicalRuleKey: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575",
+      clinicalRuleVersion: "rules.v2.7",
+      clinicalRuleSourceIds: ["user-preset", "institution-preset", "platform-preset"],
+      clinicalPresetId: "user-preset",
+      clinicalPresetVersion: 7,
+      clinicalPresetScope: "USER",
+    })
+  })
+
+  it("leaves legacy events queryable with null audit columns", () => {
+    expect(caseEventDrugAuditColumns({})).toEqual({
+      concentrationValue: null,
+      concentrationUnit: null,
+      formulation: null,
+      calculationBasis: null,
+      calculationWeightKg: null,
+      calculationMethod: null,
+      clinicalRuleKey: null,
+      clinicalRuleVersion: null,
+      clinicalRuleSourceIds: undefined,
+      clinicalPresetId: null,
+      clinicalPresetVersion: null,
+      clinicalPresetScope: null,
+    })
+  })
+
+  it("canonicalizes safe legacy aliases and drops malformed typed audit values", () => {
+    expect(caseEventDrugAuditColumns({
+      concentrationValue: -1,
+      concentrationUnit: "%" as never,
+      formulation: "hyperbaric" as never,
+      calculationBasis: "TBW_KG" as never,
+      calculationWeightKg: -5,
+      clinicalPresetVersion: -1,
+      clinicalPresetScope: "institution" as never,
+    })).toMatchObject({
+      concentrationValue: null,
+      concentrationUnit: "PERCENT",
+      formulation: "HYPERBARIC",
+      calculationBasis: "TBW",
+      calculationWeightKg: null,
+      clinicalPresetVersion: null,
+      clinicalPresetScope: "INSTITUTION",
+    })
   })
 })

@@ -103,14 +103,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       rr: number | null
     }
 
-    // Sanity-check ranges — reject obviously wrong readings
-    if (vitals.systolic != null && (vitals.systolic < 40 || vitals.systolic > 300)) vitals.systolic = null
-    if (vitals.diastolic != null && (vitals.diastolic < 20 || vitals.diastolic > 200)) vitals.diastolic = null
-    if (vitals.heartRate != null && (vitals.heartRate < 20 || vitals.heartRate > 300)) vitals.heartRate = null
-    if (vitals.spO2 != null && (vitals.spO2 < 50 || vitals.spO2 > 100)) vitals.spO2 = null
-    if (vitals.etco2 != null && (vitals.etco2 < 5 || vitals.etco2 > 100)) vitals.etco2 = null
-    if (vitals.temp != null && (vitals.temp < 30 || vitals.temp > 44)) vitals.temp = null
-    if (vitals.rr != null && (vitals.rr < 4 || vitals.rr > 60)) vitals.rr = null
+    // These are broad physical plausibility bounds, not age-specific normal
+    // ranges. Core supplies the soft pediatric interpretation after extraction.
+    if (vitals.systolic != null && (vitals.systolic < 20 || vitals.systolic > 300)) vitals.systolic = null
+    if (vitals.diastolic != null && (vitals.diastolic < 10 || vitals.diastolic > 200)) vitals.diastolic = null
+    if (vitals.heartRate != null && (vitals.heartRate < 10 || vitals.heartRate > 350)) vitals.heartRate = null
+    if (vitals.spO2 != null && (vitals.spO2 < 20 || vitals.spO2 > 100)) vitals.spO2 = null
+    if (vitals.etco2 != null && (vitals.etco2 < 2 || vitals.etco2 > 150)) vitals.etco2 = null
+    if (vitals.temp != null && (vitals.temp < 25 || vitals.temp > 45)) vitals.temp = null
+    if (vitals.rr != null && (vitals.rr < 1 || vitals.rr > 150)) vitals.rr = null
 
     return NextResponse.json(vitals)
   } catch (err) {

@@ -68,11 +68,12 @@ async function writeSnapshot(db: Db, caseId: string): Promise<void> {
   const preop = await db.preoperativeAssessment.findUnique({ where: { caseId } })
   const intraop = await db.intraoperativeRecord.findUnique({ where: { caseId } })
   const postop = await db.postoperativeRecord.findUnique({ where: { caseId } })
+  const clinicalCalculations = await db.caseClinicalCalculation.findMany({ where: { caseId } })
 
-  const snapshotJson = { ...c, preop, intraop, postop } as unknown as Prisma.InputJsonValue
+  const snapshotJson = { ...c, preop, intraop, postop, clinicalCalculations } as unknown as Prisma.InputJsonValue
   await db.caseSnapshot.upsert({
     where:  { caseId },
     update: { snapshotJson, finalizedAt: new Date() },
-    create: { caseId, schemaVersion: "3.0.0", snapshotJson },
+    create: { caseId, schemaVersion: "4.0.0", snapshotJson },
   })
 }

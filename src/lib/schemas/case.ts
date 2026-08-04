@@ -69,10 +69,13 @@ const labelledItem = z.object({
 
 export const preopSchema = z.object({
   ageYears:  cInt("preop", "ageYears"),
+  ageValue:  cInt("preop", "ageValue"),
+  ageUnit:   z.enum(["DAYS", "MONTHS", "YEARS"]).nullable().optional(),
   sex:       z.enum(["MALE", "FEMALE", "OTHER", "UNKNOWN"]).optional(),
   heightCm:  cNum("preop", "heightCm"),
   weightKg:  cNum("preop", "weightKg"),
   bmi:       cNum("preop", "bmi"),
+  bodySurfaceAreaM2: cNum("preop", "bodySurfaceAreaM2"),
   bloodType: z.enum(["A", "B", "AB", "O"]).nullable().optional(),
   rhFactor:  z.enum(["POSITIVE", "NEGATIVE"]).nullable().optional(),
 
@@ -132,6 +135,30 @@ export const preopSchema = z.object({
   gutaScore:       cNum("preop", "gutaScore"),
   apfelScore:      cInt("preop", "apfelScore"),
   stopBangScore:   cInt("preop", "stopBangScore"),
+
+  povocScore:                   cInt("preop", "povocScore"),
+  povocRiskPercent:             cNum("preop", "povocRiskPercent"),
+  povocSurgeryAtLeast30Minutes: z.boolean().optional(),
+  povocAgeAtLeast3Years:        z.boolean().optional(),
+  povocStrabismusSurgery:       z.boolean().optional(),
+  povocHistory:                 z.boolean().optional(),
+
+  coldsApplicable:      z.boolean().optional(),
+  coldsScore:           cInt("preop", "coldsScore"),
+  coldsCurrentSymptoms: z.enum(["NONE", "MILD", "MODERATE_OR_SEVERE"]).nullable().optional(),
+  coldsOnset:           z.enum(["MORE_THAN_4_WEEKS", "TWO_TO_4_WEEKS", "LESS_THAN_2_WEEKS"]).nullable().optional(),
+  coldsLungDisease:     z.enum(["NONE", "MILD", "MODERATE_OR_SEVERE"]).nullable().optional(),
+  coldsAirwayDevice:    z.enum(["FACE_MASK_OR_NONE", "SUPRAGLOTTIC", "TRACHEAL_TUBE"]).nullable().optional(),
+  coldsSurgery:         z.enum(["NON_AIRWAY", "MINOR_AIRWAY", "MAJOR_AIRWAY"]).nullable().optional(),
+
+  pediatricFasting: z.array(z.object({
+    category: z.enum(["CLEAR_FLUIDS", "BREAST_MILK", "INFANT_FORMULA_UNDER_1_YEAR", "SOLID_FOOD_OR_COW_MILK"]),
+    lastIntakeAt: z.string().datetime().nullable(),
+    status: z.enum(["MET", "NOT_MET", "UNKNOWN"]).optional(),
+    requiredHours: z.number().nonnegative().optional(),
+    policyId: z.string().min(1),
+    policyVersion: z.string().min(1),
+  })).optional(),
 
   // Item 27: Strict lab result shape matching the lab scan extractor output
   labResults: z.array(z.object({
@@ -216,6 +243,9 @@ export const postopSchema = z.object({
   recoveryHeartRate:   cInt("postop", "recoveryHeartRate"),
   recoverySpO2:        cNum("postop", "recoverySpO2"),
   painScoreNRS:        cInt("postop", "painScoreNRS"),
+  pediatricPainScale:  z.enum(["FLACC", "FPS_R", "NRS"]).nullable().optional(),
+  pediatricPainScore:  cInt("postop", "pediatricPainScore"),
+  paedScore:           cInt("postop", "paedScore"),
   ponv:               z.boolean().optional(),
   temperatureCelsius: cNum("postop", "temperatureCelsius"),
   recoveryBpUnobtainable:          z.boolean().optional(),

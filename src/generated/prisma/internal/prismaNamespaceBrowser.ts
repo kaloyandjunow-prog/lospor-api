@@ -84,6 +84,14 @@ export const ModelName = {
   PreoperativeAssessment: 'PreoperativeAssessment',
   IntraoperativeRecord: 'IntraoperativeRecord',
   PostoperativeRecord: 'PostoperativeRecord',
+  CaseClinicalCalculation: 'CaseClinicalCalculation',
+  ClinicalRuleReview: 'ClinicalRuleReview',
+  ClinicalPreset: 'ClinicalPreset',
+  PlatformClinicalPresetSelection: 'PlatformClinicalPresetSelection',
+  InstitutionClinicalPresetSelection: 'InstitutionClinicalPresetSelection',
+  UserClinicalPresetSelection: 'UserClinicalPresetSelection',
+  ClinicalPresetRule: 'ClinicalPresetRule',
+  InstitutionClinicalRuleOverride: 'InstitutionClinicalRuleOverride',
   PreopDiagnosis: 'PreopDiagnosis',
   PreopProcedure: 'PreopProcedure',
   Comorbidity: 'Comorbidity',
@@ -180,6 +188,8 @@ export const CaseScalarFieldEnum = {
   userId: 'userId',
   institutionId: 'institutionId',
   status: 'status',
+  clinicalMode: 'clinicalMode',
+  clinicalRulesVersion: 'clinicalRulesVersion',
   finalizedAt: 'finalizedAt',
   clientDraftId: 'clientDraftId',
   clinicalRevision: 'clinicalRevision',
@@ -504,6 +514,18 @@ export const CaseEventScalarFieldEnum = {
   drugId: 'drugId',
   inn: 'inn',
   drugRoute: 'drugRoute',
+  concentrationValue: 'concentrationValue',
+  concentrationUnit: 'concentrationUnit',
+  formulation: 'formulation',
+  calculationBasis: 'calculationBasis',
+  calculationWeightKg: 'calculationWeightKg',
+  calculationMethod: 'calculationMethod',
+  clinicalRuleKey: 'clinicalRuleKey',
+  clinicalRuleVersion: 'clinicalRuleVersion',
+  clinicalRuleSourceIds: 'clinicalRuleSourceIds',
+  clinicalPresetId: 'clinicalPresetId',
+  clinicalPresetVersion: 'clinicalPresetVersion',
+  clinicalPresetScope: 'clinicalPresetScope',
   infId: 'infId',
   fluidId: 'fluidId',
   rate: 'rate',
@@ -552,10 +574,14 @@ export const PreoperativeAssessmentScalarFieldEnum = {
   id: 'id',
   caseId: 'caseId',
   ageYears: 'ageYears',
+  ageValue: 'ageValue',
+  ageApproxDays: 'ageApproxDays',
+  ageUnit: 'ageUnit',
   sex: 'sex',
   heightCm: 'heightCm',
   weightKg: 'weightKg',
   bmi: 'bmi',
+  bodySurfaceAreaM2: 'bodySurfaceAreaM2',
   bloodType: 'bloodType',
   rhFactor: 'rhFactor',
   diagnosis: 'diagnosis',
@@ -621,6 +647,20 @@ export const PreoperativeAssessmentScalarFieldEnum = {
   stopbangObserved: 'stopbangObserved',
   stopbangBP: 'stopbangBP',
   stopbangNeck: 'stopbangNeck',
+  povocScore: 'povocScore',
+  povocRiskPercent: 'povocRiskPercent',
+  povocSurgeryAtLeast30Minutes: 'povocSurgeryAtLeast30Minutes',
+  povocAgeAtLeast3Years: 'povocAgeAtLeast3Years',
+  povocStrabismusSurgery: 'povocStrabismusSurgery',
+  povocHistory: 'povocHistory',
+  coldsApplicable: 'coldsApplicable',
+  coldsScore: 'coldsScore',
+  coldsCurrentSymptoms: 'coldsCurrentSymptoms',
+  coldsOnset: 'coldsOnset',
+  coldsLungDisease: 'coldsLungDisease',
+  coldsAirwayDevice: 'coldsAirwayDevice',
+  coldsSurgery: 'coldsSurgery',
+  pediatricFasting: 'pediatricFasting',
   labResults: 'labResults',
   aiOptIn: 'aiOptIn',
   createdAt: 'createdAt',
@@ -721,6 +761,9 @@ export const PostoperativeRecordScalarFieldEnum = {
   recoveryHeartRate: 'recoveryHeartRate',
   recoverySpO2: 'recoverySpO2',
   painScoreNRS: 'painScoreNRS',
+  pediatricPainScale: 'pediatricPainScale',
+  pediatricPainScore: 'pediatricPainScore',
+  paedScore: 'paedScore',
   ponv: 'ponv',
   temperatureCelsius: 'temperatureCelsius',
   recoveryBpUnobtainable: 'recoveryBpUnobtainable',
@@ -737,6 +780,133 @@ export const PostoperativeRecordScalarFieldEnum = {
 } as const
 
 export type PostoperativeRecordScalarFieldEnum = (typeof PostoperativeRecordScalarFieldEnum)[keyof typeof PostoperativeRecordScalarFieldEnum]
+
+
+export const CaseClinicalCalculationScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  kind: 'kind',
+  inputs: 'inputs',
+  outputs: 'outputs',
+  ruleVersion: 'ruleVersion',
+  sourceRefs: 'sourceRefs',
+  acceptedBy: 'acceptedBy',
+  acceptedAt: 'acceptedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type CaseClinicalCalculationScalarFieldEnum = (typeof CaseClinicalCalculationScalarFieldEnum)[keyof typeof CaseClinicalCalculationScalarFieldEnum]
+
+
+export const ClinicalRuleReviewScalarFieldEnum = {
+  id: 'id',
+  ruleKey: 'ruleKey',
+  ruleVersion: 'ruleVersion',
+  status: 'status',
+  reviewerId: 'reviewerId',
+  reviewerNotes: 'reviewerNotes',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicalRuleReviewScalarFieldEnum = (typeof ClinicalRuleReviewScalarFieldEnum)[keyof typeof ClinicalRuleReviewScalarFieldEnum]
+
+
+export const ClinicalPresetScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  name: 'name',
+  description: 'description',
+  clinicalMode: 'clinicalMode',
+  scope: 'scope',
+  ownerInstitutionId: 'ownerInstitutionId',
+  ownerUserId: 'ownerUserId',
+  copiedFromPresetId: 'copiedFromPresetId',
+  copiedFromVersion: 'copiedFromVersion',
+  version: 'version',
+  status: 'status',
+  createdById: 'createdById',
+  publishedById: 'publishedById',
+  publishedAt: 'publishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicalPresetScalarFieldEnum = (typeof ClinicalPresetScalarFieldEnum)[keyof typeof ClinicalPresetScalarFieldEnum]
+
+
+export const PlatformClinicalPresetSelectionScalarFieldEnum = {
+  clinicalMode: 'clinicalMode',
+  presetId: 'presetId',
+  selectedById: 'selectedById',
+  selectedAt: 'selectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlatformClinicalPresetSelectionScalarFieldEnum = (typeof PlatformClinicalPresetSelectionScalarFieldEnum)[keyof typeof PlatformClinicalPresetSelectionScalarFieldEnum]
+
+
+export const InstitutionClinicalPresetSelectionScalarFieldEnum = {
+  id: 'id',
+  institutionId: 'institutionId',
+  clinicalMode: 'clinicalMode',
+  presetId: 'presetId',
+  selectedById: 'selectedById',
+  selectedAt: 'selectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type InstitutionClinicalPresetSelectionScalarFieldEnum = (typeof InstitutionClinicalPresetSelectionScalarFieldEnum)[keyof typeof InstitutionClinicalPresetSelectionScalarFieldEnum]
+
+
+export const UserClinicalPresetSelectionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  clinicalMode: 'clinicalMode',
+  presetId: 'presetId',
+  selectedAt: 'selectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserClinicalPresetSelectionScalarFieldEnum = (typeof UserClinicalPresetSelectionScalarFieldEnum)[keyof typeof UserClinicalPresetSelectionScalarFieldEnum]
+
+
+export const ClinicalPresetRuleScalarFieldEnum = {
+  id: 'id',
+  presetId: 'presetId',
+  ruleKey: 'ruleKey',
+  ruleVersion: 'ruleVersion',
+  payload: 'payload',
+  sourceRefs: 'sourceRefs',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicalPresetRuleScalarFieldEnum = (typeof ClinicalPresetRuleScalarFieldEnum)[keyof typeof ClinicalPresetRuleScalarFieldEnum]
+
+
+export const InstitutionClinicalRuleOverrideScalarFieldEnum = {
+  id: 'id',
+  institutionId: 'institutionId',
+  presetId: 'presetId',
+  ruleKey: 'ruleKey',
+  baseRuleVersion: 'baseRuleVersion',
+  overrideVersion: 'overrideVersion',
+  payload: 'payload',
+  sourceRefs: 'sourceRefs',
+  rationale: 'rationale',
+  status: 'status',
+  proposedById: 'proposedById',
+  designatedReviewerId: 'designatedReviewerId',
+  designatedReviewedAt: 'designatedReviewedAt',
+  hodApproverId: 'hodApproverId',
+  hodApprovedAt: 'hodApprovedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type InstitutionClinicalRuleOverrideScalarFieldEnum = (typeof InstitutionClinicalRuleOverrideScalarFieldEnum)[keyof typeof InstitutionClinicalRuleOverrideScalarFieldEnum]
 
 
 export const PreopDiagnosisScalarFieldEnum = {

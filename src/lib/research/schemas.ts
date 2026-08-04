@@ -23,6 +23,8 @@ export const researchCohortSchema = z.object({
   filters: z.object({
     statuses: z.array(z.enum(RESEARCH_CASE_STATUSES)).max(4).optional(),
     finalized: dateRangeSchema.optional(),
+    clinicalModes: z.array(z.enum(["ADULT", "PEDIATRIC"])).optional(),
+    ageDays: numberRangeSchema.optional(),
     ageYears: numberRangeSchema.optional(),
     bmi: numberRangeSchema.optional(),
     durationMinutes: numberRangeSchema.optional(),
@@ -63,7 +65,7 @@ export const researchQuerySchema = z.object({
   metrics: z.array(z.enum(RESEARCH_METRIC_IDS)).optional(),
   distributions: z.array(z.enum(RESEARCH_DISTRIBUTION_IDS)).optional(),
   sort: z.object({
-    field: z.enum(["finalizedAt", "ageYears", "durationMinutes", "asa"]),
+    field: z.enum(["finalizedAt", "ageYears", "ageDays", "durationMinutes", "asa"]),
     direction: z.enum(["asc", "desc"]),
   }).strict().optional(),
 }).strict()

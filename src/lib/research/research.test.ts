@@ -141,6 +141,8 @@ describe("research access and query contracts", () => {
       version: 1,
       filters: {
         statuses: ["COMPLETE"],
+        clinicalModes: ["PEDIATRIC"],
+        ageDays: { min: 30, max: 365 },
         ageYears: { min: 40, max: 70 },
         diagnosisCodes: ["C61"],
         emergency: false,
@@ -152,7 +154,9 @@ describe("research access and query contracts", () => {
     expect(where).toEqual({
       AND: expect.arrayContaining([
         { institutionId: { in: ["inst-1"] } },
+        { clinicalMode: { in: ["PEDIATRIC"] } },
         { preop: { is: expect.objectContaining({
+          ageApproxDays: { gte: 30, lte: 365 },
           ageYears: { gte: 40, lte: 70 },
           emergencySurgery: false,
         }) } },

@@ -335,7 +335,7 @@ function fieldStatus(caseId: string, section: string, fieldKey: string, value: u
 export async function syncCaseRelational(db: Db, caseId: string): Promise<void> {
   const caseRecord = await db.case.findUnique({
     where: { id: caseId },
-    select: { status: true },
+    select: { status: true, clinicalMode: true, clinicalRulesVersion: true },
   })
   if (!caseRecord) return
 
@@ -343,7 +343,9 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     where: { caseId },
     select: {
       id: true,
-      ageYears: true, sex: true, heightCm: true, weightKg: true, bmi: true, bloodType: true, rhFactor: true,
+      ageYears: true, ageValue: true, ageUnit: true, ageApproxDays: true,
+      sex: true, heightCm: true, weightKg: true,
+      bmi: true, bodySurfaceAreaM2: true, bloodType: true, rhFactor: true,
       diagnosesJson: true, proceduresJson: true, comorbidities: true, labResults: true,
       currentMedications: true, allergies: true, allergyDetails: true, latexAllergy: true,
       familyAnesthesiaProblems: true, familyAnesthesiaDetails: true, dentalProsthetics: true, looseTeeth: true,
@@ -357,6 +359,9 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       rcriCVD: true, rcriInsulinDM: true, rcriCreatinine: true, rcriScore: true, gutaScore: true,
       apfelScore: true, apfelPONVHistory: true, apfelPostopOpioids: true, stopBangScore: true,
       stopbangSnoring: true, stopbangTired: true, stopbangObserved: true, stopbangBP: true, stopbangNeck: true,
+      povocScore: true, povocRiskPercent: true, coldsApplicable: true, coldsScore: true,
+      coldsCurrentSymptoms: true, coldsOnset: true, coldsLungDisease: true,
+      coldsAirwayDevice: true, coldsSurgery: true, pediatricFasting: true,
       teamNotes: true, physicalExamReport: true, notes: true, aiOptIn: true,
     },
   })
@@ -379,7 +384,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     select: {
       id: true, aldreteActivity: true, aldreteRespiration: true, aldreteCirculation: true, aldreteConsciousness: true,
       aldreteSpO2: true, aldreteTotal: true, recoveryBpSystolic: true, recoveryBpDiastolic: true,
-      recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true, painScoreNRS: true, ponv: true,
+      recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true, painScoreNRS: true,
+      pediatricPainScale: true, pediatricPainScore: true, paedScore: true, ponv: true,
       recoveryBpUnobtainable: true, recoveryHeartRateUnobtainable: true, recoverySpO2Unobtainable: true,
       recoveryTemperatureUnobtainable: true, disposition: true, dispositionNotes: true, handoverItems: true, complications: true,
     },
@@ -389,6 +395,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
   const c = { ...caseRecord, preop, intraop, postop }
   const statuses: ReturnType<typeof fieldStatus>[] = [
     fieldStatus(caseId, "case", "status", c.status),
+    fieldStatus(caseId, "case", "clinicalMode", c.clinicalMode),
+    fieldStatus(caseId, "case", "clinicalRulesVersion", c.clinicalRulesVersion),
   ]
 
   if (c.preop) {
@@ -399,6 +407,10 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     const labData = await labRowsWithLoinc(p.id, caseId, p.labResults, loincMap, concepts)
     statuses.push(
       fieldStatus(caseId, "preop", "ageYears", p.ageYears),
+      fieldStatus(caseId, "preop", "ageValue", p.ageValue),
+      fieldStatus(caseId, "preop", "ageUnit", p.ageUnit),
+      fieldStatus(caseId, "preop", "ageApproxDays", p.ageApproxDays),
+      fieldStatus(caseId, "preop", "bodySurfaceAreaM2", p.bodySurfaceAreaM2),
       fieldStatus(caseId, "preop", "sex", p.sex),
       fieldStatus(caseId, "preop", "heightCm", p.heightCm),
       fieldStatus(caseId, "preop", "weightKg", p.weightKg),
@@ -444,6 +456,12 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "preop", "gutaScore", p.gutaScore),
       fieldStatus(caseId, "preop", "apfelScore", p.apfelScore),
       fieldStatus(caseId, "preop", "stopBangScore", p.stopBangScore),
+      fieldStatus(caseId, "preop", "povocScore", p.povocScore),
+      fieldStatus(caseId, "preop", "povocRiskPercent", p.povocRiskPercent),
+      fieldStatus(caseId, "preop", "coldsApplicable", p.coldsApplicable),
+      fieldStatus(caseId, "preop", "coldsScore", p.coldsScore),
+      fieldStatus(caseId, "preop", "coldsComponents", p.coldsApplicable ? [p.coldsCurrentSymptoms, p.coldsOnset, p.coldsLungDisease, p.coldsAirwayDevice, p.coldsSurgery] : null),
+      fieldStatus(caseId, "preop", "pediatricFasting", p.pediatricFasting),
       fieldStatus(caseId, "preop", "teamNotes", p.teamNotes),
       fieldStatus(caseId, "preop", "physicalExamReport", p.physicalExamReport),
       fieldStatus(caseId, "preop", "notes", p.notes),
@@ -558,6 +576,9 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "postop", "recoverySpO2", c.postop.recoverySpO2Unobtainable ? "not-applicable" : c.postop.recoverySpO2),
       fieldStatus(caseId, "postop", "temperatureCelsius", c.postop.recoveryTemperatureUnobtainable ? "not-applicable" : c.postop.temperatureCelsius),
       fieldStatus(caseId, "postop", "painScoreNRS", c.postop.painScoreNRS),
+      fieldStatus(caseId, "postop", "pediatricPainScale", c.postop.pediatricPainScale),
+      fieldStatus(caseId, "postop", "pediatricPainScore", c.postop.pediatricPainScore),
+      fieldStatus(caseId, "postop", "paedScore", c.postop.paedScore),
       fieldStatus(caseId, "postop", "ponv", c.postop.ponv),
       fieldStatus(caseId, "postop", "disposition", c.postop.disposition),
       fieldStatus(caseId, "postop", "dispositionNotes", c.postop.dispositionNotes),

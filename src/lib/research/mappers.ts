@@ -11,16 +11,22 @@ import {
   shouldSuppressResearchBinary,
   shouldSuppressResearchCell,
 } from "@lospor/core/research"
+import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import type { Prisma } from "@/generated/prisma/client"
 
 export const RESEARCH_SUMMARY_SELECT = {
   id: true,
   caseCode: true,
   status: true,
+  clinicalMode: true,
+  clinicalRulesVersion: true,
   finalizedAt: true,
   preop: {
     select: {
       ageYears: true,
+      ageValue: true,
+      ageUnit: true,
+      ageApproxDays: true,
       sex: true,
       asaScore: true,
       diagnoses: {
@@ -64,6 +70,10 @@ export const RESEARCH_DETAIL_SELECT = {
     select: {
       ageYears: true,
       sex: true,
+      ageValue: true,
+      ageUnit: true,
+      ageApproxDays: true,
+      bodySurfaceAreaM2: true,
       heightCm: true,
       weightKg: true,
       bmi: true,
@@ -76,6 +86,10 @@ export const RESEARCH_DETAIL_SELECT = {
       rcriScore: true,
       apfelScore: true,
       stopBangScore: true,
+      povocScore: true,
+      povocRiskPercent: true,
+      coldsApplicable: true,
+      coldsScore: true,
       diagnoses: {
         select: {
           code: true,
@@ -152,6 +166,9 @@ export const RESEARCH_DETAIL_SELECT = {
       ponv: true,
       disposition: true,
       recoveryBpSystolic: true,
+      pediatricPainScale: true,
+      pediatricPainScore: true,
+      paedScore: true,
       recoveryBpDiastolic: true,
       recoveryHeartRate: true,
       recoverySpO2: true,
@@ -196,6 +213,18 @@ export const RESEARCH_DETAIL_SELECT = {
       drugRoute: true,
       rate: true,
       concentration: true,
+      concentrationValue: true,
+      concentrationUnit: true,
+      formulation: true,
+      calculationBasis: true,
+      calculationWeightKg: true,
+      calculationMethod: true,
+      clinicalRuleKey: true,
+      clinicalRuleVersion: true,
+      clinicalRuleSourceIds: true,
+      clinicalPresetId: true,
+      clinicalPresetVersion: true,
+      clinicalPresetScope: true,
       volume: true,
       fluidCategory: true,
       agentPercent: true,
@@ -233,6 +262,11 @@ export function mapResearchSummary(row: ResearchSummaryRow): ResearchCaseSummary
     ageYears: row.preop?.ageYears ?? null,
     sex: row.preop?.sex ?? null,
     asa: row.preop?.asaScore ?? null,
+    clinicalMode: row.clinicalMode,
+    clinicalRulesVersion: row.clinicalRulesVersion,
+    ageValue: row.preop?.ageValue ?? null,
+    ageUnit: row.preop?.ageUnit ?? null,
+    ageApproxDays: row.preop?.ageApproxDays ?? null,
     diagnosis: diagnosis?.labelEn ?? diagnosis?.label ?? null,
     diagnosisCode: diagnosis?.code ?? diagnosis?.sourceCode ?? null,
     diagnosisLabelEn: diagnosis?.labelEn ?? diagnosis?.label ?? null,
@@ -279,9 +313,24 @@ function eventLabel(event: ResearchDetailRow["events"][number]): {
     }
   }
   if (event.type === "drug") {
+    const concentration = event.concentration
+      ?? formatCanonicalConcentration(event.concentrationValue, event.concentrationUnit)
+    const audit = [
+      concentration,
+      event.formulation,
+      event.calculationBasis && event.calculationMethod
+        ? `${event.calculationBasis}:${event.calculationMethod}`
+        : event.calculationBasis ?? event.calculationMethod,
+      event.clinicalRuleKey && event.clinicalRuleVersion
+        ? `${event.clinicalRuleKey}@${event.clinicalRuleVersion}`
+        : event.clinicalRuleKey ?? event.clinicalRuleVersion,
+      event.clinicalPresetId && event.clinicalPresetVersion
+        ? `${event.clinicalPresetScope ?? "PRESET"}:${event.clinicalPresetId}@${event.clinicalPresetVersion}`
+        : event.clinicalPresetId,
+    ].filter((value): value is string => !!value)
     return {
       label: event.inn ?? event.atcCode ?? "Medication",
-      value: event.concentration,
+      value: audit.length ? audit.join(" | ") : null,
       unit: event.unit,
     }
   }
@@ -333,6 +382,12 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       heightCm: row.preop?.heightCm ?? null,
       weightKg: row.preop?.weightKg ?? null,
       bmi: row.preop?.bmi ?? null,
+      clinicalMode: row.clinicalMode,
+      clinicalRulesVersion: row.clinicalRulesVersion,
+      ageValue: row.preop?.ageValue ?? null,
+      ageUnit: row.preop?.ageUnit ?? null,
+      ageApproxDays: row.preop?.ageApproxDays ?? null,
+      bodySurfaceAreaM2: row.preop?.bodySurfaceAreaM2 ?? null,
       asa: row.preop?.asaScore ?? null,
       emergency: row.preop?.emergencySurgery ?? false,
       highRisk: row.preop?.highRiskSurgery ?? false,
@@ -348,6 +403,10 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       label: item.labelEn ?? item.label,
       labelEn: item.labelEn ?? item.label,
       labelBg: item.labelBg,
+      povoc: row.preop?.povocScore ?? null,
+      povocRiskPercent: row.preop?.povocRiskPercent ?? null,
+      coldsApplicable: row.preop?.coldsApplicable ?? false,
+      colds: row.preop?.coldsScore ?? null,
       mappingStatus: item.mappingStatus,
     })),
     comorbidities: (row.preop?.comorbidityRows ?? []).map(item => ({
@@ -403,6 +462,9 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       recoveryHeartRate: row.postop?.recoveryHeartRate ?? null,
       recoverySpO2: row.postop?.recoverySpO2 ?? null,
       temperatureCelsius: row.postop?.temperatureCelsius ?? null,
+      pediatricPainScale: row.postop?.pediatricPainScale ?? null,
+      pediatricPainScore: row.postop?.pediatricPainScore ?? null,
+      paedScore: row.postop?.paedScore ?? null,
       handover: selections("handoverItem"),
     },
     timeline: row.events.map(event => ({

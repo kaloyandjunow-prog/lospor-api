@@ -210,6 +210,13 @@ export type EnumCaseStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumCaseStatusFilter<$PrismaModel> | $Enums.CaseStatus
 }
 
+export type EnumClinicalModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalMode | Prisma.EnumClinicalModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalModeFilter<$PrismaModel> | $Enums.ClinicalMode
+}
+
 export type IntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -229,6 +236,16 @@ export type EnumCaseStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumCaseStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumCaseStatusFilter<$PrismaModel>
+}
+
+export type EnumClinicalModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalMode | Prisma.EnumClinicalModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalModeWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalModeFilter<$PrismaModel>
 }
 
 export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -450,6 +467,13 @@ export type EnumClinicalFieldPresenceWithAggregatesFilter<$PrismaModel = never> 
   _max?: Prisma.NestedEnumClinicalFieldPresenceFilter<$PrismaModel>
 }
 
+export type EnumPediatricAgeUnitNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricAgeUnit | Prisma.EnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricAgeUnitNullableFilter<$PrismaModel> | $Enums.PediatricAgeUnit | null
+}
+
 export type EnumSexFilter<$PrismaModel = never> = {
   equals?: $Enums.Sex | Prisma.EnumSexFieldRefInput<$PrismaModel>
   in?: $Enums.Sex[] | Prisma.ListEnumSexFieldRefInput<$PrismaModel>
@@ -504,6 +528,16 @@ export type EnumASAScoreNullableFilter<$PrismaModel = never> = {
   in?: $Enums.ASAScore[] | Prisma.ListEnumASAScoreFieldRefInput<$PrismaModel> | null
   notIn?: $Enums.ASAScore[] | Prisma.ListEnumASAScoreFieldRefInput<$PrismaModel> | null
   not?: Prisma.NestedEnumASAScoreNullableFilter<$PrismaModel> | $Enums.ASAScore | null
+}
+
+export type EnumPediatricAgeUnitNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricAgeUnit | Prisma.EnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricAgeUnitNullableWithAggregatesFilter<$PrismaModel> | $Enums.PediatricAgeUnit | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPediatricAgeUnitNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPediatricAgeUnitNullableFilter<$PrismaModel>
 }
 
 export type EnumSexWithAggregatesFilter<$PrismaModel = never> = {
@@ -684,11 +718,28 @@ export type EnumArterialLineSiteNullableWithAggregatesFilter<$PrismaModel = neve
   _max?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel>
 }
 
+export type EnumPediatricPainScaleNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricPainScale | Prisma.EnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricPainScaleNullableFilter<$PrismaModel> | $Enums.PediatricPainScale | null
+}
+
 export type EnumDispositionNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.Disposition | Prisma.EnumDispositionFieldRefInput<$PrismaModel> | null
   in?: $Enums.Disposition[] | Prisma.ListEnumDispositionFieldRefInput<$PrismaModel> | null
   notIn?: $Enums.Disposition[] | Prisma.ListEnumDispositionFieldRefInput<$PrismaModel> | null
   not?: Prisma.NestedEnumDispositionNullableFilter<$PrismaModel> | $Enums.Disposition | null
+}
+
+export type EnumPediatricPainScaleNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricPainScale | Prisma.EnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricPainScaleNullableWithAggregatesFilter<$PrismaModel> | $Enums.PediatricPainScale | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPediatricPainScaleNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPediatricPainScaleNullableFilter<$PrismaModel>
 }
 
 export type EnumDispositionNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -699,6 +750,57 @@ export type EnumDispositionNullableWithAggregatesFilter<$PrismaModel = never> = 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDispositionNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDispositionNullableFilter<$PrismaModel>
+}
+
+export type EnumClinicalRuleReviewStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalRuleReviewStatus | Prisma.EnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalRuleReviewStatusFilter<$PrismaModel> | $Enums.ClinicalRuleReviewStatus
+}
+
+export type EnumClinicalRuleReviewStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalRuleReviewStatus | Prisma.EnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalRuleReviewStatusWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalRuleReviewStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalRuleReviewStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalRuleReviewStatusFilter<$PrismaModel>
+}
+
+export type EnumClinicalPresetScopeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetScope | Prisma.EnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetScopeFilter<$PrismaModel> | $Enums.ClinicalPresetScope
+}
+
+export type EnumClinicalPresetStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetStatus | Prisma.EnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetStatusFilter<$PrismaModel> | $Enums.ClinicalPresetStatus
+}
+
+export type EnumClinicalPresetScopeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetScope | Prisma.EnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetScopeWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalPresetScope
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalPresetScopeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalPresetScopeFilter<$PrismaModel>
+}
+
+export type EnumClinicalPresetStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetStatus | Prisma.EnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetStatusWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalPresetStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalPresetStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalPresetStatusFilter<$PrismaModel>
 }
 
 export type EnumMedicationKindFilter<$PrismaModel = never> = {
@@ -961,6 +1063,13 @@ export type NestedEnumCaseStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumCaseStatusFilter<$PrismaModel> | $Enums.CaseStatus
 }
 
+export type NestedEnumClinicalModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalMode | Prisma.EnumClinicalModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalModeFilter<$PrismaModel> | $Enums.ClinicalMode
+}
+
 export type NestedEnumCaseStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.CaseStatus | Prisma.EnumCaseStatusFieldRefInput<$PrismaModel>
   in?: $Enums.CaseStatus[] | Prisma.ListEnumCaseStatusFieldRefInput<$PrismaModel>
@@ -969,6 +1078,16 @@ export type NestedEnumCaseStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumCaseStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumCaseStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumClinicalModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalMode | Prisma.EnumClinicalModeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalMode[] | Prisma.ListEnumClinicalModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalModeWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalModeFilter<$PrismaModel>
 }
 
 export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -1163,6 +1282,13 @@ export type NestedEnumClinicalFieldPresenceWithAggregatesFilter<$PrismaModel = n
   _max?: Prisma.NestedEnumClinicalFieldPresenceFilter<$PrismaModel>
 }
 
+export type NestedEnumPediatricAgeUnitNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricAgeUnit | Prisma.EnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricAgeUnitNullableFilter<$PrismaModel> | $Enums.PediatricAgeUnit | null
+}
+
 export type NestedEnumSexFilter<$PrismaModel = never> = {
   equals?: $Enums.Sex | Prisma.EnumSexFieldRefInput<$PrismaModel>
   in?: $Enums.Sex[] | Prisma.ListEnumSexFieldRefInput<$PrismaModel>
@@ -1217,6 +1343,16 @@ export type NestedEnumASAScoreNullableFilter<$PrismaModel = never> = {
   in?: $Enums.ASAScore[] | Prisma.ListEnumASAScoreFieldRefInput<$PrismaModel> | null
   notIn?: $Enums.ASAScore[] | Prisma.ListEnumASAScoreFieldRefInput<$PrismaModel> | null
   not?: Prisma.NestedEnumASAScoreNullableFilter<$PrismaModel> | $Enums.ASAScore | null
+}
+
+export type NestedEnumPediatricAgeUnitNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricAgeUnit | Prisma.EnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricAgeUnit[] | Prisma.ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricAgeUnitNullableWithAggregatesFilter<$PrismaModel> | $Enums.PediatricAgeUnit | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPediatricAgeUnitNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPediatricAgeUnitNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumSexWithAggregatesFilter<$PrismaModel = never> = {
@@ -1397,11 +1533,28 @@ export type NestedEnumArterialLineSiteNullableWithAggregatesFilter<$PrismaModel 
   _max?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel>
 }
 
+export type NestedEnumPediatricPainScaleNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricPainScale | Prisma.EnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricPainScaleNullableFilter<$PrismaModel> | $Enums.PediatricPainScale | null
+}
+
 export type NestedEnumDispositionNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.Disposition | Prisma.EnumDispositionFieldRefInput<$PrismaModel> | null
   in?: $Enums.Disposition[] | Prisma.ListEnumDispositionFieldRefInput<$PrismaModel> | null
   notIn?: $Enums.Disposition[] | Prisma.ListEnumDispositionFieldRefInput<$PrismaModel> | null
   not?: Prisma.NestedEnumDispositionNullableFilter<$PrismaModel> | $Enums.Disposition | null
+}
+
+export type NestedEnumPediatricPainScaleNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PediatricPainScale | Prisma.EnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PediatricPainScale[] | Prisma.ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPediatricPainScaleNullableWithAggregatesFilter<$PrismaModel> | $Enums.PediatricPainScale | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPediatricPainScaleNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPediatricPainScaleNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumDispositionNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -1412,6 +1565,57 @@ export type NestedEnumDispositionNullableWithAggregatesFilter<$PrismaModel = nev
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDispositionNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDispositionNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumClinicalRuleReviewStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalRuleReviewStatus | Prisma.EnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalRuleReviewStatusFilter<$PrismaModel> | $Enums.ClinicalRuleReviewStatus
+}
+
+export type NestedEnumClinicalRuleReviewStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalRuleReviewStatus | Prisma.EnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalRuleReviewStatus[] | Prisma.ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalRuleReviewStatusWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalRuleReviewStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalRuleReviewStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalRuleReviewStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumClinicalPresetScopeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetScope | Prisma.EnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetScopeFilter<$PrismaModel> | $Enums.ClinicalPresetScope
+}
+
+export type NestedEnumClinicalPresetStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetStatus | Prisma.EnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetStatusFilter<$PrismaModel> | $Enums.ClinicalPresetStatus
+}
+
+export type NestedEnumClinicalPresetScopeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetScope | Prisma.EnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetScope[] | Prisma.ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetScopeWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalPresetScope
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalPresetScopeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalPresetScopeFilter<$PrismaModel>
+}
+
+export type NestedEnumClinicalPresetStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ClinicalPresetStatus | Prisma.EnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ClinicalPresetStatus[] | Prisma.ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumClinicalPresetStatusWithAggregatesFilter<$PrismaModel> | $Enums.ClinicalPresetStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumClinicalPresetStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumClinicalPresetStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumMedicationKindFilter<$PrismaModel = never> = {

@@ -175,7 +175,7 @@ describe("mapCasesToOmop", () => {
       generated_by_user_id: "admin-1",
       generated_by_role: "ADMIN",
       source: "LOSPOR",
-      source_version: "3.5.1",
+      source_version: "3.6.0",
       included_case_count: 1,
       excluded_case_count: 2,
       app_git_commit: "abc123",
@@ -192,7 +192,7 @@ describe("mapCasesToOmop", () => {
       drug_exposure: 3,
       measurement: 24,
       procedure_occurrence: 3,
-      observation: 22,
+      observation: 23,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -308,7 +308,7 @@ describe("mapCasesToOmop", () => {
       forcedOverride: false,
     })
 
-    expect(bundle.metadata.source_version).toBe("3.5.1")
+    expect(bundle.metadata.source_version).toBe("3.6.0")
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
       visit_start_date: "2026-07-21",
       visit_end_date: "2026-07-21",
@@ -318,6 +318,49 @@ describe("mapCasesToOmop", () => {
       observation_period_end_date: "2026-07-21",
     }))
     expect(bundle.person[0].year_of_birth).toBe(1986)
+  })
+
+  it("exports frozen drug route-profile inputs and rule provenance", () => {
+    const base = completeCase()
+    const events = (base.events as Array<Record<string, unknown>>).map(event =>
+      event.type === "drug"
+        ? {
+            ...event,
+            concentration: "0.5%",
+            concentrationValue: 0.5,
+            concentrationUnit: "PERCENT",
+            formulation: "HYPERBARIC",
+            calculationBasis: "IBW",
+            calculationWeightKg: 18.25,
+            calculationMethod: "MCLAREN_CDC_2000",
+            clinicalRuleKey: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575",
+            clinicalRuleVersion: "rules.v2.7",
+            clinicalRuleSourceIds: ["user-preset", "institution-preset", "platform-preset"],
+            clinicalPresetId: "user-preset",
+            clinicalPresetVersion: 7,
+            clinicalPresetScope: "USER",
+          }
+        : event,
+    )
+    const bundle = mapCasesToOmop([completeCase({ events }) as never])
+
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR_DRUG_CONCENTRATION", value_as_string: "0.5%" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_DRUG_FORMULATION", value_as_string: "HYPERBARIC" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_DOSE_CALCULATION_BASIS", value_as_string: "IBW" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_DOSE_CALCULATION_METHOD", value_as_string: "MCLAREN_CDC_2000" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_KEY", value_as_string: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_VERSION", value_as_string: "rules.v2.7" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_ID", value_as_string: "user-preset" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_VERSION", value_as_string: "7" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_SCOPE", value_as_string: "USER" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_SOURCE_IDS", value_as_string: "user-preset|institution-preset|platform-preset" }),
+    ]))
+    expect(bundle.measurement).toContainEqual(expect.objectContaining({
+      measurement_source_value: "LOSPOR_DOSE_CALCULATION_WEIGHT_KG",
+      value_as_number: 18.25,
+      unit_source_value: "kg",
+    }))
   })
 
   it("fails the quality gate for unsafe export inputs", () => {

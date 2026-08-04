@@ -2368,6 +2368,233 @@
         }
       }
     },
+    "/v1/cases/{id}/calculations": {
+      "get": {
+        "operationId": "get_v1_cases_id_calculations",
+        "summary": "List accepted pediatric calculations",
+        "tags": [
+          "cases"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PediatricCalculation"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_v1_cases_id_calculations",
+        "summary": "Recompute and accept a pediatric calculation",
+        "tags": [
+          "cases"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PediatricCalculationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PediatricCalculation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/cases/{id}/finalize": {
       "post": {
         "operationId": "post_v1_cases_id_finalize",
@@ -5257,6 +5484,347 @@
           },
           "429": {
             "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/clinical/pediatric/rules": {
+      "get": {
+        "operationId": "get_v1_clinical_pediatric_rules",
+        "summary": "Read pediatric capabilities, reviewed rules, and unavailable calculators",
+        "tags": [
+          "clinical"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/clinical/rules/runtime": {
+      "get": {
+        "operationId": "get_v1_clinical_rules_runtime",
+        "summary": "Read the effective mode-specific personal, institution, or platform ruleset",
+        "tags": [
+          "clinical"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ADULT",
+                "PEDIATRIC"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/clinical/rules/workbench": {
+      "get": {
+        "operationId": "get_v1_clinical_rules_workbench",
+        "summary": "Read mode-specific rulesets in the caller's active management scope",
+        "tags": [
+          "clinical"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ADULT",
+                "PEDIATRIC"
+              ]
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PLATFORM",
+                "INSTITUTION",
+                "USER"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_v1_clinical_rules_workbench",
+        "summary": "Copy, edit, publish, select, or clear a clinical ruleset",
+        "tags": [
+          "clinical"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -8199,6 +8767,200 @@
         }
       }
     },
+    "/v1/admin/clinical-rules": {
+      "get": {
+        "operationId": "get_v1_admin_clinical_rules",
+        "summary": "Compatibility alias for the clinical-rules workbench",
+        "tags": [
+          "admin"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "admin",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_v1_admin_clinical_rules",
+        "summary": "Compatibility alias for clinical-rules workbench actions",
+        "tags": [
+          "admin"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/users": {
       "get": {
         "operationId": "get_v1_admin_users",
@@ -9904,9 +10666,59 @@
         "type": "object",
         "additionalProperties": true
       },
+      "PreopCaseSection": {
+        "type": "object",
+        "properties": {
+          "ageValue": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ageUnit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "DAYS",
+                  "MONTHS",
+                  "YEARS"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
       "CaseCreateRequest": {
         "type": "object",
         "properties": {
+          "clinicalMode": {
+            "type": "string",
+            "enum": [
+              "ADULT",
+              "PEDIATRIC"
+            ],
+            "default": "ADULT"
+          },
+          "clinicalRulesVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "notes": {
             "anyOf": [
               {
@@ -9919,7 +10731,7 @@
             ]
           },
           "preop": {
-            "$ref": "#/components/schemas/CaseSection"
+            "$ref": "#/components/schemas/PreopCaseSection"
           },
           "intraop": {
             "$ref": "#/components/schemas/CaseSection"
@@ -9955,8 +10767,25 @@
               }
             ]
           },
+          "clinicalMode": {
+            "type": "string",
+            "enum": [
+              "ADULT",
+              "PEDIATRIC"
+            ]
+          },
+          "clinicalRulesVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "preop": {
-            "$ref": "#/components/schemas/CaseSection"
+            "$ref": "#/components/schemas/PreopCaseSection"
           },
           "intraop": {
             "$ref": "#/components/schemas/CaseSection"
@@ -9986,6 +10815,23 @@
               }
             ]
           },
+          "clinicalMode": {
+            "type": "string",
+            "enum": [
+              "ADULT",
+              "PEDIATRIC"
+            ]
+          },
+          "clinicalRulesVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -10006,7 +10852,7 @@
           "preop": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/CaseSection"
+                "$ref": "#/components/schemas/PreopCaseSection"
               },
               {
                 "type": "null"
@@ -10115,6 +10961,23 @@
             "type": "string"
           },
           "caseCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "clinicalMode": {
+            "type": "string",
+            "enum": [
+              "ADULT",
+              "PEDIATRIC"
+            ]
+          },
+          "clinicalRulesVersion": {
             "anyOf": [
               {
                 "type": "string"
@@ -10344,7 +11207,8 @@
       "Event": {
         "type": "object",
         "required": [
-          "type"
+          "type",
+          "ts"
         ],
         "properties": {
           "id": {
@@ -10399,6 +11263,118 @@
               {
                 "type": "number"
               }
+            ]
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "fluidId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "fluidEntryMode": {
+            "type": "string",
+            "enum": [
+              "VOLUME",
+              "RATE"
+            ]
+          },
+          "bagVolumeMl": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "administeredVolumeMl": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "drugRoute": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "concentration": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "concentrationValue": {
+            "type": "number",
+            "minimum": 0
+          },
+          "concentrationUnit": {
+            "type": "string",
+            "enum": [
+              "PERCENT",
+              "MCG_PER_ML",
+              "MG_PER_ML",
+              "IU_PER_ML",
+              "MMOL_PER_ML",
+              "MEQ_PER_ML"
+            ]
+          },
+          "formulation": {
+            "type": "string",
+            "enum": [
+              "HYPOBARIC",
+              "ISOBARIC",
+              "HYPERBARIC"
+            ]
+          },
+          "calculationBasis": {
+            "type": "string",
+            "enum": [
+              "FLAT",
+              "NONE",
+              "TBW",
+              "IBW",
+              "BSA_M2"
+            ]
+          },
+          "calculationWeightKg": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "calculationMethod": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "clinicalRuleKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "clinicalRuleVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "clinicalRuleSourceIds": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            }
+          },
+          "clinicalPresetId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "clinicalPresetVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "clinicalPresetScope": {
+            "type": "string",
+            "enum": [
+              "PLATFORM",
+              "INSTITUTION",
+              "USER"
             ]
           }
         },
@@ -10555,22 +11531,250 @@
         ],
         "additionalProperties": false
       },
+      "PediatricCapabilities": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "productionReady": {
+            "type": "boolean"
+          },
+          "minimumClientVersion": {
+            "type": "string"
+          },
+          "rulesetVersion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "productionReady",
+          "minimumClientVersion",
+          "rulesetVersion"
+        ],
+        "additionalProperties": false
+      },
       "Capabilities": {
         "type": "object",
         "properties": {
           "apiVersion": {
             "type": "string"
           },
-          "revisionSync": {
-            "type": "boolean"
+          "serviceVersion": {
+            "type": "string"
           },
-          "idempotentEvents": {
-            "type": "boolean"
+          "catalogVersion": {
+            "type": "string"
           },
-          "caseLocks": {
-            "type": "boolean"
+          "minimumSupportedClients": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "compatibilityPaths": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "features": {
+            "type": "object",
+            "additionalProperties": true
           }
         },
+        "additionalProperties": false
+      },
+      "PediatricCalculationRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "MOSTELLER_BSA"
+              },
+              "inputs": {
+                "type": "object",
+                "properties": {
+                  "heightCm": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "weightKg": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "heightCm",
+                  "weightKg"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "kind",
+              "inputs"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "MAINTENANCE_FLUID"
+              },
+              "inputs": {
+                "type": "object",
+                "properties": {
+                  "weightKg": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "age": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "DAYS",
+                              "MONTHS",
+                              "YEARS"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "weightKg"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "kind",
+              "inputs"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "RCUK_RESUSCITATION"
+              },
+              "inputs": {
+                "type": "object",
+                "properties": {
+                  "weightKg": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "weightKg"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "kind",
+              "inputs"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PediatricCalculation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "MOSTELLER_BSA",
+              "MAINTENANCE_FLUID",
+              "RCUK_RESUSCITATION"
+            ]
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "outputs": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "ruleVersion": {
+            "type": "string"
+          },
+          "sourceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "acceptedBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "acceptedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "caseId",
+          "kind",
+          "inputs",
+          "outputs",
+          "ruleVersion",
+          "sourceRefs",
+          "createdAt"
+        ],
         "additionalProperties": false
       },
       "RoleRequest": {
@@ -10721,8 +11925,21 @@
               ]
             }
           },
+          "clinicalModes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ADULT",
+                "PEDIATRIC"
+              ]
+            }
+          },
           "finalized": {
             "$ref": "#/components/schemas/ResearchDateRange"
+          },
+          "ageDays": {
+            "$ref": "#/components/schemas/ResearchNumberRange"
           },
           "ageYears": {
             "$ref": "#/components/schemas/ResearchNumberRange"
@@ -10931,6 +12148,7 @@
                 "enum": [
                   "finalizedAt",
                   "ageYears",
+                  "ageDays",
                   "durationMinutes",
                   "asa"
                 ]
@@ -10962,7 +12180,9 @@
               "type": "string",
               "enum": [
                 "caseCount",
+                "pediatricRate",
                 "meanAgeYears",
+                "meanAgeDays",
                 "meanBmi",
                 "meanDurationMinutes",
                 "emergencyRate",
@@ -10984,6 +12204,7 @@
                 "sex",
                 "asa",
                 "status",
+                "clinicalMode",
                 "procedure",
                 "diagnosis",
                 "technique",
@@ -11054,7 +12275,9 @@
             "type": "string",
             "enum": [
               "caseCount",
+              "pediatricRate",
               "meanAgeYears",
+              "meanAgeDays",
               "meanBmi",
               "meanDurationMinutes",
               "emergencyRate",
@@ -11103,6 +12326,7 @@
               "count",
               "percent",
               "years",
+              "days",
               "kg/m2",
               "minutes",
               "score"
@@ -11184,6 +12408,7 @@
               "sex",
               "asa",
               "status",
+              "clinicalMode",
               "procedure",
               "diagnosis",
               "technique",
@@ -11223,11 +12448,63 @@
               "COMPLETE"
             ]
           },
+          "clinicalMode": {
+            "type": "string",
+            "enum": [
+              "ADULT",
+              "PEDIATRIC"
+            ]
+          },
+          "clinicalRulesVersion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "period": {
             "anyOf": [
               {
                 "type": "string",
                 "pattern": "^[0-9]{4}-[0-9]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ageValue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ageUnit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "DAYS",
+                  "MONTHS",
+                  "YEARS"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ageApproxDays": {
+            "anyOf": [
+              {
+                "type": "number"
               },
               {
                 "type": "null"
@@ -11384,7 +12661,12 @@
           "id",
           "researchId",
           "status",
+          "clinicalMode",
+          "clinicalRulesVersion",
           "period",
+          "ageValue",
+          "ageUnit",
+          "ageApproxDays",
           "ageYears",
           "sex",
           "asa",
@@ -11610,7 +12892,9 @@
               "type": "string",
               "enum": [
                 "caseCount",
+                "pediatricRate",
                 "meanAgeYears",
+                "meanAgeDays",
                 "meanBmi",
                 "meanDurationMinutes",
                 "emergencyRate",
@@ -11825,7 +13109,9 @@
             "type": "string",
             "enum": [
               "caseCount",
+              "pediatricRate",
               "meanAgeYears",
+              "meanAgeDays",
               "meanBmi",
               "meanDurationMinutes",
               "emergencyRate",
