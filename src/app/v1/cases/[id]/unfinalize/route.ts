@@ -5,6 +5,7 @@ import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import { FINALIZE_UNDO_WINDOW_MS } from "@/lib/constants"
 import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
+import { pediatricMutationResponse } from "@/lib/pediatric-http"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           userId: true,
           status: true,
           finalizedAt: true,
+          clinicalMode: true,
           institutionId: true,
         },
       })
@@ -37,6 +39,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (caseRecord.status !== "COMPLETE") {
         return NextResponse.json({ error: "Case is not finalized" }, { status: 400 })
       }
+      const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
+      if (pediatricBlock) return pediatricBlock
       if (!caseRecord.finalizedAt || Date.now() - caseRecord.finalizedAt.getTime() >= FINALIZE_UNDO_WINDOW_MS) {
         return NextResponse.json({ error: "Undo window expired" }, { status: 403 })
       }

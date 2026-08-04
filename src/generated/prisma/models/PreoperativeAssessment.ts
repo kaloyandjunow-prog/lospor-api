@@ -28,9 +28,12 @@ export type AggregatePreoperativeAssessment = {
 
 export type PreoperativeAssessmentAvgAggregateOutputType = {
   ageYears: number | null
+  ageValue: number | null
+  ageApproxDays: number | null
   heightCm: number | null
   weightKg: number | null
   bmi: number | null
+  bodySurfaceAreaM2: number | null
   bpSystolic: number | null
   bpDiastolic: number | null
   heartRate: number | null
@@ -43,14 +46,20 @@ export type PreoperativeAssessmentAvgAggregateOutputType = {
   gutaScore: number | null
   apfelScore: number | null
   stopBangScore: number | null
+  povocScore: number | null
+  povocRiskPercent: number | null
+  coldsScore: number | null
   syncRevision: number | null
 }
 
 export type PreoperativeAssessmentSumAggregateOutputType = {
   ageYears: number | null
+  ageValue: number | null
+  ageApproxDays: number | null
   heightCm: number | null
   weightKg: number | null
   bmi: number | null
+  bodySurfaceAreaM2: number | null
   bpSystolic: number | null
   bpDiastolic: number | null
   heartRate: number | null
@@ -63,6 +72,9 @@ export type PreoperativeAssessmentSumAggregateOutputType = {
   gutaScore: number | null
   apfelScore: number | null
   stopBangScore: number | null
+  povocScore: number | null
+  povocRiskPercent: number | null
+  coldsScore: number | null
   syncRevision: number | null
 }
 
@@ -70,10 +82,14 @@ export type PreoperativeAssessmentMinAggregateOutputType = {
   id: string | null
   caseId: string | null
   ageYears: number | null
+  ageValue: number | null
+  ageApproxDays: number | null
+  ageUnit: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex | null
   heightCm: number | null
   weightKg: number | null
   bmi: number | null
+  bodySurfaceAreaM2: number | null
   bloodType: $Enums.BloodType | null
   rhFactor: $Enums.RhFactor | null
   diagnosis: string | null
@@ -136,6 +152,19 @@ export type PreoperativeAssessmentMinAggregateOutputType = {
   stopbangObserved: boolean | null
   stopbangBP: boolean | null
   stopbangNeck: boolean | null
+  povocScore: number | null
+  povocRiskPercent: number | null
+  povocSurgeryAtLeast30Minutes: boolean | null
+  povocAgeAtLeast3Years: boolean | null
+  povocStrabismusSurgery: boolean | null
+  povocHistory: boolean | null
+  coldsApplicable: boolean | null
+  coldsScore: number | null
+  coldsCurrentSymptoms: string | null
+  coldsOnset: string | null
+  coldsLungDisease: string | null
+  coldsAirwayDevice: string | null
+  coldsSurgery: string | null
   aiOptIn: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -146,10 +175,14 @@ export type PreoperativeAssessmentMaxAggregateOutputType = {
   id: string | null
   caseId: string | null
   ageYears: number | null
+  ageValue: number | null
+  ageApproxDays: number | null
+  ageUnit: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex | null
   heightCm: number | null
   weightKg: number | null
   bmi: number | null
+  bodySurfaceAreaM2: number | null
   bloodType: $Enums.BloodType | null
   rhFactor: $Enums.RhFactor | null
   diagnosis: string | null
@@ -212,6 +245,19 @@ export type PreoperativeAssessmentMaxAggregateOutputType = {
   stopbangObserved: boolean | null
   stopbangBP: boolean | null
   stopbangNeck: boolean | null
+  povocScore: number | null
+  povocRiskPercent: number | null
+  povocSurgeryAtLeast30Minutes: boolean | null
+  povocAgeAtLeast3Years: boolean | null
+  povocStrabismusSurgery: boolean | null
+  povocHistory: boolean | null
+  coldsApplicable: boolean | null
+  coldsScore: number | null
+  coldsCurrentSymptoms: string | null
+  coldsOnset: string | null
+  coldsLungDisease: string | null
+  coldsAirwayDevice: string | null
+  coldsSurgery: string | null
   aiOptIn: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -222,10 +268,14 @@ export type PreoperativeAssessmentCountAggregateOutputType = {
   id: number
   caseId: number
   ageYears: number
+  ageValue: number
+  ageApproxDays: number
+  ageUnit: number
   sex: number
   heightCm: number
   weightKg: number
   bmi: number
+  bodySurfaceAreaM2: number
   bloodType: number
   rhFactor: number
   diagnosis: number
@@ -291,6 +341,20 @@ export type PreoperativeAssessmentCountAggregateOutputType = {
   stopbangObserved: number
   stopbangBP: number
   stopbangNeck: number
+  povocScore: number
+  povocRiskPercent: number
+  povocSurgeryAtLeast30Minutes: number
+  povocAgeAtLeast3Years: number
+  povocStrabismusSurgery: number
+  povocHistory: number
+  coldsApplicable: number
+  coldsScore: number
+  coldsCurrentSymptoms: number
+  coldsOnset: number
+  coldsLungDisease: number
+  coldsAirwayDevice: number
+  coldsSurgery: number
+  pediatricFasting: number
   labResults: number
   aiOptIn: number
   createdAt: number
@@ -302,9 +366,12 @@ export type PreoperativeAssessmentCountAggregateOutputType = {
 
 export type PreoperativeAssessmentAvgAggregateInputType = {
   ageYears?: true
+  ageValue?: true
+  ageApproxDays?: true
   heightCm?: true
   weightKg?: true
   bmi?: true
+  bodySurfaceAreaM2?: true
   bpSystolic?: true
   bpDiastolic?: true
   heartRate?: true
@@ -317,14 +384,20 @@ export type PreoperativeAssessmentAvgAggregateInputType = {
   gutaScore?: true
   apfelScore?: true
   stopBangScore?: true
+  povocScore?: true
+  povocRiskPercent?: true
+  coldsScore?: true
   syncRevision?: true
 }
 
 export type PreoperativeAssessmentSumAggregateInputType = {
   ageYears?: true
+  ageValue?: true
+  ageApproxDays?: true
   heightCm?: true
   weightKg?: true
   bmi?: true
+  bodySurfaceAreaM2?: true
   bpSystolic?: true
   bpDiastolic?: true
   heartRate?: true
@@ -337,6 +410,9 @@ export type PreoperativeAssessmentSumAggregateInputType = {
   gutaScore?: true
   apfelScore?: true
   stopBangScore?: true
+  povocScore?: true
+  povocRiskPercent?: true
+  coldsScore?: true
   syncRevision?: true
 }
 
@@ -344,10 +420,14 @@ export type PreoperativeAssessmentMinAggregateInputType = {
   id?: true
   caseId?: true
   ageYears?: true
+  ageValue?: true
+  ageApproxDays?: true
+  ageUnit?: true
   sex?: true
   heightCm?: true
   weightKg?: true
   bmi?: true
+  bodySurfaceAreaM2?: true
   bloodType?: true
   rhFactor?: true
   diagnosis?: true
@@ -410,6 +490,19 @@ export type PreoperativeAssessmentMinAggregateInputType = {
   stopbangObserved?: true
   stopbangBP?: true
   stopbangNeck?: true
+  povocScore?: true
+  povocRiskPercent?: true
+  povocSurgeryAtLeast30Minutes?: true
+  povocAgeAtLeast3Years?: true
+  povocStrabismusSurgery?: true
+  povocHistory?: true
+  coldsApplicable?: true
+  coldsScore?: true
+  coldsCurrentSymptoms?: true
+  coldsOnset?: true
+  coldsLungDisease?: true
+  coldsAirwayDevice?: true
+  coldsSurgery?: true
   aiOptIn?: true
   createdAt?: true
   updatedAt?: true
@@ -420,10 +513,14 @@ export type PreoperativeAssessmentMaxAggregateInputType = {
   id?: true
   caseId?: true
   ageYears?: true
+  ageValue?: true
+  ageApproxDays?: true
+  ageUnit?: true
   sex?: true
   heightCm?: true
   weightKg?: true
   bmi?: true
+  bodySurfaceAreaM2?: true
   bloodType?: true
   rhFactor?: true
   diagnosis?: true
@@ -486,6 +583,19 @@ export type PreoperativeAssessmentMaxAggregateInputType = {
   stopbangObserved?: true
   stopbangBP?: true
   stopbangNeck?: true
+  povocScore?: true
+  povocRiskPercent?: true
+  povocSurgeryAtLeast30Minutes?: true
+  povocAgeAtLeast3Years?: true
+  povocStrabismusSurgery?: true
+  povocHistory?: true
+  coldsApplicable?: true
+  coldsScore?: true
+  coldsCurrentSymptoms?: true
+  coldsOnset?: true
+  coldsLungDisease?: true
+  coldsAirwayDevice?: true
+  coldsSurgery?: true
   aiOptIn?: true
   createdAt?: true
   updatedAt?: true
@@ -496,10 +606,14 @@ export type PreoperativeAssessmentCountAggregateInputType = {
   id?: true
   caseId?: true
   ageYears?: true
+  ageValue?: true
+  ageApproxDays?: true
+  ageUnit?: true
   sex?: true
   heightCm?: true
   weightKg?: true
   bmi?: true
+  bodySurfaceAreaM2?: true
   bloodType?: true
   rhFactor?: true
   diagnosis?: true
@@ -565,6 +679,20 @@ export type PreoperativeAssessmentCountAggregateInputType = {
   stopbangObserved?: true
   stopbangBP?: true
   stopbangNeck?: true
+  povocScore?: true
+  povocRiskPercent?: true
+  povocSurgeryAtLeast30Minutes?: true
+  povocAgeAtLeast3Years?: true
+  povocStrabismusSurgery?: true
+  povocHistory?: true
+  coldsApplicable?: true
+  coldsScore?: true
+  coldsCurrentSymptoms?: true
+  coldsOnset?: true
+  coldsLungDisease?: true
+  coldsAirwayDevice?: true
+  coldsSurgery?: true
+  pediatricFasting?: true
   labResults?: true
   aiOptIn?: true
   createdAt?: true
@@ -663,10 +791,14 @@ export type PreoperativeAssessmentGroupByOutputType = {
   id: string
   caseId: string
   ageYears: number | null
+  ageValue: number | null
+  ageApproxDays: number | null
+  ageUnit: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm: number | null
   weightKg: number | null
   bmi: number | null
+  bodySurfaceAreaM2: number | null
   bloodType: $Enums.BloodType | null
   rhFactor: $Enums.RhFactor | null
   diagnosis: string
@@ -732,6 +864,20 @@ export type PreoperativeAssessmentGroupByOutputType = {
   stopbangObserved: boolean
   stopbangBP: boolean
   stopbangNeck: boolean
+  povocScore: number | null
+  povocRiskPercent: number | null
+  povocSurgeryAtLeast30Minutes: boolean
+  povocAgeAtLeast3Years: boolean
+  povocStrabismusSurgery: boolean
+  povocHistory: boolean
+  coldsApplicable: boolean
+  coldsScore: number | null
+  coldsCurrentSymptoms: string | null
+  coldsOnset: string | null
+  coldsLungDisease: string | null
+  coldsAirwayDevice: string | null
+  coldsSurgery: string | null
+  pediatricFasting: runtime.JsonValue
   labResults: runtime.JsonValue
   aiOptIn: boolean
   createdAt: Date
@@ -766,10 +912,14 @@ export type PreoperativeAssessmentWhereInput = {
   id?: Prisma.StringFilter<"PreoperativeAssessment"> | string
   caseId?: Prisma.StringFilter<"PreoperativeAssessment"> | string
   ageYears?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  ageValue?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  ageApproxDays?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
+  ageUnit?: Prisma.EnumPediatricAgeUnitNullableFilter<"PreoperativeAssessment"> | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFilter<"PreoperativeAssessment"> | $Enums.Sex
   heightCm?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   weightKg?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   bmi?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
+  bodySurfaceAreaM2?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   bloodType?: Prisma.EnumBloodTypeNullableFilter<"PreoperativeAssessment"> | $Enums.BloodType | null
   rhFactor?: Prisma.EnumRhFactorNullableFilter<"PreoperativeAssessment"> | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFilter<"PreoperativeAssessment"> | string
@@ -835,6 +985,20 @@ export type PreoperativeAssessmentWhereInput = {
   stopbangObserved?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   stopbangBP?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   stopbangNeck?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  povocRiskPercent?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocStrabismusSurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  coldsApplicable?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  coldsScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  coldsCurrentSymptoms?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsOnset?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsLungDisease?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsAirwayDevice?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsSurgery?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  pediatricFasting?: Prisma.JsonFilter<"PreoperativeAssessment">
   labResults?: Prisma.JsonFilter<"PreoperativeAssessment">
   aiOptIn?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   createdAt?: Prisma.DateTimeFilter<"PreoperativeAssessment"> | Date | string
@@ -852,10 +1016,14 @@ export type PreoperativeAssessmentOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   caseId?: Prisma.SortOrder
   ageYears?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageValue?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageApproxDays?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageUnit?: Prisma.SortOrderInput | Prisma.SortOrder
   sex?: Prisma.SortOrder
   heightCm?: Prisma.SortOrderInput | Prisma.SortOrder
   weightKg?: Prisma.SortOrderInput | Prisma.SortOrder
   bmi?: Prisma.SortOrderInput | Prisma.SortOrder
+  bodySurfaceAreaM2?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodType?: Prisma.SortOrderInput | Prisma.SortOrder
   rhFactor?: Prisma.SortOrderInput | Prisma.SortOrder
   diagnosis?: Prisma.SortOrder
@@ -921,6 +1089,20 @@ export type PreoperativeAssessmentOrderByWithRelationInput = {
   stopbangObserved?: Prisma.SortOrder
   stopbangBP?: Prisma.SortOrder
   stopbangNeck?: Prisma.SortOrder
+  povocScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocRiskPercent?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocSurgeryAtLeast30Minutes?: Prisma.SortOrder
+  povocAgeAtLeast3Years?: Prisma.SortOrder
+  povocStrabismusSurgery?: Prisma.SortOrder
+  povocHistory?: Prisma.SortOrder
+  coldsApplicable?: Prisma.SortOrder
+  coldsScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsCurrentSymptoms?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsOnset?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsLungDisease?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsAirwayDevice?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsSurgery?: Prisma.SortOrderInput | Prisma.SortOrder
+  pediatricFasting?: Prisma.SortOrder
   labResults?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -941,10 +1123,14 @@ export type PreoperativeAssessmentWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.PreoperativeAssessmentWhereInput[]
   NOT?: Prisma.PreoperativeAssessmentWhereInput | Prisma.PreoperativeAssessmentWhereInput[]
   ageYears?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  ageValue?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  ageApproxDays?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
+  ageUnit?: Prisma.EnumPediatricAgeUnitNullableFilter<"PreoperativeAssessment"> | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFilter<"PreoperativeAssessment"> | $Enums.Sex
   heightCm?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   weightKg?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   bmi?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
+  bodySurfaceAreaM2?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   bloodType?: Prisma.EnumBloodTypeNullableFilter<"PreoperativeAssessment"> | $Enums.BloodType | null
   rhFactor?: Prisma.EnumRhFactorNullableFilter<"PreoperativeAssessment"> | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFilter<"PreoperativeAssessment"> | string
@@ -1010,6 +1196,20 @@ export type PreoperativeAssessmentWhereUniqueInput = Prisma.AtLeast<{
   stopbangObserved?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   stopbangBP?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   stopbangNeck?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  povocRiskPercent?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocStrabismusSurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  coldsApplicable?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  coldsScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
+  coldsCurrentSymptoms?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsOnset?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsLungDisease?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsAirwayDevice?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  coldsSurgery?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  pediatricFasting?: Prisma.JsonFilter<"PreoperativeAssessment">
   labResults?: Prisma.JsonFilter<"PreoperativeAssessment">
   aiOptIn?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   createdAt?: Prisma.DateTimeFilter<"PreoperativeAssessment"> | Date | string
@@ -1027,10 +1227,14 @@ export type PreoperativeAssessmentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   caseId?: Prisma.SortOrder
   ageYears?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageValue?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageApproxDays?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageUnit?: Prisma.SortOrderInput | Prisma.SortOrder
   sex?: Prisma.SortOrder
   heightCm?: Prisma.SortOrderInput | Prisma.SortOrder
   weightKg?: Prisma.SortOrderInput | Prisma.SortOrder
   bmi?: Prisma.SortOrderInput | Prisma.SortOrder
+  bodySurfaceAreaM2?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodType?: Prisma.SortOrderInput | Prisma.SortOrder
   rhFactor?: Prisma.SortOrderInput | Prisma.SortOrder
   diagnosis?: Prisma.SortOrder
@@ -1096,6 +1300,20 @@ export type PreoperativeAssessmentOrderByWithAggregationInput = {
   stopbangObserved?: Prisma.SortOrder
   stopbangBP?: Prisma.SortOrder
   stopbangNeck?: Prisma.SortOrder
+  povocScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocRiskPercent?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocSurgeryAtLeast30Minutes?: Prisma.SortOrder
+  povocAgeAtLeast3Years?: Prisma.SortOrder
+  povocStrabismusSurgery?: Prisma.SortOrder
+  povocHistory?: Prisma.SortOrder
+  coldsApplicable?: Prisma.SortOrder
+  coldsScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsCurrentSymptoms?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsOnset?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsLungDisease?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsAirwayDevice?: Prisma.SortOrderInput | Prisma.SortOrder
+  coldsSurgery?: Prisma.SortOrderInput | Prisma.SortOrder
+  pediatricFasting?: Prisma.SortOrder
   labResults?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1115,10 +1333,14 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"PreoperativeAssessment"> | string
   caseId?: Prisma.StringWithAggregatesFilter<"PreoperativeAssessment"> | string
   ageYears?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
+  ageValue?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
+  ageApproxDays?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
+  ageUnit?: Prisma.EnumPediatricAgeUnitNullableWithAggregatesFilter<"PreoperativeAssessment"> | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexWithAggregatesFilter<"PreoperativeAssessment"> | $Enums.Sex
   heightCm?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   weightKg?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   bmi?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
+  bodySurfaceAreaM2?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   bloodType?: Prisma.EnumBloodTypeNullableWithAggregatesFilter<"PreoperativeAssessment"> | $Enums.BloodType | null
   rhFactor?: Prisma.EnumRhFactorNullableWithAggregatesFilter<"PreoperativeAssessment"> | $Enums.RhFactor | null
   diagnosis?: Prisma.StringWithAggregatesFilter<"PreoperativeAssessment"> | string
@@ -1184,6 +1406,20 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
   stopbangObserved?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
   stopbangBP?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
   stopbangNeck?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  povocScore?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
+  povocRiskPercent?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  povocStrabismusSurgery?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  povocHistory?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  coldsApplicable?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  coldsScore?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
+  coldsCurrentSymptoms?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
+  coldsOnset?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
+  coldsLungDisease?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
+  coldsAirwayDevice?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
+  coldsSurgery?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
+  pediatricFasting?: Prisma.JsonWithAggregatesFilter<"PreoperativeAssessment">
   labResults?: Prisma.JsonWithAggregatesFilter<"PreoperativeAssessment">
   aiOptIn?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"PreoperativeAssessment"> | Date | string
@@ -1194,10 +1430,14 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
 export type PreoperativeAssessmentCreateInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -1263,6 +1503,20 @@ export type PreoperativeAssessmentCreateInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -1280,10 +1534,14 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
   id?: string
   caseId: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -1349,6 +1607,20 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -1364,10 +1636,14 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
 export type PreoperativeAssessmentUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1433,6 +1709,20 @@ export type PreoperativeAssessmentUpdateInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1450,10 +1740,14 @@ export type PreoperativeAssessmentUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   caseId?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1519,6 +1813,20 @@ export type PreoperativeAssessmentUncheckedUpdateInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1535,10 +1843,14 @@ export type PreoperativeAssessmentCreateManyInput = {
   id?: string
   caseId: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -1604,6 +1916,20 @@ export type PreoperativeAssessmentCreateManyInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -1614,10 +1940,14 @@ export type PreoperativeAssessmentCreateManyInput = {
 export type PreoperativeAssessmentUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1683,6 +2013,20 @@ export type PreoperativeAssessmentUpdateManyMutationInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1694,10 +2038,14 @@ export type PreoperativeAssessmentUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   caseId?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1763,6 +2111,20 @@ export type PreoperativeAssessmentUncheckedUpdateManyInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1779,10 +2141,14 @@ export type PreoperativeAssessmentCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   caseId?: Prisma.SortOrder
   ageYears?: Prisma.SortOrder
+  ageValue?: Prisma.SortOrder
+  ageApproxDays?: Prisma.SortOrder
+  ageUnit?: Prisma.SortOrder
   sex?: Prisma.SortOrder
   heightCm?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
   bmi?: Prisma.SortOrder
+  bodySurfaceAreaM2?: Prisma.SortOrder
   bloodType?: Prisma.SortOrder
   rhFactor?: Prisma.SortOrder
   diagnosis?: Prisma.SortOrder
@@ -1848,6 +2214,20 @@ export type PreoperativeAssessmentCountOrderByAggregateInput = {
   stopbangObserved?: Prisma.SortOrder
   stopbangBP?: Prisma.SortOrder
   stopbangNeck?: Prisma.SortOrder
+  povocScore?: Prisma.SortOrder
+  povocRiskPercent?: Prisma.SortOrder
+  povocSurgeryAtLeast30Minutes?: Prisma.SortOrder
+  povocAgeAtLeast3Years?: Prisma.SortOrder
+  povocStrabismusSurgery?: Prisma.SortOrder
+  povocHistory?: Prisma.SortOrder
+  coldsApplicable?: Prisma.SortOrder
+  coldsScore?: Prisma.SortOrder
+  coldsCurrentSymptoms?: Prisma.SortOrder
+  coldsOnset?: Prisma.SortOrder
+  coldsLungDisease?: Prisma.SortOrder
+  coldsAirwayDevice?: Prisma.SortOrder
+  coldsSurgery?: Prisma.SortOrder
+  pediatricFasting?: Prisma.SortOrder
   labResults?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1857,9 +2237,12 @@ export type PreoperativeAssessmentCountOrderByAggregateInput = {
 
 export type PreoperativeAssessmentAvgOrderByAggregateInput = {
   ageYears?: Prisma.SortOrder
+  ageValue?: Prisma.SortOrder
+  ageApproxDays?: Prisma.SortOrder
   heightCm?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
   bmi?: Prisma.SortOrder
+  bodySurfaceAreaM2?: Prisma.SortOrder
   bpSystolic?: Prisma.SortOrder
   bpDiastolic?: Prisma.SortOrder
   heartRate?: Prisma.SortOrder
@@ -1872,6 +2255,9 @@ export type PreoperativeAssessmentAvgOrderByAggregateInput = {
   gutaScore?: Prisma.SortOrder
   apfelScore?: Prisma.SortOrder
   stopBangScore?: Prisma.SortOrder
+  povocScore?: Prisma.SortOrder
+  povocRiskPercent?: Prisma.SortOrder
+  coldsScore?: Prisma.SortOrder
   syncRevision?: Prisma.SortOrder
 }
 
@@ -1879,10 +2265,14 @@ export type PreoperativeAssessmentMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   caseId?: Prisma.SortOrder
   ageYears?: Prisma.SortOrder
+  ageValue?: Prisma.SortOrder
+  ageApproxDays?: Prisma.SortOrder
+  ageUnit?: Prisma.SortOrder
   sex?: Prisma.SortOrder
   heightCm?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
   bmi?: Prisma.SortOrder
+  bodySurfaceAreaM2?: Prisma.SortOrder
   bloodType?: Prisma.SortOrder
   rhFactor?: Prisma.SortOrder
   diagnosis?: Prisma.SortOrder
@@ -1945,6 +2335,19 @@ export type PreoperativeAssessmentMaxOrderByAggregateInput = {
   stopbangObserved?: Prisma.SortOrder
   stopbangBP?: Prisma.SortOrder
   stopbangNeck?: Prisma.SortOrder
+  povocScore?: Prisma.SortOrder
+  povocRiskPercent?: Prisma.SortOrder
+  povocSurgeryAtLeast30Minutes?: Prisma.SortOrder
+  povocAgeAtLeast3Years?: Prisma.SortOrder
+  povocStrabismusSurgery?: Prisma.SortOrder
+  povocHistory?: Prisma.SortOrder
+  coldsApplicable?: Prisma.SortOrder
+  coldsScore?: Prisma.SortOrder
+  coldsCurrentSymptoms?: Prisma.SortOrder
+  coldsOnset?: Prisma.SortOrder
+  coldsLungDisease?: Prisma.SortOrder
+  coldsAirwayDevice?: Prisma.SortOrder
+  coldsSurgery?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -1955,10 +2358,14 @@ export type PreoperativeAssessmentMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   caseId?: Prisma.SortOrder
   ageYears?: Prisma.SortOrder
+  ageValue?: Prisma.SortOrder
+  ageApproxDays?: Prisma.SortOrder
+  ageUnit?: Prisma.SortOrder
   sex?: Prisma.SortOrder
   heightCm?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
   bmi?: Prisma.SortOrder
+  bodySurfaceAreaM2?: Prisma.SortOrder
   bloodType?: Prisma.SortOrder
   rhFactor?: Prisma.SortOrder
   diagnosis?: Prisma.SortOrder
@@ -2021,6 +2428,19 @@ export type PreoperativeAssessmentMinOrderByAggregateInput = {
   stopbangObserved?: Prisma.SortOrder
   stopbangBP?: Prisma.SortOrder
   stopbangNeck?: Prisma.SortOrder
+  povocScore?: Prisma.SortOrder
+  povocRiskPercent?: Prisma.SortOrder
+  povocSurgeryAtLeast30Minutes?: Prisma.SortOrder
+  povocAgeAtLeast3Years?: Prisma.SortOrder
+  povocStrabismusSurgery?: Prisma.SortOrder
+  povocHistory?: Prisma.SortOrder
+  coldsApplicable?: Prisma.SortOrder
+  coldsScore?: Prisma.SortOrder
+  coldsCurrentSymptoms?: Prisma.SortOrder
+  coldsOnset?: Prisma.SortOrder
+  coldsLungDisease?: Prisma.SortOrder
+  coldsAirwayDevice?: Prisma.SortOrder
+  coldsSurgery?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -2029,9 +2449,12 @@ export type PreoperativeAssessmentMinOrderByAggregateInput = {
 
 export type PreoperativeAssessmentSumOrderByAggregateInput = {
   ageYears?: Prisma.SortOrder
+  ageValue?: Prisma.SortOrder
+  ageApproxDays?: Prisma.SortOrder
   heightCm?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
   bmi?: Prisma.SortOrder
+  bodySurfaceAreaM2?: Prisma.SortOrder
   bpSystolic?: Prisma.SortOrder
   bpDiastolic?: Prisma.SortOrder
   heartRate?: Prisma.SortOrder
@@ -2044,6 +2467,9 @@ export type PreoperativeAssessmentSumOrderByAggregateInput = {
   gutaScore?: Prisma.SortOrder
   apfelScore?: Prisma.SortOrder
   stopBangScore?: Prisma.SortOrder
+  povocScore?: Prisma.SortOrder
+  povocRiskPercent?: Prisma.SortOrder
+  coldsScore?: Prisma.SortOrder
   syncRevision?: Prisma.SortOrder
 }
 
@@ -2082,6 +2508,10 @@ export type PreoperativeAssessmentUncheckedUpdateOneWithoutCaseNestedInput = {
   delete?: Prisma.PreoperativeAssessmentWhereInput | boolean
   connect?: Prisma.PreoperativeAssessmentWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.PreoperativeAssessmentUpdateToOneWithWhereWithoutCaseInput, Prisma.PreoperativeAssessmentUpdateWithoutCaseInput>, Prisma.PreoperativeAssessmentUncheckedUpdateWithoutCaseInput>
+}
+
+export type NullableEnumPediatricAgeUnitFieldUpdateOperationsInput = {
+  set?: $Enums.PediatricAgeUnit | null
 }
 
 export type EnumSexFieldUpdateOperationsInput = {
@@ -2189,10 +2619,14 @@ export type PreoperativeAssessmentUpdateOneRequiredWithoutMedicationsNestedInput
 export type PreoperativeAssessmentCreateWithoutCaseInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -2258,6 +2692,20 @@ export type PreoperativeAssessmentCreateWithoutCaseInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -2273,10 +2721,14 @@ export type PreoperativeAssessmentCreateWithoutCaseInput = {
 export type PreoperativeAssessmentUncheckedCreateWithoutCaseInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -2342,6 +2794,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutCaseInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -2373,10 +2839,14 @@ export type PreoperativeAssessmentUpdateToOneWithWhereWithoutCaseInput = {
 export type PreoperativeAssessmentUpdateWithoutCaseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2442,6 +2912,20 @@ export type PreoperativeAssessmentUpdateWithoutCaseInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2457,10 +2941,14 @@ export type PreoperativeAssessmentUpdateWithoutCaseInput = {
 export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2526,6 +3014,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2541,10 +3043,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
 export type PreoperativeAssessmentCreateWithoutDiagnosesInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -2610,6 +3116,20 @@ export type PreoperativeAssessmentCreateWithoutDiagnosesInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -2626,10 +3146,14 @@ export type PreoperativeAssessmentUncheckedCreateWithoutDiagnosesInput = {
   id?: string
   caseId: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -2695,6 +3219,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutDiagnosesInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -2725,10 +3263,14 @@ export type PreoperativeAssessmentUpdateToOneWithWhereWithoutDiagnosesInput = {
 export type PreoperativeAssessmentUpdateWithoutDiagnosesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2794,6 +3336,20 @@ export type PreoperativeAssessmentUpdateWithoutDiagnosesInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2810,10 +3366,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   caseId?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2879,6 +3439,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2893,10 +3467,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
 export type PreoperativeAssessmentCreateWithoutProcedureRowsInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -2962,6 +3540,20 @@ export type PreoperativeAssessmentCreateWithoutProcedureRowsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -2978,10 +3570,14 @@ export type PreoperativeAssessmentUncheckedCreateWithoutProcedureRowsInput = {
   id?: string
   caseId: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -3047,6 +3643,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutProcedureRowsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3077,10 +3687,14 @@ export type PreoperativeAssessmentUpdateToOneWithWhereWithoutProcedureRowsInput 
 export type PreoperativeAssessmentUpdateWithoutProcedureRowsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3146,6 +3760,20 @@ export type PreoperativeAssessmentUpdateWithoutProcedureRowsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3162,10 +3790,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   caseId?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3231,6 +3863,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3245,10 +3891,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
 export type PreoperativeAssessmentCreateWithoutComorbidityRowsInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -3314,6 +3964,20 @@ export type PreoperativeAssessmentCreateWithoutComorbidityRowsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3330,10 +3994,14 @@ export type PreoperativeAssessmentUncheckedCreateWithoutComorbidityRowsInput = {
   id?: string
   caseId: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -3399,6 +4067,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutComorbidityRowsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3429,10 +4111,14 @@ export type PreoperativeAssessmentUpdateToOneWithWhereWithoutComorbidityRowsInpu
 export type PreoperativeAssessmentUpdateWithoutComorbidityRowsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3498,6 +4184,20 @@ export type PreoperativeAssessmentUpdateWithoutComorbidityRowsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3514,10 +4214,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   caseId?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3583,6 +4287,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3597,10 +4315,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
 export type PreoperativeAssessmentCreateWithoutLabRowsInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -3666,6 +4388,20 @@ export type PreoperativeAssessmentCreateWithoutLabRowsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3682,10 +4418,14 @@ export type PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput = {
   id?: string
   caseId: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -3751,6 +4491,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3781,10 +4535,14 @@ export type PreoperativeAssessmentUpdateToOneWithWhereWithoutLabRowsInput = {
 export type PreoperativeAssessmentUpdateWithoutLabRowsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3850,6 +4608,20 @@ export type PreoperativeAssessmentUpdateWithoutLabRowsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3866,10 +4638,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   caseId?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3935,6 +4711,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3949,10 +4739,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
 export type PreoperativeAssessmentCreateWithoutMedicationsInput = {
   id?: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -4018,6 +4812,20 @@ export type PreoperativeAssessmentCreateWithoutMedicationsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -4034,10 +4842,14 @@ export type PreoperativeAssessmentUncheckedCreateWithoutMedicationsInput = {
   id?: string
   caseId: string
   ageYears?: number | null
+  ageValue?: number | null
+  ageApproxDays?: number | null
+  ageUnit?: $Enums.PediatricAgeUnit | null
   sex: $Enums.Sex
   heightCm?: number | null
   weightKg?: number | null
   bmi?: number | null
+  bodySurfaceAreaM2?: number | null
   bloodType?: $Enums.BloodType | null
   rhFactor?: $Enums.RhFactor | null
   diagnosis: string
@@ -4103,6 +4915,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutMedicationsInput = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: number | null
+  povocRiskPercent?: number | null
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: number | null
+  coldsCurrentSymptoms?: string | null
+  coldsOnset?: string | null
+  coldsLungDisease?: string | null
+  coldsAirwayDevice?: string | null
+  coldsSurgery?: string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -4133,10 +4959,14 @@ export type PreoperativeAssessmentUpdateToOneWithWhereWithoutMedicationsInput = 
 export type PreoperativeAssessmentUpdateWithoutMedicationsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4202,6 +5032,20 @@ export type PreoperativeAssessmentUpdateWithoutMedicationsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4218,10 +5062,14 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutMedicationsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   caseId?: Prisma.StringFieldUpdateOperationsInput | string
   ageYears?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ageApproxDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  ageUnit?: Prisma.NullableEnumPediatricAgeUnitFieldUpdateOperationsInput | $Enums.PediatricAgeUnit | null
   sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
   heightCm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightKg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bmi?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bodySurfaceAreaM2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bloodType?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   rhFactor?: Prisma.NullableEnumRhFactorFieldUpdateOperationsInput | $Enums.RhFactor | null
   diagnosis?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4287,6 +5135,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutMedicationsInput = {
   stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsOnset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsLungDisease?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4369,10 +5231,14 @@ export type PreoperativeAssessmentSelect<ExtArgs extends runtime.Types.Extension
   id?: boolean
   caseId?: boolean
   ageYears?: boolean
+  ageValue?: boolean
+  ageApproxDays?: boolean
+  ageUnit?: boolean
   sex?: boolean
   heightCm?: boolean
   weightKg?: boolean
   bmi?: boolean
+  bodySurfaceAreaM2?: boolean
   bloodType?: boolean
   rhFactor?: boolean
   diagnosis?: boolean
@@ -4438,6 +5304,20 @@ export type PreoperativeAssessmentSelect<ExtArgs extends runtime.Types.Extension
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: boolean
+  povocRiskPercent?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: boolean
+  coldsCurrentSymptoms?: boolean
+  coldsOnset?: boolean
+  coldsLungDisease?: boolean
+  coldsAirwayDevice?: boolean
+  coldsSurgery?: boolean
+  pediatricFasting?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -4456,10 +5336,14 @@ export type PreoperativeAssessmentSelectCreateManyAndReturn<ExtArgs extends runt
   id?: boolean
   caseId?: boolean
   ageYears?: boolean
+  ageValue?: boolean
+  ageApproxDays?: boolean
+  ageUnit?: boolean
   sex?: boolean
   heightCm?: boolean
   weightKg?: boolean
   bmi?: boolean
+  bodySurfaceAreaM2?: boolean
   bloodType?: boolean
   rhFactor?: boolean
   diagnosis?: boolean
@@ -4525,6 +5409,20 @@ export type PreoperativeAssessmentSelectCreateManyAndReturn<ExtArgs extends runt
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: boolean
+  povocRiskPercent?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: boolean
+  coldsCurrentSymptoms?: boolean
+  coldsOnset?: boolean
+  coldsLungDisease?: boolean
+  coldsAirwayDevice?: boolean
+  coldsSurgery?: boolean
+  pediatricFasting?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -4537,10 +5435,14 @@ export type PreoperativeAssessmentSelectUpdateManyAndReturn<ExtArgs extends runt
   id?: boolean
   caseId?: boolean
   ageYears?: boolean
+  ageValue?: boolean
+  ageApproxDays?: boolean
+  ageUnit?: boolean
   sex?: boolean
   heightCm?: boolean
   weightKg?: boolean
   bmi?: boolean
+  bodySurfaceAreaM2?: boolean
   bloodType?: boolean
   rhFactor?: boolean
   diagnosis?: boolean
@@ -4606,6 +5508,20 @@ export type PreoperativeAssessmentSelectUpdateManyAndReturn<ExtArgs extends runt
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: boolean
+  povocRiskPercent?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: boolean
+  coldsCurrentSymptoms?: boolean
+  coldsOnset?: boolean
+  coldsLungDisease?: boolean
+  coldsAirwayDevice?: boolean
+  coldsSurgery?: boolean
+  pediatricFasting?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -4618,10 +5534,14 @@ export type PreoperativeAssessmentSelectScalar = {
   id?: boolean
   caseId?: boolean
   ageYears?: boolean
+  ageValue?: boolean
+  ageApproxDays?: boolean
+  ageUnit?: boolean
   sex?: boolean
   heightCm?: boolean
   weightKg?: boolean
   bmi?: boolean
+  bodySurfaceAreaM2?: boolean
   bloodType?: boolean
   rhFactor?: boolean
   diagnosis?: boolean
@@ -4687,6 +5607,20 @@ export type PreoperativeAssessmentSelectScalar = {
   stopbangObserved?: boolean
   stopbangBP?: boolean
   stopbangNeck?: boolean
+  povocScore?: boolean
+  povocRiskPercent?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean
+  povocAgeAtLeast3Years?: boolean
+  povocStrabismusSurgery?: boolean
+  povocHistory?: boolean
+  coldsApplicable?: boolean
+  coldsScore?: boolean
+  coldsCurrentSymptoms?: boolean
+  coldsOnset?: boolean
+  coldsLungDisease?: boolean
+  coldsAirwayDevice?: boolean
+  coldsSurgery?: boolean
+  pediatricFasting?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -4694,7 +5628,7 @@ export type PreoperativeAssessmentSelectScalar = {
   syncRevision?: boolean
 }
 
-export type PreoperativeAssessmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "ageYears" | "sex" | "heightCm" | "weightKg" | "bmi" | "bloodType" | "rhFactor" | "diagnosis" | "diagnosesJson" | "plannedProcedure" | "proceduresJson" | "icdCode" | "teamNotes" | "physicalExamReport" | "notes" | "comorbidities" | "allergies" | "allergyDetails" | "latexAllergy" | "currentMedications" | "familyAnesthesiaProblems" | "familyAnesthesiaDetails" | "dentalProsthetics" | "looseTeeth" | "smoking" | "substanceAbuse" | "bpSystolic" | "bpDiastolic" | "heartRate" | "heartArrhythmia" | "spO2" | "temperature" | "respiratoryRate" | "bpUnobtainable" | "heartRateUnobtainable" | "spO2Unobtainable" | "temperatureUnobtainable" | "respiratoryRateUnobtainable" | "mallampati" | "mouthOpeningCm" | "thyromental" | "neckMobility" | "upperLipBiteTest" | "retrognathia" | "prominentIncisors" | "facialHair" | "difficultAirwayHistory" | "difficultAirwayNotes" | "cormackLehane" | "airwayUnobtainable" | "asaScore" | "elective" | "emergencySurgery" | "highRiskSurgery" | "rcriIschemicHeart" | "rcriCHF" | "rcriCVD" | "rcriInsulinDM" | "rcriCreatinine" | "rcriScore" | "gutaScore" | "apfelScore" | "stopBangScore" | "apfelPONVHistory" | "apfelPostopOpioids" | "stopbangSnoring" | "stopbangTired" | "stopbangObserved" | "stopbangBP" | "stopbangNeck" | "labResults" | "aiOptIn" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["preoperativeAssessment"]>
+export type PreoperativeAssessmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "ageYears" | "ageValue" | "ageApproxDays" | "ageUnit" | "sex" | "heightCm" | "weightKg" | "bmi" | "bodySurfaceAreaM2" | "bloodType" | "rhFactor" | "diagnosis" | "diagnosesJson" | "plannedProcedure" | "proceduresJson" | "icdCode" | "teamNotes" | "physicalExamReport" | "notes" | "comorbidities" | "allergies" | "allergyDetails" | "latexAllergy" | "currentMedications" | "familyAnesthesiaProblems" | "familyAnesthesiaDetails" | "dentalProsthetics" | "looseTeeth" | "smoking" | "substanceAbuse" | "bpSystolic" | "bpDiastolic" | "heartRate" | "heartArrhythmia" | "spO2" | "temperature" | "respiratoryRate" | "bpUnobtainable" | "heartRateUnobtainable" | "spO2Unobtainable" | "temperatureUnobtainable" | "respiratoryRateUnobtainable" | "mallampati" | "mouthOpeningCm" | "thyromental" | "neckMobility" | "upperLipBiteTest" | "retrognathia" | "prominentIncisors" | "facialHair" | "difficultAirwayHistory" | "difficultAirwayNotes" | "cormackLehane" | "airwayUnobtainable" | "asaScore" | "elective" | "emergencySurgery" | "highRiskSurgery" | "rcriIschemicHeart" | "rcriCHF" | "rcriCVD" | "rcriInsulinDM" | "rcriCreatinine" | "rcriScore" | "gutaScore" | "apfelScore" | "stopBangScore" | "apfelPONVHistory" | "apfelPostopOpioids" | "stopbangSnoring" | "stopbangTired" | "stopbangObserved" | "stopbangBP" | "stopbangNeck" | "povocScore" | "povocRiskPercent" | "povocSurgeryAtLeast30Minutes" | "povocAgeAtLeast3Years" | "povocStrabismusSurgery" | "povocHistory" | "coldsApplicable" | "coldsScore" | "coldsCurrentSymptoms" | "coldsOnset" | "coldsLungDisease" | "coldsAirwayDevice" | "coldsSurgery" | "pediatricFasting" | "labResults" | "aiOptIn" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["preoperativeAssessment"]>
 export type PreoperativeAssessmentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   diagnoses?: boolean | Prisma.PreoperativeAssessment$diagnosesArgs<ExtArgs>
@@ -4725,10 +5659,14 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     id: string
     caseId: string
     ageYears: number | null
+    ageValue: number | null
+    ageApproxDays: number | null
+    ageUnit: $Enums.PediatricAgeUnit | null
     sex: $Enums.Sex
     heightCm: number | null
     weightKg: number | null
     bmi: number | null
+    bodySurfaceAreaM2: number | null
     bloodType: $Enums.BloodType | null
     rhFactor: $Enums.RhFactor | null
     diagnosis: string
@@ -4794,6 +5732,20 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     stopbangObserved: boolean
     stopbangBP: boolean
     stopbangNeck: boolean
+    povocScore: number | null
+    povocRiskPercent: number | null
+    povocSurgeryAtLeast30Minutes: boolean
+    povocAgeAtLeast3Years: boolean
+    povocStrabismusSurgery: boolean
+    povocHistory: boolean
+    coldsApplicable: boolean
+    coldsScore: number | null
+    coldsCurrentSymptoms: string | null
+    coldsOnset: string | null
+    coldsLungDisease: string | null
+    coldsAirwayDevice: string | null
+    coldsSurgery: string | null
+    pediatricFasting: runtime.JsonValue
     labResults: runtime.JsonValue
     aiOptIn: boolean
     createdAt: Date
@@ -5231,10 +6183,14 @@ export interface PreoperativeAssessmentFieldRefs {
   readonly id: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
   readonly caseId: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
   readonly ageYears: Prisma.FieldRef<"PreoperativeAssessment", 'Int'>
+  readonly ageValue: Prisma.FieldRef<"PreoperativeAssessment", 'Int'>
+  readonly ageApproxDays: Prisma.FieldRef<"PreoperativeAssessment", 'Float'>
+  readonly ageUnit: Prisma.FieldRef<"PreoperativeAssessment", 'PediatricAgeUnit'>
   readonly sex: Prisma.FieldRef<"PreoperativeAssessment", 'Sex'>
   readonly heightCm: Prisma.FieldRef<"PreoperativeAssessment", 'Float'>
   readonly weightKg: Prisma.FieldRef<"PreoperativeAssessment", 'Float'>
   readonly bmi: Prisma.FieldRef<"PreoperativeAssessment", 'Float'>
+  readonly bodySurfaceAreaM2: Prisma.FieldRef<"PreoperativeAssessment", 'Float'>
   readonly bloodType: Prisma.FieldRef<"PreoperativeAssessment", 'BloodType'>
   readonly rhFactor: Prisma.FieldRef<"PreoperativeAssessment", 'RhFactor'>
   readonly diagnosis: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
@@ -5300,6 +6256,20 @@ export interface PreoperativeAssessmentFieldRefs {
   readonly stopbangObserved: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly stopbangBP: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly stopbangNeck: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly povocScore: Prisma.FieldRef<"PreoperativeAssessment", 'Int'>
+  readonly povocRiskPercent: Prisma.FieldRef<"PreoperativeAssessment", 'Float'>
+  readonly povocSurgeryAtLeast30Minutes: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly povocAgeAtLeast3Years: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly povocStrabismusSurgery: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly povocHistory: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly coldsApplicable: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly coldsScore: Prisma.FieldRef<"PreoperativeAssessment", 'Int'>
+  readonly coldsCurrentSymptoms: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
+  readonly coldsOnset: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
+  readonly coldsLungDisease: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
+  readonly coldsAirwayDevice: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
+  readonly coldsSurgery: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
+  readonly pediatricFasting: Prisma.FieldRef<"PreoperativeAssessment", 'Json'>
   readonly labResults: Prisma.FieldRef<"PreoperativeAssessment", 'Json'>
   readonly aiOptIn: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"PreoperativeAssessment", 'DateTime'>

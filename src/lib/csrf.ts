@@ -32,11 +32,13 @@ export function appOrigin(): string | null {
 }
 
 
-function isDevelopmentDatabaseOrigin(origin: string): boolean {
+const DEVELOPMENT_CLIENT_PORTS = new Set(["3000", "3001", "3003"])
+
+function isDevelopmentClientOrigin(origin: string): boolean {
   if (process.env.NODE_ENV === "production") return false
   try {
     const url = new URL(origin)
-    if (url.protocol !== "http:" || url.port !== "3003") return false
+    if (url.protocol !== "http:" || !DEVELOPMENT_CLIENT_PORTS.has(url.port)) return false
     if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true
     if (/^10\.(?:\d{1,3}\.){2}\d{1,3}$/.test(url.hostname)) return true
     if (/^192\.168\.(?:\d{1,3}\.)\d{1,3}$/.test(url.hostname)) return true
@@ -65,7 +67,7 @@ export function validateCookieWriteOrigin(req: HeaderSource): "pass" | "skip" | 
   const isAllowed = (value: string | null) =>
     value !== null && (
       expected.includes(value) ||
-      isDevelopmentDatabaseOrigin(value)
+      isDevelopmentClientOrigin(value)
     )
 
   const origin = originFrom(req.headers.get("origin"))

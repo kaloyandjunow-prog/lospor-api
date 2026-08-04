@@ -47,7 +47,7 @@ export function redactExportRow(c: ExportRow) {
 }
 
 export const CASE_SELECT = {
-  id: true, caseCode: true, createdAt: true, status: true,
+  id: true, caseCode: true, createdAt: true, status: true, clinicalMode: true, clinicalRulesVersion: true,
   institutionId: true,
   user: { select: { institution: { select: { name: true } } } },
   fieldStatuses: {
@@ -89,6 +89,18 @@ export const CASE_SELECT = {
       drugRoute: true,
       rate: true,
       concentration: true,
+      concentrationValue: true,
+      concentrationUnit: true,
+      formulation: true,
+      calculationBasis: true,
+      calculationWeightKg: true,
+      calculationMethod: true,
+      clinicalRuleKey: true,
+      clinicalRuleVersion: true,
+      clinicalRuleSourceIds: true,
+      clinicalPresetId: true,
+      clinicalPresetVersion: true,
+      clinicalPresetScope: true,
       volume: true,
       fluidCategory: true,
       agentPercent: true,
@@ -98,13 +110,15 @@ export const CASE_SELECT = {
   },
   preop: {
     select: {
-      ageYears: true, sex: true, heightCm: true, weightKg: true,
+      ageYears: true, ageValue: true, ageUnit: true, ageApproxDays: true,
+      sex: true, heightCm: true, weightKg: true, bodySurfaceAreaM2: true,
       bpSystolic: true, bpDiastolic: true, heartRate: true, spO2: true,
       temperature: true, respiratoryRate: true,
       diagnosis: true, diagnosesJson: true, plannedProcedure: true, proceduresJson: true,
       comorbidities: true, asaScore: true, emergencySurgery: true, highRiskSurgery: true,
       allergies: true, allergyDetails: true, smoking: true, substanceAbuse: true,
       currentMedications: true, rcriScore: true, apfelScore: true, stopBangScore: true,
+      povocScore: true, povocRiskPercent: true, coldsScore: true, pediatricFasting: true,
       difficultAirwayHistory: true, mallampati: true, labResults: true,
       labRows: {
         select: {
@@ -165,7 +179,8 @@ export const CASE_SELECT = {
   postop: {
     select: {
       aldreteActivity: true, aldreteRespiration: true, aldreteCirculation: true, aldreteConsciousness: true, aldreteSpO2: true,
-      aldreteTotal: true, painScoreNRS: true, ponv: true, disposition: true,
+      aldreteTotal: true, painScoreNRS: true, pediatricPainScale: true,
+      pediatricPainScore: true, paedScore: true, ponv: true, disposition: true,
       recoveryBpSystolic: true, recoveryBpDiastolic: true, recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true,
       complications: true,
     },

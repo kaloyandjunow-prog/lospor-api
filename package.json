@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "7.3.2",
+  "version": "8.0.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -28,7 +28,19 @@
     "reproject:cases": "tsx scripts/reproject-cases.ts",
     "smoke:start-time": "tsx scripts/smoke-start-time.ts",
     "report:intraop-time": "tsx scripts/intraop-time-anomalies.ts",
-    "repair:intraop-time": "tsx scripts/intraop-time-anomalies.ts --apply"
+    "repair:intraop-time": "tsx scripts/intraop-time-anomalies.ts --apply",
+    "clinical-rules:reset-dev": "tsx scripts/reset-dev-clinical-rulesets.ts",
+    "clinical-rules:create-platform-drafts": "tsx scripts/create-platform-clinical-drafts.ts",
+    "clinical-rules:create-pediatric-v2": "tsx scripts/create-pediatric-v2-platform-draft.ts",
+    "clinical-rules:append-pediatric-fluid-profiles": "tsx scripts/append-pediatric-fluid-profiles-to-draft.ts",
+    "clinical-rules:append-pediatric-infusion-profiles": "tsx scripts/append-pediatric-infusion-profiles-to-draft.ts",
+    "clinical-rules:promote-pediatric-platform": "tsx scripts/promote-pediatric-platform-ruleset.ts",
+    "clinical-rules:promote-pediatric-v2": "tsx scripts/promote-pediatric-v2-platform-ruleset.ts",
+    "clinical-rules:verify-pediatric-v2": "tsx scripts/verify-pediatric-v2-platform-ruleset.ts",
+    "clinical-rules:verify-platform-drafts": "tsx scripts/verify-platform-clinical-drafts.ts",
+    "clinical-rules:export-platform-drafts": "tsx scripts/export-platform-clinical-drafts.ts",
+    "clinical-rules:publish-adult-v2": "tsx scripts/publish-adult-v2-platform-ruleset.ts",
+    "clinical-rules:prune": "tsx scripts/prune-clinical-rulesets.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -42,7 +54,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1095.0",
     "@aws-sdk/lib-storage": "^3.1095.0",
-    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v7.3.0",
+    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v8.0.0",
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
     "@sparticuz/chromium": "^149.0.0",

@@ -13,18 +13,14 @@ import {
 } from "@/lib/clinical-transaction"
 import { getAuthUser } from "@/lib/mobile-auth"
 
+import { pediatricMutationResponse } from "@/lib/pediatric-http"
+import { caseEventWriteSchema } from "@/lib/case-event-schema"
 const CORS = (req: NextRequest) => corsHeaders(req, "PUT, DELETE, OPTIONS")
 
-const eventSchema = z.object({
-  ts: z.string().optional(),
-  type: z.string().min(1).max(64),
-  name: z.string().max(200).optional(),
-  label: z.string().max(200).optional(),
-  dose: z.union([z.string(), z.number()]).optional(),
-  unit: z.string().max(40).optional(),
-  rate: z.union([z.string(), z.number()]).optional(),
-  volume: z.union([z.string(), z.number()]).optional(),
-}).passthrough()
+// The path id remains authoritative (`{ ...parsed, id: eventId }` below).
+// Reuse the refined canonical schema directly: Zod cannot `.omit()` a schema
+// after `superRefine`, and accepting an ignored body id is backwards-compatible.
+const eventSchema = caseEventWriteSchema
 
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: CORS(req) })
@@ -89,7 +85,7 @@ export async function PUT(
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true },
+        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -98,6 +94,8 @@ export async function PUT(
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
+      const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
+      if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
@@ -150,7 +148,7 @@ export async function DELETE(
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true },
+        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -164,6 +162,8 @@ export async function DELETE(
         select: { updatedAt: true, syncRevision: true },
       })
       const existing = { ...caseRecord, intraop: existingIntraop }
+      const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
+      if (pediatricBlock) return pediatricBlock
       if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
         return conflict(existing.intraop)
       }

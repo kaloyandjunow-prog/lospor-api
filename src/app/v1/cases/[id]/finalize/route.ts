@@ -6,6 +6,7 @@ import { syncCaseRelational } from "@/lib/relational-sync"
 import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
+import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import {
   evaluateCaseFinalization,
   type ClinicalIssueCode,
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true },
+        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -54,6 +55,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is already finalised" }, { status: 409 })
       }
+      const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
+      if (pediatricBlock) return pediatricBlock
 
       const preop = await tx.preoperativeAssessment.findUnique({
         where: { caseId: id },

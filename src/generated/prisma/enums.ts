@@ -39,6 +39,60 @@ export const CaseStatus = {
 export type CaseStatus = (typeof CaseStatus)[keyof typeof CaseStatus]
 
 
+export const ClinicalMode = {
+  ADULT: 'ADULT',
+  PEDIATRIC: 'PEDIATRIC'
+} as const
+
+export type ClinicalMode = (typeof ClinicalMode)[keyof typeof ClinicalMode]
+
+
+export const PediatricAgeUnit = {
+  DAYS: 'DAYS',
+  MONTHS: 'MONTHS',
+  YEARS: 'YEARS'
+} as const
+
+export type PediatricAgeUnit = (typeof PediatricAgeUnit)[keyof typeof PediatricAgeUnit]
+
+
+export const PediatricPainScale = {
+  FLACC: 'FLACC',
+  FPS_R: 'FPS_R',
+  NRS: 'NRS'
+} as const
+
+export type PediatricPainScale = (typeof PediatricPainScale)[keyof typeof PediatricPainScale]
+
+
+export const ClinicalRuleReviewStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  DEPRECATED: 'DEPRECATED'
+} as const
+
+export type ClinicalRuleReviewStatus = (typeof ClinicalRuleReviewStatus)[keyof typeof ClinicalRuleReviewStatus]
+
+
+export const ClinicalPresetStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  RETIRED: 'RETIRED'
+} as const
+
+export type ClinicalPresetStatus = (typeof ClinicalPresetStatus)[keyof typeof ClinicalPresetStatus]
+
+
+export const ClinicalPresetScope = {
+  PLATFORM: 'PLATFORM',
+  INSTITUTION: 'INSTITUTION',
+  USER: 'USER'
+} as const
+
+export type ClinicalPresetScope = (typeof ClinicalPresetScope)[keyof typeof ClinicalPresetScope]
+
+
 export const RequestStatus = {
   PENDING: 'PENDING',
   APPROVED: 'APPROVED',

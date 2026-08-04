@@ -430,6 +430,14 @@ export const ModelName = {
   PreoperativeAssessment: 'PreoperativeAssessment',
   IntraoperativeRecord: 'IntraoperativeRecord',
   PostoperativeRecord: 'PostoperativeRecord',
+  CaseClinicalCalculation: 'CaseClinicalCalculation',
+  ClinicalRuleReview: 'ClinicalRuleReview',
+  ClinicalPreset: 'ClinicalPreset',
+  PlatformClinicalPresetSelection: 'PlatformClinicalPresetSelection',
+  InstitutionClinicalPresetSelection: 'InstitutionClinicalPresetSelection',
+  UserClinicalPresetSelection: 'UserClinicalPresetSelection',
+  ClinicalPresetRule: 'ClinicalPresetRule',
+  InstitutionClinicalRuleOverride: 'InstitutionClinicalRuleOverride',
   PreopDiagnosis: 'PreopDiagnosis',
   PreopProcedure: 'PreopProcedure',
   Comorbidity: 'Comorbidity',
@@ -457,7 +465,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "institution" | "case" | "caseLock" | "caseTransfer" | "roleRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseSnapshot" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "institution" | "case" | "caseLock" | "caseTransfer" | "roleRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseSnapshot" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2903,6 +2911,598 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CaseClinicalCalculation: {
+      payload: Prisma.$CaseClinicalCalculationPayload<ExtArgs>
+      fields: Prisma.CaseClinicalCalculationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CaseClinicalCalculationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CaseClinicalCalculationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>
+        }
+        findFirst: {
+          args: Prisma.CaseClinicalCalculationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CaseClinicalCalculationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>
+        }
+        findMany: {
+          args: Prisma.CaseClinicalCalculationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>[]
+        }
+        create: {
+          args: Prisma.CaseClinicalCalculationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>
+        }
+        createMany: {
+          args: Prisma.CaseClinicalCalculationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CaseClinicalCalculationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>[]
+        }
+        delete: {
+          args: Prisma.CaseClinicalCalculationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>
+        }
+        update: {
+          args: Prisma.CaseClinicalCalculationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>
+        }
+        deleteMany: {
+          args: Prisma.CaseClinicalCalculationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CaseClinicalCalculationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CaseClinicalCalculationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>[]
+        }
+        upsert: {
+          args: Prisma.CaseClinicalCalculationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseClinicalCalculationPayload>
+        }
+        aggregate: {
+          args: Prisma.CaseClinicalCalculationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCaseClinicalCalculation>
+        }
+        groupBy: {
+          args: Prisma.CaseClinicalCalculationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseClinicalCalculationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CaseClinicalCalculationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseClinicalCalculationCountAggregateOutputType> | number
+        }
+      }
+    }
+    ClinicalRuleReview: {
+      payload: Prisma.$ClinicalRuleReviewPayload<ExtArgs>
+      fields: Prisma.ClinicalRuleReviewFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ClinicalRuleReviewFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ClinicalRuleReviewFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>
+        }
+        findFirst: {
+          args: Prisma.ClinicalRuleReviewFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ClinicalRuleReviewFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>
+        }
+        findMany: {
+          args: Prisma.ClinicalRuleReviewFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>[]
+        }
+        create: {
+          args: Prisma.ClinicalRuleReviewCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>
+        }
+        createMany: {
+          args: Prisma.ClinicalRuleReviewCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ClinicalRuleReviewCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>[]
+        }
+        delete: {
+          args: Prisma.ClinicalRuleReviewDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>
+        }
+        update: {
+          args: Prisma.ClinicalRuleReviewUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>
+        }
+        deleteMany: {
+          args: Prisma.ClinicalRuleReviewDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ClinicalRuleReviewUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ClinicalRuleReviewUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>[]
+        }
+        upsert: {
+          args: Prisma.ClinicalRuleReviewUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRuleReviewPayload>
+        }
+        aggregate: {
+          args: Prisma.ClinicalRuleReviewAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClinicalRuleReview>
+        }
+        groupBy: {
+          args: Prisma.ClinicalRuleReviewGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalRuleReviewGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ClinicalRuleReviewCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalRuleReviewCountAggregateOutputType> | number
+        }
+      }
+    }
+    ClinicalPreset: {
+      payload: Prisma.$ClinicalPresetPayload<ExtArgs>
+      fields: Prisma.ClinicalPresetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ClinicalPresetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ClinicalPresetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>
+        }
+        findFirst: {
+          args: Prisma.ClinicalPresetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ClinicalPresetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>
+        }
+        findMany: {
+          args: Prisma.ClinicalPresetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>[]
+        }
+        create: {
+          args: Prisma.ClinicalPresetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>
+        }
+        createMany: {
+          args: Prisma.ClinicalPresetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ClinicalPresetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>[]
+        }
+        delete: {
+          args: Prisma.ClinicalPresetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>
+        }
+        update: {
+          args: Prisma.ClinicalPresetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>
+        }
+        deleteMany: {
+          args: Prisma.ClinicalPresetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ClinicalPresetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ClinicalPresetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>[]
+        }
+        upsert: {
+          args: Prisma.ClinicalPresetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetPayload>
+        }
+        aggregate: {
+          args: Prisma.ClinicalPresetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClinicalPreset>
+        }
+        groupBy: {
+          args: Prisma.ClinicalPresetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalPresetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ClinicalPresetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalPresetCountAggregateOutputType> | number
+        }
+      }
+    }
+    PlatformClinicalPresetSelection: {
+      payload: Prisma.$PlatformClinicalPresetSelectionPayload<ExtArgs>
+      fields: Prisma.PlatformClinicalPresetSelectionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PlatformClinicalPresetSelectionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PlatformClinicalPresetSelectionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>
+        }
+        findFirst: {
+          args: Prisma.PlatformClinicalPresetSelectionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PlatformClinicalPresetSelectionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>
+        }
+        findMany: {
+          args: Prisma.PlatformClinicalPresetSelectionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>[]
+        }
+        create: {
+          args: Prisma.PlatformClinicalPresetSelectionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>
+        }
+        createMany: {
+          args: Prisma.PlatformClinicalPresetSelectionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PlatformClinicalPresetSelectionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>[]
+        }
+        delete: {
+          args: Prisma.PlatformClinicalPresetSelectionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>
+        }
+        update: {
+          args: Prisma.PlatformClinicalPresetSelectionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PlatformClinicalPresetSelectionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PlatformClinicalPresetSelectionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PlatformClinicalPresetSelectionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PlatformClinicalPresetSelectionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlatformClinicalPresetSelectionPayload>
+        }
+        aggregate: {
+          args: Prisma.PlatformClinicalPresetSelectionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePlatformClinicalPresetSelection>
+        }
+        groupBy: {
+          args: Prisma.PlatformClinicalPresetSelectionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlatformClinicalPresetSelectionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PlatformClinicalPresetSelectionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlatformClinicalPresetSelectionCountAggregateOutputType> | number
+        }
+      }
+    }
+    InstitutionClinicalPresetSelection: {
+      payload: Prisma.$InstitutionClinicalPresetSelectionPayload<ExtArgs>
+      fields: Prisma.InstitutionClinicalPresetSelectionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InstitutionClinicalPresetSelectionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InstitutionClinicalPresetSelectionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>
+        }
+        findFirst: {
+          args: Prisma.InstitutionClinicalPresetSelectionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InstitutionClinicalPresetSelectionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>
+        }
+        findMany: {
+          args: Prisma.InstitutionClinicalPresetSelectionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>[]
+        }
+        create: {
+          args: Prisma.InstitutionClinicalPresetSelectionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>
+        }
+        createMany: {
+          args: Prisma.InstitutionClinicalPresetSelectionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InstitutionClinicalPresetSelectionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>[]
+        }
+        delete: {
+          args: Prisma.InstitutionClinicalPresetSelectionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>
+        }
+        update: {
+          args: Prisma.InstitutionClinicalPresetSelectionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>
+        }
+        deleteMany: {
+          args: Prisma.InstitutionClinicalPresetSelectionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InstitutionClinicalPresetSelectionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InstitutionClinicalPresetSelectionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>[]
+        }
+        upsert: {
+          args: Prisma.InstitutionClinicalPresetSelectionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalPresetSelectionPayload>
+        }
+        aggregate: {
+          args: Prisma.InstitutionClinicalPresetSelectionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInstitutionClinicalPresetSelection>
+        }
+        groupBy: {
+          args: Prisma.InstitutionClinicalPresetSelectionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InstitutionClinicalPresetSelectionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InstitutionClinicalPresetSelectionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InstitutionClinicalPresetSelectionCountAggregateOutputType> | number
+        }
+      }
+    }
+    UserClinicalPresetSelection: {
+      payload: Prisma.$UserClinicalPresetSelectionPayload<ExtArgs>
+      fields: Prisma.UserClinicalPresetSelectionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserClinicalPresetSelectionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserClinicalPresetSelectionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>
+        }
+        findFirst: {
+          args: Prisma.UserClinicalPresetSelectionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserClinicalPresetSelectionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>
+        }
+        findMany: {
+          args: Prisma.UserClinicalPresetSelectionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>[]
+        }
+        create: {
+          args: Prisma.UserClinicalPresetSelectionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>
+        }
+        createMany: {
+          args: Prisma.UserClinicalPresetSelectionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UserClinicalPresetSelectionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>[]
+        }
+        delete: {
+          args: Prisma.UserClinicalPresetSelectionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>
+        }
+        update: {
+          args: Prisma.UserClinicalPresetSelectionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserClinicalPresetSelectionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserClinicalPresetSelectionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UserClinicalPresetSelectionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>[]
+        }
+        upsert: {
+          args: Prisma.UserClinicalPresetSelectionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserClinicalPresetSelectionPayload>
+        }
+        aggregate: {
+          args: Prisma.UserClinicalPresetSelectionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserClinicalPresetSelection>
+        }
+        groupBy: {
+          args: Prisma.UserClinicalPresetSelectionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserClinicalPresetSelectionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserClinicalPresetSelectionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserClinicalPresetSelectionCountAggregateOutputType> | number
+        }
+      }
+    }
+    ClinicalPresetRule: {
+      payload: Prisma.$ClinicalPresetRulePayload<ExtArgs>
+      fields: Prisma.ClinicalPresetRuleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ClinicalPresetRuleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ClinicalPresetRuleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>
+        }
+        findFirst: {
+          args: Prisma.ClinicalPresetRuleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ClinicalPresetRuleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>
+        }
+        findMany: {
+          args: Prisma.ClinicalPresetRuleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>[]
+        }
+        create: {
+          args: Prisma.ClinicalPresetRuleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>
+        }
+        createMany: {
+          args: Prisma.ClinicalPresetRuleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ClinicalPresetRuleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>[]
+        }
+        delete: {
+          args: Prisma.ClinicalPresetRuleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>
+        }
+        update: {
+          args: Prisma.ClinicalPresetRuleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>
+        }
+        deleteMany: {
+          args: Prisma.ClinicalPresetRuleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ClinicalPresetRuleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ClinicalPresetRuleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>[]
+        }
+        upsert: {
+          args: Prisma.ClinicalPresetRuleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalPresetRulePayload>
+        }
+        aggregate: {
+          args: Prisma.ClinicalPresetRuleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClinicalPresetRule>
+        }
+        groupBy: {
+          args: Prisma.ClinicalPresetRuleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalPresetRuleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ClinicalPresetRuleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalPresetRuleCountAggregateOutputType> | number
+        }
+      }
+    }
+    InstitutionClinicalRuleOverride: {
+      payload: Prisma.$InstitutionClinicalRuleOverridePayload<ExtArgs>
+      fields: Prisma.InstitutionClinicalRuleOverrideFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InstitutionClinicalRuleOverrideFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InstitutionClinicalRuleOverrideFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>
+        }
+        findFirst: {
+          args: Prisma.InstitutionClinicalRuleOverrideFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InstitutionClinicalRuleOverrideFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>
+        }
+        findMany: {
+          args: Prisma.InstitutionClinicalRuleOverrideFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>[]
+        }
+        create: {
+          args: Prisma.InstitutionClinicalRuleOverrideCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>
+        }
+        createMany: {
+          args: Prisma.InstitutionClinicalRuleOverrideCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InstitutionClinicalRuleOverrideCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>[]
+        }
+        delete: {
+          args: Prisma.InstitutionClinicalRuleOverrideDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>
+        }
+        update: {
+          args: Prisma.InstitutionClinicalRuleOverrideUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>
+        }
+        deleteMany: {
+          args: Prisma.InstitutionClinicalRuleOverrideDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InstitutionClinicalRuleOverrideUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InstitutionClinicalRuleOverrideUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>[]
+        }
+        upsert: {
+          args: Prisma.InstitutionClinicalRuleOverrideUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionClinicalRuleOverridePayload>
+        }
+        aggregate: {
+          args: Prisma.InstitutionClinicalRuleOverrideAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInstitutionClinicalRuleOverride>
+        }
+        groupBy: {
+          args: Prisma.InstitutionClinicalRuleOverrideGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InstitutionClinicalRuleOverrideGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InstitutionClinicalRuleOverrideCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InstitutionClinicalRuleOverrideCountAggregateOutputType> | number
+        }
+      }
+    }
     PreopDiagnosis: {
       payload: Prisma.$PreopDiagnosisPayload<ExtArgs>
       fields: Prisma.PreopDiagnosisFieldRefs
@@ -3896,6 +4496,8 @@ export const CaseScalarFieldEnum = {
   userId: 'userId',
   institutionId: 'institutionId',
   status: 'status',
+  clinicalMode: 'clinicalMode',
+  clinicalRulesVersion: 'clinicalRulesVersion',
   finalizedAt: 'finalizedAt',
   clientDraftId: 'clientDraftId',
   clinicalRevision: 'clinicalRevision',
@@ -4220,6 +4822,18 @@ export const CaseEventScalarFieldEnum = {
   drugId: 'drugId',
   inn: 'inn',
   drugRoute: 'drugRoute',
+  concentrationValue: 'concentrationValue',
+  concentrationUnit: 'concentrationUnit',
+  formulation: 'formulation',
+  calculationBasis: 'calculationBasis',
+  calculationWeightKg: 'calculationWeightKg',
+  calculationMethod: 'calculationMethod',
+  clinicalRuleKey: 'clinicalRuleKey',
+  clinicalRuleVersion: 'clinicalRuleVersion',
+  clinicalRuleSourceIds: 'clinicalRuleSourceIds',
+  clinicalPresetId: 'clinicalPresetId',
+  clinicalPresetVersion: 'clinicalPresetVersion',
+  clinicalPresetScope: 'clinicalPresetScope',
   infId: 'infId',
   fluidId: 'fluidId',
   rate: 'rate',
@@ -4268,10 +4882,14 @@ export const PreoperativeAssessmentScalarFieldEnum = {
   id: 'id',
   caseId: 'caseId',
   ageYears: 'ageYears',
+  ageValue: 'ageValue',
+  ageApproxDays: 'ageApproxDays',
+  ageUnit: 'ageUnit',
   sex: 'sex',
   heightCm: 'heightCm',
   weightKg: 'weightKg',
   bmi: 'bmi',
+  bodySurfaceAreaM2: 'bodySurfaceAreaM2',
   bloodType: 'bloodType',
   rhFactor: 'rhFactor',
   diagnosis: 'diagnosis',
@@ -4337,6 +4955,20 @@ export const PreoperativeAssessmentScalarFieldEnum = {
   stopbangObserved: 'stopbangObserved',
   stopbangBP: 'stopbangBP',
   stopbangNeck: 'stopbangNeck',
+  povocScore: 'povocScore',
+  povocRiskPercent: 'povocRiskPercent',
+  povocSurgeryAtLeast30Minutes: 'povocSurgeryAtLeast30Minutes',
+  povocAgeAtLeast3Years: 'povocAgeAtLeast3Years',
+  povocStrabismusSurgery: 'povocStrabismusSurgery',
+  povocHistory: 'povocHistory',
+  coldsApplicable: 'coldsApplicable',
+  coldsScore: 'coldsScore',
+  coldsCurrentSymptoms: 'coldsCurrentSymptoms',
+  coldsOnset: 'coldsOnset',
+  coldsLungDisease: 'coldsLungDisease',
+  coldsAirwayDevice: 'coldsAirwayDevice',
+  coldsSurgery: 'coldsSurgery',
+  pediatricFasting: 'pediatricFasting',
   labResults: 'labResults',
   aiOptIn: 'aiOptIn',
   createdAt: 'createdAt',
@@ -4437,6 +5069,9 @@ export const PostoperativeRecordScalarFieldEnum = {
   recoveryHeartRate: 'recoveryHeartRate',
   recoverySpO2: 'recoverySpO2',
   painScoreNRS: 'painScoreNRS',
+  pediatricPainScale: 'pediatricPainScale',
+  pediatricPainScore: 'pediatricPainScore',
+  paedScore: 'paedScore',
   ponv: 'ponv',
   temperatureCelsius: 'temperatureCelsius',
   recoveryBpUnobtainable: 'recoveryBpUnobtainable',
@@ -4453,6 +5088,133 @@ export const PostoperativeRecordScalarFieldEnum = {
 } as const
 
 export type PostoperativeRecordScalarFieldEnum = (typeof PostoperativeRecordScalarFieldEnum)[keyof typeof PostoperativeRecordScalarFieldEnum]
+
+
+export const CaseClinicalCalculationScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  kind: 'kind',
+  inputs: 'inputs',
+  outputs: 'outputs',
+  ruleVersion: 'ruleVersion',
+  sourceRefs: 'sourceRefs',
+  acceptedBy: 'acceptedBy',
+  acceptedAt: 'acceptedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type CaseClinicalCalculationScalarFieldEnum = (typeof CaseClinicalCalculationScalarFieldEnum)[keyof typeof CaseClinicalCalculationScalarFieldEnum]
+
+
+export const ClinicalRuleReviewScalarFieldEnum = {
+  id: 'id',
+  ruleKey: 'ruleKey',
+  ruleVersion: 'ruleVersion',
+  status: 'status',
+  reviewerId: 'reviewerId',
+  reviewerNotes: 'reviewerNotes',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicalRuleReviewScalarFieldEnum = (typeof ClinicalRuleReviewScalarFieldEnum)[keyof typeof ClinicalRuleReviewScalarFieldEnum]
+
+
+export const ClinicalPresetScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  name: 'name',
+  description: 'description',
+  clinicalMode: 'clinicalMode',
+  scope: 'scope',
+  ownerInstitutionId: 'ownerInstitutionId',
+  ownerUserId: 'ownerUserId',
+  copiedFromPresetId: 'copiedFromPresetId',
+  copiedFromVersion: 'copiedFromVersion',
+  version: 'version',
+  status: 'status',
+  createdById: 'createdById',
+  publishedById: 'publishedById',
+  publishedAt: 'publishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicalPresetScalarFieldEnum = (typeof ClinicalPresetScalarFieldEnum)[keyof typeof ClinicalPresetScalarFieldEnum]
+
+
+export const PlatformClinicalPresetSelectionScalarFieldEnum = {
+  clinicalMode: 'clinicalMode',
+  presetId: 'presetId',
+  selectedById: 'selectedById',
+  selectedAt: 'selectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlatformClinicalPresetSelectionScalarFieldEnum = (typeof PlatformClinicalPresetSelectionScalarFieldEnum)[keyof typeof PlatformClinicalPresetSelectionScalarFieldEnum]
+
+
+export const InstitutionClinicalPresetSelectionScalarFieldEnum = {
+  id: 'id',
+  institutionId: 'institutionId',
+  clinicalMode: 'clinicalMode',
+  presetId: 'presetId',
+  selectedById: 'selectedById',
+  selectedAt: 'selectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type InstitutionClinicalPresetSelectionScalarFieldEnum = (typeof InstitutionClinicalPresetSelectionScalarFieldEnum)[keyof typeof InstitutionClinicalPresetSelectionScalarFieldEnum]
+
+
+export const UserClinicalPresetSelectionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  clinicalMode: 'clinicalMode',
+  presetId: 'presetId',
+  selectedAt: 'selectedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserClinicalPresetSelectionScalarFieldEnum = (typeof UserClinicalPresetSelectionScalarFieldEnum)[keyof typeof UserClinicalPresetSelectionScalarFieldEnum]
+
+
+export const ClinicalPresetRuleScalarFieldEnum = {
+  id: 'id',
+  presetId: 'presetId',
+  ruleKey: 'ruleKey',
+  ruleVersion: 'ruleVersion',
+  payload: 'payload',
+  sourceRefs: 'sourceRefs',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicalPresetRuleScalarFieldEnum = (typeof ClinicalPresetRuleScalarFieldEnum)[keyof typeof ClinicalPresetRuleScalarFieldEnum]
+
+
+export const InstitutionClinicalRuleOverrideScalarFieldEnum = {
+  id: 'id',
+  institutionId: 'institutionId',
+  presetId: 'presetId',
+  ruleKey: 'ruleKey',
+  baseRuleVersion: 'baseRuleVersion',
+  overrideVersion: 'overrideVersion',
+  payload: 'payload',
+  sourceRefs: 'sourceRefs',
+  rationale: 'rationale',
+  status: 'status',
+  proposedById: 'proposedById',
+  designatedReviewerId: 'designatedReviewerId',
+  designatedReviewedAt: 'designatedReviewedAt',
+  hodApproverId: 'hodApproverId',
+  hodApprovedAt: 'hodApprovedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type InstitutionClinicalRuleOverrideScalarFieldEnum = (typeof InstitutionClinicalRuleOverrideScalarFieldEnum)[keyof typeof InstitutionClinicalRuleOverrideScalarFieldEnum]
 
 
 export const PreopDiagnosisScalarFieldEnum = {
@@ -4860,6 +5622,20 @@ export type ListEnumCaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
 
 
 /**
+ * Reference to a field of type 'ClinicalMode'
+ */
+export type EnumClinicalModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalMode'>
+    
+
+
+/**
+ * Reference to a field of type 'ClinicalMode[]'
+ */
+export type ListEnumClinicalModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalMode[]'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -4961,6 +5737,20 @@ export type EnumClinicalFieldPresenceFieldRefInput<$PrismaModel> = FieldRefInput
  * Reference to a field of type 'ClinicalFieldPresence[]'
  */
 export type ListEnumClinicalFieldPresenceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalFieldPresence[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PediatricAgeUnit'
+ */
+export type EnumPediatricAgeUnitFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PediatricAgeUnit'>
+    
+
+
+/**
+ * Reference to a field of type 'PediatricAgeUnit[]'
+ */
+export type ListEnumPediatricAgeUnitFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PediatricAgeUnit[]'>
     
 
 
@@ -5147,6 +5937,20 @@ export type ListEnumArterialLineSiteFieldRefInput<$PrismaModel> = FieldRefInputT
 
 
 /**
+ * Reference to a field of type 'PediatricPainScale'
+ */
+export type EnumPediatricPainScaleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PediatricPainScale'>
+    
+
+
+/**
+ * Reference to a field of type 'PediatricPainScale[]'
+ */
+export type ListEnumPediatricPainScaleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PediatricPainScale[]'>
+    
+
+
+/**
  * Reference to a field of type 'Disposition'
  */
 export type EnumDispositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Disposition'>
@@ -5157,6 +5961,48 @@ export type EnumDispositionFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'Disposition[]'
  */
 export type ListEnumDispositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Disposition[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ClinicalRuleReviewStatus'
+ */
+export type EnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalRuleReviewStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ClinicalRuleReviewStatus[]'
+ */
+export type ListEnumClinicalRuleReviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalRuleReviewStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ClinicalPresetScope'
+ */
+export type EnumClinicalPresetScopeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalPresetScope'>
+    
+
+
+/**
+ * Reference to a field of type 'ClinicalPresetScope[]'
+ */
+export type ListEnumClinicalPresetScopeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalPresetScope[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ClinicalPresetStatus'
+ */
+export type EnumClinicalPresetStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalPresetStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ClinicalPresetStatus[]'
+ */
+export type ListEnumClinicalPresetStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalPresetStatus[]'>
     
 
 
@@ -5399,6 +6245,14 @@ export type GlobalOmitConfig = {
   preoperativeAssessment?: Prisma.PreoperativeAssessmentOmit
   intraoperativeRecord?: Prisma.IntraoperativeRecordOmit
   postoperativeRecord?: Prisma.PostoperativeRecordOmit
+  caseClinicalCalculation?: Prisma.CaseClinicalCalculationOmit
+  clinicalRuleReview?: Prisma.ClinicalRuleReviewOmit
+  clinicalPreset?: Prisma.ClinicalPresetOmit
+  platformClinicalPresetSelection?: Prisma.PlatformClinicalPresetSelectionOmit
+  institutionClinicalPresetSelection?: Prisma.InstitutionClinicalPresetSelectionOmit
+  userClinicalPresetSelection?: Prisma.UserClinicalPresetSelectionOmit
+  clinicalPresetRule?: Prisma.ClinicalPresetRuleOmit
+  institutionClinicalRuleOverride?: Prisma.InstitutionClinicalRuleOverrideOmit
   preopDiagnosis?: Prisma.PreopDiagnosisOmit
   preopProcedure?: Prisma.PreopProcedureOmit
   comorbidity?: Prisma.ComorbidityOmit

@@ -89,6 +89,20 @@ export async function POST(req: NextRequest) {
   const aiOptInAtStart = Boolean(parsed.aiOptIn)
 
   // GDPR: Only structured fields are sent to the AI provider.
+  const pediatricPayload = parsed.clinicalMode === "PEDIATRIC"
+    || (typeof parsed.ageYears === "number" && parsed.ageYears < 18)
+    || (
+      typeof parsed.ageValue === "number"
+      && ["DAYS", "MONTHS", "YEARS"].includes(String(parsed.ageUnit))
+      && (parsed.ageUnit !== "YEARS" || parsed.ageValue < 18)
+    )
+  if (pediatricPayload) {
+    return NextResponse.json({
+      error: "Pediatric AI treatment and dose advice is disabled",
+      code: "PEDIATRIC_AI_ADVICE_DISABLED",
+    }, { status: 403 })
+  }
+
   // Free-text fields that may contain PHI are explicitly excluded by
   // buildPatientSummary's field allowlist. redactText is a defense-in-depth
   // backstop in case a future edit adds a free-text field without updating

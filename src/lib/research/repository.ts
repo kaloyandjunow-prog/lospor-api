@@ -23,7 +23,7 @@ import {
 export async function readResearchCases(
   where: Prisma.CaseWhereInput,
   pagination?: ResearchPaginationRequest,
-  sort?: { field: "finalizedAt" | "ageYears" | "durationMinutes" | "asa"; direction: "asc" | "desc" },
+  sort?: { field: "finalizedAt" | "ageYears" | "ageDays" | "durationMinutes" | "asa"; direction: "asc" | "desc" },
 ) {
   const paging = makeResearchPagination(await prisma.case.count({ where }), pagination)
   const orderBy: Prisma.CaseOrderByWithRelationInput =
@@ -31,9 +31,11 @@ export async function readResearchCases(
       ? { finalizedAt: sort?.direction ?? "desc" }
       : sort.field === "ageYears"
         ? { preop: { ageYears: sort.direction } }
-        : sort.field === "durationMinutes"
-          ? { intraop: { durationMinutes: sort.direction } }
-          : { preop: { asaScore: sort.direction } }
+        : sort.field === "ageDays"
+          ? { preop: { ageApproxDays: sort.direction } }
+          : sort.field === "durationMinutes"
+            ? { intraop: { durationMinutes: sort.direction } }
+            : { preop: { asaScore: sort.direction } }
 
   const rows = await prisma.case.findMany({
     where,
@@ -129,6 +131,7 @@ export async function readResearchMetrics(
   const requestedSet = new Set(requested)
   const [
     preopAverage,
+    pediatricCases,
     intraopAverage,
     postopAverage,
     emergencies,
@@ -143,9 +146,10 @@ export async function readResearchMetrics(
   ] = await Promise.all([
     prisma.preoperativeAssessment.aggregate({
       where: { case: where },
-      _avg: { ageYears: true, bmi: true },
-      _count: { ageYears: true, bmi: true },
+      _avg: { ageYears: true, ageApproxDays: true, bmi: true },
+      _count: { ageYears: true, ageApproxDays: true, bmi: true },
     }),
+    prisma.case.count({ where: { AND: [where, { clinicalMode: "PEDIATRIC" }] } }),
     prisma.intraoperativeRecord.aggregate({
       where: { case: where },
       _avg: { durationMinutes: true },
@@ -171,7 +175,13 @@ export async function readResearchMetrics(
 
   const all: ResearchMetric[] = [
     metric("caseCount", total, total, { unit: "count", hideExact: !allowExactCounts }),
+    metric("pediatricRate", researchPercent(pediatricCases, total), total, {
+      numerator: pediatricCases,
+      unit: "percent",
+      binary: true,
+    }),
     metric("meanAgeYears", preopAverage._avg.ageYears, preopAverage._count.ageYears, { unit: "years" }),
+    metric("meanAgeDays", preopAverage._avg.ageApproxDays, preopAverage._count.ageApproxDays, { unit: "days" }),
     metric("meanBmi", preopAverage._avg.bmi, preopAverage._count.bmi, { unit: "kg/m2" }),
     metric("meanDurationMinutes", intraopAverage._avg.durationMinutes, intraopAverage._count.durationMinutes, { unit: "minutes" }),
     metric("emergencyRate", researchPercent(emergencies, emergencyObserved), emergencyObserved, {
@@ -248,6 +258,9 @@ export async function readResearchDistribution(
   if (id === "status") {
     const rows = await prisma.case.findMany({ where, select: { id: true, status: true } })
     for (const row of rows) addBucket(buckets, row.status, row.status, row.id)
+  } else if (id === "clinicalMode") {
+    const rows = await prisma.case.findMany({ where, select: { id: true, clinicalMode: true } })
+    for (const row of rows) addBucket(buckets, row.clinicalMode, row.clinicalMode, row.id)
   } else if (id === "sex" || id === "asa") {
     const rows = await prisma.preoperativeAssessment.findMany({
       where: { case: where },

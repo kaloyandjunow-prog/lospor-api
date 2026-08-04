@@ -10,38 +10,48 @@ datasource db {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 model User {
-  id                      String                   @id @default(cuid())
-  email                   String                   @unique
-  name                    String
-  firstName               String                   @default("")
-  lastName                String                   @default("")
-  title                   String                   @default("")
-  passwordHash            String
-  role                    UserRole                 @default(MEMBER)
-  institutionId           String?
-  institution             Institution?             @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
-  cases                   Case[]
-  roleRequests            RoleRequest[]
-  transfersSent           CaseTransfer[]           @relation("TransfersSent")
-  transfersReceived       CaseTransfer[]           @relation("TransfersReceived")
-  emailVerificationTokens EmailVerificationToken[]
-  researchCohorts         ResearchCohort[]         @relation("ResearchCohortOwner")
-  researchExports         ResearchExport[]         @relation("ResearchExportOwner")
-  researchAccessGrants    ResearchAccessGrant[]    @relation("ResearchAccessSubject")
-  researchGrantsIssued    ResearchAccessGrant[]    @relation("ResearchAccessGrantor")
-  passwordResetTokens     PasswordResetToken[]
-  approvedAt              DateTime?
-  emailVerifiedAt         DateTime?
-  acceptedTermsAt         DateTime?
-  acceptedPrivacyAt       DateTime?
-  termsVersion            String?
-  preferences             Json                     @default("{}")
-  lastLoginAt             DateTime?
+  id                          String                               @id @default(cuid())
+  email                       String                               @unique
+  name                        String
+  firstName                   String                               @default("")
+  lastName                    String                               @default("")
+  title                       String                               @default("")
+  passwordHash                String
+  role                        UserRole                             @default(MEMBER)
+  institutionId               String?
+  institution                 Institution?                         @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
+  cases                       Case[]
+  roleRequests                RoleRequest[]
+  transfersSent               CaseTransfer[]                       @relation("TransfersSent")
+  transfersReceived           CaseTransfer[]                       @relation("TransfersReceived")
+  emailVerificationTokens     EmailVerificationToken[]
+  researchCohorts             ResearchCohort[]                     @relation("ResearchCohortOwner")
+  researchExports             ResearchExport[]                     @relation("ResearchExportOwner")
+  researchAccessGrants        ResearchAccessGrant[]                @relation("ResearchAccessSubject")
+  researchGrantsIssued        ResearchAccessGrant[]                @relation("ResearchAccessGrantor")
+  clinicalRuleReviews         ClinicalRuleReview[]                 @relation("ClinicalRuleReviewer")
+  clinicalPresetsCreated      ClinicalPreset[]                     @relation("ClinicalPresetCreator")
+  clinicalPresetsPublished    ClinicalPreset[]                     @relation("ClinicalPresetPublisher")
+  clinicalPresetsOwned        ClinicalPreset[]                     @relation("ClinicalPresetUserOwner")
+  clinicalPresetSelections    UserClinicalPresetSelection[]
+  platformPresetSelections    PlatformClinicalPresetSelection[]
+  institutionPresetSelections InstitutionClinicalPresetSelection[]
+  clinicalOverridesToReview   InstitutionClinicalRuleOverride[]    @relation("ClinicalRuleDesignatedReviewer")
+  clinicalOverridesApproved   InstitutionClinicalRuleOverride[]    @relation("ClinicalRuleHodApprover")
+  clinicalOverridesProposed   InstitutionClinicalRuleOverride[]    @relation("ClinicalRuleProposer")
+  passwordResetTokens         PasswordResetToken[]
+  approvedAt                  DateTime?
+  emailVerifiedAt             DateTime?
+  acceptedTermsAt             DateTime?
+  acceptedPrivacyAt           DateTime?
+  termsVersion                String?
+  preferences                 Json                                 @default("{}")
+  lastLoginAt                 DateTime?
   // Token-revocation epoch: any JWT (web session or mobile bearer) whose iat
   // predates this is rejected — set on password reset so old sessions die.
-  passwordChangedAt       DateTime?
-  deletedAt               DateTime?
-  createdAt               DateTime                 @default(now())
+  passwordChangedAt           DateTime?
+  deletedAt                   DateTime?
+  createdAt                   DateTime                             @default(now())
 }
 
 model EmailVerificationToken {
@@ -79,47 +89,53 @@ enum UserRole {
 }
 
 model Institution {
-  id                   String                @id @default(cuid())
-  name                 String
-  city                 String
-  country              String                @default("Bulgaria")
-  users                User[]                @relation("UserPrimaryInstitution")
-  cases                Case[]
-  researchCohorts      ResearchCohort[]
-  researchExports      ResearchExport[]
-  researchAccessGrants ResearchAccessGrant[]
+  id                       String                               @id @default(cuid())
+  name                     String
+  city                     String
+  country                  String                               @default("Bulgaria")
+  users                    User[]                               @relation("UserPrimaryInstitution")
+  cases                    Case[]
+  researchCohorts          ResearchCohort[]
+  researchExports          ResearchExport[]
+  researchAccessGrants     ResearchAccessGrant[]
+  clinicalRuleOverrides    InstitutionClinicalRuleOverride[]
+  clinicalPresets          ClinicalPreset[]                     @relation("ClinicalPresetInstitutionOwner")
+  clinicalPresetSelections InstitutionClinicalPresetSelection[]
 }
 
 // ─── Case ────────────────────────────────────────────────────────────────────
 
 model Case {
-  id                 String       @id @default(cuid())
-  caseCode           String?
-  notes              String?
-  userId             String
-  user               User         @relation(fields: [userId], references: [id])
-  institutionId      String?
-  institution        Institution? @relation(fields: [institutionId], references: [id])
-  status             CaseStatus   @default(DRAFT)
-  finalizedAt        DateTime?
-  clientDraftId      String?
-  clinicalRevision   Int          @default(0)
-  eventRevision      Int          @default(0)
-  relationalRevision Int          @default(0)
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  id                   String       @id @default(cuid())
+  caseCode             String?
+  notes                String?
+  userId               String
+  user                 User         @relation(fields: [userId], references: [id])
+  institutionId        String?
+  institution          Institution? @relation(fields: [institutionId], references: [id])
+  status               CaseStatus   @default(DRAFT)
+  clinicalMode         ClinicalMode @default(ADULT)
+  clinicalRulesVersion String?
+  finalizedAt          DateTime?
+  clientDraftId        String?
+  clinicalRevision     Int          @default(0)
+  eventRevision        Int          @default(0)
+  relationalRevision   Int          @default(0)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
-  preop         PreoperativeAssessment?
-  intraop       IntraoperativeRecord?
-  postop        PostoperativeRecord?
-  transfers     CaseTransfer[]
-  lock          CaseLock?
-  events        CaseEvent[]
-  selections    CaseSelection[]
-  complications CaseComplication[]
-  fieldStatuses ClinicalFieldStatus[]
-  fieldChanges  CaseFieldChange[]
-  snapshot      CaseSnapshot?
+  preop                PreoperativeAssessment?
+  intraop              IntraoperativeRecord?
+  postop               PostoperativeRecord?
+  transfers            CaseTransfer[]
+  lock                 CaseLock?
+  events               CaseEvent[]
+  selections           CaseSelection[]
+  complications        CaseComplication[]
+  fieldStatuses        ClinicalFieldStatus[]
+  fieldChanges         CaseFieldChange[]
+  snapshot             CaseSnapshot?
+  clinicalCalculations CaseClinicalCalculation[]
 
   @@unique([userId, caseCode])
   @@unique([userId, clientDraftId])
@@ -171,6 +187,42 @@ enum CaseStatus {
   IN_PROGRESS
   AWAITING_REVIEW
   COMPLETE
+}
+
+enum ClinicalMode {
+  ADULT
+  PEDIATRIC
+}
+
+enum PediatricAgeUnit {
+  DAYS
+  MONTHS
+  YEARS
+}
+
+enum PediatricPainScale {
+  FLACC
+  FPS_R
+  NRS
+}
+
+enum ClinicalRuleReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DEPRECATED
+}
+
+enum ClinicalPresetStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum ClinicalPresetScope {
+  PLATFORM
+  INSTITUTION
+  USER
 }
 
 // ─── Custom terms (free-text entries added by clinicians) ─────────────────────
@@ -538,6 +590,21 @@ model CaseEvent {
   drugId            String?
   inn               String?
   drugRoute         String?
+  // Drug-selection audit fields. `concentration` remains the legacy display
+  // value (for example "0.5%"); the typed value/unit pair is canonical for new
+  // writes while preserving old rows and clients.
+  concentrationValue Float?
+  concentrationUnit  String?
+  formulation         String?
+  calculationBasis    String?
+  calculationWeightKg Float?
+  calculationMethod   String?
+  clinicalRuleKey     String?
+  clinicalRuleVersion String?
+  clinicalRuleSourceIds Json?
+  clinicalPresetId      String?
+  clinicalPresetVersion Int?
+  clinicalPresetScope   String?
   infId             String?
   fluidId           String?
   rate              String?
@@ -563,6 +630,8 @@ model CaseEvent {
   @@index([fluidId])
   @@index([clinicalEventCode])
   @@index([caseId, logicalId])
+  @@index([clinicalRuleKey, clinicalRuleVersion])
+  @@index([clinicalPresetId, clinicalPresetVersion])
 }
 
 model AuditLog {
@@ -605,13 +674,17 @@ model PreoperativeAssessment {
   caseId String @unique
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 
-  ageYears  Int?
-  sex       Sex
-  heightCm  Float?
-  weightKg  Float?
-  bmi       Float?
-  bloodType BloodType?
-  rhFactor  RhFactor?
+  ageYears          Int?
+  ageValue          Int?
+  ageApproxDays     Float?
+  ageUnit           PediatricAgeUnit?
+  sex               Sex
+  heightCm          Float?
+  weightKg          Float?
+  bmi               Float?
+  bodySurfaceAreaM2 Float?
+  bloodType         BloodType?
+  rhFactor          RhFactor?
 
   diagnosis          String
   diagnosesJson      Json?
@@ -691,6 +764,23 @@ model PreoperativeAssessment {
   stopbangObserved Boolean @default(false)
   stopbangBP       Boolean @default(false)
   stopbangNeck     Boolean @default(false)
+
+  povocScore                   Int?
+  povocRiskPercent             Float?
+  povocSurgeryAtLeast30Minutes Boolean @default(false)
+  povocAgeAtLeast3Years        Boolean @default(false)
+  povocStrabismusSurgery       Boolean @default(false)
+  povocHistory                 Boolean @default(false)
+
+  coldsApplicable      Boolean @default(false)
+  coldsScore           Int?
+  coldsCurrentSymptoms String?
+  coldsOnset           String?
+  coldsLungDisease     String?
+  coldsAirwayDevice    String?
+  coldsSurgery         String?
+
+  pediatricFasting Json @default("[]")
 
   labResults Json @default("[]")
 
@@ -833,12 +923,15 @@ model PostoperativeRecord {
   recoveryHeartRate               Int?
   recoverySpO2                    Float?
   painScoreNRS                    Int?
-  ponv                            Boolean @default(false)
+  pediatricPainScale              PediatricPainScale?
+  pediatricPainScore              Int?
+  paedScore                       Int?
+  ponv                            Boolean             @default(false)
   temperatureCelsius              Float?
-  recoveryBpUnobtainable          Boolean @default(false)
-  recoveryHeartRateUnobtainable   Boolean @default(false)
-  recoverySpO2Unobtainable        Boolean @default(false)
-  recoveryTemperatureUnobtainable Boolean @default(false)
+  recoveryBpUnobtainable          Boolean             @default(false)
+  recoveryHeartRateUnobtainable   Boolean             @default(false)
+  recoverySpO2Unobtainable        Boolean             @default(false)
+  recoveryTemperatureUnobtainable Boolean             @default(false)
 
   complications    String?
   disposition      Disposition?
@@ -848,6 +941,161 @@ model PostoperativeRecord {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   syncRevision Int      @default(0)
+}
+
+model CaseClinicalCalculation {
+  id          String    @id @default(cuid())
+  caseId      String
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  kind        String
+  inputs      Json
+  outputs     Json
+  ruleVersion String
+  sourceRefs  Json      @default("[]")
+  acceptedBy  String?
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([caseId, kind])
+  @@index([ruleVersion])
+}
+
+model ClinicalRuleReview {
+  id            String                   @id @default(cuid())
+  ruleKey       String
+  ruleVersion   String
+  status        ClinicalRuleReviewStatus @default(PENDING)
+  reviewerId    String?
+  reviewer      User?                    @relation("ClinicalRuleReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewerNotes String?
+  reviewedAt    DateTime?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@unique([ruleKey, ruleVersion])
+  @@index([status])
+}
+
+model ClinicalPreset {
+  id                    String                               @id @default(cuid())
+  key                   String
+  name                  String
+  description           String?
+  clinicalMode          ClinicalMode                         @default(PEDIATRIC)
+  scope                 ClinicalPresetScope                  @default(PLATFORM)
+  ownerInstitutionId    String?
+  ownerInstitution      Institution?                         @relation("ClinicalPresetInstitutionOwner", fields: [ownerInstitutionId], references: [id], onDelete: Cascade)
+  ownerUserId           String?
+  ownerUser             User?                                @relation("ClinicalPresetUserOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  copiedFromPresetId    String?
+  copiedFromPreset      ClinicalPreset?                      @relation("ClinicalPresetCopies", fields: [copiedFromPresetId], references: [id], onDelete: SetNull)
+  copies                ClinicalPreset[]                     @relation("ClinicalPresetCopies")
+  copiedFromVersion     Int?
+  version               Int
+  status                ClinicalPresetStatus                 @default(DRAFT)
+  createdById           String?
+  createdBy             User?                                @relation("ClinicalPresetCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  publishedById         String?
+  publishedBy           User?                                @relation("ClinicalPresetPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  publishedAt           DateTime?
+  createdAt             DateTime                             @default(now())
+  updatedAt             DateTime                             @updatedAt
+  rules                 ClinicalPresetRule[]
+  platformSelections    PlatformClinicalPresetSelection[]
+  institutionSelections InstitutionClinicalPresetSelection[]
+  userSelections        UserClinicalPresetSelection[]
+  overrides             InstitutionClinicalRuleOverride[]
+
+  @@index([scope, clinicalMode, status])
+  @@index([ownerInstitutionId, clinicalMode, status])
+  @@index([ownerUserId, clinicalMode, status])
+  @@index([copiedFromPresetId])
+}
+
+model PlatformClinicalPresetSelection {
+  clinicalMode ClinicalMode   @id
+  presetId     String
+  preset       ClinicalPreset @relation(fields: [presetId], references: [id], onDelete: Restrict)
+  selectedById String?
+  selectedBy   User?          @relation(fields: [selectedById], references: [id], onDelete: SetNull)
+  selectedAt   DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([presetId])
+}
+
+model InstitutionClinicalPresetSelection {
+  id            String         @id @default(cuid())
+  institutionId String
+  institution   Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  clinicalMode  ClinicalMode
+  presetId      String
+  preset        ClinicalPreset @relation(fields: [presetId], references: [id], onDelete: Restrict)
+  selectedById  String?
+  selectedBy    User?          @relation(fields: [selectedById], references: [id], onDelete: SetNull)
+  selectedAt    DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([institutionId, clinicalMode])
+  @@index([presetId])
+}
+
+model UserClinicalPresetSelection {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinicalMode ClinicalMode
+  presetId     String
+  preset       ClinicalPreset @relation(fields: [presetId], references: [id], onDelete: Restrict)
+  selectedAt   DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([userId, clinicalMode])
+  @@index([presetId])
+}
+
+model ClinicalPresetRule {
+  id          String         @id @default(cuid())
+  presetId    String
+  preset      ClinicalPreset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  ruleKey     String
+  ruleVersion String
+  payload     Json
+  sourceRefs  Json           @default("[]")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([presetId, ruleKey])
+  @@index([presetId])
+}
+
+model InstitutionClinicalRuleOverride {
+  id                   String                   @id @default(cuid())
+  institutionId        String
+  institution          Institution              @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  presetId             String
+  preset               ClinicalPreset           @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  ruleKey              String
+  baseRuleVersion      String
+  overrideVersion      String
+  payload              Json
+  sourceRefs           Json                     @default("[]")
+  rationale            String
+  status               ClinicalRuleReviewStatus @default(PENDING)
+  proposedById         String?
+  proposedBy           User?                    @relation("ClinicalRuleProposer", fields: [proposedById], references: [id], onDelete: SetNull)
+  designatedReviewerId String?
+  designatedReviewer   User?                    @relation("ClinicalRuleDesignatedReviewer", fields: [designatedReviewerId], references: [id], onDelete: SetNull)
+  designatedReviewedAt DateTime?
+  hodApproverId        String?
+  hodApprover          User?                    @relation("ClinicalRuleHodApprover", fields: [hodApproverId], references: [id], onDelete: SetNull)
+  hodApprovedAt        DateTime?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  @@unique([institutionId, presetId, ruleKey, overrideVersion])
+  @@index([institutionId, status])
+  @@index([presetId])
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────

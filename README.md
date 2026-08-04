@@ -22,6 +22,27 @@ this repository at the production database. `DATABASE_URL` may use the normal
 application pool; `DIRECT_URL` must be a direct/session PostgreSQL connection
 that supports transactions and row locks used by clinical finalization.
 
+## Pediatric development
+
+Pediatric mode is enabled automatically outside production. Apply all pending
+pediatric migrations only to the intended disposable/local development
+database before testing. Do not apply them to production as part of local
+verification.
+
+Pediatric writes require an `X-LOSPOR-Client-Version` compatible with V8.
+Production uses a double gate: `PEDIATRIC_MODE_ENABLED=true` and a Core
+clinical manifest with `PEDIATRIC_PRODUCTION_READY=true`. The current draft
+manifest remains false.
+
+`GET /v1/clinical/pediatric/rules` returns the institution's assigned published
+preset plus approved local changes. Platform administrators manage versioned
+presets and assignment through `GET/POST /v1/clinical/rules/workbench`; the
+older `/v1/admin/clinical-rules` path is a temporary compatibility wrapper.
+Every institution has one preset. A HOD initiates a local change with a
+rationale and designated reviewer; references are not required. Proposal,
+designated review, and final HOD/admin approval must be performed by three
+different people. Pending and rejected changes never appear in the effective
+runtime response.
 The generated OpenAPI document is available at `/openapi.json`. V7 initially
 accepts first-party LOSPOR clients only; third-party credentials and scopes are
 not enabled.

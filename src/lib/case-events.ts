@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma/client"
 import { calculateFluidTotals, fluidTotalsPatch } from "@lospor/core/intraop-totals"
+import { canonicalConcentrationUnit } from "@lospor/core/clinical-rule-vocabulary"
 import {
   INTRAOP_COLUMN_MS,
   gasFractions,
@@ -11,6 +12,7 @@ import type {
   LogEvent,
   LegacyKeyEvents,
 } from "@/types/timetable"
+import type { CaseEventInput } from "@/lib/case-event-schema"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase E: CaseEvent rows are the source of truth for the intraop chart.
@@ -30,6 +32,68 @@ export type { LogEvent }
 
 const INTRAOP_GLUCOSE_LOINC_CODE = "2345-7"
 const INTRAOP_GLUCOSE_UNIT_CANON = "mmol/L"
+export const CASE_EVENT_SCHEMA_VERSION = "3.2.0"
+
+function finiteNumberOrNull(value: unknown): number | null {
+  if (value == null || value === "" || Number.isNaN(Number(value))) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/** Typed columns copied out of the immutable event JSON for audit/query use. */
+export function caseEventDrugAuditColumns(event: Partial<CaseEventInput>) {
+  const concentrationUnit = event.concentrationUnit == null
+    ? null
+    : canonicalConcentrationUnit(String(event.concentrationUnit))?.kind ?? null
+  const formulation = event.formulation == null
+    ? null
+    : (["HYPOBARIC", "ISOBARIC", "HYPERBARIC"] as const).find(
+        value => value === String(event.formulation).toUpperCase(),
+      ) ?? null
+  const rawBasis = event.calculationBasis == null
+    ? null
+    : String(event.calculationBasis).toUpperCase()
+  const calculationBasis = rawBasis === "TBW_KG"
+    ? "TBW"
+    : (["FLAT", "NONE", "TBW", "IBW", "BSA_M2"] as const).find(
+        value => value === rawBasis,
+      ) ?? null
+  const clinicalPresetScope = event.clinicalPresetScope == null
+    ? null
+    : (["PLATFORM", "INSTITUTION", "USER"] as const).find(
+        value => value === String(event.clinicalPresetScope).toUpperCase(),
+      ) ?? null
+  const concentrationValue = finiteNumberOrNull(event.concentrationValue)
+  const calculationWeightKg = finiteNumberOrNull(event.calculationWeightKg)
+  const clinicalPresetVersion = finiteNumberOrNull(event.clinicalPresetVersion)
+  const optionalText = (value: unknown) => typeof value === "string" && value.trim()
+    ? value.trim()
+    : null
+  return {
+    concentrationValue: concentrationValue != null && concentrationValue >= 0
+      ? concentrationValue
+      : null,
+    concentrationUnit,
+    formulation,
+    calculationBasis,
+    calculationWeightKg: calculationWeightKg != null && calculationWeightKg > 0
+      ? calculationWeightKg
+      : null,
+    calculationMethod: optionalText(event.calculationMethod),
+    clinicalRuleKey: optionalText(event.clinicalRuleKey),
+    clinicalRuleVersion: optionalText(event.clinicalRuleVersion),
+    clinicalRuleSourceIds: Array.isArray(event.clinicalRuleSourceIds)
+      ? event.clinicalRuleSourceIds.filter(value => typeof value === "string")
+      : undefined,
+    clinicalPresetId: optionalText(event.clinicalPresetId),
+    clinicalPresetVersion: clinicalPresetVersion != null
+      && Number.isInteger(clinicalPresetVersion)
+      && clinicalPresetVersion > 0
+      ? clinicalPresetVersion
+      : null,
+    clinicalPresetScope,
+  }
+}
 
 // ─── Projection (moved verbatim from the events route) ───────────────────────
 export function projectTimetable(log: LogEvent[], start: Date) {
@@ -90,7 +154,9 @@ function buildRow(
   idempotencyKey: string,
   source: string,
 ) {
-  const primary = ev.dose ?? ev.value ?? ev.rate ?? ev.volume
+  const audited = ev as LogEvent & Partial<CaseEventInput>
+  const fluidVolume = audited.administeredVolumeMl ?? audited.bagVolumeMl ?? ev.volume
+  const primary = ev.dose ?? ev.value ?? ev.rate ?? fluidVolume
   // Typed vital columns (only for vital events) so vitals are queryable as columns.
   const isVital = ev.type === "vital"
   const isGas = ev.type === "gas_start" || ev.type === "gas_change"
@@ -128,17 +194,18 @@ function buildRow(
     metadataJson:   ev as object,
     source,
     sourceVersion:   "case-events-v1",
-    schemaVersion:   "3.0.0",
+    schemaVersion:   CASE_EVENT_SCHEMA_VERSION,
     idempotencyKey,
     atcCode:        ev.atcCode ?? null,
     drugId:         ev.drugId ?? null,
     inn:            ev.inn ?? null,
     drugRoute:      ev.drugRoute ?? null,
+    ...caseEventDrugAuditColumns(audited),
     infId:          ev.infId ?? null,
     fluidId:        ev.fluidId ?? null,
     rate:           ev.rate != null ? String(ev.rate) : null,
     concentration:  ev.concentration ?? null,
-    volume:         ev.volume != null ? String(ev.volume) : null,
+    volume:         fluidVolume != null ? String(fluidVolume) : null,
     fluidCategory:  ev.category ?? null,
     agentPercent:   isAgent ? numF(ev.value) : null,
     clinicalEventCode: isClinicalEvent ? ev.value ?? null : null,

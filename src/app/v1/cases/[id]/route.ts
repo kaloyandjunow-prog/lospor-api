@@ -26,6 +26,9 @@ import {
   isCaseFinalizedDatabaseError,
   withLockedCaseTransaction,
 } from "@/lib/clinical-transaction"
+import { pediatricMutationResponse } from "@/lib/pediatric-http"
+import { decidePediatricWrite } from "@/lib/pediatric-mode"
+import { requiresPediatricModeDecision } from "@lospor/core/pediatric"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 const REVISION_HEADER = SECTION_REVISION_HEADER
@@ -54,6 +57,7 @@ const patchBodySchema = z.object({
   notes:       z.string().max(1000).nullable().optional(),
   preop:       preopSchema.optional(),
   intraop:     intraopSchema.optional(),
+  clinicalMode: z.enum(["ADULT", "PEDIATRIC"]).optional(),
   postop:      postopSchema.optional(),
   forceUpdate: z.boolean().optional(),
 })
@@ -71,6 +75,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       preop: true,
       intraop: true,
       postop: true,
+      clinicalCalculations: true,
       institution: { select: { name: true, city: true } },
       user: {
         select: {
@@ -81,9 +86,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   })
   if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const pediatricModeDecisionRequired = requiresPediatricModeDecision({
+    clinicalMode: record.clinicalMode,
+    ageValue: record.preop?.ageValue,
+    ageUnit: record.preop?.ageUnit,
+    ageYears: record.preop?.ageYears,
+  })
   const normalizedRecord = record.intraop && Array.isArray(record.intraop.techniques)
     ? {
         ...record,
+        pediatricModeDecisionRequired,
         intraop: {
           ...record.intraop,
           techniques: normalizeOptionCodes(
@@ -94,7 +106,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           ),
         },
       }
-    : record
+    : { ...record, pediatricModeDecisionRequired }
   // Prisma JSON columns are intentionally broad at the persistence boundary.
   // The response contract is the shared serialised CaseDetail shape.
   const responseRecord = normalizedRecord as unknown as Serialized<CaseDetail>
@@ -133,7 +145,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (rejectedFields.length) {
       console.warn(`[PATCH /api/cases/:id] rejected fields on ${id}:`, rejectedFields.map(f => f.path).join(", "))
     }
-    const { preop, intraop, postop, status, notes, forceUpdate: forceUpdateField } = body
+    const { preop, intraop, postop, status, clinicalMode, notes, forceUpdate: forceUpdateField } = body
     const preopBase = req.headers.get("x-lospor-preop-updated-at")
     const postopBase = req.headers.get("x-lospor-postop-updated-at")
     const intraopBase = req.headers.get("x-lospor-intraop-updated-at")
@@ -143,6 +155,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const forceUpdate = req.headers.get("x-lospor-force-update") === "true" ||
       forceUpdateField === true
 
+    const clientVersion = req.headers.get("x-lospor-client-version")
     for (const [name, revision] of [["preop", preopRevision], ["postop", postopRevision], ["intraop", intraopRevision]] as const) {
       if (revision === "invalid") {
         return NextResponse.json({ error: `Invalid ${name} revision` }, { status: 400 })
@@ -171,6 +184,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           status: true,
           createdAt: true,
           institutionId: true,
+          clinicalMode: true,
+          clinicalRulesVersion: true,
         },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
@@ -181,9 +196,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
 
-      const existingPreop = preop
-        ? await tx.preoperativeAssessment.findUnique({ where: { caseId: id } })
-        : null
+      const existingPreop = await tx.preoperativeAssessment.findUnique({ where: { caseId: id } })
       const existingIntraop = intraop
         ? await tx.intraoperativeRecord.findUnique({
             where: { caseId: id },
@@ -208,10 +221,37 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         postop: existingPostop,
       }
       const differentUser = existing.userId !== userId
-    // Missing-timestamp guard stays scoped to different users: clients that
-    // legitimately send no base header (fresh loads, older mobile flows) must
-    // not 409 against their own case.
-    if (!forceUpdate && differentUser && preop && existing.preop && !preopBase) {
+      const requestedMode = clinicalMode ?? caseRecord.clinicalMode
+      const enforceAgeDecision = clinicalMode !== undefined || (
+        preop != null && (
+          "ageYears" in preop
+          || "ageValue" in preop
+          || "ageUnit" in preop
+        )
+      )
+      const pediatricDecision = decidePediatricWrite({
+        clinicalMode: requestedMode,
+        preop: preop as Record<string, unknown> | undefined,
+        currentPreop: existingPreop as unknown as Record<string, unknown> | null,
+        clientVersion,
+        enforceAgeDecision,
+        allowIncompleteAge: true,
+      })
+      if (!pediatricDecision.allowed) {
+        return NextResponse.json({
+          error: pediatricDecision.code,
+          ...pediatricDecision,
+        }, { status: pediatricDecision.status })
+      }
+      const preopTouched = preop != null || clinicalMode !== undefined
+      const mappedPreop = preopTouched
+        ? { ...(preop ?? {}), clinicalMode: pediatricDecision.clinicalMode }
+        : null
+
+      // Missing-timestamp guard stays scoped to different users: clients that
+      // legitimately send no base header (fresh loads, older mobile flows) must
+      // not 409 against their own case.
+    if (!forceUpdate && differentUser && preopTouched && existing.preop && !preopBase) {
       return NextResponse.json({
         error: "conflict",
         section: "preop",
@@ -241,7 +281,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // owner's own writes — the same user in two tabs/devices could previously
     // silently overwrite themselves. Clients self-heal via the shared
     // conflict-retry engine or surface the conflict-resolution UI.
-    if (!forceUpdate && preop && preopRevision != null && preopRevision !== "invalid" && existing.preop && existing.preop.syncRevision !== preopRevision) {
+    if (!forceUpdate && preopTouched && preopRevision != null && preopRevision !== "invalid" && existing.preop && existing.preop.syncRevision !== preopRevision) {
       return NextResponse.json({
         error: "conflict",
         section: "preop",
@@ -262,7 +302,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         serverVersion: { updatedAt: existing.intraop.updatedAt, revision: existing.intraop.syncRevision },
       }, { status: 409 })
     }
-    if (!forceUpdate && preop && preopRevision == null && preopBase && existing.preop?.updatedAt && existing.preop.updatedAt.getTime() > new Date(preopBase).getTime()) {
+    if (!forceUpdate && preopTouched && preopRevision == null && preopBase && existing.preop?.updatedAt && existing.preop.updatedAt.getTime() > new Date(preopBase).getTime()) {
       return NextResponse.json({
         error: "conflict",
         section: "preop",
@@ -304,7 +344,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       // The parent row is locked before this fresh read. Child-table triggers
       // acquire the same lock, so revision checks and all section/event writes
       // serialize with finalization even if a future caller bypasses this route.
-    if (preop) {
+    if (preopTouched && mappedPreop) {
       // Partial update: only touch fields present in the payload, so a stale
       // or partial save never wipes existing preop data. Create still uses
       // the full mapPreop (with defaults) for brand-new records.
@@ -316,7 +356,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               ? { syncRevision: preopRevision }
               : {}),
           },
-          data: { ...mapPreopUpdate(preop), syncRevision: { increment: 1 } },
+          data: {
+            ...mapPreopUpdate(mappedPreop, existingPreop as unknown as Record<string, unknown>),
+            syncRevision: { increment: 1 },
+          },
         })
         if (updated.count === 0) {
           const current = await tx.preoperativeAssessment.findUnique({ where: { caseId: id } })
@@ -328,7 +371,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         }
       } else {
         await tx.preoperativeAssessment.create({
-          data: { caseId: id, ...mapPreop(preop), syncRevision: 1 },
+          data: { caseId: id, ...mapPreop(mappedPreop), syncRevision: 1 },
         })
       }
     }
@@ -469,9 +512,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
+    if (
+      pediatricDecision.clinicalMode !== caseRecord.clinicalMode
+      || pediatricDecision.clinicalRulesVersion !== caseRecord.clinicalRulesVersion
+    ) {
+      await tx.case.update({
+        where: { id },
+        data: {
+          clinicalMode: pediatricDecision.clinicalMode,
+          clinicalRulesVersion: pediatricDecision.clinicalRulesVersion,
+        },
+      })
+    }
+
     // Status transition rules:
-    //   1. Explicit status in payload -> use as-is (e.g., final submit sends "COMPLETE")
-    //   2. No explicit status + intraop data + current DRAFT -> promote to IN_PROGRESS
+    //   1. Explicit status in payload -> use as-is (e.g. final submit).
+    //   2. No explicit status + intraop data + current DRAFT -> promote to IN_PROGRESS.
     //   3. No explicit status + postop data + current IN_PROGRESS -> promote to AWAITING_REVIEW
     //   4. Never implicitly demote a status
     //   COMPLETE requires POST /api/cases/:id/finalize (not allowed here)
@@ -494,6 +550,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         finalizedAt: true,
         clinicalRevision: true,
         eventRevision: true,
+        clinicalMode: true,
+        clinicalRulesVersion: true,
         relationalRevision: true,
       },
     })
@@ -527,6 +585,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({
       id,
+      clinicalMode: updated?.clinicalMode,
+      clinicalRulesVersion: updated?.clinicalRulesVersion,
       updatedAt: updated?.updatedAt,
       finalizedAt: updated?.finalizedAt,
       clinicalRevision: updated?.clinicalRevision,
@@ -567,12 +627,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const result = await withLockedCaseTransaction(id, async tx => {
       const existing = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true },
+        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!existing) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canAccessCaseWithOwnerFallback(tx, user, existing)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
+      const pediatricBlock = pediatricMutationResponse(req, existing.clinicalMode)
+      if (pediatricBlock) return pediatricBlock
       if (existing.status === "COMPLETE") {
         return NextResponse.json({ error: "Cannot delete a completed case" }, { status: 400 })
       }

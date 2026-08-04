@@ -11,6 +11,7 @@ import { caseWhereForUser } from "@/lib/access-control"
 import { generateCaseCode, isPrismaUniqueError } from "@/lib/case-code"
 import { corsHeaders } from "@/lib/cors"
 import { z } from "zod"
+import { decidePediatricWrite } from "@/lib/pediatric-mode"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -68,6 +69,28 @@ export async function POST(req: NextRequest) {
     const preopParsed = parseLenient(preopSchema, body.preop)
     takeRejected("preop", preopParsed.rejected)
     const preop = preopParsed.value
+    const clinicalMode = body.clinicalMode === "PEDIATRIC"
+      ? "PEDIATRIC"
+      : body.clinicalMode == null || body.clinicalMode === "ADULT"
+        ? "ADULT"
+        : null
+    if (!clinicalMode) {
+      return NextResponse.json({ error: "Invalid clinical mode" }, { status: 400 })
+    }
+    const pediatricDecision = decidePediatricWrite({
+      clinicalMode,
+      preop,
+      clientVersion: req.headers.get("x-lospor-client-version"),
+      enforceAgeDecision: true,
+      allowIncompleteAge: true,
+    })
+    if (!pediatricDecision.allowed) {
+      return NextResponse.json({
+        error: pediatricDecision.code,
+        ...pediatricDecision,
+      }, { status: pediatricDecision.status })
+    }
+    const mappedPreop = { ...preop, clinicalMode: pediatricDecision.clinicalMode }
 
     let intraop: z.infer<typeof intraopSchema> | undefined
     if (body.intraop) {
@@ -101,12 +124,14 @@ export async function POST(req: NextRequest) {
       try {
         caseRecord = await prisma.case.create({
           data: {
+            clinicalMode: pediatricDecision.clinicalMode,
+            clinicalRulesVersion: pediatricDecision.clinicalRulesVersion,
             userId,
             status,
             institutionId: user.institutionId ?? null,
             caseCode: await generateCaseCode(userId, prisma),
             ...(idempotencyKey ? { clientDraftId: idempotencyKey } : {}),
-            preop: { create: { ...mapPreop(preop), syncRevision: 1 } },
+            preop: { create: { ...mapPreop(mappedPreop), syncRevision: 1 } },
             ...(intraop ? { intraop: { create: { ...mapIntraop(intraop), syncRevision: 1 } } } : {}),
             ...(postop  ? { postop:  { create: { ...mapPostop(postop), syncRevision: 1 } } } : {}),
           },
@@ -138,6 +163,8 @@ export async function POST(req: NextRequest) {
     after(() => syncCaseRelationalLockedSafe(caseRecord.id, userId))
     return NextResponse.json({
       id: caseRecord.id,
+      clinicalMode: pediatricDecision.clinicalMode,
+      clinicalRulesVersion: pediatricDecision.clinicalRulesVersion,
       caseCode: caseRecord.caseCode,
       preopUpdatedAt: caseRecord.preop?.updatedAt,
       preopRevision: caseRecord.preop?.syncRevision,
@@ -169,7 +196,7 @@ export async function GET(req: NextRequest) {
     prisma.case.findMany({
       where,
       include: {
-        preop:  { select: { diagnosis: true, plannedProcedure: true, ageYears: true, sex: true, asaScore: true } },
+        preop:  { select: { diagnosis: true, plannedProcedure: true, ageYears: true, ageValue: true, ageUnit: true, sex: true, asaScore: true } },
         postop: { select: { disposition: true, aldreteTotal: true } },
         intraop: { select: { monthYear: true, durationMinutes: true, endTime: true } },
         user: { select: { name: true } },

@@ -12,6 +12,13 @@ import {
   canonicalizePreopPatch,
 } from "@lospor/core/case-payloads"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
+import {
+  calculateColds,
+  calculatePovoc,
+  normalizePediatricAge,
+  type ClinicalMode,
+} from "@lospor/core/pediatric"
+import { calculateMostellerBsa } from "@lospor/core/pediatric-calculators"
 
 // Copies full[k] into r[k] for each key present in the raw payload. A plain
 // `r[k] = full[k]` inside a loop over a key UNION can't statically prove the
@@ -38,6 +45,7 @@ type PreopRawInput = Partial<Prisma.PreoperativeAssessmentUncheckedCreateWithout
   procedures?: { label?: string; sub?: string; code?: string; group?: string; domain?: string; description?: string }[]
   allergyDetails?: string | { label?: string; inn?: string; atcCode?: string; dose?: string; route?: string; frequency?: string }[] | null
   currentMedications?: string | { label?: string; inn?: string; atcCode?: string; dose?: string; route?: string; frequency?: string }[] | null
+  clinicalMode?: ClinicalMode
 }
 
 type TaggedDrugList = PreopRawInput["currentMedications"] | PreopRawInput["allergyDetails"]
@@ -82,6 +90,57 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
       bmi = computedBmi
     }
   }
+  const bsaResult = heightCm != null && weightKg != null
+    ? calculateMostellerBsa({ heightCm, weightKg })
+    : null
+  const bodySurfaceAreaM2 = bsaResult?.available ? bsaResult.value.squareMetres : null
+  const pediatric = preop.clinicalMode === "PEDIATRIC"
+  const normalizedAge = pediatric
+    && preop.ageValue != null
+    && preop.ageUnit != null
+    ? normalizePediatricAge({
+        value: preop.ageValue,
+        unit: preop.ageUnit,
+      })
+    : null
+  const povoc = pediatric && normalizedAge
+    ? calculatePovoc({
+        ageYears: normalizedAge.approximateDays / 365.2425,
+        surgeryMinutes: preop.povocSurgeryAtLeast30Minutes ? 30 : 0,
+        strabismusSurgery: preop.povocStrabismusSurgery ?? false,
+        patientOrFamilyHistory: preop.povocHistory ?? false,
+      })
+    : null
+  const coldsCurrentSymptoms = safeEnum(
+    preop.coldsCurrentSymptoms,
+    ["NONE", "MILD", "MODERATE_OR_SEVERE"] as const,
+  )
+  const coldsOnset = safeEnum(
+    preop.coldsOnset,
+    ["MORE_THAN_4_WEEKS", "TWO_TO_4_WEEKS", "LESS_THAN_2_WEEKS"] as const,
+  )
+  const coldsLungDisease = safeEnum(
+    preop.coldsLungDisease,
+    ["NONE", "MILD", "MODERATE_OR_SEVERE"] as const,
+  )
+  const coldsAirwayDevice = safeEnum(
+    preop.coldsAirwayDevice,
+    ["FACE_MASK_OR_NONE", "SUPRAGLOTTIC", "TRACHEAL_TUBE"] as const,
+  )
+  const coldsSurgery = safeEnum(
+    preop.coldsSurgery,
+    ["NON_AIRWAY", "MINOR_AIRWAY", "MAJOR_AIRWAY"] as const,
+  )
+  const colds = pediatric && preop.coldsApplicable === true
+    && coldsCurrentSymptoms && coldsOnset && coldsLungDisease && coldsAirwayDevice && coldsSurgery
+    ? calculateColds({
+        currentSymptoms: coldsCurrentSymptoms,
+        onset: coldsOnset,
+        lungDisease: coldsLungDisease,
+        airwayDevice: coldsAirwayDevice,
+        surgery: coldsSurgery,
+      })
+    : null
 
   // Item 26: Build JSON arrays for diagnoses/procedures; keep legacy string columns for compat
   const diagnosesArr = Array.isArray(preop.diagnoses) ? preop.diagnoses : []
@@ -89,7 +148,11 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
 
   return {
     // Items 18 + 19: Use null instead of 0 for missing biometrics — 0 corrupts risk scores
-    ageYears:  preop.ageYears  ?? null,
+    ageYears: normalizedAge?.completedYears ?? preop.ageYears ?? null,
+    ageApproxDays: normalizedAge?.approximateDays ?? null,
+    ageValue: preop.ageValue ?? null,
+    ageUnit: preop.ageUnit ?? null,
+    bodySurfaceAreaM2,
     sex:       preop.sex ?? "UNKNOWN",  // never conflate "not recorded" with "other"
     heightCm,
     weightKg,
@@ -159,16 +222,31 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     rcriInsulinDM:      preop.rcriInsulinDM      ?? false,
     rcriCreatinine:     preop.rcriCreatinine     ?? false,
 
-    rcriScore:    toIntOrNull(preop.rcriScore),
-    gutaScore:    toFloatOrNull(preop.gutaScore),
-    apfelScore:   toIntOrNull(preop.apfelScore),
-    stopBangScore: toIntOrNull(preop.stopBangScore),
+    rcriScore:     pediatric ? null : toIntOrNull(preop.rcriScore),
+    gutaScore:     pediatric ? null : toFloatOrNull(preop.gutaScore),
+    apfelScore:    pediatric ? null : toIntOrNull(preop.apfelScore),
+    stopBangScore: pediatric ? null : toIntOrNull(preop.stopBangScore),
 
     apfelPONVHistory:   preop.apfelPONVHistory   ?? false,
     apfelPostopOpioids: preop.apfelPostopOpioids ?? false,
 
     stopbangSnoring:  preop.stopbangSnoring  ?? false,
     stopbangTired:    preop.stopbangTired    ?? false,
+    povocScore:                   povoc?.score ?? null,
+    povocRiskPercent:             povoc?.riskPercent ?? null,
+    povocSurgeryAtLeast30Minutes: povoc?.factors.surgeryAtLeast30Minutes ?? false,
+    povocAgeAtLeast3Years:        povoc?.factors.ageAtLeast3Years ?? false,
+    povocStrabismusSurgery:       povoc?.factors.strabismusSurgery ?? false,
+    povocHistory:                 povoc?.factors.patientOrFamilyHistory ?? false,
+    coldsApplicable:              pediatric ? preop.coldsApplicable ?? false : false,
+    coldsScore:                   colds?.score ?? null,
+    coldsCurrentSymptoms:         pediatric ? coldsCurrentSymptoms : null,
+    coldsOnset:                   pediatric ? coldsOnset : null,
+    coldsLungDisease:             pediatric ? coldsLungDisease : null,
+    coldsAirwayDevice:            pediatric ? coldsAirwayDevice : null,
+    coldsSurgery:                 pediatric ? coldsSurgery : null,
+    pediatricFasting:            pediatric ? preop.pediatricFasting ?? [] : [],
+
     stopbangObserved: preop.stopbangObserved ?? false,
     stopbangBP:       preop.stopbangBP       ?? false,
     stopbangNeck:     preop.stopbangNeck     ?? false,
@@ -446,8 +524,11 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
 // in the payload. Using mapPreop for updates fills in ?? null / ?? false defaults
 // for every missing field, silently wiping existing preop data on any partial or
 // stale save (e.g. a replayed offline snapshot). Mirrors mapIntraopUpdate.
-export function mapPreopUpdate(preop: Record<string, unknown>) {
-  const full = mapPreop(preop)
+export function mapPreopUpdate(
+  preop: Record<string, unknown>,
+  currentPreop: Record<string, unknown> | null = null,
+) {
+  const full = mapPreop({ ...(currentPreop ?? {}), ...preop })
   const r: Partial<typeof full> = {}
   // "Present" means the key exists AND is not undefined. Form snapshots send
   // undefined for unfilled optional fields, so undefined keys must be skipped.
@@ -455,8 +536,9 @@ export function mapPreopUpdate(preop: Record<string, unknown>) {
 
   // Direct fields: source key name === output key name
   const DIRECT = [
-      "ageYears", "sex", "heightCm", "weightKg", "bloodType", "rhFactor",
-      "teamNotes", "physicalExamReport", "notes", "aiOptIn", "comorbidities",
+    "ageYears", "ageValue", "ageUnit",
+    "sex", "heightCm", "weightKg", "bloodType", "rhFactor",
+    "teamNotes", "physicalExamReport", "notes", "aiOptIn", "comorbidities",
     "allergies", "latexAllergy", "currentMedications",
     "dentalProsthetics", "looseTeeth", "smoking", "substanceAbuse",
     "bpSystolic", "bpDiastolic", "heartRate", "heartArrhythmia", "spO2", "temperature", "respiratoryRate",
@@ -468,6 +550,10 @@ export function mapPreopUpdate(preop: Record<string, unknown>) {
     "rcriScore", "gutaScore", "apfelScore", "stopBangScore",
     "apfelPONVHistory", "apfelPostopOpioids",
     "stopbangSnoring", "stopbangTired", "stopbangObserved", "stopbangBP", "stopbangNeck",
+    "povocScore", "povocRiskPercent", "povocSurgeryAtLeast30Minutes",
+    "povocAgeAtLeast3Years", "povocStrabismusSurgery", "povocHistory",
+    "coldsApplicable", "coldsScore", "coldsCurrentSymptoms", "coldsOnset",
+    "coldsLungDisease", "coldsAirwayDevice", "coldsSurgery", "pediatricFasting",
     "labResults",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
@@ -481,7 +567,29 @@ export function mapPreopUpdate(preop: Record<string, unknown>) {
   }
 
   // Computed / aliased fields — include when any contributing source key is present
-  if (has("heightCm") || has("weightKg") || has("bmi")) r.bmi = full.bmi
+  if (has("heightCm") || has("weightKg") || has("bmi")) {
+    r.bmi = full.bmi
+    r.bodySurfaceAreaM2 = full.bodySurfaceAreaM2
+  }
+  const ageTouched = ["ageValue", "ageUnit", "clinicalMode"].some(has)
+  if (ageTouched) {
+    r.ageYears = full.ageYears
+    r.ageApproxDays = full.ageApproxDays
+  }
+  if (
+    has("ageValue") || has("ageUnit") || has("povocSurgeryAtLeast30Minutes")
+    || has("povocStrabismusSurgery") || has("povocHistory")
+  ) {
+    r.povocScore = full.povocScore
+    r.povocRiskPercent = full.povocRiskPercent
+    r.povocAgeAtLeast3Years = full.povocAgeAtLeast3Years
+  }
+  if (
+    has("coldsApplicable") || has("coldsCurrentSymptoms") || has("coldsOnset")
+    || has("coldsLungDisease") || has("coldsAirwayDevice") || has("coldsSurgery")
+  ) {
+    r.coldsScore = full.coldsScore
+  }
   if (has("diagnoses")) {
     r.diagnosis      = full.diagnosis
     r.diagnosesJson  = full.diagnosesJson
@@ -502,6 +610,24 @@ export function mapPreopUpdate(preop: Record<string, unknown>) {
     if (full.difficultAirwayHistory === false) r.difficultAirwayNotes = null
   }
 
+  if ((preop as PreopRawInput).clinicalMode === "PEDIATRIC") {
+    r.rcriIschemicHeart = false
+    r.rcriCHF = false
+    r.rcriCVD = false
+    r.rcriInsulinDM = false
+    r.rcriCreatinine = false
+    r.rcriScore = null
+    r.gutaScore = null
+    r.apfelScore = null
+    r.stopBangScore = null
+    r.apfelPONVHistory = false
+    r.apfelPostopOpioids = false
+    r.stopbangSnoring = false
+    r.stopbangTired = false
+    r.stopbangObserved = false
+    r.stopbangBP = false
+    r.stopbangNeck = false
+  }
   return r
 }
 
@@ -513,7 +639,8 @@ export function mapPostopUpdate(postop: Record<string, unknown>) {
 
   const DIRECT = [
     "recoveryBpSystolic", "recoveryBpDiastolic", "recoveryHeartRate", "recoverySpO2",
-    "painScoreNRS", "ponv", "complications", "handoverItems", "disposition", "dispositionNotes",
+    "painScoreNRS", "pediatricPainScale", "pediatricPainScore", "paedScore",
+    "ponv", "complications", "handoverItems", "disposition", "dispositionNotes",
     "recoveryBpUnobtainable", "recoveryHeartRateUnobtainable", "recoverySpO2Unobtainable", "recoveryTemperatureUnobtainable",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
@@ -578,6 +705,9 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
     recoveryBpDiastolic: toIntOrNull(postop.recoveryBpDiastolic),
     recoveryHeartRate:   toIntOrNull(postop.recoveryHeartRate),
     recoverySpO2:        toFloatOrNull(postop.recoverySpO2),
+    pediatricPainScale: safeEnum(postop.pediatricPainScale, ["FLACC", "FPS_R", "NRS"] as const),
+    pediatricPainScore: toIntOrNull(postop.pediatricPainScore),
+    paedScore:          toIntOrNull(postop.paedScore),
     painScoreNRS:       toIntOrNull(postop.painScoreNRS),
     ponv:               postop.ponv               ?? false,
     temperatureCelsius: toFloatOrNull(postop.temperatureCelsius ?? postop.temperaturePostop),

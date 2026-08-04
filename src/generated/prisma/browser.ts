@@ -183,6 +183,46 @@ export type IntraoperativeRecord = Prisma.IntraoperativeRecordModel
  */
 export type PostoperativeRecord = Prisma.PostoperativeRecordModel
 /**
+ * Model CaseClinicalCalculation
+ * 
+ */
+export type CaseClinicalCalculation = Prisma.CaseClinicalCalculationModel
+/**
+ * Model ClinicalRuleReview
+ * 
+ */
+export type ClinicalRuleReview = Prisma.ClinicalRuleReviewModel
+/**
+ * Model ClinicalPreset
+ * 
+ */
+export type ClinicalPreset = Prisma.ClinicalPresetModel
+/**
+ * Model PlatformClinicalPresetSelection
+ * 
+ */
+export type PlatformClinicalPresetSelection = Prisma.PlatformClinicalPresetSelectionModel
+/**
+ * Model InstitutionClinicalPresetSelection
+ * 
+ */
+export type InstitutionClinicalPresetSelection = Prisma.InstitutionClinicalPresetSelectionModel
+/**
+ * Model UserClinicalPresetSelection
+ * 
+ */
+export type UserClinicalPresetSelection = Prisma.UserClinicalPresetSelectionModel
+/**
+ * Model ClinicalPresetRule
+ * 
+ */
+export type ClinicalPresetRule = Prisma.ClinicalPresetRuleModel
+/**
+ * Model InstitutionClinicalRuleOverride
+ * 
+ */
+export type InstitutionClinicalRuleOverride = Prisma.InstitutionClinicalRuleOverrideModel
+/**
  * Model PreopDiagnosis
  * 
  */

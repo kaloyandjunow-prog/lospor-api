@@ -13,6 +13,8 @@ import {
 } from "@/lib/clinical-transaction"
 import { z } from "zod"
 
+import { pediatricMutationResponse } from "@/lib/pediatric-http"
+import { caseEventWriteSchema } from "@/lib/case-event-schema"
 const CORS = (req: NextRequest) => corsHeaders(req, "POST, PUT, OPTIONS")
 
 export async function OPTIONS(req: NextRequest) {
@@ -23,17 +25,7 @@ export async function OPTIONS(req: NextRequest) {
 // fluidId, etc.) passed through so the timetable projection still sees them.
 const MAX_LOG_ENTRIES = 20_000
 
-const eventSchema = z.object({
-  id:        z.string().optional(),
-  ts:        z.string().optional(),
-  type:      z.string().min(1).max(64),
-  name:      z.string().max(200).optional(),
-  label:     z.string().max(200).optional(),
-  dose:      z.union([z.string(), z.number()]).optional(),
-  unit:      z.string().max(40).optional(),
-  rate:      z.union([z.string(), z.number()]).optional(),
-  volume:    z.union([z.string(), z.number()]).optional(),
-}).passthrough()
+const eventSchema = caseEventWriteSchema
 
 // Free-text fields a user can type — these get the same PII guard as the rest of
 // the clinical write paths. Vitals/numbers are not user prose, so they're skipped.
@@ -122,7 +114,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true },
+        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -131,6 +123,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
+      const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
+      if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
@@ -223,7 +217,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true },
+        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -232,6 +226,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
+      const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
+      if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
