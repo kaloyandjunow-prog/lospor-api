@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "7.3.2",
+  "version": "8.0.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {

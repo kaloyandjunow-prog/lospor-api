@@ -1,5 +1,35 @@
 # Changelog - LOSPOR API
 
+## [8.0.0] - 2026-08-04
+
+First stable release. Adds pediatric clinical mode, the clinical-ruleset API,
+and dose provenance.
+
+Requires `@lospor/core` v8.0.0.
+
+### Added
+
+- Pediatric clinical mode on `Case`, with research-grade age capture.
+- `ClinicalPreset` and `ClinicalPresetRule`, plus the selection tables backing
+  the PLATFORM / INSTITUTION / USER ruleset hierarchy.
+- Authoring scope guard. Below PLATFORM a ruleset may adjust presentation --
+  ranges, quick values, display names -- but not schema: no new drugs, units,
+  routes or concentrations, and a slider may narrow but never widen. Keeping
+  authored rules inside the canonical vocabulary is what keeps the recorded data
+  research-capable.
+- `CaseEvent` records which rule and preset produced a dose and on what weight
+  basis, so an administration stays reproducible after the ruleset moves on.
+- Guarded scripts to create, publish, verify and prune platform rulesets, each
+  refusing to run against a production-like database.
+
+### Migrations
+
+Nine migrations, all additive relative to v7.3.2: every `DROP COLUMN` in this
+batch removes a column added earlier in the same batch, and no new `NOT NULL`
+column lacks a default. A rollback to v7.3.2 therefore needs no schema
+downgrade -- though cases recorded in pediatric mode will not be understood by
+a v7.3.2 client.
+
 ## [7.3.2] - 2026-07-28
 
 ### Fixed
