@@ -21,6 +21,7 @@ import {
 import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { assertDatabaseWritable } from "./lib/protected-database"
 
 const TARGET_PRESET_ID = "lospor-pediatrics-v2"
 const APPLY_ARGUMENT = "--apply"
@@ -35,9 +36,7 @@ if (process.env.TARGET_CLINICAL_PRESET_ID !== TARGET_PRESET_ID) {
   throw new Error(`TARGET_CLINICAL_PRESET_ID must be exactly "${TARGET_PRESET_ID}".`)
 }
 if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
-if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-  throw new Error("Refusing to promote a ruleset in a production-like environment.")
-}
+assertDatabaseWritable("promote a ruleset")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const canonical = createLosporPediatricV2Draft()

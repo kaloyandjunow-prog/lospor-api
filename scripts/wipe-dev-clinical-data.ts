@@ -10,14 +10,13 @@
 import "dotenv/config"
 import { PrismaClient, Prisma } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { assertDatabaseWritable } from "./lib/protected-database"
 
 if (process.env.WIPE_DEV_CLINICAL_DATA !== "YES") {
   throw new Error('Refusing to wipe clinical data. Set WIPE_DEV_CLINICAL_DATA="YES" explicitly.')
 }
 
-if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-  throw new Error("Refusing to run clinical wipe in a production-like environment.")
-}
+assertDatabaseWritable("run clinical wipe")
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
 

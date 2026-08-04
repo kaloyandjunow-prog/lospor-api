@@ -21,13 +21,12 @@
 import "dotenv/config"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { assertDatabaseWritable } from "./lib/protected-database"
 
 if (process.env.PRUNE_CLINICAL_RULESETS !== "YES") {
   throw new Error('Refusing to run. Set PRUNE_CLINICAL_RULESETS="YES" explicitly.')
 }
-if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-  throw new Error("Refusing to delete rulesets in a production-like environment.")
-}
+assertDatabaseWritable("delete rulesets")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 /** The only presets that survive. */

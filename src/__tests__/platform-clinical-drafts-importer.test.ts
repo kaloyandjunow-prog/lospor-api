@@ -21,10 +21,12 @@ const verifier = readFileSync(
 )
 
 describe("platform clinical draft importer", () => {
-  it("requires explicit non-production authorization", () => {
+  it("refuses to write to a protected database unless it is named", () => {
     expect(importer).toContain("CREATE_PLATFORM_CLINICAL_DRAFTS")
-    expect(importer).toContain('process.env.VERCEL_ENV === "production"')
-    expect(importer).toContain('process.env.NODE_ENV === "production"')
+    expect(importer).toContain("assertDatabaseWritable(")
+    // The guard must inspect the connection string, not the ambient environment:
+    // VERCEL_ENV/NODE_ENV are unset on a laptop pointed at production.
+    expect(importer).not.toContain('process.env.VERCEL_ENV === "production"')
   })
 
   it("is append-only and leaves drafts inactive", () => {
@@ -46,8 +48,10 @@ describe("platform clinical draft importer", () => {
     expect(pediatricFluidAppender).toContain("APPEND_PEDIATRIC_FLUID_PROFILES_TO_DRAFT")
     expect(pediatricFluidAppender).toContain('TARGET_CLINICAL_PRESET_ID="lospor-pediatrics-v1"')
     expect(pediatricFluidAppender).toContain('const APPLY_ARGUMENT = "--apply"')
-    expect(pediatricFluidAppender).toContain('process.env.VERCEL_ENV === "production"')
-    expect(pediatricFluidAppender).toContain('process.env.NODE_ENV === "production"')
+    expect(pediatricFluidAppender).toContain("assertDatabaseWritable(")
+    // The guard must inspect the connection string, not the ambient environment:
+    // VERCEL_ENV/NODE_ENV are unset on a laptop pointed at production.
+    expect(pediatricFluidAppender).not.toContain('process.env.VERCEL_ENV === "production"')
     expect(pediatricFluidAppender).toContain('preset.scope !== "PLATFORM"')
     expect(pediatricFluidAppender).toContain('preset.status !== "DRAFT"')
     expect(pediatricFluidAppender).toContain("preset.publishedAt !== null")
@@ -80,8 +84,10 @@ describe("platform clinical draft importer", () => {
     expect(pediatricPlatformPromoter).toContain("PROMOTE_PEDIATRIC_PLATFORM_RULESET")
     expect(pediatricPlatformPromoter).toContain('TARGET_CLINICAL_PRESET_ID="lospor-pediatrics-v1"')
     expect(pediatricPlatformPromoter).toContain('const APPLY_ARGUMENT = "--apply"')
-    expect(pediatricPlatformPromoter).toContain('process.env.VERCEL_ENV === "production"')
-    expect(pediatricPlatformPromoter).toContain('process.env.NODE_ENV === "production"')
+    expect(pediatricPlatformPromoter).toContain("assertDatabaseWritable(")
+    // The guard must inspect the connection string, not the ambient environment:
+    // VERCEL_ENV/NODE_ENV are unset on a laptop pointed at production.
+    expect(pediatricPlatformPromoter).not.toContain('process.env.VERCEL_ENV === "production"')
     expect(pediatricPlatformPromoter).toContain('admin.role !== "ADMIN"')
     expect(pediatricPlatformPromoter).toContain('preset.status !== "DRAFT"')
     expect(pediatricPlatformPromoter).toContain("validateClinicalRuleCollectionForPublication")

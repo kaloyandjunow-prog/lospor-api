@@ -30,13 +30,12 @@ import {
 import { createLosporAdultV2Draft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { assertDatabaseWritable } from "./lib/protected-database"
 
 if (process.env.PUBLISH_ADULT_V2_RULESET !== "YES") {
   throw new Error('Refusing to run. Set PUBLISH_ADULT_V2_RULESET="YES" explicitly.')
 }
-if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
-  throw new Error("Refusing to publish rulesets in a production-like environment.")
-}
+assertDatabaseWritable("publish rulesets")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const apply = process.argv.includes("--apply")
