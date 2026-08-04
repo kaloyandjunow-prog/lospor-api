@@ -1,3 +1,4 @@
+import { caseWhereForUser } from "@/lib/access-control"
 import { NextRequest, NextResponse } from "next/server"
 import { SignJWT } from "jose"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -40,11 +41,10 @@ export async function GET(
   } else {
     const user = await getAuthUser(req)
     if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    where = user.role === "ADMIN"
-      ? { id }
-      : user.role === "HEAD_OF_DEPT" && user.institutionId
-        ? { id, user: { institutionId: user.institutionId } }
-        : { id, userId: user.id }
+    // Shared predicate: a case belongs to the institution it was performed at.
+    // This route used to scope by the owner's current institution, so a case
+    // followed its author to a new hospital.
+    where = caseWhereForUser(user, id)
   }
 
   const record = await prisma.case.findFirst({ where, select: { id: true, caseCode: true, userId: true } })

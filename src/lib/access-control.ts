@@ -48,11 +48,38 @@ export async function canAccessCaseWithOwnerFallback(
   return owner?.institutionId === user.institutionId
 }
 
+/**
+ * A case belongs to the institution it was performed at.
+ *
+ * `Case.institutionId` is the snapshot taken when the case was created, and it
+ * is the authority. The owner's *current* institution is only a fallback, for
+ * historical rows recorded before the snapshot existed.
+ *
+ * This used to scope solely by the owner's current institution, which disagreed
+ * with `canAccessCase` above. The consequence was clinical, not cosmetic: when a
+ * colleague moved hospitals, the cases they had performed at the old one
+ * vanished from that department's list and appeared in the new department's —
+ * so a head of department could see case metadata for operations carried out
+ * somewhere else entirely, and the department that did the work lost sight of
+ * it.
+ *
+ * Exported so every route scopes identically. Anything hand-rolling this
+ * predicate will drift from it again.
+ */
+export function headOfDeptCaseScope(institutionId: string): Prisma.CaseWhereInput {
+  return {
+    OR: [
+      { institutionId },
+      { institutionId: null, user: { institutionId } },
+    ],
+  }
+}
+
 export function caseWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereInput {
   const base = id ? { id } : {}
   if (user.role === "ADMIN") return base
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
-    return { ...base, user: { institutionId: user.institutionId } }
+    return { ...base, ...headOfDeptCaseScope(user.institutionId) }
   }
   return { ...base, userId: user.id }
 }
