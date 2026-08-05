@@ -133,17 +133,32 @@ async function main() {
     })
     if (rulesets.count) console.log(`E2E rulesets cleared: ${rulesets.count}`)
 
-    // Sign-in is rate limited per email — 10 attempts in 15 minutes — and every
-    // suite run signs each of these accounts in once. Iterating on a spec
-    // therefore used to end in a locked-out login page that looked like a
-    // broken login rather than the limiter doing its job. Clearing the counters
-    // for the test accounts is safe: they are keyed by email, and these emails
-    // belong to nobody.
+    // Sign-in is rate limited two ways — 10 attempts per email and 50 per
+    // client address in 15 minutes — and every suite run signs each of these
+    // accounts in. Iterating on a spec therefore used to end in a locked-out
+    // login page that looked like a broken login rather than the limiter doing
+    // its job. The per-address counter was the tighter one in practice, because
+    // it is shared across every account and both suites.
+    //
+    // Clearing the per-email counters is safe: they are keyed by these
+    // addresses, which belong to nobody. Clearing the per-address counters is
+    // safe here and only here — this script refuses to run against production,
+    // so the only traffic these buckets ever held is the suite's own.
     const limitKeys = [
       email, researchEmail,
       ...cast.map(person => person.email.trim().toLowerCase()),
     ].map(address => `login:${address}`)
-    const limits = await prisma.rateLimit.deleteMany({ where: { key: { in: limitKeys } } })
+    const limits = await prisma.rateLimit.deleteMany({
+      where: {
+        OR: [
+          { key: { in: limitKeys } },
+          { key: { startsWith: "login-ip:" } },
+          // The spec that proves the limiter works deliberately exhausts a
+          // throwaway address on every run. Those buckets are litter.
+          { key: { startsWith: "login:rate-limit-" } },
+        ],
+      },
+    })
     if (limits.count) console.log(`E2E login rate limits cleared: ${limits.count}`)
   } finally {
     await prisma.$disconnect()
