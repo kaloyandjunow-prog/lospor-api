@@ -58,6 +58,22 @@ export type CaseTransfer = Prisma.CaseTransferModel
  */
 export type RoleRequest = Prisma.RoleRequestModel
 /**
+ * Model InstitutionChangeRequest
+ * Asking to move to another institution.
+ * 
+ * Choosing an institution at registration is self-service; moving afterwards
+ * is not. Institutional membership is what lets a head of department see a
+ * clinician's cases, so joining a department is the act that needs that
+ * department's consent -- an administrator, or the head of the institution
+ * being joined.
+ * 
+ * Kept separate from RoleRequest deliberately: the approver differs. A role
+ * request is resolved by any administrator, whereas this one can also be
+ * resolved by the head of the *requested* institution, and folding both into
+ * one table would make that query ambiguous.
+ */
+export type InstitutionChangeRequest = Prisma.InstitutionChangeRequestModel
+/**
  * Model Icd10Code
  * 
  */
