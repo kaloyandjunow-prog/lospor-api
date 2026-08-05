@@ -1,5 +1,20 @@
 # Changelog - LOSPOR API
 
+## [8.3.1] - 2026-08-05
+
+Requires `@lospor/core` v8.3.0.
+
+### Added
+
+- `/health/ready` reports whether this installation can send email:
+  `"email": "configured" | "not-configured"`. Without a mail provider nobody can
+  verify an address, and a verified address is a condition of signing in — so an
+  installation with no `BREVO_API_KEY` accepts registrations and then strands
+  every one of them. That failure was invisible: a warning in the logs nobody
+  reads, and a 201 to the client as though all was well. Reported rather than
+  enforced, because verifying accounts by hand is a legitimate deployment; only
+  whether a key is present is disclosed, never the key.
+
 ## [8.3.0] - 2026-08-05
 
 Requires `@lospor/core` v8.3.0.
