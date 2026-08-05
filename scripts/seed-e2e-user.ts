@@ -16,6 +16,86 @@ import { NO_INSTITUTION_ID } from "../src/lib/institutions"
 
 const PROD_PROJECT_REF = "yzqszvlvccyufrkbuhtv" // never seed E2E data here
 
+/**
+ * Makes sure a published platform ruleset exists for each clinical mode.
+ *
+ * A freshly migrated database has none. The only preset the migrations ever
+ * created was a placeholder, and 20260804000000 deliberately deletes it —
+ * correctly, because an empty published ruleset silently resolved to "no doses"
+ * while every health check reported success. The real ones are promoted by an
+ * administrator after install.
+ *
+ * That leaves the release gate, which builds a database from migrations alone,
+ * with no rules at all: the paediatric drug profiles come back empty and there
+ * is nothing for a department to copy, so the specs that cover dosing and the
+ * authoring scope guard fail for want of provisioning rather than for a defect.
+ *
+ * Built from the same bundled drafts the promotion scripts use, so CI exercises
+ * the real clinical content.
+ *
+ * The condition is deliberately "no PUBLISHED platform ruleset exists for this
+ * mode at all" — not "no selection exists". Keying on the selection was wrong
+ * and did real damage on the development database: an adult ruleset was
+ * published and curated there but never selected, so this ran, overwrote its
+ * publication timestamp and publisher, and pointed the platform selection at
+ * it. A published-but-unselected ruleset is somebody's decision, not a gap to
+ * be filled by a seed script.
+ *
+ * It also never touches an existing preset. If there is nothing published, it
+ * creates and selects one; otherwise it does nothing at all.
+ */
+async function ensurePlatformRulesets(
+  prisma: { [key: string]: any },
+  publisherId: string,
+): Promise<void> {
+  const {
+    createLosporAdultV2Draft,
+    createLosporPediatricPlatformDraft,
+  } = await import("@lospor/core/platform-clinical-drafts")
+  const { clinicalRuleKey } = await import("@lospor/core/clinical-rules")
+
+  for (const draft of [createLosporAdultV2Draft(), createLosporPediatricPlatformDraft()]) {
+    const published = await prisma.clinicalPreset.count({
+      where: { scope: "PLATFORM", clinicalMode: draft.clinicalMode, status: "PUBLISHED" },
+    })
+    if (published > 0) continue
+
+    // A distinct id, so this can never be mistaken for — or collide with — a
+    // curated ruleset promoted through the real path.
+    const id = `e2e-platform-${draft.clinicalMode.toLowerCase()}`
+    const now = new Date()
+    await prisma.clinicalPreset.create({
+      data: {
+        id,
+        key: `E2E_${draft.key}`,
+        name: `${draft.name} (end-to-end provisioning)`,
+        description: draft.description,
+        clinicalMode: draft.clinicalMode,
+        scope: "PLATFORM",
+        version: draft.version,
+        status: "PUBLISHED",
+        publishedAt: now,
+        publishedById: publisherId,
+        createdById: publisherId,
+        rules: {
+          create: draft.rules.map((rule: { payload: unknown; sourceRefs: unknown }) => ({
+            ruleKey: clinicalRuleKey(rule.payload as never),
+            ruleVersion: `${draft.key}.v${draft.version}.e2e`,
+            payload: rule.payload,
+            sourceRefs: rule.sourceRefs,
+          })),
+        },
+      },
+    })
+    await prisma.platformClinicalPresetSelection.upsert({
+      where: { clinicalMode: draft.clinicalMode },
+      update: { presetId: id, selectedById: publisherId },
+      create: { clinicalMode: draft.clinicalMode, presetId: id, selectedById: publisherId },
+    })
+    console.log(`E2E platform ruleset provisioned: ${draft.clinicalMode} -> ${id} (${draft.rules.length} rules)`)
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_URL ?? ""
   if (url.includes(PROD_PROJECT_REF)) {
@@ -44,6 +124,10 @@ async function main() {
       },
     })
     console.log(`E2E user ready: ${user.email} (id ${user.id}, institution ${inst.id})`)
+
+    // Needs an administrator to attribute the publication to, so it runs here
+    // rather than at the top. A no-op wherever the rulesets already exist.
+    await ensurePlatformRulesets(prisma, user.id)
     const researchEmail = E2E_RESEARCH_EMAIL.trim().toLowerCase()
     const researcher = await prisma.user.upsert({
       where: { email: researchEmail },
