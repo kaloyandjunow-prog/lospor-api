@@ -33,16 +33,40 @@ describe("email verification does not approve the account", () => {
   })
 })
 
-describe("sign-in requires approval", () => {
+/**
+ * Approval used to gate signing in. That deadlocked every fresh installation —
+ * the first user registers unapproved, only an ADMIN can approve, and the seed
+ * creates no ADMIN — and it protected less than it looked like it did, because
+ * what a signed-in user can see is decided by role: a MEMBER sees only their
+ * own cases. Approval now gates what an account may become and where it may
+ * belong, which is where the department boundary actually lives.
+ */
+describe("sign-in requires a verified address, not approval", () => {
   const credentials = read("../lib/credentials.ts")
 
-  it("rejects an unapproved account", () => {
-    expect(credentials).toMatch(/if \(!user\.approvedAt\) return null/)
+  it("does not reject an unapproved account", () => {
+    expect(credentials).not.toMatch(/if \(!user\.approvedAt\) return null/)
   })
 
   it("still requires a verified email and an undeleted account", () => {
     expect(credentials).toContain("user.emailVerifiedAt")
     expect(credentials).toContain("user.deletedAt")
+  })
+})
+
+describe("a fresh installation can be bootstrapped", () => {
+  const bootstrap = read("../../scripts/bootstrap-admin.ts")
+
+  it("sets role, approval and verification together", () => {
+    // Setting `role` alone was the documented procedure, and it left an account
+    // that still could not sign in.
+    expect(bootstrap).toMatch(/role:\s*"ADMIN"/)
+    expect(bootstrap).toMatch(/approvedAt:\s*now/)
+    expect(bootstrap).toMatch(/emailVerifiedAt:\s*now/)
+  })
+
+  it("refuses to run once an administrator exists", () => {
+    expect(bootstrap).toMatch(/role:\s*"ADMIN",\s*deletedAt:\s*null/)
   })
 })
 

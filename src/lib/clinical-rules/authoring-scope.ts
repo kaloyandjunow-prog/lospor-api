@@ -133,12 +133,35 @@ function ageBandOf(payload: ClinicalRulePayload) {
   }
 }
 
+/**
+ * A comparison that survives a round trip through JSON and zod.
+ *
+ * A unit is an object — { amount, display, ucumCode, bodyBasis, timeBasis } —
+ * not a string. Comparing those with !== compares references, so two units that
+ * say exactly the same thing never matched; and comparing JSON.stringify output
+ * compares key *order*, which zod rewrites to its schema order on the way in.
+ *
+ * The effect was that a department could not save any drug-profile edit at all.
+ * Every save round-trips the whole payload, the untouched units came back in a
+ * different key order, and the guard reported them as an attempt to redefine a
+ * canonical unit — so a legitimate narrowing was refused along with everything
+ * else. The unit tests missed it because they use a string for `unit`.
+ */
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value ?? null)
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, item]) => item !== undefined)
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+  return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`
+}
+
 function unitsOf(payload: ClinicalRulePayload) {
   const record = asRecord(payload)
   return {
-    unit: record.unit ?? null,
-    routeUnits: JSON.stringify(record.routeUnits ?? {}),
-    doseUnit: record.doseUnit ?? null,
+    unit: canonicalJson(record.unit ?? null),
+    routeUnits: canonicalJson(record.routeUnits ?? {}),
+    doseUnit: canonicalJson(record.doseUnit ?? null),
   }
 }
 

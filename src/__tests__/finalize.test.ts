@@ -39,19 +39,39 @@ const VALID_CASE = {
   userId: "user-1",
   status: "IN_PROGRESS",
   user: { institutionId: "inst-1" },
-  preop: { id: "preop-1" },
+  // A complete assessment, not merely a row. Finalisation used to check only
+  // that the preoperative record existed, so `{ id }` was enough to mark a case
+  // COMPLETE through the API while the clients refused to.
+  preop: {
+    id: "preop-1",
+    ageYears: 44,
+    sex: "FEMALE",
+    heightCm: 168,
+    weightKg: 70,
+    diagnoses: ["K80.2"],
+    procedures: ["0FT44ZZ"],
+    bpSystolic: 128,
+    bpDiastolic: 76,
+    heartRate: 72,
+    respiratoryRate: 14,
+    mallampati: "II",
+    asaScore: 2,
+  },
   intraop: {
     id: "intraop-1",
     startTime: new Date("2026-01-01T08:00:00Z"),
     endTime:   new Date("2026-01-01T10:00:00Z"),
     techniques: ["GA"],
   },
+  // Every component. One subscore with the rest null used to be enough, and
+  // the missing ones were then counted as zero — documenting a patient nobody
+  // had assessed as unresponsive and apnoeic.
   postop: {
     aldreteActivity: 2,
-    aldreteRespiration: null,
-    aldreteCirculation: null,
-    aldreteConsciousness: null,
-    aldreteSpO2: null,
+    aldreteRespiration: 2,
+    aldreteCirculation: 2,
+    aldreteConsciousness: 2,
+    aldreteSpO2: 2,
     disposition: "WARD",
   },
 }
@@ -145,6 +165,32 @@ describe("POST /api/cases/:id/finalize", () => {
     expect(res.status).toBe(422)
     const body = await res.json()
     expect(body.reason).toBe("missing_aldrete")
+  })
+
+  it("returns 422 when the Aldrete assessment is only partly done", async () => {
+    // One subscore used to be enough, and core then counted the other four as
+    // zero — a finalised record describing a patient nobody had assessed as
+    // unresponsive and apnoeic.
+    findPostopMock.mockResolvedValue({ ...VALID_CASE.postop, aldreteSpO2: null })
+
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.reason).toBe("missing_aldrete")
+  })
+
+  it("returns 422 when the preoperative assessment exists but is incomplete", async () => {
+    // Existence was the only test, so a draft with nothing but an id could be
+    // finalised through the API while every client refused to.
+    findPreopMock.mockResolvedValue({ id: "preop-1" })
+
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.reason).toBe("incomplete_preop")
+    // Every gap, not just the first: fixing them one at a time is a guessing game.
+    expect(body.blockers.length).toBeGreaterThan(1)
+    expect(body.blockers.flatMap((item: { path: string[] }) => item.path)).toContain("preop.demographics")
   })
 
   it("returns 422 when postop has no disposition", async () => {

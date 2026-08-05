@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "8.2.1",
+  "version": "8.3.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
     "verify:boundaries": "node scripts/check-shared-core-boundaries.mjs",
     "openapi:generate": "node scripts/generate-openapi.mjs",
     "prebuild": "npm run openapi:generate",
@@ -54,7 +55,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1095.0",
     "@aws-sdk/lib-storage": "^3.1095.0",
-    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v8.2.1",
+    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v8.3.0",
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
     "@sparticuz/chromium": "^149.0.0",

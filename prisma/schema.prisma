@@ -22,6 +22,7 @@ model User {
   institution                 Institution?                         @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
   cases                       Case[]
   roleRequests                RoleRequest[]
+  institutionChangeRequests   InstitutionChangeRequest[]
   transfersSent               CaseTransfer[]                       @relation("TransfersSent")
   transfersReceived           CaseTransfer[]                       @relation("TransfersReceived")
   emailVerificationTokens     EmailVerificationToken[]
@@ -94,6 +95,7 @@ model Institution {
   city                     String
   country                  String                               @default("Bulgaria")
   users                    User[]                               @relation("UserPrimaryInstitution")
+  institutionChangeRequests InstitutionChangeRequest[]          @relation("RequestedInstitution")
   cases                    Case[]
   researchCohorts          ResearchCohort[]
   researchExports          ResearchExport[]
@@ -240,6 +242,38 @@ enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+/// Asking to move to another institution.
+///
+/// Choosing an institution at registration is self-service; moving afterwards
+/// is not. Institutional membership is what lets a head of department see a
+/// clinician's cases, so joining a department is the act that needs that
+/// department's consent -- an administrator, or the head of the institution
+/// being joined.
+///
+/// Kept separate from RoleRequest deliberately: the approver differs. A role
+/// request is resolved by any administrator, whereas this one can also be
+/// resolved by the head of the *requested* institution, and folding both into
+/// one table would make that query ambiguous.
+model InstitutionChangeRequest {
+  id                     String        @id @default(cuid())
+  userId                 String
+  user                   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// The institution being joined. Restricted so an institution cannot be
+  /// deleted while a request to join it is outstanding.
+  requestedInstitutionId String
+  requestedInstitution   Institution   @relation("RequestedInstitution", fields: [requestedInstitutionId], references: [id], onDelete: Restrict)
+  /// Where the clinician was when they asked, so an approver can see the move
+  /// being made and the audit trail survives the change.
+  previousInstitutionId  String?
+  status                 RequestStatus @default(PENDING)
+  requestedAt            DateTime      @default(now())
+  resolvedAt             DateTime?
+  resolvedById           String?
+
+  @@index([status, requestedInstitutionId])
+  @@index([userId])
 }
 
 // ICD-10 vocabulary (seeded from WHO ICD-10 + official BG MZ labels)

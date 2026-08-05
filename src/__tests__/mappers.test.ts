@@ -141,6 +141,24 @@ describe("mapPostopUpdate (partial)", () => {
     expect(result.aldreteTotal).toBe(10)
   })
 
+  // A partial score used to be summed with the unassessed components counted
+  // as zero, so one component scored 2 was stored as an Aldrete of 2/10 — a
+  // patient documented as apnoeic and unresponsive. There is no total until
+  // all five have been assessed.
+  it("leaves aldreteTotal unset while the score is incomplete", () => {
+    const result = mapPostopUpdate({ aldreteActivity: 2 })
+    expect(result.aldreteActivity).toBe(2)
+    expect(result.aldreteTotal).toBeNull()
+  })
+
+  it("still refuses a total when four of five are scored", () => {
+    const result = mapPostopUpdate({
+      aldreteActivity: 2, aldreteRespiration: 2,
+      aldreteCirculation: 2, aldreteConsciousness: 2,
+    })
+    expect(result.aldreteTotal).toBeNull()
+  })
+
   it("returns an empty object for an empty payload", () => {
     expect(mapPostopUpdate({})).toEqual({})
   })

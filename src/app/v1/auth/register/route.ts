@@ -18,7 +18,12 @@ const schema = z.object({
   firstName:      z.string().min(1, "First name required"),
   lastName:       z.string().min(1, "Last name required"),
   email:          emailSchema,
-  institutionId:  z.union([z.string().cuid(), z.literal(""), z.undefined()]).optional(),
+  // Required. An account with no institution produced cases stamped with no
+  // institution, and those became visible to whichever department the author
+  // later joined. Anyone without a department picks "Без институция"
+  // (NO_INSTITUTION_ID), which is a real institution that cannot have a head.
+  // Not .cuid(): NO_INSTITUTION_ID is a fixed readable id, not a generated one.
+  institutionId:  z.string().min(1),
   acceptedTerms:  z.boolean().refine(v => v === true, "You must accept the terms"),
   password: passwordSchema,
 })

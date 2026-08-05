@@ -59,6 +59,7 @@ export const ModelName = {
   CaseLock: 'CaseLock',
   CaseTransfer: 'CaseTransfer',
   RoleRequest: 'RoleRequest',
+  InstitutionChangeRequest: 'InstitutionChangeRequest',
   Icd10Code: 'Icd10Code',
   Icd10Synonym: 'Icd10Synonym',
   LabLoinc: 'LabLoinc',
@@ -236,6 +237,20 @@ export const RoleRequestScalarFieldEnum = {
 } as const
 
 export type RoleRequestScalarFieldEnum = (typeof RoleRequestScalarFieldEnum)[keyof typeof RoleRequestScalarFieldEnum]
+
+
+export const InstitutionChangeRequestScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  requestedInstitutionId: 'requestedInstitutionId',
+  previousInstitutionId: 'previousInstitutionId',
+  status: 'status',
+  requestedAt: 'requestedAt',
+  resolvedAt: 'resolvedAt',
+  resolvedById: 'resolvedById'
+} as const
+
+export type InstitutionChangeRequestScalarFieldEnum = (typeof InstitutionChangeRequestScalarFieldEnum)[keyof typeof InstitutionChangeRequestScalarFieldEnum]
 
 
 export const Icd10CodeScalarFieldEnum = {

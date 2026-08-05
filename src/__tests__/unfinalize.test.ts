@@ -83,6 +83,10 @@ describe("POST /api/cases/:id/unfinalize", () => {
       userId: "other-user",
       status: "COMPLETE",
       finalizedAt: recentFinalizedAt,
+      // The case's own institution decides, not the owner's. This fixture carried
+      // only user.institutionId and passed through the owner fallback — the
+      // very path that let a case follow its author to another hospital.
+      institutionId: "inst-1",
       user: { institutionId: "inst-1" },
     })
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })

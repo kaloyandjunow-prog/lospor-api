@@ -405,6 +405,7 @@ export const ModelName = {
   CaseLock: 'CaseLock',
   CaseTransfer: 'CaseTransfer',
   RoleRequest: 'RoleRequest',
+  InstitutionChangeRequest: 'InstitutionChangeRequest',
   Icd10Code: 'Icd10Code',
   Icd10Synonym: 'Icd10Synonym',
   LabLoinc: 'LabLoinc',
@@ -465,7 +466,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "institution" | "case" | "caseLock" | "caseTransfer" | "roleRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseSnapshot" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "institution" | "case" | "caseLock" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseSnapshot" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1058,6 +1059,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.RoleRequestCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.RoleRequestCountAggregateOutputType> | number
+        }
+      }
+    }
+    InstitutionChangeRequest: {
+      payload: Prisma.$InstitutionChangeRequestPayload<ExtArgs>
+      fields: Prisma.InstitutionChangeRequestFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InstitutionChangeRequestFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InstitutionChangeRequestFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>
+        }
+        findFirst: {
+          args: Prisma.InstitutionChangeRequestFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InstitutionChangeRequestFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>
+        }
+        findMany: {
+          args: Prisma.InstitutionChangeRequestFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>[]
+        }
+        create: {
+          args: Prisma.InstitutionChangeRequestCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>
+        }
+        createMany: {
+          args: Prisma.InstitutionChangeRequestCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InstitutionChangeRequestCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>[]
+        }
+        delete: {
+          args: Prisma.InstitutionChangeRequestDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>
+        }
+        update: {
+          args: Prisma.InstitutionChangeRequestUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>
+        }
+        deleteMany: {
+          args: Prisma.InstitutionChangeRequestDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InstitutionChangeRequestUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InstitutionChangeRequestUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>[]
+        }
+        upsert: {
+          args: Prisma.InstitutionChangeRequestUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InstitutionChangeRequestPayload>
+        }
+        aggregate: {
+          args: Prisma.InstitutionChangeRequestAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInstitutionChangeRequest>
+        }
+        groupBy: {
+          args: Prisma.InstitutionChangeRequestGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InstitutionChangeRequestGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InstitutionChangeRequestCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InstitutionChangeRequestCountAggregateOutputType> | number
         }
       }
     }
@@ -4546,6 +4621,20 @@ export const RoleRequestScalarFieldEnum = {
 export type RoleRequestScalarFieldEnum = (typeof RoleRequestScalarFieldEnum)[keyof typeof RoleRequestScalarFieldEnum]
 
 
+export const InstitutionChangeRequestScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  requestedInstitutionId: 'requestedInstitutionId',
+  previousInstitutionId: 'previousInstitutionId',
+  status: 'status',
+  requestedAt: 'requestedAt',
+  resolvedAt: 'resolvedAt',
+  resolvedById: 'resolvedById'
+} as const
+
+export type InstitutionChangeRequestScalarFieldEnum = (typeof InstitutionChangeRequestScalarFieldEnum)[keyof typeof InstitutionChangeRequestScalarFieldEnum]
+
+
 export const Icd10CodeScalarFieldEnum = {
   code: 'code',
   labelEn: 'labelEn',
@@ -6220,6 +6309,7 @@ export type GlobalOmitConfig = {
   caseLock?: Prisma.CaseLockOmit
   caseTransfer?: Prisma.CaseTransferOmit
   roleRequest?: Prisma.RoleRequestOmit
+  institutionChangeRequest?: Prisma.InstitutionChangeRequestOmit
   icd10Code?: Prisma.Icd10CodeOmit
   icd10Synonym?: Prisma.Icd10SynonymOmit
   labLoinc?: Prisma.LabLoincOmit
