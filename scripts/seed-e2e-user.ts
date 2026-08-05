@@ -13,8 +13,20 @@ import {
 // Every account belongs to an institution; a researcher with no department
 // belongs to "Без институция" rather than to NULL.
 import { NO_INSTITUTION_ID } from "../src/lib/institutions"
+// Type-only, so the generated client is still loaded lazily inside main().
+import type { Prisma } from "../src/generated/prisma/client"
 
 const PROD_PROJECT_REF = "yzqszvlvccyufrkbuhtv" // never seed E2E data here
+
+// The client is created inside main() so the production guard runs first; this
+// gives the helpers below its type without hoisting the connection.
+async function openPrisma(connectionString: string) {
+  const { PrismaClient } = await import("../src/generated/prisma/client")
+  const { PrismaPg } = await import("@prisma/adapter-pg")
+  return new PrismaClient({
+    adapter: new PrismaPg({ connectionString }),
+  } as ConstructorParameters<typeof PrismaClient>[0])
+}
 
 /**
  * Makes sure a published platform ruleset exists for each clinical mode.
@@ -45,7 +57,7 @@ const PROD_PROJECT_REF = "yzqszvlvccyufrkbuhtv" // never seed E2E data here
  * creates and selects one; otherwise it does nothing at all.
  */
 async function ensurePlatformRulesets(
-  prisma: { [key: string]: any },
+  prisma: Awaited<ReturnType<typeof openPrisma>>,
   publisherId: string,
 ): Promise<void> {
   const {
@@ -78,11 +90,11 @@ async function ensurePlatformRulesets(
         publishedById: publisherId,
         createdById: publisherId,
         rules: {
-          create: draft.rules.map((rule: { payload: unknown; sourceRefs: unknown }) => ({
-            ruleKey: clinicalRuleKey(rule.payload as never),
+          create: draft.rules.map(rule => ({
+            ruleKey: clinicalRuleKey(rule.payload),
             ruleVersion: `${draft.key}.v${draft.version}.e2e`,
-            payload: rule.payload,
-            sourceRefs: rule.sourceRefs,
+            payload: rule.payload as Prisma.InputJsonValue,
+            sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
           })),
         },
       },
@@ -101,9 +113,7 @@ async function main() {
   if (url.includes(PROD_PROJECT_REF)) {
     throw new Error("Refusing to seed E2E user: DATABASE_URL points at the production project.")
   }
-  const { PrismaClient } = await import("../src/generated/prisma/client")
-  const { PrismaPg } = await import("@prisma/adapter-pg")
-  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) } as ConstructorParameters<typeof PrismaClient>[0])
+  const prisma = await openPrisma(url)
   try {
     const passwordHash = await bcrypt.hash(E2E_PASSWORD, 10)
     const now = new Date()
