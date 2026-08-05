@@ -1,5 +1,14 @@
 # Changelog - LOSPOR API
 
+## [8.2.1] - 2026-08-05
+
+Requires `@lospor/core` v8.2.1.
+
+### Changed
+
+- Repinned to `@lospor/core` v8.2.1. No API behaviour changes: the fix is in
+  measurement display, which the API does not use.
+
 ## [8.2.0] - 2026-08-05
 
 Security and access-control fixes, and the dose calculation is brought under the
