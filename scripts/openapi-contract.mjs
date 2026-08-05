@@ -300,6 +300,16 @@ export const schemas = {
     requestedAt: { type: "string", format: "date-time" },
     resolvedAt: nullable({ type: "string", format: "date-time" }),
   }, ["id", "userId", "status"]),
+  InstitutionChangeRequest: object({
+    id: { type: "string" },
+    userId: { type: "string" },
+    requestedInstitutionId: { type: "string" },
+    previousInstitutionId: nullable({ type: "string" }),
+    status: { type: "string" },
+    requestedAt: { type: "string", format: "date-time" },
+    resolvedAt: nullable({ type: "string", format: "date-time" }),
+    resolvedById: nullable({ type: "string" }),
+  }, ["id", "userId", "requestedInstitutionId", "status"]),
   AuditLog: object({
     id: { type: "string" },
     userId: { type: "string" },
@@ -828,6 +838,10 @@ add("POST", "/v1/locale", "Set the browser locale", { requestBody: body(object({
 
 add("GET", "/v1/custom-terms", "Search institution custom terms", { parameters: [query("q", { type: "string" }), query("type", { type: "string" })], result: arrayOf("JsonObject") })
 add("POST", "/v1/custom-terms", "Create an institution custom term", { requestBody: body(object({ term: { type: "string" }, termType: { type: "string" } }, ["term", "termType"])), status: 201, result: ref("JsonObject") })
+// Choosing an institution at registration is self-service; moving afterwards
+// needs approval, so it goes through a request rather than PATCH /v1/user.
+add("GET", "/v1/user/institution-request", "Read the current institution-change request", { result: ref("InstitutionChangeRequest") })
+add("POST", "/v1/user/institution-request", "Request a move to another institution", { status: 201, requestBody: body(object({ institutionId: { type: "string" } }, ["institutionId"])), result: ref("InstitutionChangeRequest") })
 add("GET", "/v1/role-request", "Read the current role-elevation request", { result: ref("RoleRequest") })
 add("POST", "/v1/role-request", "Request department-head access", { status: 201, result: ref("RoleRequest") })
 
@@ -876,6 +890,11 @@ add("GET", "/v1/admin/users", "List users for administration", { parameters: [qu
 add("PATCH", "/v1/admin/users/{id}", "Update a user role or institution", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("User"), stability: "admin" })
 add("DELETE", "/v1/admin/users/{id}", "Delete a user account", { parameters: [id], result: ref("Message"), stability: "admin" })
 add("POST", "/v1/admin/users/{id}/approve", "Approve a registered user", { parameters: [id], result: ref("User"), stability: "admin" })
+// Joining a department is what lets its head see a clinician's cases, so an
+// administrator sees every request and a head of department sees only requests
+// to join their own institution.
+add("GET", "/v1/admin/institution-requests", "List pending institution-change requests", { result: arrayOf("InstitutionChangeRequest"), stability: "admin" })
+add("POST", "/v1/admin/institution-requests/{id}", "Approve or reject an institution change", { parameters: [id], requestBody: body(object({ decision: { type: "string", enum: ["APPROVE", "REJECT"] } }, ["decision"])), result: ref("InstitutionChangeRequest"), stability: "admin" })
 add("GET", "/v1/admin/role-requests", "List role-elevation requests", { result: arrayOf("RoleRequest"), stability: "admin" })
 add("PATCH", "/v1/admin/role-requests/{id}", "Approve or reject a role request", { parameters: [id], requestBody: body(object({ action: { type: "string", enum: ["approve", "reject"] } }, ["action"])), result: ref("RoleRequest"), stability: "admin" })
 add("GET", "/v1/admin/audit-logs", "List paged audit history", { parameters: [query("page", { type: "integer", minimum: 0 }), query("action", { type: "string" })], result: arrayOf("AuditLog"), stability: "admin" })

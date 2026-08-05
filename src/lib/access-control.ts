@@ -1,6 +1,6 @@
 import { Prisma, UserRole } from "@/generated/prisma/client"
 
-type AuthUser = {
+export type AuthUser = {
   id: string
   role?: string | null
   institutionId?: string | null
