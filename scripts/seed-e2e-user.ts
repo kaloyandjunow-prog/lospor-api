@@ -5,7 +5,14 @@
 // Usage: npx tsx scripts/seed-e2e-user.ts   (uses .env DATABASE_URL = dev DB)
 import "dotenv/config"
 import bcrypt from "bcryptjs"
-import { E2E_EMAIL, E2E_PASSWORD, E2E_RESEARCH_EMAIL } from "../e2e/credentials"
+import {
+  E2E_EMAIL, E2E_PASSWORD, E2E_RESEARCH_EMAIL,
+  E2E_HOD_A_EMAIL, E2E_MEMBER_A_EMAIL, E2E_HOD_B_EMAIL, E2E_MEMBER_B_EMAIL,
+  E2E_INSTITUTION_B,
+} from "../e2e/credentials"
+// Every account belongs to an institution; a researcher with no department
+// belongs to "Без институция" rather than to NULL.
+import { NO_INSTITUTION_ID } from "../src/lib/institutions"
 
 const PROD_PROJECT_REF = "yzqszvlvccyufrkbuhtv" // never seed E2E data here
 
@@ -42,13 +49,16 @@ async function main() {
       where: { email: researchEmail },
       update: {
         passwordHash, approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
-        acceptedPrivacyAt: now, role: "RESEARCHER", institutionId: null,
+        acceptedPrivacyAt: now, role: "RESEARCHER", institutionId: NO_INSTITUTION_ID,
       },
       create: {
         email: researchEmail, name: "E2E Aggregate Researcher", firstName: "Aggregate",
         lastName: "Researcher", title: "Dr", passwordHash, role: "RESEARCHER",
         approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
         acceptedPrivacyAt: now, termsVersion: "e2e",
+        // Omitting this left the column NULL, which the invariant no longer
+        // allows: every account belongs to an institution.
+        institutionId: NO_INSTITUTION_ID,
       },
     })
     await prisma.researchAccessGrant.deleteMany({ where: { userId: researcher.id } })
@@ -61,6 +71,59 @@ async function main() {
       canExportOmop: false,
     } })
     console.log(`E2E aggregate researcher ready: ${researcher.email} (id ${researcher.id})`)
+
+    // The cast. Institution, visibility and approval rules need more than one
+    // person and more than one institution before they mean anything: a head of
+    // department must have somebody to be head *of*, and "the other hospital's
+    // head cannot see this" needs an other hospital.
+    const instB = await prisma.institution.upsert({
+      where: { id: E2E_INSTITUTION_B },
+      update: {},
+      create: { id: E2E_INSTITUTION_B, name: "E2E Second Hospital", city: "Plovdiv" },
+    })
+
+    const cast = [
+      { email: E2E_HOD_A_EMAIL,    role: "HEAD_OF_DEPT", institutionId: inst.id,  first: "Hod",    last: "Alpha" },
+      { email: E2E_MEMBER_A_EMAIL, role: "MEMBER",       institutionId: inst.id,  first: "Member", last: "Alpha" },
+      { email: E2E_HOD_B_EMAIL,    role: "HEAD_OF_DEPT", institutionId: instB.id, first: "Hod",    last: "Beta"  },
+      { email: E2E_MEMBER_B_EMAIL, role: "MEMBER",       institutionId: instB.id, first: "Member", last: "Beta"  },
+    ] as const
+
+    const castIds: string[] = []
+    for (const person of cast) {
+      const email = person.email.trim().toLowerCase()
+      const seeded = await prisma.user.upsert({
+        where: { email },
+        // Reset role and institution on every run: a spec that moves somebody
+        // between institutions must not leave the next run starting elsewhere.
+        update: {
+          passwordHash, role: person.role, institutionId: person.institutionId,
+          approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now, acceptedPrivacyAt: now,
+        },
+        create: {
+          email, name: `${person.first} ${person.last}`,
+          firstName: person.first, lastName: person.last, title: "Dr",
+          passwordHash, role: person.role, institutionId: person.institutionId,
+          approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
+          acceptedPrivacyAt: now, termsVersion: "e2e",
+        },
+      })
+      // Likewise for anything a previous run left half-decided.
+      await prisma.institutionChangeRequest.deleteMany({ where: { userId: seeded.id } })
+      castIds.push(seeded.id)
+      console.log(`E2E ${person.role} ready: ${seeded.email} (${person.institutionId})`)
+    }
+
+    // Most specs delete what they create, but one cannot: a finalised case is
+    // undeletable by design, which is the point of finalising. Clearing the
+    // cast's cases here rather than leaving them to accumulate is safe because
+    // these four accounts exist only for Playwright — nobody records real work
+    // as hod-a-e2e. The administrator and researcher are deliberately left
+    // alone; those are also used for hand smoke-testing.
+    if (castIds.length) {
+      const { count } = await prisma.case.deleteMany({ where: { userId: { in: castIds } } })
+      if (count) console.log(`E2E cases cleared: ${count}`)
+    }
   } finally {
     await prisma.$disconnect()
   }

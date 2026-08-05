@@ -11,8 +11,14 @@
  * A fixed id rather than a lookup by name. The name is Bulgarian, it is
  * displayed, and display strings get edited; the id is what the rules key on
  * and it is seeded with an upsert so re-seeding cannot mint a second one.
+ *
+ * The id and the head-of-department rule live in @lospor/core because web and
+ * mobile need them too — the settings menus have to know not to offer "leave"
+ * to somebody already here. Re-exported rather than redefined so there is one
+ * copy of the string.
  */
-export const NO_INSTITUTION_ID = "no-institution"
+export { NO_INSTITUTION_ID, canHaveHeadOfDepartment } from "@lospor/core/account"
+import { NO_INSTITUTION_ID } from "@lospor/core/account"
 
 export const NO_INSTITUTION = {
   id: NO_INSTITUTION_ID,
@@ -21,15 +27,8 @@ export const NO_INSTITUTION = {
   country: "Bulgaria",
 } as const
 
-/**
- * Whether an institution can have a head of department.
- *
- * "Без институция" cannot. It is not a department: the people in it have no
- * shared workplace, so there is nobody with standing to see everyone's cases.
- * Granting it a head would hand one clinician sight of every unaffiliated
- * clinician's work in the whole register. Administrators still see everything,
- * which is the intended and auditable route.
- */
-export function canHaveHeadOfDepartment(institutionId: string | null | undefined): boolean {
-  return Boolean(institutionId) && institutionId !== NO_INSTITUTION_ID
-}
+// canHaveHeadOfDepartment is re-exported above. "Без институция" cannot have
+// one: it is not a department, the people in it share no workplace, and so
+// nobody has standing to see everyone's cases. Granting it a head would hand
+// one clinician sight of every unaffiliated clinician's work in the register.
+// Administrators still see everything, which is the intended, auditable route.

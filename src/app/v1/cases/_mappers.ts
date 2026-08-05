@@ -12,6 +12,7 @@ import {
   canonicalizePreopPatch,
 } from "@lospor/core/case-payloads"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
+import { aldreteTotal as coreAldreteTotal } from "@lospor/core/postop"
 import {
   calculateColds,
   calculatePovoc,
@@ -686,13 +687,23 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
   const aldreteCirculation = postop.aldreteCirculation ?? postop.circulationScore
   const aldreteConsciousness = postop.aldreteConsciousness ?? postop.consciousnessScore
   const aldreteSpO2 = postop.aldreteSpO2 ?? postop.spO2Score
+  // A total is only a total once all five components have been assessed.
+  //
+  // This used to sum whatever had arrived and count anything missing as 0, so a
+  // patient with one component scored — say activity 2, the rest not yet looked
+  // at — was recorded with an Aldrete of 2/10. That is not an incomplete score,
+  // it is a documented emergency. Core's aldreteTotal returns null until every
+  // component is present, which is the same rule the clients and the
+  // finalisation gate already use.
+  const computedTotal = coreAldreteTotal({
+    aldreteActivity:      toIntOrNull(aldreteActivity),
+    aldreteRespiration:   toIntOrNull(aldreteRespiration),
+    aldreteCirculation:   toIntOrNull(aldreteCirculation),
+    aldreteConsciousness: toIntOrNull(aldreteConsciousness),
+    aldreteSpO2:          toIntOrNull(aldreteSpO2),
+  })
   const aldreteTotal =
-    postop.aldreteTotal != null ? toIntOrNull(postop.aldreteTotal)
-    : aldreteActivity != null
-      ? [aldreteActivity, aldreteRespiration,
-         aldreteCirculation, aldreteConsciousness, aldreteSpO2]
-          .reduce((s: number, v: unknown) => s + (parseInt(String(v ?? 0), 10) || 0), 0)
-      : null
+    postop.aldreteTotal != null ? toIntOrNull(postop.aldreteTotal) : computedTotal
 
   return {
     aldreteActivity:      toIntOrNull(aldreteActivity),
