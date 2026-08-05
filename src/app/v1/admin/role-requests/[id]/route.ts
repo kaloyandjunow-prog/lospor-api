@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { canHaveHeadOfDepartment } from "@/lib/institutions"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
 import { prisma } from "@/lib/prisma"
@@ -27,6 +28,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!roleRequest) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   if (action === "approve") {
+    // See canHaveHeadOfDepartment: "Без институция" is not a department.
+    const target = await prisma.user.findUnique({
+      where:  { id: roleRequest.userId },
+      select: { institutionId: true },
+    })
+    if (!canHaveHeadOfDepartment(target?.institutionId)) {
+      return NextResponse.json(
+        { error: "This user's institution cannot have a head of department" },
+        { status: 422 },
+      )
+    }
+
     await prisma.user.update({
       where: { id: roleRequest.userId },
       data:  { role: "HEAD_OF_DEPT" },

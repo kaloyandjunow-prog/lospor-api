@@ -26,26 +26,35 @@ export function canAccessCase(user: AuthUser, record: CaseAccessRecord): boolean
   if (user.role === "ADMIN") return true
   if (record.userId === user.id) return true
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
-    return (record.institutionId ?? record.user?.institutionId) === user.institutionId
+    // The case's own institution, not the owner's. This used to fall back to
+    // `record.user.institutionId` when the case had none, which handed a head
+    // of department every unstamped case belonging to anyone who later joined
+    // them. It must stay identical to headOfDeptCaseScope, or a list and a
+    // detail view disagree about the same case.
+    return record.institutionId === user.institutionId
   }
   return false
 }
 
+/**
+ * Kept for its call sites; it no longer falls back to the owner.
+ *
+ * Looking the owner up was how an unstamped case reached a head of department:
+ * the answer depended on where its author happens to work *now*, so the same
+ * case changed hands when its author moved. Registration requires an
+ * institution and every case is stamped at creation, so there is nothing left
+ * that needs the lookup, and an unstamped historical case stays with the
+ * clinician who recorded it and with administrators.
+ *
+ * `db` is unused and retained so the call sites keep their transaction
+ * argument; it can go when they are next touched.
+ */
 export async function canAccessCaseWithOwnerFallback(
-  db: Pick<Prisma.TransactionClient, "user">,
+  _db: Pick<Prisma.TransactionClient, "user">,
   user: AuthUser,
   record: CaseAccessRecord,
 ): Promise<boolean> {
-  if (canAccessCase(user, record)) return true
-  if (user.role !== "HEAD_OF_DEPT" || !user.institutionId || record.institutionId != null) {
-    return false
-  }
-
-  const owner = await db.user.findUnique({
-    where: { id: record.userId },
-    select: { institutionId: true },
-  })
-  return owner?.institutionId === user.institutionId
+  return canAccessCase(user, record)
 }
 
 /**
@@ -67,12 +76,22 @@ export async function canAccessCaseWithOwnerFallback(
  * predicate will drift from it again.
  */
 export function headOfDeptCaseScope(institutionId: string): Prisma.CaseWhereInput {
-  return {
-    OR: [
-      { institutionId },
-      { institutionId: null, user: { institutionId } },
-    ],
-  }
+  // Cases stamped with this institution, and only those.
+  //
+  // There used to be a second clause matching cases with no institution owned
+  // by someone currently in this one. It was there because accounts could
+  // exist without an institution, and it quietly undid the rule it sat beside:
+  // a clinician who recorded cases while unaffiliated, then joined a
+  // department, handed that department's head every case they had ever
+  // recorded — work done elsewhere, before that hospital had anything to do
+  // with them.
+  //
+  // Registration now requires an institution and every case is stamped at
+  // creation, so nothing new lands unstamped. Cases still carrying no
+  // institution stay visible to the clinician who recorded them and to
+  // administrators, and to nobody else, which is the honest reading: they
+  // belong to no department.
+  return { institutionId }
 }
 
 export function caseWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereInput {

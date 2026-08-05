@@ -95,6 +95,9 @@ describe("account email auth flows", () => {
       title: "Dr",
       email: "doctor@example.com",
       password: "Strong1!",
+      // Registration requires an institution now; "Без институция" is the
+      // one for clinicians with no department.
+      institutionId: "no-institution",
       acceptedTerms: true,
     }))
 
@@ -132,6 +135,9 @@ describe("account email auth flows", () => {
       title: "Dr",
       email: "  Doctor@Example.COM ",
       password: "Strong1!",
+      // Registration requires an institution now; "Без институция" is the
+      // one for clinicians with no department.
+      institutionId: "no-institution",
       acceptedTerms: true,
     }))
 

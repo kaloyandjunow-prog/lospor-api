@@ -22,13 +22,13 @@ const HOSPITAL_A = "inst-a"
 const HOSPITAL_B = "inst-b"
 
 describe("headOfDeptCaseScope", () => {
-  it("matches on the case's own institution, and on the owner's only when unset", () => {
-    expect(headOfDeptCaseScope(HOSPITAL_A)).toEqual({
-      OR: [
-        { institutionId: HOSPITAL_A },
-        { institutionId: null, user: { institutionId: HOSPITAL_A } },
-      ],
-    })
+  it("matches on the case's own institution and nothing else", () => {
+    // The owner fallback is gone. It matched unstamped cases through whoever
+    // owned them, so a clinician who recorded cases while unaffiliated and
+    // then joined a department handed that department's head everything they
+    // had ever recorded. Registration now requires an institution and every
+    // case is stamped at creation, so there is nothing left for it to catch.
+    expect(headOfDeptCaseScope(HOSPITAL_A)).toEqual({ institutionId: HOSPITAL_A })
   })
 })
 
@@ -80,23 +80,30 @@ describe("a case does not follow its author to another hospital", () => {
   it("the query predicate agrees with the in-memory check", () => {
     // Both must encode the same rule, or a list and a detail view disagree
     // about the same case — which is how the two drifted apart originally.
-    const scopeA = headOfDeptCaseScope(HOSPITAL_A)
-    const matchesA = scopeA.OR?.some(clause =>
-      ("institutionId" in clause && clause.institutionId === caseAtA.institutionId)
-      || (clause.institutionId === null && caseAtA.institutionId === null))
-    expect(matchesA).toBe(true)
+    expect(headOfDeptCaseScope(HOSPITAL_A).institutionId).toBe(caseAtA.institutionId)
+    expect(canAccessCase(hod(HOSPITAL_A), caseAtA)).toBe(true)
 
-    const scopeB = headOfDeptCaseScope(HOSPITAL_B)
-    const matchesB = scopeB.OR?.some(clause =>
-      ("institutionId" in clause && clause.institutionId === caseAtA.institutionId)
-      || (clause.institutionId === null && caseAtA.institutionId === null))
-    expect(matchesB).toBe(false)
+    expect(headOfDeptCaseScope(HOSPITAL_B).institutionId).not.toBe(caseAtA.institutionId)
+    expect(canAccessCase(hod(HOSPITAL_B), caseAtA)).toBe(false)
   })
 })
 
+/**
+ * A case with no institution belongs to no department.
+ *
+ * It used to resolve through its owner's *current* institution, on the reasoning
+ * that this was the best available evidence of where it was performed. It is
+ * not evidence: it is wherever that clinician happens to work now. A clinician
+ * who recorded cases while unaffiliated and then joined a department handed
+ * that department's head everything they had ever recorded, and the same case
+ * changed hands again on every subsequent move.
+ *
+ * Registration now requires an institution — anyone without a department picks
+ * "Без институция" — and every case is stamped at creation, so no new case can
+ * land here. The ones that already exist stay with the clinician who recorded
+ * them, and with administrators.
+ */
 describe("historical cases recorded before the snapshot existed", () => {
-  // institutionId is null: fall back to the owner's current institution, which
-  // is the best available evidence for where the case was performed.
   const legacyCase = {
     id: "case-old",
     userId: "owner-1",
@@ -104,11 +111,19 @@ describe("historical cases recorded before the snapshot existed", () => {
     user: { institutionId: HOSPITAL_A },
   }
 
-  it("is visible to the owner's institution", () => {
-    expect(canAccessCase(hod(HOSPITAL_A), legacyCase)).toBe(true)
+  it("is not visible to the head of the institution its author now works in", () => {
+    expect(canAccessCase(hod(HOSPITAL_A), legacyCase)).toBe(false)
   })
 
-  it("is not visible to an unrelated institution", () => {
+  it("is not visible to an unrelated institution either", () => {
     expect(canAccessCase(hod(HOSPITAL_B), legacyCase)).toBe(false)
+  })
+
+  it("stays visible to the clinician who recorded it", () => {
+    expect(canAccessCase({ id: "owner-1", role: "MEMBER" }, legacyCase)).toBe(true)
+  })
+
+  it("stays visible to an administrator", () => {
+    expect(canAccessCase({ id: "someone", role: "ADMIN" }, legacyCase)).toBe(true)
   })
 })

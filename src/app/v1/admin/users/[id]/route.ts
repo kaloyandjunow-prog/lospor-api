@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { canHaveHeadOfDepartment } from "@/lib/institutions"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
 import { prisma } from "@/lib/prisma"
@@ -25,6 +26,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params
   const body   = await req.json()
   const data   = schema.parse(body)
+
+  // "Без институция" is not a department, so it has no head. Its members share
+  // no workplace, and a head there would see every unaffiliated clinician's
+  // cases across the whole register.
+  if (data.role === "HEAD_OF_DEPT") {
+    const target = await prisma.user.findUnique({
+      where:  { id },
+      select: { institutionId: true },
+    })
+    if (!canHaveHeadOfDepartment(target?.institutionId)) {
+      return NextResponse.json(
+        { error: "This user's institution cannot have a head of department" },
+        { status: 422 },
+      )
+    }
+  }
 
   const updated = await prisma.user.update({
     where: { id },
