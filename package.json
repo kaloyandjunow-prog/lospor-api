@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
     "verify:boundaries": "node scripts/check-shared-core-boundaries.mjs",
     "openapi:generate": "node scripts/generate-openapi.mjs",
     "prebuild": "npm run openapi:generate",
