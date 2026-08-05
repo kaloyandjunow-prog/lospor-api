@@ -149,6 +149,43 @@ describe("scopeGuardIssues", () => {
       baseline: platformPropofol,
     })).toEqual([])
   })
+
+  /**
+   * Real rules carry a unit as an object, not the "MG" string the fixtures
+   * above use, and every save round-trips the payload through JSON and zod —
+   * which rewrites object keys into schema order. The guard compared units by
+   * reference and by raw JSON text, so an untouched unit came back looking
+   * changed and *every* departmental edit was refused, narrowing included.
+   * Found end to end; these pin it at the unit level.
+   */
+  const objectUnit = {
+    amount: "ML", display: "mL", ucumCode: "mL", bodyBasis: "NONE", timeBasis: "NONE",
+  }
+  const reorderedUnit = {
+    amount: "ML", bodyBasis: "NONE", timeBasis: "NONE", display: "mL", ucumCode: "mL",
+  }
+  const withUnit = (unit: unknown, routeUnits: unknown) => variant(draft => {
+    draft.unit = unit
+    draft.routeUnits = routeUnits
+  })
+
+  it("treats an object unit as unchanged when only its key order differs", () => {
+    expect(scopeGuardIssues({
+      scope: "INSTITUTION",
+      next: withUnit(reorderedUnit, { IV: reorderedUnit }),
+      baseline: withUnit(objectUnit, { IV: objectUnit }),
+    })).toEqual([])
+  })
+
+  it("still catches an object unit whose meaning has changed", () => {
+    const changed = { ...objectUnit, amount: "MG", display: "mg", ucumCode: "mg" }
+    const issues = scopeGuardIssues({
+      scope: "INSTITUTION",
+      next: withUnit(changed, { IV: changed }),
+      baseline: withUnit(objectUnit, { IV: objectUnit }),
+    })
+    expect(issues.map(issue => issue.field)).toContain("unit")
+  })
 })
 
 /**

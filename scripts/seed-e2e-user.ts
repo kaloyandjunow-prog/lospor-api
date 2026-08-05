@@ -124,6 +124,27 @@ async function main() {
       const { count } = await prisma.case.deleteMany({ where: { userId: { in: castIds } } })
       if (count) console.log(`E2E cases cleared: ${count}`)
     }
+
+    // Same reason, different table: there is no delete-ruleset action, so the
+    // scope-guard spec creates a departmental copy per run under an "e2e_" key
+    // and leaves it. Anything with that prefix is a test artefact.
+    const rulesets = await prisma.clinicalPreset.deleteMany({
+      where: { key: { startsWith: "e2e_" } },
+    })
+    if (rulesets.count) console.log(`E2E rulesets cleared: ${rulesets.count}`)
+
+    // Sign-in is rate limited per email — 10 attempts in 15 minutes — and every
+    // suite run signs each of these accounts in once. Iterating on a spec
+    // therefore used to end in a locked-out login page that looked like a
+    // broken login rather than the limiter doing its job. Clearing the counters
+    // for the test accounts is safe: they are keyed by email, and these emails
+    // belong to nobody.
+    const limitKeys = [
+      email, researchEmail,
+      ...cast.map(person => person.email.trim().toLowerCase()),
+    ].map(address => `login:${address}`)
+    const limits = await prisma.rateLimit.deleteMany({ where: { key: { in: limitKeys } } })
+    if (limits.count) console.log(`E2E login rate limits cleared: ${limits.count}`)
   } finally {
     await prisma.$disconnect()
   }
