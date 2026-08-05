@@ -117,9 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   if (!mistralRes.ok) {
-    clearTimeout(timeoutHandle)
-    const errText = await mistralRes.text().catch(() => "")
-    console.error("[cases/ai/advise] Mistral error:", mistralRes.status, errText)
+    clearTimeout(timeoutHandle)    console.error("[cases/ai/advise] Mistral error:", mistralRes.status)  // body withheld: provider errors can echo the clinical payload
     if (mistralRes.status === 429) {
       return NextResponse.json(
         { error: "AI service is busy — please try again in a moment" },
@@ -159,7 +157,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               const text = json.choices?.[0]?.delta?.content
               if (text) controller.enqueue(encoder.encode(text))
             } catch (err) {
-              console.error("[cases/ai/advise] Malformed stream chunk:", line, err)
+              console.error("[cases/ai/advise] Malformed stream chunk:", err instanceof Error ? err.name : "parse error")  // chunk withheld: may contain model output
             }
           }
         }

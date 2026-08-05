@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { convertLabValue, isConfidentConversion } from "@lospor/core/lab-unit-conversion"
 import { LAB_LIBRARY } from "@/lib/labs"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { fetchMistralChatCompletions } from "@/lib/mistral"
@@ -28,57 +29,24 @@ INSTRUCTIONS:
    - "Глюкоза" -> Glucose
 3. Use the EXACT name string from the library including all parentheses, subscripts, and special characters.
 4. DISCARD any result that does not match a library entry. Do not guess and do not use the printed name.
-5. Convert the numeric value to the canonical unit shown in the library if the report uses a different unit:
-   - Haemoglobin (Hb): g/dL x 10 -> g/L, e.g. 13.5 g/dL -> 135 g/L
-   - Haematocrit (Hct): decimal ratio x 100 -> %, e.g. 0.42 -> 42
-   - MCHC: g/dL x 10 -> g/L, e.g. 34 g/dL -> 340 g/L
-   - Creatinine: mg/dL x 88.4 -> μmol/L
-   - Glucose: mg/dL / 18.0 -> mmol/L
-   - Urea (BUN): BUN mg/dL / 2.8 -> mmol/L
-   - Total bilirubin / Direct bilirubin: mg/dL x 17.1 -> μmol/L
-   - CRP: mg/dL x 10 -> mg/L
-   - Calcium (Ca²⁺): mg/dL x 0.25 -> mmol/L
+5. DO NOT CONVERT ANYTHING. Report the number and the unit exactly as they are
+   printed on the report. Unit conversion is performed afterwards by the server,
+   which needs the original unit to do it correctly. If you convert, the value
+   will be converted a second time and the stored result will be wrong.
+   - If the report prints "1.0 mg/dL", return value "1.0" and unit "mg/dL".
+   - If the report prints "88 μmol/L", return value "88" and unit "μmol/L".
+   - Copy the unit even when it looks unusual. Never substitute the library unit.
 6. Return ONLY a valid JSON array. Each element: { "test": string, "value": string, "unit": string }.
    - "test" must be an exact name from the library.
-   - "unit" must be the canonical unit from the library.
-   - "value" is the converted numeric value as a string.
+   - "value" is the number exactly as printed, as a string.
+   - "unit" is the unit exactly as printed. If no unit is printed, return "".
 7. No markdown, no explanation. If no matching results are found, return [].`
 
-function normaliseValue(name: string, raw: string): string {
-  const n = parseFloat(raw.replace(",", "."))
-  if (!isFinite(n)) return raw
-  switch (name) {
-    case "Haemoglobin (Hb)":
-      if (n >= 5 && n <= 25) return String(Math.round(n * 10))
-      break
-    case "Haematocrit (Hct)":
-      if (n > 0 && n < 1) return String(Math.round(n * 100 * 10) / 10)
-      break
-    case "Creatinine":
-      if (n >= 0.3 && n <= 15) return String(Math.round(n * 88.4))
-      break
-    case "Glucose":
-      if (n >= 50) return String(Math.round(n / 18.0 * 10) / 10)
-      break
-    case "Urea (BUN)":
-      if (n >= 5 && n <= 200) return String(Math.round(n / 2.8 * 10) / 10)
-      break
-    case "Total bilirubin":
-    case "Direct bilirubin":
-      if (n >= 0.1 && n <= 30) return String(Math.round(n * 17.1 * 10) / 10)
-      break
-    case "CRP":
-      if (n >= 0.01 && n <= 30) return String(Math.round(n * 10 * 10) / 10)
-      break
-    case "Calcium (Ca²⁺)":
-      if (n >= 5 && n <= 15) return String(Math.round(n * 0.25 * 100) / 100)
-      break
-    case "MCHC":
-      if (n >= 20 && n <= 40) return String(Math.round(n * 10))
-      break
-  }
-  return raw
-}
+// Unit conversion lives in @lospor/core/lab-unit-conversion and is driven by the
+// unit printed on the report. The heuristic that used to live here inferred the
+// source unit from the magnitude of the number, which cannot work: canonical and
+// conventional ranges overlap. A neonate's normal creatinine of 10 µmol/L was
+// read as 10 mg/dL and stored as 884 µmol/L.
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -152,31 +120,52 @@ export async function POST(req: NextRequest) {
     clearTimeout(timeout)
   }
 
-  if (!mistralRes.ok) {
-    const errText = await mistralRes.text().catch(() => "")
-    console.error("[ai/read-labs] Mistral error:", mistralRes.status, errText)
+  if (!mistralRes.ok) {    console.error("[ai/read-labs] Mistral error:", mistralRes.status)  // body withheld: provider errors can echo the clinical payload
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 
   const json = await mistralRes.json()
   const content: string = json.choices?.[0]?.message?.content ?? ""
 
-  let results: { test: string; value: string; unit: string }[] = []
+  let results: {
+    test: string
+    value: string
+    unit: string
+    /** As printed on the report, so the reviewer can check the conversion. */
+    sourceValue: string
+    sourceUnit: string
+    conversionStatus: string
+    /** False when the unit was unrecognised — such rows are not pre-selected. */
+    confident: boolean
+  }[] = []
   try {
     const clean = content.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "").trim()
     const parsed = JSON.parse(clean)
     if (Array.isArray(parsed)) {
       results = (parsed as unknown[])
-        .filter((row): row is { test: string; value: string } =>
+        .filter((row): row is { test: string; value: string; unit?: string } =>
           !!row &&
           typeof row === "object" &&
           typeof (row as Record<string, unknown>).test === "string" &&
           typeof (row as Record<string, unknown>).value === "string")
         .filter(row => LIBRARY_MAP.has(row.test))
         .map(row => {
+          // Convert once, from the unit the report actually printed. The source
+          // value and unit are kept so the review screen can show them beside
+          // the converted result, and so nothing is ever silently rewritten.
+          const conversion = convertLabValue(row.test, String(row.value), String(row.unit ?? ""))
           const canonicalUnit = LIBRARY_MAP.get(row.test)!
-          const normalisedValue = normaliseValue(row.test, String(row.value))
-          return { test: String(row.test), value: normalisedValue, unit: canonicalUnit }
+          const converted = conversion.status === "converted" || conversion.status === "already-canonical"
+          return {
+            test: String(row.test),
+            value: converted ? String(conversion.value) : String(row.value),
+            unit: converted ? conversion.unit : canonicalUnit,
+            sourceValue: String(row.value),
+            sourceUnit: String(row.unit ?? ""),
+            conversionStatus: conversion.status,
+            // Only rows converted with a known unit are safe to offer ticked.
+            confident: isConfidentConversion(conversion),
+          }
         })
     }
   } catch {

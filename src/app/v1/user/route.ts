@@ -62,8 +62,16 @@ const preferencesPatchSchema = z.object({
   autoFillBg: z.boolean().optional(),
 }).passthrough()
 
+/**
+ * Institution is deliberately not self-editable.
+ *
+ * Departmental visibility is built on it: a head of department sees the cases of
+ * their institution. While any authenticated user could change their own
+ * institutionId, they could move themselves into another hospital's department
+ * at will, and the boundary meant nothing. Membership is set at registration and
+ * changed by an administrator.
+ */
 const patchSchema = z.object({
-  institutionId: z.union([z.string().cuid(), z.literal(""), z.null()]).optional(),
   preferences: preferencesPatchSchema.optional(),
 })
 
@@ -93,7 +101,7 @@ export async function PATCH(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(body.institutionId !== undefined ? { institutionId: body.institutionId === "" ? null : body.institutionId } : {}),
+        // institutionId is intentionally absent: see patchSchema above.
         ...(nextPreferences ? { preferences: nextPreferences as Prisma.InputJsonValue } : {}),
       },
       select: {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { PEDIATRIC_PRODUCTION_READY } from "@lospor/core/pediatric"
 import {
   decidePediatricCaseMutation,
   decidePediatricWrite,
@@ -8,16 +9,37 @@ import {
 
 describe("pediatric API gate", () => {
   it("enables development but requires clinical readiness and an explicit production flag", () => {
+    // Production needs BOTH: the reviewed clinical manifest (productionReady)
+    // and the deployment flag. Each is passed explicitly here rather than
+    // relying on the shipped PEDIATRIC_PRODUCTION_READY constant, so these cases
+    // pin the gate's logic and do not have to be rewritten every time the
+    // clinical sign-off changes.
     expect(isPediatricModeEnabled({ NODE_ENV: "development" })).toBe(true)
-    expect(isPediatricModeEnabled({ NODE_ENV: "production" })).toBe(false)
+    expect(isPediatricModeEnabled({ NODE_ENV: "production" }, true)).toBe(false)
+
+    // Clinically reviewed, but not switched on in this deployment.
+    expect(isPediatricModeEnabled({
+      NODE_ENV: "production",
+      PEDIATRIC_MODE_ENABLED: "false",
+    }, true)).toBe(false)
+
+    // Switched on, but the manifest has not been signed off.
     expect(isPediatricModeEnabled({
       NODE_ENV: "production",
       PEDIATRIC_MODE_ENABLED: "true",
-    })).toBe(false)
+    }, false)).toBe(false)
+
+    // Both.
     expect(isPediatricModeEnabled({
       NODE_ENV: "production",
       PEDIATRIC_MODE_ENABLED: "true",
     }, true)).toBe(true)
+  })
+
+  it("ships with the clinical manifest signed off", () => {
+    // Separate from the logic above: this records the current clinical
+    // decision, so flipping it back is a deliberate, visible change.
+    expect(PEDIATRIC_PRODUCTION_READY).toBe(true)
   })
 
   it("rejects pediatric mutations from an old client", () => {
@@ -76,7 +98,7 @@ describe("pediatric API gate", () => {
     })).toMatchObject({
       allowed: true,
       clinicalMode: "PEDIATRIC",
-      clinicalRulesVersion: "2026.07.29-draft.1",
+      clinicalRulesVersion: "2026.08.04-release.1",
     })
   })
 
@@ -90,7 +112,7 @@ describe("pediatric API gate", () => {
     })).toMatchObject({
       allowed: true,
       clinicalMode: "PEDIATRIC",
-      clinicalRulesVersion: "2026.07.29-draft.1",
+      clinicalRulesVersion: "2026.08.04-release.1",
     })
   })
 })

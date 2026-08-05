@@ -246,7 +246,7 @@ describe("account email auth flows", () => {
     })
     expect(mocks.userUpdate).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: "user-1" },
-      data: { emailVerifiedAt: expect.any(Date), approvedAt: expect.any(Date) },
+      data: { emailVerifiedAt: expect.any(Date) },
     }))
   })
 })

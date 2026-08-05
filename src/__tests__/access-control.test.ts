@@ -13,7 +13,16 @@ describe("access control helpers", () => {
   it("scopes head of department access to their institution only when present", () => {
     const user = { id: "hod-1", role: "HEAD_OF_DEPT", institutionId: "inst-1" }
 
-    expect(caseWhereForUser(user)).toEqual({ user: { institutionId: "inst-1" } })
+    // Scopes by the case's own institution snapshot, falling back to the
+    // owner's only for historical rows that predate the snapshot. It used to
+    // scope solely by the owner's current institution, which let a case follow
+    // its author to a different hospital.
+    expect(caseWhereForUser(user)).toEqual({
+      OR: [
+        { institutionId: "inst-1" },
+        { institutionId: null, user: { institutionId: "inst-1" } },
+      ],
+    })
     expect(canAccessCase(user, { userId: "other", user: { institutionId: "inst-1" } })).toBe(true)
     expect(canAccessCase(user, { userId: "other", user: { institutionId: "inst-2" } })).toBe(false)
     expect(canAccessCase(user, { userId: "other", institutionId: "inst-1" })).toBe(true)

@@ -1,4 +1,57 @@
-# Rolling back from v8.0.0
+# Rolling back
+
+## v8.2.0 — 2026-08-05
+
+**Rollback is Vercel Instant Rollback. There is no database step at all.**
+
+v8.2.0 changes no schema: `git diff v8.0.0..v8.2.0 -- prisma/` is empty, no new
+migrations, `schema.prisma` untouched. A v8.0.0 deployment and a v8.2.0
+deployment run against exactly the same database, so promoting the previous
+deployment is complete and instant.
+
+### Order
+
+Roll back **api first, then app** — the app calls the api, never the reverse.
+Deploying v8.0.0 the wrong way round put app v8 live against api v7.3.0 for 104
+seconds.
+
+1. Vercel → `lospor-api` → Deployments → the deployment before v8.2.0 →
+   **Instant Rollback** / Promote to Production.
+2. Confirm `https://api.lospor.org/health` reports the older version.
+3. Same for `lospor-app`.
+
+### What rolling back turns off
+
+Pediatric mode. It is gated on two independent switches:
+
+    pediatricModeEnabled = PEDIATRIC_PRODUCTION_READY && PEDIATRIC_MODE_ENABLED === "true"
+
+`PEDIATRIC_MODE_ENABLED` is a Vercel environment variable and is set.
+`PEDIATRIC_PRODUCTION_READY` comes from `@lospor/core` and is `true` only from
+v8.1.0 onward; v8.0.0 has it `false`. So rolling the api back to v8.0.0 turns
+pediatric mode off without touching the environment variable.
+
+Pediatric cases already recorded are **not** destroyed by that — they remain in
+the database with `clinicalMode = PEDIATRIC`. They simply stop being editable as
+pediatric cases until the api is rolled forward again. Structural safety is not
+semantic safety.
+
+### What rolling back re-opens
+
+These are the defects v8.2.0 fixed. Rolling back restores them, which is the
+cost of the rollback and worth stating plainly:
+
+- CORS and CSRF fail open in production.
+- Research and OMOP CSV exports are formula-injectable.
+- A case is visible to a head of department who has since changed hospitals.
+- An unapproved account can sign in, and verifying your own email approves you.
+- Preop and postop forms pre-fill observations that were never taken.
+- Paediatric quick-dose buttons offer an adult's dose to a neonate.
+- The authoring scope guard does not cover the dose arithmetic.
+
+---
+
+## v8.0.0 — 2026-08-04 (kept for history)
 
 Written 2026-08-04, before v8.0.0 was deployed. Read the whole file before
 acting: the fastest correct move depends on whether pediatric cases have been
