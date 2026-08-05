@@ -1,5 +1,72 @@
 # Changelog - LOSPOR API
 
+## [8.3.0] - 2026-08-05
+
+Requires `@lospor/core` v8.3.0.
+
+### Added
+
+- **Changing institution is a request that somebody decides.**
+  `POST /v1/user/institution-request` files one; `GET /v1/admin/institution-requests`
+  is the queue; `POST /v1/admin/institution-requests/{id}` approves or rejects.
+  The queue is scoped to the institution being *joined*, not the one being left —
+  approving is what lets a head of department see the newcomer's cases, so it is
+  the receiving department that decides. A head of a different institution gets
+  404 rather than 403, so they learn nothing about requests that are not theirs.
+- **Leaving applies at once.** A move to `no-institution` needs nobody's
+  approval: it grants no one anything, and requiring the hospital's permission to
+  stop working there would trap people in a department they have left. Recorded
+  as a self-resolved request and audited as `INSTITUTION_CHANGE_SELF_LEAVE`.
+- `scripts/bootstrap-admin.ts` (`npm run bootstrap:admin`) — sets role,
+  approval and email verification together, and refuses if an administrator
+  already exists.
+
+### Fixed
+
+- **A departmental drug-profile edit could not be saved at all.** The authoring
+  scope guard compared canonical units with `!==` and route units as raw JSON
+  text. Units are objects, so the first compared references and the second
+  compared key *order* — which zod rewrites on every save. An untouched unit
+  therefore always looked changed, and an institution or personal ruleset was
+  refused with "canonical units are fixed by the platform ruleset" whether it
+  was widening a dose or narrowing one. Both now compare by a key-sorted
+  canonical form.
+- **A partial Aldrete score was summed with the missing components counted as
+  zero.** One component recorded as 2 was stored as a total of 2/10 — a patient
+  documented as apnoeic and unresponsive. `mapPostop` now uses core's rule: no
+  total until all five are assessed.
+- **A fresh installation could not sign anyone in.** Sign-in required
+  `approvedAt`, which only an administrator could set, and there was no
+  administrator. Approval is no longer a sign-in gate; email verification is.
+- **Finalisation checked that a preoperative record existed, and nothing more.**
+  A draft with only an id could be finalised through the API while every client
+  refused to. It now validates the record and returns every blocker in
+  `blockers[]` rather than only the first.
+- **A case no longer follows its author between hospitals.** The
+  head-of-department scope carried an owner fallback, so moving a clinician
+  handed their entire history to the new department's head. A head now matches
+  on institution alone, in the query and in both in-memory access checks.
+
+### Changed
+
+- **Registration requires `institutionId`.** Every account belongs to an
+  institution; "Без институция" (`no-institution`) is the answer when none of the
+  listed hospitals fit. Breaking for any client that omits the field.
+- Granting head of department is refused with 422 for an institution that cannot
+  have one.
+
+### Database
+
+Three migrations, applied automatically by the production build:
+
+- `20260805120000_institution_change_request` — the request table.
+- `20260805140000_no_institution_backfill` — creates "Без институция" and moves
+  users with no institution into it.
+- `20260805160000_no_institution_case_backfill` — the same for cases, so the
+  column stops carrying two ways of saying the same thing. Visibility is
+  unchanged: that institution has no head of department, so those cases stay
+  with their author and with administrators exactly as they did.
+
 ## [8.2.1] - 2026-08-05
 
 Requires `@lospor/core` v8.2.1.
