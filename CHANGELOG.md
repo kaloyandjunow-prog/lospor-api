@@ -1,5 +1,24 @@
 # Changelog - LOSPOR API
 
+## [8.4.0] - 2026-08-06
+
+### Changed
+
+- `/v1/search/icd10` and `/v1/search/procedures` now rank through
+  `@lospor/core/search` instead of keeping their own copies, so the offline
+  vocabulary bundled into the mobile app returns identical results rather than
+  similar ones.
+- ICD-10 queries order by code explicitly. Without an `ORDER BY`, Postgres could
+  return any rows it liked for a `take`, which made the result set
+  unreproducible — and left no way to show that the offline copy agreed with it.
+
+### Added
+
+- `scripts/generate-vocabulary.mts` generates the offline vocabulary into
+  `@lospor/core/vocabulary`, and `scripts/verify-vocabulary-parity.mts` checks a
+  corpus of queries against the live database. Current result: 60/60 identical
+  for ICD-10 across both languages, 20/20 identical procedure group lists.
+
 ## [8.3.2] - 2026-08-06
 
 ### Fixed
