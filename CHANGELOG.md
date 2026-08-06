@@ -1,5 +1,16 @@
 # Changelog - LOSPOR API
 
+## [8.3.2] - 2026-08-06
+
+### Fixed
+
+- A laboratory value the extractor could not convert is no longer labelled with
+  the canonical unit. The value is still in whatever unit the report printed, so
+  pairing it with the canonical one put a haematocrit of `0.41` on screen as
+  `0.41 %` — a number and a unit that do not belong together, in an editable
+  field a clinician would reasonably read as already reconciled. Unconverted
+  rows now carry the source unit, or none when the report printed none.
+
 ## [8.3.1] - 2026-08-05
 
 Requires `@lospor/core` v8.3.0.
