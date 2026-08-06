@@ -154,12 +154,16 @@ export async function POST(req: NextRequest) {
           // value and unit are kept so the review screen can show them beside
           // the converted result, and so nothing is ever silently rewritten.
           const conversion = convertLabValue(row.test, String(row.value), String(row.unit ?? ""))
-          const canonicalUnit = LIBRARY_MAP.get(row.test)!
           const converted = conversion.status === "converted" || conversion.status === "already-canonical"
           return {
             test: String(row.test),
             value: converted ? String(conversion.value) : String(row.value),
-            unit: converted ? conversion.unit : canonicalUnit,
+            // An unconverted value is still in whatever unit the report printed,
+            // so it must not be labelled with the canonical one. Doing that put a
+            // haematocrit of 0.41 on screen as "0.41 %" — a number and a unit that
+            // do not belong together, in an editable field the clinician would
+            // reasonably take as already reconciled.
+            unit: converted ? conversion.unit : String(row.unit ?? ""),
             sourceValue: String(row.value),
             sourceUnit: String(row.unit ?? ""),
             conversionStatus: conversion.status,
