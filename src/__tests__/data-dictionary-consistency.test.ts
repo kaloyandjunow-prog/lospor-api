@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { CLINICAL_NUMBER_RULES } from "@lospor/core/clinical-validation"
 import { DATA_DICTIONARY, DICTIONARY_VERSION, type DictionaryEntry } from "@/lib/data-dictionary"
 import { mapCasesToOmop } from "@/lib/omop-mapper"
 import { completeCaseFixture } from "./fixtures/complete-case"
@@ -32,6 +33,40 @@ function parseExportName(entry: DictionaryEntry): {
   // The namespace may itself contain an underscore, as POSTOP_LOINC does.
   const concept = /\(([A-Z_]+:[A-Za-z0-9_-]+)\)/.exec(entry.exportName)?.[1] ?? null
   return { table: table ?? "", column: column ?? "", concept }
+}
+
+/**
+ * The two columns an OMOP observation or measurement can carry a value in.
+ * Which of the two a variable lands in is not cosmetic: a score written as
+ * text cannot be averaged, thresholded or plotted without being cast back,
+ * and a researcher who reads "value_as_number" in the dictionary and finds
+ * NULL in the column concludes the value was never recorded.
+ */
+const VALUE_COLUMNS = new Set(["value_as_number", "value_as_string"])
+const NUMERIC_TYPES = new Set(["integer", "float"])
+
+/** Which set of validation rules an entry's source table is governed by. */
+const SECTION_BY_SOURCE_TABLE: Record<string, "preop" | "intraop" | "postop"> = {
+  PreoperativeRecord: "preop",
+  IntraoperativeRecord: "intraop",
+  PostoperativeRecord: "postop",
+}
+
+/** Every column an export row can name its variable in. */
+const SOURCE_VALUE_COLUMNS = [
+  "observation_source_value",
+  "measurement_source_value",
+  "procedure_source_value",
+]
+
+function tableRows(table: string): Array<Record<string, unknown>> {
+  const rows = (bundle as unknown as Record<string, unknown>)[table]
+  return Array.isArray(rows) ? rows as Array<Record<string, unknown>> : []
+}
+
+function rowsForConcept(table: string, concept: string): Array<Record<string, unknown>> {
+  return tableRows(table).filter(row =>
+    SOURCE_VALUE_COLUMNS.some(key => row[key] === concept))
 }
 
 // Both fixtures, because an adult case emits none of the paediatric scores:
@@ -161,5 +196,105 @@ describe("every variable the export emits is documented", () => {
       .map(([code, table]) => `${table}: ${code}`)
 
     expect(undocumented.sort(), "emitted with no dictionary entry").toEqual([])
+  })
+})
+
+/**
+ * The checks above compare table names and concept codes. Everything between
+ * them — which column the value lands in, and whether it lands there as a
+ * number or as text — was parsed out of the export name and then thrown away,
+ * and that is exactly where the dictionary was wrong: twenty-six entries
+ * declared observation.value_as_number against an OBSERVATION row that had no
+ * such column, so every score in the export was documented as a number and
+ * shipped as a string in a column that did not exist.
+ *
+ * These assert the full tuple the dictionary promises: table, column, the
+ * source value the row is found under, and the type of the value in it.
+ */
+describe("the dictionary names the column the value is actually written to", () => {
+  it("names a column the emitted rows actually have", () => {
+    const wrong: string[] = []
+    for (const entry of DATA_DICTIONARY) {
+      const { table, column } = parseExportName(entry)
+      if (!table || !column) continue
+      const rows = tableRows(table)
+      if (rows.length === 0) {
+        // Not a documentation fault, but it means this entry is unchecked, so
+        // it is reported rather than quietly skipped.
+        wrong.push(`${entry.name}: ${table} is empty in the fixtures, so ${column} is unverifiable`)
+        continue
+      }
+      if (!(column in rows[0])) wrong.push(`${entry.name} → ${table}.${column}`)
+    }
+
+    expect(wrong.sort(), "documented under a column the emitted row does not have").toEqual([])
+  })
+
+  it("writes the value into the documented column, in the documented form", () => {
+    // Only concepts the fixtures actually produce can be checked here. The
+    // reverse direction — every documented concept appearing in an export — is
+    // a question about fixture coverage rather than about the contract, and a
+    // fixture gap would surface here as a documentation fault it is not.
+    const emitted = new Set([...emittedVariables()].map(([code]) => code))
+    const wrong: string[] = []
+
+    for (const entry of DATA_DICTIONARY) {
+      const { table, column, concept } = parseExportName(entry)
+      if (!concept || !VALUE_COLUMNS.has(column)) continue
+      if (!emitted.has(concept)) continue
+
+      const rows = rowsForConcept(table, concept)
+      if (rows.length === 0) {
+        wrong.push(`${entry.name}: ${concept} is emitted, but not into ${table}`)
+        continue
+      }
+      const expectedType = column === "value_as_number" ? "number" : "string"
+      if (!rows.some(row => typeof row[column] === expectedType)) {
+        const got = rows.map(row => row[column] === null ? "null" : typeof row[column]).join(", ")
+        wrong.push(`${entry.name}: ${table}.${column} holds ${got}, not ${expectedType}`)
+      }
+    }
+
+    expect(wrong.sort(), "documented column is empty or holds the wrong form").toEqual([])
+  })
+
+  it("states the range the app actually enforces", () => {
+    // allowedValues is what a researcher screens on: a value outside it reads
+    // as corrupt data. Written by hand it drifts towards what feels plausible
+    // rather than what the app accepts, and the two versions of the height
+    // range disagreed by exactly the population paediatric mode exists for —
+    // the dictionary said 50-250 cm while the validator has always taken
+    // 20-280, so every neonate on file sat outside its own documented range.
+    // The rules in @lospor/core are the ones enforced at entry, so they are
+    // the answer rather than a second opinion.
+    const disagreeing: string[] = []
+    for (const entry of DATA_DICTIONARY) {
+      const section = SECTION_BY_SOURCE_TABLE[entry.sourceTable]
+      if (!section || !NUMERIC_TYPES.has(entry.type)) continue
+      const rule = CLINICAL_NUMBER_RULES[section][entry.sourceColumn]
+      if (!rule) continue
+      const enforced = `${rule.min}–${rule.max}`
+      if (entry.allowedValues !== enforced) {
+        disagreeing.push(`${entry.name}: documents ${entry.allowedValues ?? "no range"}, enforces ${enforced}`)
+      }
+    }
+
+    expect(disagreeing.sort(), "documented range is not the validated one").toEqual([])
+  })
+
+  it("declares a value type that agrees with the column it names", () => {
+    // A variable documented as an integer or a float has to be in
+    // value_as_number, and one documented as a string, enum, boolean or JSON
+    // blob has to be in value_as_string. The two statements are the same fact
+    // written twice, and when they disagree one of them is wrong.
+    const contradictory = DATA_DICTIONARY
+      .filter(entry => VALUE_COLUMNS.has(parseExportName(entry).column))
+      .filter(entry => {
+        const numericColumn = parseExportName(entry).column === "value_as_number"
+        return numericColumn !== NUMERIC_TYPES.has(entry.type)
+      })
+      .map(entry => `${entry.name}: ${entry.type} in ${parseExportName(entry).column}`)
+
+    expect(contradictory.sort(), "declared type and declared column disagree").toEqual([])
   })
 })

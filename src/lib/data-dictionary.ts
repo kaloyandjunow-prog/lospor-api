@@ -1,7 +1,20 @@
+// 4.1.0 points the entries at columns that exist. Twenty-six entries declared
+// observation.value_as_number, a column the export did not have until
+// source_version 3.7.0 added it; five more named a column by a name the export
+// has never used (visit_start_datetime, visit_end_datetime, route_concept_id,
+// and the anaesthesia techniques, which are procedure rows rather than
+// observations). Every numeric allowed range is now the one the validator in
+// @lospor/core enforces, rather than the narrower range that felt plausible
+// when the entry was written: the dictionary said height 50-250 cm and weight
+// 1-300 kg while the app has always accepted 20-280 and 0.1-700, so every
+// neonate on file sat outside its own documented range and would have read as
+// a data-quality problem. A test holds the two together from now on. Nothing
+// has been exported under 4.0.0, so no dataset needs migrating.
+//
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.0.0"
+export const DICTIONARY_VERSION = "4.1.0"
 
 export interface DictionaryEntry {
   name: string
@@ -40,21 +53,23 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.0.0",
   },
   {
-    name: "visit_start_datetime",
-    exportName: "visit_occurrence.visit_start_datetime",
-    meaning: "Anaesthesia/procedure start time",
+    name: "visit_start_date",
+    exportName: "visit_occurrence.visit_start_date",
+    meaning: "Day of the anaesthetic. A date, not an instant — the exact start time is not exported at visit level, only on the individual intraoperative events",
     type: "datetime",
-    missingnessRule: "NULL when intraop.startTime not recorded",
-    sourceTable: "IntraoperativeRecord", sourceColumn: "startTime",
+    missingnessRule: "NULL only if the case carries no usable date at all; a case with no recorded start falls back to the day it was created",
+    derivationRule: "intraop.startedAt, else the legacy startTime when it carries a real date, else case.createdAt. The legacy wall-clock columns sit on a dummy 2000-01-01 date and are never exported as the day of surgery",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "startedAt / startTime",
     versionIntroduced: "3.0.0",
   },
   {
-    name: "visit_end_datetime",
-    exportName: "visit_occurrence.visit_end_datetime",
-    meaning: "Anaesthesia/procedure end time",
+    name: "visit_end_date",
+    exportName: "visit_occurrence.visit_end_date",
+    meaning: "Day the anaesthetic ended, which for an overnight case is not the day it started",
     type: "datetime",
-    missingnessRule: "NULL when intraop.endTime not recorded",
-    sourceTable: "IntraoperativeRecord", sourceColumn: "endTime",
+    missingnessRule: "NULL only if the case carries no usable date at all",
+    derivationRule: "intraop.endedAt, else the legacy endTime when it carries a real date, else the start date",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "endedAt / endTime",
     versionIntroduced: "3.0.0",
   },
   // ── Preop demographics ────────────────────────────────────────────────────────
@@ -64,7 +79,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Patient age at time of anaesthesia, in whole years",
     unit: "years",
     type: "integer",
-    allowedValues: "0–120",
+    allowedValues: "0–149",
     missingnessRule: "NULL = not recorded by clinician",
     sourceTable: "PreoperativeRecord", sourceColumn: "ageYears",
     versionIntroduced: "3.0.0",
@@ -85,7 +100,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Patient height",
     unit: "cm",
     type: "float",
-    allowedValues: "50–250",
+    // The range the app actually enforces (clinical-validation in @lospor/core).
+    // The dictionary previously said 50–250, which excludes every neonate the
+    // paediatric mode exists to record: a researcher would have read a real
+    // 34 cm preterm height as out-of-range noise.
+    allowedValues: "20–280",
     missingnessRule: "NULL = not recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "heightCm",
     versionIntroduced: "3.0.0",
@@ -96,7 +115,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Patient weight",
     unit: "kg",
     type: "float",
-    allowedValues: "1–300",
+    // As enforced by clinical-validation in @lospor/core. The lower bound
+    // matters: a 0.6 kg preterm infant is a real weight and every dose on that
+    // chart was calculated from it.
+    allowedValues: "0.1–700",
     missingnessRule: "NULL = not recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "weightKg",
     versionIntroduced: "3.0.0",
@@ -107,7 +129,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Preoperative systolic blood pressure",
     unit: "mmHg",
     type: "integer",
-    allowedValues: "40–300",
+    allowedValues: "10–300",
     missingnessRule: "NULL = not recorded or marked unobtainable",
     sourceTable: "PreoperativeRecord", sourceColumn: "bpSystolic",
     versionIntroduced: "3.0.0",
@@ -118,7 +140,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Preoperative diastolic blood pressure",
     unit: "mmHg",
     type: "integer",
-    allowedValues: "20–200",
+    allowedValues: "5–200",
     missingnessRule: "NULL = not recorded or marked unobtainable",
     sourceTable: "PreoperativeRecord", sourceColumn: "bpDiastolic",
     versionIntroduced: "3.0.0",
@@ -129,7 +151,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Preoperative heart rate",
     unit: "bpm",
     type: "integer",
-    allowedValues: "20–300",
+    allowedValues: "10–350",
     missingnessRule: "NULL = not recorded or marked unobtainable",
     sourceTable: "PreoperativeRecord", sourceColumn: "heartRate",
     versionIntroduced: "3.0.0",
@@ -140,7 +162,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Preoperative peripheral oxygen saturation",
     unit: "%",
     type: "integer",
-    allowedValues: "50–100",
+    allowedValues: "0–100",
     missingnessRule: "NULL = not recorded or marked unobtainable",
     sourceTable: "PreoperativeRecord", sourceColumn: "spO2",
     versionIntroduced: "3.0.0",
@@ -151,7 +173,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Preoperative body temperature",
     unit: "°C",
     type: "float",
-    allowedValues: "30–43",
+    allowedValues: "25–45",
     missingnessRule: "NULL = not recorded or marked unobtainable",
     sourceTable: "PreoperativeRecord", sourceColumn: "temperature",
     versionIntroduced: "3.0.0",
@@ -162,7 +184,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Preoperative respiratory rate",
     unit: "breaths/min",
     type: "integer",
-    allowedValues: "4–60",
+    allowedValues: "0–150",
     missingnessRule: "NULL = not recorded or marked unobtainable",
     sourceTable: "PreoperativeRecord", sourceColumn: "respiratoryRate",
     versionIntroduced: "3.0.0",
@@ -255,6 +277,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Total anaesthesia duration",
     unit: "minutes",
     type: "float",
+    allowedValues: "0–1440",
     missingnessRule: "NULL = start or end time not recorded",
     derivationRule: "Derived from intraop.startTime and intraop.endTime if both present, else stored value",
     sourceTable: "IntraoperativeRecord", sourceColumn: "durationMinutes",
@@ -262,10 +285,15 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "techniques",
-    exportName: "observation.value_as_string (LOSPOR:ANAESTHESIA_TECHNIQUE)",
-    meaning: "Anaesthesia techniques used (multi-select)",
-    type: "json",
-    missingnessRule: "Empty array = no technique recorded",
+    // One procedure row per technique, not one observation carrying a list.
+    // The dictionary named an observation code that has never been emitted, so
+    // a researcher filtering observations for LOSPOR:ANAESTHESIA_TECHNIQUE got
+    // nothing back and would have read that as "no technique recorded".
+    exportName: "procedure_occurrence.procedure_source_value",
+    meaning: "Anaesthesia techniques used (multi-select), one procedure row per technique, each source value prefixed ANAESTHESIA_TECHNIQUE:",
+    type: "string",
+    allowedValues: "ANAESTHESIA_TECHNIQUE:<technique>",
+    missingnessRule: "No row = no technique recorded",
     sourceTable: "IntraoperativeRecord", sourceColumn: "techniques",
     versionIntroduced: "3.0.0",
   },
@@ -284,6 +312,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Total crystalloid fluid administered intraoperatively",
     unit: "mL",
     type: "integer",
+    allowedValues: "0–50000",
     missingnessRule: "NULL = not recorded",
     sourceTable: "IntraoperativeRecord", sourceColumn: "crystalloidsMl",
     versionIntroduced: "3.0.0",
@@ -294,6 +323,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Total colloid fluid administered intraoperatively",
     unit: "mL",
     type: "integer",
+    allowedValues: "0–20000",
     missingnessRule: "NULL = not recorded",
     sourceTable: "IntraoperativeRecord", sourceColumn: "colloidsMl",
     versionIntroduced: "3.0.0",
@@ -304,6 +334,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Total blood products administered intraoperatively",
     unit: "mL",
     type: "integer",
+    allowedValues: "0–20000",
     missingnessRule: "NULL = not recorded",
     sourceTable: "IntraoperativeRecord", sourceColumn: "bloodMl",
     versionIntroduced: "3.0.0",
@@ -314,6 +345,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Urine output during the procedure",
     unit: "mL",
     type: "integer",
+    allowedValues: "0–20000",
     missingnessRule: "NULL = not measured",
     sourceTable: "IntraoperativeRecord", sourceColumn: "urineMl",
     versionIntroduced: "3.0.0",
@@ -443,8 +475,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.drugRoute",
-    exportName: "drug_exposure.route_concept_id",
-    meaning: "Administration route",
+    // Carried as the source value: LOSPOR has no reviewed mapping to the OMOP
+    // route vocabulary, and route_concept_id is not emitted at all.
+    exportName: "drug_exposure.route_source_value",
+    meaning: "Administration route, as recorded",
     type: "string",
     missingnessRule: "NULL = not recorded",
     sourceTable: "CaseEvent", sourceColumn: "drugRoute",
@@ -452,8 +486,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.concentrationValue",
-    exportName: "observation.value_as_string (LOSPOR:DRUG_CONCENTRATION)",
-    meaning: "Numeric concentration selected when the drug was administered",
+    exportName: "observation.value_as_number (LOSPOR:DRUG_CONCENTRATION)",
+    meaning: "Numeric concentration selected when the drug was administered. The same row's value_as_string carries the canonical rendering with its unit, such as \"0.5%\"",
     type: "float",
     missingnessRule: "NULL = legacy event, no concentration required, or not recorded",
     sourceTable: "CaseEvent", sourceColumn: "concentrationValue",
@@ -545,7 +579,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.clinicalPresetVersion",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_PRESET_VERSION)",
+    exportName: "observation.value_as_number (LOSPOR:CLINICAL_PRESET_VERSION)",
     meaning: "Version number of the effective ruleset snapshot",
     type: "integer",
     missingnessRule: "NULL = manual or legacy event",
@@ -640,8 +674,9 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Temperature at PACU exit",
     unit: "Cel",
     type: "float",
+    allowedValues: "25–45",
     missingnessRule: "NULL = not measured",
-    sourceTable: "PostoperativeRecord", sourceColumn: "recoveryTemperature",
+    sourceTable: "PostoperativeRecord", sourceColumn: "temperatureCelsius",
     versionIntroduced: "4.0.0",
   },
   {
@@ -874,6 +909,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Systolic BP at PACU exit",
     unit: "mmHg",
     type: "integer",
+    allowedValues: "10–300",
     missingnessRule: "NULL = not measured",
     sourceTable: "PostoperativeRecord", sourceColumn: "recoveryBpSystolic",
     versionIntroduced: "3.0.0",
@@ -884,6 +920,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Diastolic BP at PACU exit",
     unit: "mmHg",
     type: "integer",
+    allowedValues: "5–200",
     missingnessRule: "NULL = not measured",
     sourceTable: "PostoperativeRecord", sourceColumn: "recoveryBpDiastolic",
     versionIntroduced: "3.0.0",
@@ -894,6 +931,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Heart rate at PACU exit",
     unit: "bpm",
     type: "integer",
+    allowedValues: "10–350",
     missingnessRule: "NULL = not measured",
     sourceTable: "PostoperativeRecord", sourceColumn: "recoveryHeartRate",
     versionIntroduced: "3.0.0",
@@ -904,6 +942,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "SpO2 at PACU exit",
     unit: "%",
     type: "integer",
+    allowedValues: "0–100",
     missingnessRule: "NULL = not measured",
     sourceTable: "PostoperativeRecord", sourceColumn: "recoverySpO2",
     versionIntroduced: "3.0.0",
