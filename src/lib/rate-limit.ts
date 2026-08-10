@@ -1,6 +1,43 @@
 import { RATE_LIMIT_WINDOW_MS } from "@/lib/constants"
 import { prisma } from "@/lib/prisma"
 
+// The production Supabase project. Mirrors the guard in scripts/seed-e2e-user.ts:
+// whatever else is misconfigured, nothing that points here gets test behaviour.
+const PROD_PROJECT_REF = "yzqszvlvccyufrkbuhtv"
+
+/**
+ * Whether rate limiting is switched off for an automated test run.
+ *
+ * The end-to-end suite authenticates six accounts and signs in again in several
+ * specs, all from one address, against a limit of ten per fifteen minutes. It
+ * therefore exhausts a limit it imposed on itself, and the failure appears as a
+ * login page that never navigates — which reads like a broken application.
+ *
+ * Turning a brute-force control off is not something to do casually, so the
+ * opt-in is deliberately hard to reach by accident. It requires an explicit
+ * variable, and is then refused outright in any of the three situations that
+ * could mean "this is not a test": a production build, a Vercel deployment of
+ * any kind, or a connection string pointing at the production project. The
+ * appliance runs NODE_ENV=production, so it can never take effect there either.
+ *
+ * When it is active it says so on every start, because a security control that
+ * is off silently is worse than one that is on.
+ */
+let announced = false
+
+export function rateLimitingDisabledForTests(): boolean {
+  if (process.env.LOSPOR_DISABLE_RATE_LIMIT !== "true") return false
+  if (process.env.NODE_ENV === "production") return false
+  if (process.env.VERCEL_ENV) return false
+  if ((process.env.DATABASE_URL ?? "").includes(PROD_PROJECT_REF)) return false
+
+  if (!announced) {
+    announced = true
+    console.warn("[rate-limit] DISABLED for testing — LOSPOR_DISABLE_RATE_LIMIT is set")
+  }
+  return true
+}
+
 // DB-backed, serverless-safe rate limiter. The previous in-memory Map reset per
 // lambda instance, so limits were effectively unenforced in production. This uses
 // a single atomic upsert (INSERT … ON CONFLICT … RETURNING) so concurrent requests
@@ -13,6 +50,8 @@ export async function rateLimit(
   limit: number,
   windowMs: number = RATE_LIMIT_WINDOW_MS,
 ): Promise<{ allowed: boolean; retryAfter: number }> {
+  if (rateLimitingDisabledForTests()) return { allowed: true, retryAfter: 0 }
+
   const now = new Date()
   const threshold = new Date(now.getTime() - windowMs)
 
