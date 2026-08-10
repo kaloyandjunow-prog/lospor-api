@@ -19,7 +19,7 @@ describe("mapCasesToOmop", () => {
       generated_by_user_id: "admin-1",
       generated_by_role: "ADMIN",
       source: "LOSPOR",
-      source_version: "3.6.0",
+      source_version: "3.7.0",
       included_case_count: 1,
       excluded_case_count: 2,
       app_git_commit: "abc123",
@@ -108,14 +108,44 @@ describe("mapCasesToOmop", () => {
         value_as_number: 120,
       }),
     ]))
+    // A textual observation carries no number: an ASA class is "I", not 1, and
+    // writing it as 1 would make it addable to something.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:ASA_CLASS", value_as_string: "I" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION", value_as_string: "PONV; treated" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:DISPOSITION", value_as_string: "WARD" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ASA_CLASS", value_as_string: "I", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION", value_as_string: "PONV; treated", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DISPOSITION", value_as_string: "WARD", value_as_number: null }),
     ]))
+    // Every score, on the other hand, has to arrive as a number. Until 3.7.0
+    // these were strings in a column the OBSERVATION row did not have, so a
+    // researcher could not average an Aldrete total or threshold an RCRI
+    // without casting the whole column back from text.
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:RCRI", value_as_number: 0, value_as_string: "0" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:APFEL", value_as_number: 1 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:STOP_BANG", value_as_number: 1 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:AGE_YEARS", value_as_number: 14 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_TOTAL", value_as_number: 10 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_ACTIVITY", value_as_number: 2 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CRYSTALLOIDS_ML", value_as_number: 500 }),
+      // A zero total is a recorded zero, not a missing value: it has to survive
+      // as 0 rather than being dropped as falsy.
+      expect.objectContaining({ observation_source_value: "LOSPOR:COLLOIDS_ML", value_as_number: 0, value_as_string: "0" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ANAESTHESIA_DURATION_MIN", value_as_number: 60 }),
+      expect.objectContaining({ observation_source_value: "LOINC:72514-3", value_as_number: 2 }),
+    ]))
+    // A boolean is a fact, not a quantity: "true" in value_as_number would be
+    // indistinguishable from a score of 1.
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:EMERGENCY_SURGERY", value_as_string: "false", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DIFFICULT_AIRWAY_HISTORY", value_as_string: "true", value_as_number: null }),
+    ]))
+    // The NRS pain score used to be emitted under concept 3020891 — body
+    // temperature, copied from the vital map — which would have put a pain
+    // score of 2 into any OHDSI temperature query.
+    expect(bundle.observation.find(row => row.observation_source_value === "LOINC:72514-3")?.observation_concept_id).toBe(0)
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
       expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 2 }),
@@ -152,7 +182,7 @@ describe("mapCasesToOmop", () => {
       forcedOverride: false,
     })
 
-    expect(bundle.metadata.source_version).toBe("3.6.0")
+    expect(bundle.metadata.source_version).toBe("3.7.0")
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
       visit_start_date: "2026-07-21",
       visit_end_date: "2026-07-21",
@@ -189,14 +219,16 @@ describe("mapCasesToOmop", () => {
     const bundle = mapCasesToOmop([completeCase({ events }) as never])
 
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_CONCENTRATION", value_as_string: "0.5%" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_CONCENTRATION", value_as_string: "0.5%", value_as_number: 0.5 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_FORMULATION", value_as_string: "HYPERBARIC" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_BASIS", value_as_string: "IBW" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_METHOD", value_as_string: "MCLAREN_CDC_2000" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_KEY", value_as_string: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_VERSION", value_as_string: "rules.v2.7" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_ID", value_as_string: "user-preset" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_VERSION", value_as_string: "7" }),
+      // Both columns: the text is the canonical rendering a clinician would
+      // recognise, the number is the one a query can use.
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_VERSION", value_as_string: "7", value_as_number: 7 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_SCOPE", value_as_string: "USER" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_SOURCE_IDS", value_as_string: "user-preset|institution-preset|platform-preset" }),
     ]))
