@@ -719,11 +719,18 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       }
       sourceObservation("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS", preop.ageApproxDays, vitDate)
       sourceObservation("LOSPOR:BODY_SURFACE_AREA_M2", preop.bodySurfaceAreaM2, vitDate)
+      // Age is also folded into person.year_of_birth, but most analyses want it
+      // directly rather than deriving it from a date.
+      sourceObservation("LOSPOR:AGE_YEARS", preop.ageYears, vitDate)
+      // Emergency also appears as the conventional "E" suffix on the ASA class
+      // below; this is the same fact as a value a cohort can be filtered on.
+      sourceObservation("LOSPOR:EMERGENCY_SURGERY", preop.emergencySurgery, vitDate)
+      sourceObservation("LOSPOR:HIGH_RISK_SURGERY", preop.highRiskSurgery, vitDate)
       sourceObservation("LOSPOR:POVOC_SCORE", preop.povocScore, vitDate)
       sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocRiskPercent, vitDate)
       sourceObservation("LOSPOR:COLDS_SCORE", preop.coldsScore, vitDate)
       sourceObservation(
-        "PEDIATRIC_FASTING_ASSESSMENT",
+        "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT",
         preop.pediatricFasting == null ? null : JSON.stringify(preop.pediatricFasting),
         vitDate,
       )
@@ -918,6 +925,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     }
 
     if (c.intraop) {
+      sourceObservation("LOSPOR:ANAESTHESIA_DURATION_MIN", c.intraop.durationMinutes)
+      sourceObservation("LOSPOR:AIRWAY_DEVICE", c.intraop.airwayDevice)
       const techs: string[] = Array.isArray(c.intraop.techniques) ? c.intraop.techniques as string[] : []
       for (const tech of techs) {
         procedures.push({
@@ -963,6 +972,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               visit_occurrence_id:       visitId,
             })
           }
+        }
+        if (ev.type === "agent_start" && ev.agentPercent != null) {
+          sourceObservation("LOSPOR:VOLATILE_AGENT_PERCENT", ev.agentPercent, isoDate(ev.timestamp))
         }
         if (ev.type === "gas_start" || ev.type === "gas_change") {
           const gasValues: [string, number | null | undefined, string][] = [

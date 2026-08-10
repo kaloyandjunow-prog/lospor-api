@@ -36,7 +36,7 @@ describe("mapCasesToOmop", () => {
       drug_exposure: 3,
       measurement: 26,
       procedure_occurrence: 3,
-      observation: 23,
+      observation: 28,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 

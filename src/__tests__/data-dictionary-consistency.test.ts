@@ -28,7 +28,8 @@ function parseExportName(entry: DictionaryEntry): {
   concept: string | null
 } {
   const [, table, column] = /^([a-z_]+)\.([a-zA-Z_]+)/.exec(entry.exportName) ?? []
-  const concept = /\(([A-Z]+:[A-Za-z0-9_-]+)\)/.exec(entry.exportName)?.[1] ?? null
+  // The namespace may itself contain an underscore, as POSTOP_LOINC does.
+  const concept = /\(([A-Z_]+:[A-Za-z0-9_-]+)\)/.exec(entry.exportName)?.[1] ?? null
   return { table: table ?? "", column: column ?? "", concept }
 }
 
@@ -104,23 +105,55 @@ describe("the dictionary describes the export it ships with", () => {
   })
 })
 
-/**
- * A concept-by-concept comparison is deliberately NOT asserted here.
- *
- * Writing it surfaced three disagreements between the dictionary and the
- * export that are real and none of them mine to resolve silently:
- *
- *  - height (LOINC:8302-2) and weight (LOINC:29463-7) are documented as
- *    measurements, and a case carrying both produces no measurement row for
- *    either;
- *  - several variables are documented under a LOINC or LOSPOR code and emitted
- *    under a different string — ASA, RCRI, Apfel, STOP-BANG, Mallampati,
- *    carrier gas, FiO2, pain score;
- *  - PACU vitals are emitted with a POSTOP_ prefix where the dictionary marks
- *    the same concept with a [PACU] suffix.
- *
- * Any of those could be fixed in the dictionary or in the mapper, and the
- * choice changes a published contract that datasets have already been
- * generated against. Asserting either side would freeze a decision nobody has
- * made. The structural checks above hold regardless of how it is settled.
- */
+/** Analytes the fixture happens to result; open-ended in real data. */
+const LAB_ANALYTE_CODES = new Set(["LOINC:2345-7", "LOINC:718-7"])
+
+const VALUE_NAMESPACES = [
+  "ATC:", "ICD10:", "LAB:", "LOSPOR_PROCEDURE:",
+  "ANAESTHESIA_TECHNIQUE:", "VASCULAR_ACCESS:",
+]
+
+function emittedVariables(): Map<string, string> {
+  const found = new Map<string, string>()
+  for (const [table, rows] of Object.entries(bundle)) {
+    if (!Array.isArray(rows)) continue
+    for (const row of rows as Array<Record<string, unknown>>) {
+      for (const key of ["observation_source_value", "measurement_source_value"]) {
+        const value = row[key]
+        if (typeof value !== "string") continue
+        if (VALUE_NAMESPACES.some(ns => value.startsWith(ns))) continue
+        // Which lab analytes appear depends on what was ordered, so a LOINC
+        // code carried by a lab row is a value rather than a documented
+        // column -- the dictionary covers them with one generic lab entry.
+        // The LOINC codes that ARE columns (vitals, FiO2, pain score) are
+        // documented individually and still checked below.
+        if (LAB_ANALYTE_CODES.has(value)) continue
+        found.set(value, table)
+      }
+    }
+  }
+  return found
+}
+
+describe("every variable the export emits is documented", () => {
+  /**
+   * This is the assertion the whole file exists for: a variable appearing in
+   * an export with no dictionary entry is a column a researcher cannot
+   * interpret, and one appearing under a different name than the dictionary
+   * gives is worse — they filter for it, get nothing, and read that as "not
+   * recorded" rather than "named differently".
+   *
+   * Both were true of this export until 4.0.0. Holding it now costs nothing;
+   * the alternative is noticing in someone's results.
+   */
+  it("names every emitted variable, under the name the export uses", () => {
+    const documented = new Set(
+      DATA_DICTIONARY.map(entry => parseExportName(entry).concept).filter(Boolean),
+    )
+    const undocumented = [...emittedVariables()]
+      .filter(([code]) => !documented.has(code))
+      .map(([code, table]) => `${table}: ${code}`)
+
+    expect(undocumented.sort(), "emitted with no dictionary entry").toEqual([])
+  })
+})
