@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { DATA_DICTIONARY, DICTIONARY_VERSION, type DictionaryEntry } from "@/lib/data-dictionary"
 import { mapCasesToOmop } from "@/lib/omop-mapper"
 import { completeCaseFixture } from "./fixtures/complete-case"
+import { pediatricCaseFixture } from "./fixtures/pediatric-case"
 
 /**
  * The data dictionary is the published definition of a research export: what
@@ -33,7 +34,12 @@ function parseExportName(entry: DictionaryEntry): {
   return { table: table ?? "", column: column ?? "", concept }
 }
 
-const bundle = mapCasesToOmop([completeCaseFixture() as never], {
+// Both fixtures, because an adult case emits none of the paediatric scores:
+// a check run against one alone would pass while every POVOC, COLDS, PAED and
+// pain-scale variable went undocumented. A fixture gap and a documentation gap
+// are indistinguishable from inside the test, so the fixture has to be as wide
+// as the export.
+const bundle = mapCasesToOmop([completeCaseFixture() as never, pediatricCaseFixture() as never], {
   exportId: "export-dictionary-check",
   userId: "user-1",
   userRole: "RESEARCHER",
