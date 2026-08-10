@@ -593,7 +593,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = this subscore was not recorded",
     sourceTable: "PostoperativeRecord", sourceColumn: "aldreteActivity",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "aldreteRespiration",
     exportName: "observation.value_as_number (LOSPOR:ALDRETE_RESPIRATION)",
@@ -603,7 +603,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = this subscore was not recorded",
     sourceTable: "PostoperativeRecord", sourceColumn: "aldreteRespiration",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "aldreteCirculation",
     exportName: "observation.value_as_number (LOSPOR:ALDRETE_CIRCULATION)",
@@ -613,7 +613,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = this subscore was not recorded",
     sourceTable: "PostoperativeRecord", sourceColumn: "aldreteCirculation",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "aldreteConsciousness",
     exportName: "observation.value_as_number (LOSPOR:ALDRETE_CONSCIOUSNESS)",
@@ -623,7 +623,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = this subscore was not recorded",
     sourceTable: "PostoperativeRecord", sourceColumn: "aldreteConsciousness",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "aldreteSpO2",
     exportName: "observation.value_as_number (LOSPOR:ALDRETE_SPO2)",
@@ -643,7 +643,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not measured",
     sourceTable: "PostoperativeRecord", sourceColumn: "recoveryTemperature",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "postop.complication",
     exportName: "observation.value_as_string (LOSPOR:POSTOP_COMPLICATION)",
@@ -663,7 +663,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not recorded for this gas setting",
     sourceTable: "CaseEvent", sourceColumn: "fiAirPercent",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "event.fiN2OPercent",
     exportName: "measurement.value_as_number (LOSPOR:FIN2O_PERCENT)",
@@ -674,7 +674,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not recorded for this gas setting",
     sourceTable: "CaseEvent", sourceColumn: "fiN2OPercent",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "monitoring",
     exportName: "observation.value_as_string (LOSPOR:INTRAOP_MONITORING)",
@@ -693,7 +693,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "Always present; defaults to ADULT",
     sourceTable: "Case", sourceColumn: "clinicalMode",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "premedication",
     exportName: "observation.value_as_string (LOSPOR:PREMEDICATION_PHASE)",
@@ -702,7 +702,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = no premedication recorded for that phase",
     sourceTable: "IntraoperativeRecord", sourceColumn: "premedicationEvening / premedicationMorning",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "lab.result",
     exportName: "measurement.value_as_number (LOINC:<code>, or LAB:<test name> where unmapped)",
@@ -722,7 +722,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = an exact age with a unit was not recorded; ageYears may still be present",
     sourceTable: "PreoperativeRecord", sourceColumn: "ageValue / ageUnit",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "ageApproxDays",
     exportName: "observation.value_as_number (LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS)",
@@ -733,7 +733,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     derivationRule: "Months are converted at 30.436875 days and years at 365.2425, so a value is approximate by design",
     sourceTable: "PreoperativeRecord", sourceColumn: "ageApproxDays",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "bodySurfaceAreaM2",
     exportName: "observation.value_as_number (LOSPOR:BODY_SURFACE_AREA_M2)",
@@ -745,7 +745,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     derivationRule: "Mosteller formula from height and weight",
     sourceTable: "PreoperativeRecord", sourceColumn: "bodySurfaceAreaM2",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "povocScore",
     exportName: "observation.value_as_number (LOSPOR:POVOC_SCORE)",
@@ -755,7 +755,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = not scored for this case",
     sourceTable: "PreoperativeRecord", sourceColumn: "povocScore",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "povocRiskPercent",
     exportName: "observation.value_as_number (LOSPOR:POVOC_RISK_PERCENT)",
@@ -767,7 +767,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     derivationRule: "Derived from povocScore; it is a prediction, not an observed outcome",
     sourceTable: "PreoperativeRecord", sourceColumn: "povocRiskPercent",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "coldsScore",
     exportName: "observation.value_as_number (LOSPOR:COLDS_SCORE)",
@@ -777,7 +777,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = not scored; a child with no respiratory infection is not scored rather than scored zero",
     sourceTable: "PreoperativeRecord", sourceColumn: "coldsScore",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "paedScore",
     exportName: "observation.value_as_number (LOSPOR:PAED_SCORE)",
@@ -787,7 +787,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = not scored in recovery",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedScore",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "pediatricPainScore.FLACC",
     exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_PAIN_FLACC_0_10)",
@@ -820,7 +820,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     derivationRule: "The scale is part of the code because a score of 4 is not the same finding on an observed scale as on a self-reported one; the three are not interchangeable",
     sourceTable: "PostoperativeRecord", sourceColumn: "pediatricPainScore",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "pediatricFasting",
     exportName: "observation.value_as_string (LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
@@ -829,7 +829,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = no fasting assessment was recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "pediatricFasting",
     versionIntroduced: "4.0.0",
-  },
+  },
   {
     name: "clinicalRulesVersion",
     exportName: "observation.value_as_string (LOSPOR:CLINICAL_RULES_VERSION)",
