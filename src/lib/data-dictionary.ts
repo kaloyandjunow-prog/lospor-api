@@ -1,4 +1,7 @@
-export const DICTIONARY_VERSION = "3.5.0"
+// 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
+// weight, which were documented but never exported. Nothing had been exported
+// under 3.x, so no dataset needs migrating.
+export const DICTIONARY_VERSION = "4.0.0"
 
 export interface DictionaryEntry {
   name: string
@@ -378,7 +381,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.fgfLitersPerMin",
-    exportName: "observation.value_as_number (LOSPOR:FGF_L_PER_MIN)",
+    exportName: "measurement.value_as_number (LOSPOR:FGF_L_PER_MIN)",
     meaning: "Fresh gas flow rate",
     unit: "L/min",
     type: "float",
@@ -389,7 +392,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.fio2Percent",
-    exportName: "observation.value_as_number (LOINC:3150-0)",
+    exportName: "measurement.value_as_number (LOINC:3150-0)",
     meaning: "Fraction of inspired oxygen",
     unit: "%",
     type: "float",
@@ -612,7 +615,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "recoveryBpSystolic",
-    exportName: "measurement.value_as_number (LOINC:8480-6) [PACU]",
+    exportName: "measurement.value_as_number (POSTOP_LOINC:8480-6)",
     meaning: "Systolic BP at PACU exit",
     unit: "mmHg",
     type: "integer",
@@ -622,7 +625,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "recoveryBpDiastolic",
-    exportName: "measurement.value_as_number (LOINC:8462-4) [PACU]",
+    exportName: "measurement.value_as_number (POSTOP_LOINC:8462-4)",
     meaning: "Diastolic BP at PACU exit",
     unit: "mmHg",
     type: "integer",
@@ -632,7 +635,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "recoveryHeartRate",
-    exportName: "measurement.value_as_number (LOINC:8867-4) [PACU]",
+    exportName: "measurement.value_as_number (POSTOP_LOINC:8867-4)",
     meaning: "Heart rate at PACU exit",
     unit: "bpm",
     type: "integer",
@@ -642,7 +645,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "recoverySpO2",
-    exportName: "measurement.value_as_number (LOINC:59408-5) [PACU]",
+    exportName: "measurement.value_as_number (POSTOP_LOINC:59408-5)",
     meaning: "SpO2 at PACU exit",
     unit: "%",
     type: "integer",

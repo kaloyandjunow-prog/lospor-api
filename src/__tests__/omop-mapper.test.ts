@@ -34,7 +34,7 @@ describe("mapCasesToOmop", () => {
       visit_occurrence: 1,
       condition_occurrence: 2,
       drug_exposure: 3,
-      measurement: 24,
+      measurement: 26,
       procedure_occurrence: 3,
       observation: 23,
     })
@@ -100,7 +100,7 @@ describe("mapCasesToOmop", () => {
         measurement_datetime: "2026-06-01T08:15:00.000Z",
       }),
       expect.objectContaining({
-        measurement_source_value: "INTRAOP_FIO2_PERCENT",
+        measurement_source_value: "LOINC:3150-0",
         value_as_number: 50,
       }),
       expect.objectContaining({
@@ -109,12 +109,12 @@ describe("mapCasesToOmop", () => {
       }),
     ]))
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "ASA_PHYSICAL_STATUS", value_as_string: "I" }),
-      expect.objectContaining({ observation_source_value: "INTRAOP_CARRIER_GAS", value_as_string: "AIR/O2" }),
-      expect.objectContaining({ observation_source_value: "PREMEDICATION_PHASE", value_as_string: "evening" }),
-      expect.objectContaining({ observation_source_value: "INTRAOP_MONITORING", value_as_string: "ecg" }),
-      expect.objectContaining({ observation_source_value: "POSTOP_COMPLICATION", value_as_string: "PONV; treated" }),
-      expect.objectContaining({ observation_source_value: "POSTOP_DISPOSITION", value_as_string: "WARD" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ASA_CLASS", value_as_string: "I" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION", value_as_string: "PONV; treated" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DISPOSITION", value_as_string: "WARD" }),
     ]))
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
@@ -189,19 +189,19 @@ describe("mapCasesToOmop", () => {
     const bundle = mapCasesToOmop([completeCase({ events }) as never])
 
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR_DRUG_CONCENTRATION", value_as_string: "0.5%" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_DRUG_FORMULATION", value_as_string: "HYPERBARIC" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_DOSE_CALCULATION_BASIS", value_as_string: "IBW" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_DOSE_CALCULATION_METHOD", value_as_string: "MCLAREN_CDC_2000" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_KEY", value_as_string: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_VERSION", value_as_string: "rules.v2.7" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_ID", value_as_string: "user-preset" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_VERSION", value_as_string: "7" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_SCOPE", value_as_string: "USER" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_SOURCE_IDS", value_as_string: "user-preset|institution-preset|platform-preset" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_CONCENTRATION", value_as_string: "0.5%" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_FORMULATION", value_as_string: "HYPERBARIC" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_BASIS", value_as_string: "IBW" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_METHOD", value_as_string: "MCLAREN_CDC_2000" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_KEY", value_as_string: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_VERSION", value_as_string: "rules.v2.7" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_ID", value_as_string: "user-preset" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_VERSION", value_as_string: "7" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_SCOPE", value_as_string: "USER" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_SOURCE_IDS", value_as_string: "user-preset|institution-preset|platform-preset" }),
     ]))
     expect(bundle.measurement).toContainEqual(expect.objectContaining({
-      measurement_source_value: "LOSPOR_DOSE_CALCULATION_WEIGHT_KG",
+      measurement_source_value: "LOSPOR:DOSE_CALCULATION_WEIGHT_KG",
       value_as_number: 18.25,
       unit_source_value: "kg",
     }))
