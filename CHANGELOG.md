@@ -1,5 +1,44 @@
 # Changelog - LOSPOR API
 
+## [9.0.0] - 2026-08-11
+
+### Breaking
+
+- `/research/benchmarks` now rejects a metric it cannot plot instead of
+  answering `null`. Nine of the fourteen metric ids had no evaluator; the
+  endpoint accepted them, returned an empty series, and reported a real
+  `caseCount` with `suppressed: false` alongside it. A client could not tell
+  "nobody implemented this" from "no patients matched" or "withheld for a small
+  cell size". Requests naming those nine now fail loudly.
+- Requires `@lospor/core` v9.0.0, which makes
+  `ResearchMetadata.supportedBenchmarkMetrics` mandatory.
+
+### Added
+
+- The capability response states `supportedBenchmarkMetrics`, the five metrics
+  benchmarking can actually plot. `supportedMetrics` still lists all fourteen,
+  which is correct — the aggregate path implements every one of them.
+- OMOP observations carry `value_as_number`. Twenty-two scored variables — RCRI,
+  Apfel, STOP-BANG, the Aldrete subscores and total, POVOC, COLDS, PAED, the
+  paediatric pain scales, age, body surface area, duration, the fluid totals —
+  were documented as numbers and written into the free-text column. The CSV
+  writer now emits the column too; without that the numbers were dropped again
+  at export time.
+- Height and weight are exported, and every emitted variable now has a data
+  dictionary entry under the name the export actually uses.
+
+### Fixed
+
+- The NRS pain score was emitted under OHDSI concept `3020891`, the standard
+  concept for body temperature, copied from the vital map. Pooled, a pain score
+  of 2 answered a temperature query as 2 °C. It now emits `0` and carries
+  `LOINC:72514-3` as its source value.
+- Seventeen documented ranges were narrower than the validator enforces — age
+  0–120 against 149, SpO2 50–100 against 0–100, temperature 30–43 against
+  25–45. A researcher filtering on the published range would have silently
+  excluded real records.
+- `DICTIONARY_VERSION` is 4.1.0, `source_version` 3.7.0, `schema_version` 3.6.0.
+
 ## [8.4.0] - 2026-08-06
 
 ### Changed
