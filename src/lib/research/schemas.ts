@@ -1,5 +1,6 @@
 import { z } from "zod"
 import {
+  RESEARCH_BENCHMARK_METRIC_IDS,
   RESEARCH_CASE_STATUSES,
   RESEARCH_DISTRIBUTION_IDS,
   RESEARCH_EXPORT_FORMATS,
@@ -79,7 +80,18 @@ export const researchComparisonSchema = z.object({
 export const researchBenchmarkSchema = z.object({
   cohort: researchCohortSchema,
   interval: z.enum(["month", "quarter", "year"]),
-  metric: z.enum(RESEARCH_METRIC_IDS),
+  // Deliberately narrower than `RESEARCH_METRIC_IDS`. Benchmarking evaluates a
+  // metric per period and per institution, and only these five have an
+  // evaluator. The other nine used to be accepted here and answered with an
+  // unsuppressed chart of nulls beside a real case count, which reads as a
+  // finding — this institution recorded none of these — rather than as a
+  // feature that was never built. A 400 naming the supported metrics is the
+  // honest answer, and it is what lets the browser build its picker from the
+  // contract instead of a hand-kept list.
+  metric: z.enum(RESEARCH_BENCHMARK_METRIC_IDS, {
+    error: `metric must be one of: ${RESEARCH_BENCHMARK_METRIC_IDS.join(", ")}. `
+      + "Other metrics are available on /research/query but cannot be plotted over time.",
+  }),
   compareWithPreviousPeriod: z.boolean().optional(),
   institutionIds: z.array(z.string().trim().min(1)).max(50).optional(),
 }).strict()

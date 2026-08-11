@@ -639,7 +639,7 @@ async function writeArtifact(
   }
 }
 
-type OmopTableName = Exclude<keyof OmopBundle, "metadata">
+export type OmopTableName = Exclude<keyof OmopBundle, "metadata">
 
 const OMOP_TABLES: OmopTableName[] = [
   "person",
@@ -652,6 +652,21 @@ const OMOP_TABLES: OmopTableName[] = [
   "observation",
 ]
 
+/**
+ * The CSV column set, per table, in OMOP CDM v5.4 column order.
+ *
+ * This list is the only thing that reaches a CSV file: a field the mapper emits
+ * but this list omits is written nowhere and no error is raised. That is how
+ * every numeric observation was silently dropped — OBSERVATION gained
+ * `value_as_number`, ~22 scores started arriving as real numbers, and the eight
+ * columns below wrote out the string form only. `omopCsvColumnsMatchMapper` in
+ * the test suite now holds this list against the keys the mapper actually
+ * produces, so the next added field fails a test instead of vanishing.
+ *
+ * `value_as_number` sits immediately before `value_as_string` here because that
+ * is CDM v5.4's order for OBSERVATION, and it matches where MEASUREMENT below
+ * puts its own `value_as_number` — directly after the type concept.
+ */
 const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   person: [
     "person_id", "gender_concept_id", "year_of_birth", "month_of_birth", "day_of_birth",
@@ -686,9 +701,31 @@ const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   ],
   observation: [
     "observation_id", "person_id", "observation_concept_id", "observation_date",
-    "observation_type_concept_id", "value_as_string", "observation_source_value",
-    "visit_occurrence_id",
+    "observation_type_concept_id", "value_as_number", "value_as_string",
+    "observation_source_value", "visit_occurrence_id",
   ],
+}
+
+/**
+ * The header line and the value lines are produced from one list, so a header
+ * can never describe a column the rows do not carry, or omit one they do.
+ * Exported for the regression test, which asserts against the text a researcher
+ * actually downloads rather than against the declaration above.
+ */
+export function omopCsvHeaderLine(table: OmopTableName): string {
+  return `${OMOP_COLUMNS[table].join(",")}\n`
+}
+
+export function omopCsvValueLine(
+  table: OmopTableName,
+  row: Record<string, unknown>,
+): string {
+  return `${OMOP_COLUMNS[table].map(column => csvEscape(row[column])).join(",")}\n`
+}
+
+/** The declared column set, for tests that hold it against the mapper output. */
+export function omopCsvColumns(table: OmopTableName): readonly string[] {
+  return OMOP_COLUMNS[table]
 }
 
 function omopExportContext(
@@ -811,7 +848,7 @@ async function prepareOmopExport(
     await persistWorkingKeys(record, Object.values(keys))
     if (format === "csv") {
       for (const table of OMOP_TABLES) {
-        await writeChunk(sinks[table].sink.writable, `${OMOP_COLUMNS[table].join(",")}\n`)
+        await writeChunk(sinks[table].sink.writable, omopCsvHeaderLine(table))
       }
     }
 
@@ -847,11 +884,7 @@ async function prepareOmopExport(
         tableCounts[table] += rows.length
         for (const row of rows) {
           if (format === "csv") {
-            const columns = OMOP_COLUMNS[table]
-            await writeChunk(
-              sinks[table].sink.writable,
-              `${columns.map(column => csvEscape(row[column])).join(",")}\n`,
-            )
+            await writeChunk(sinks[table].sink.writable, omopCsvValueLine(table, row))
           } else {
             await writeChunk(
               sinks[table].sink.writable,
