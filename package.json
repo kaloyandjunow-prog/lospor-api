@@ -23,7 +23,7 @@
     "research-exports:work": "tsx scripts/process-research-exports.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:pg": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/*-postgres.test.ts",
+    "test:pg": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run postgres.test.ts",
     "test:pg:governance": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/research-governance-postgres.test.ts",
     "e2e:seed": "tsx scripts/seed-e2e-user.ts",
     "smoke:autosave": "tsx scripts/smoke-autosave.ts",
