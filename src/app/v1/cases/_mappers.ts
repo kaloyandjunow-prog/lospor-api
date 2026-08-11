@@ -79,6 +79,15 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
   const allergies = preop.allergies ?? false
   const allergyDetails = allergies ? taggedListToStorage(preop.allergyDetails) : null
   // Item 20: Validate/compute BMI from height+weight; discard client BMI if it diverges >10%
+  //
+  // Stored at full precision on purpose — this is a research database, and the
+  // mean of precisely-stored BMIs is a better statistic than the mean of values
+  // pre-rounded to one decimal. `pediatric-mappers.test.ts` pins that to four
+  // decimal places.
+  //
+  // Rounding belongs at the display edge, and only there: the anaesthesia record
+  // was printing "BMI 26.1224489795918" because CaseSummary rendered this value
+  // raw. Fixed there, not here.
   const heightCm = preop.heightCm ?? null
   const weightKg = preop.weightKg ?? null
   let bmi: number | null = null

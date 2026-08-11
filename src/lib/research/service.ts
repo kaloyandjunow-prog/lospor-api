@@ -1,4 +1,5 @@
 import type {
+  ResearchBenchmarkMetricId,
   ResearchBenchmarkRequest,
   ResearchBenchmarkResponse,
   ResearchCaseQueryResponse,
@@ -15,6 +16,7 @@ import type {
 } from "@lospor/core/research"
 import {
   RESEARCH_API_VERSION,
+  RESEARCH_BENCHMARK_METRIC_IDS,
   RESEARCH_DISTRIBUTION_IDS,
   RESEARCH_EXPORT_FORMATS,
   RESEARCH_METRIC_IDS,
@@ -78,7 +80,13 @@ export async function researchMetadata(context: ResearchContext): Promise<Resear
     permissions: context.permissions,
     suppressionThreshold: RESEARCH_MIN_CELL_SIZE,
     defaultCohort: normalizeResearchCohort(),
+    // All fourteen are genuinely computed by /research/query and
+    // /research/compare, so this list is accurate for what it names, and it
+    // stays at all fourteen: narrowing it would withdraw nine metrics the query
+    // endpoint answers correctly. What benchmarking can plot is a different and
+    // smaller question, answered by its own field below.
     supportedMetrics: [...RESEARCH_METRIC_IDS],
+    supportedBenchmarkMetrics: [...RESEARCH_BENCHMARK_METRIC_IDS],
     supportedDistributions: [...RESEARCH_DISTRIBUTION_IDS],
     supportedExports: [...RESEARCH_EXPORT_FORMATS],
   }
@@ -201,50 +209,139 @@ function previousBenchmarkPeriod(
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`
 }
 
-function benchmarkValue(
-  metricId: ResearchMetricId,
-  cases: Awaited<ReturnType<typeof readAllResearchSummaries>>,
-): { value: number | null; validCount: number; numerator?: number } {
-  if (metricId === "caseCount") {
-    return { value: cases.length, validCount: cases.length }
-  }
-  if (metricId === "meanAgeYears") {
+type BenchmarkCases = Awaited<ReturnType<typeof readAllResearchSummaries>>
+
+/**
+ * Recorded/expected clinical field counts per case id, for `fieldCompleteness`.
+ * Empty for every other metric, which does not read it.
+ */
+type BenchmarkFieldStatusCounts = Map<string, { complete: number; total: number }>
+
+type BenchmarkEvaluation = {
+  value: number | null
+  /** The cell size suppression is judged on — always a count of cases. */
+  validCount: number
+  numerator?: number
+}
+
+type BenchmarkEvaluator = (
+  cases: BenchmarkCases,
+  fieldStatuses: BenchmarkFieldStatusCounts,
+) => BenchmarkEvaluation
+
+function mean(values: number[]): number | null {
+  if (!values.length) return null
+  return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
+/**
+ * One evaluator per metric benchmarking can plot, keyed by the shared contract
+ * list so the two cannot drift.
+ *
+ * The type is exhaustive on purpose. Before this, an unhandled metric fell
+ * through to `{ value: null }` while the surrounding code still reported a real
+ * `caseCount` and `suppressed: false` — a chart that says "this institution
+ * has 240 cases and none of them have this" when the truth is "nobody wrote
+ * this evaluator". Adding an id to `RESEARCH_BENCHMARK_METRIC_IDS` without an
+ * evaluator here is now a compile error, and removing one is too.
+ */
+const BENCHMARK_EVALUATORS: Record<ResearchBenchmarkMetricId, BenchmarkEvaluator> = {
+  caseCount: cases => ({ value: cases.length, validCount: cases.length }),
+
+  meanAgeYears: cases => {
     const values = cases.flatMap(item => item.ageYears === null ? [] : [item.ageYears])
-    return {
-      value: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null,
-      validCount: values.length,
-    }
-  }
-  if (metricId === "meanDurationMinutes") {
-    const values = cases.flatMap(item => item.durationMinutes === null ? [] : [item.durationMinutes])
-    return {
-      value: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null,
-      validCount: values.length,
-    }
-  }
-  if (metricId === "complicationRate") {
+    return { value: mean(values), validCount: values.length }
+  },
+
+  meanDurationMinutes: cases => {
+    const values = cases.flatMap(item =>
+      item.durationMinutes === null ? [] : [item.durationMinutes])
+    return { value: mean(values), validCount: values.length }
+  },
+
+  // Cases carrying at least one complication, over cases in the group. This is
+  // the same quantity `readResearchMetrics` reports for `complicationRate`,
+  // which counts distinct case ids in CaseComplication over the case total.
+  complicationRate: cases => {
     const numerator = cases.filter(item => item.complications > 0).length
-    return {
-      value: researchPercent(numerator, cases.length),
-      validCount: cases.length,
-      numerator,
+    return { value: researchPercent(numerator, cases.length), validCount: cases.length, numerator }
+  },
+
+  // Pooled over clinical field rows: complete fields across the group divided
+  // by recorded fields across the group.
+  //
+  // This used to be the unweighted mean of each case's own completeness
+  // percentage, which is a different number from the one the query and compare
+  // screens print under the same name. Two screens, one metric name, two
+  // answers — and neither was labelled, so a researcher had no way to know
+  // which they were reading. They now agree, on the aggregate path's
+  // definition, for two reasons. It is the definition already published by
+  // /research/query, /research/compare and /research/quality, so the benchmark
+  // was the single dissenter. And a mean of per-case percentages silently
+  // counts a case with no recorded fields at all as 0% complete, because
+  // `completeness()` returns 0 for an empty list; pooling leaves such a case
+  // out of both numerator and denominator, where it belongs.
+  //
+  // `validCount` stays a count of cases, not of field rows. Suppression asks
+  // how many patients a cell exposes, and one case can carry forty field rows.
+  fieldCompleteness: (cases, fieldStatuses) => {
+    let complete = 0
+    let total = 0
+    for (const item of cases) {
+      const counts = fieldStatuses.get(item.id)
+      if (!counts) continue
+      complete += counts.complete
+      total += counts.total
     }
-  }
-  if (metricId === "fieldCompleteness") {
-    return {
-      value: cases.length
-        ? cases.reduce((sum, item) => sum + item.completeness, 0) / cases.length
-        : null,
-      validCount: cases.length,
+    return { value: researchPercent(complete, total), validCount: cases.length }
+  },
+}
+
+function isBenchmarkMetric(id: ResearchMetricId): id is ResearchBenchmarkMetricId {
+  return (RESEARCH_BENCHMARK_METRIC_IDS as readonly ResearchMetricId[]).includes(id)
+}
+
+/**
+ * Per-case complete/recorded field counts, read only when the requested metric
+ * needs them. The presence values that count as complete are the same two the
+ * aggregate path uses.
+ */
+async function readBenchmarkFieldStatusCounts(
+  where: Prisma.CaseWhereInput,
+): Promise<BenchmarkFieldStatusCounts> {
+  const rows = await prisma.clinicalFieldStatus.groupBy({
+    by: ["caseId", "presence"],
+    where: { case: where },
+    _count: { _all: true },
+  })
+  const counts: BenchmarkFieldStatusCounts = new Map()
+  for (const row of rows) {
+    const entry = counts.get(row.caseId) ?? { complete: 0, total: 0 }
+    entry.total += row._count._all
+    if (row.presence === "PRESENT" || row.presence === "NOT_APPLICABLE") {
+      entry.complete += row._count._all
     }
+    counts.set(row.caseId, entry)
   }
-  return { value: null, validCount: 0 }
+  return counts
 }
 
 export async function benchmarkResearchCohort(
   request: ResearchBenchmarkRequest,
   context: ResearchContext,
 ): Promise<ResearchBenchmarkResponse> {
+  // The request schema already refuses anything outside the benchmark list, so
+  // this only fires for a caller that bypassed it. Refusing loudly is the point:
+  // the alternative is the answer that used to be given — an unsuppressed chart
+  // of nulls beside a genuine case count, indistinguishable from a real finding
+  // of nothing.
+  if (!isBenchmarkMetric(request.metric)) {
+    throw new Error(
+      `Metric "${request.metric}" cannot be benchmarked. ` +
+      `Benchmarking supports: ${RESEARCH_BENCHMARK_METRIC_IDS.join(", ")}.`,
+    )
+  }
+  const evaluate = BENCHMARK_EVALUATORS[request.metric]
   const requestedInstitutions = request.institutionIds?.length
     ? request.institutionIds.filter(id =>
         context.scopeKind === "ALL" || context.institutionIds.includes(id))
@@ -266,6 +363,9 @@ export async function benchmarkResearchCohort(
     select: { id: true, institutionId: true },
   })
   const institutionByCase = new Map(caseInstitutions.map(item => [item.id, item.institutionId]))
+  const fieldStatuses = request.metric === "fieldCompleteness"
+    ? await readBenchmarkFieldStatusCounts(scopedWhere)
+    : new Map()
   const groups = new Map<string, typeof rows>()
 
   for (const row of rows) {
@@ -281,7 +381,7 @@ export async function benchmarkResearchCohort(
   const basePoints = [...groups.entries()]
     .map(([key, cases]) => {
       const [period, institutionId] = key.split("::")
-      const result = benchmarkValue(request.metric, cases)
+      const result = evaluate(cases, fieldStatuses)
       const suppressed = !allowExact && (result.numerator !== undefined
         ? shouldSuppressResearchBinary(result.numerator, result.validCount)
         : shouldSuppressResearchCell(result.validCount))

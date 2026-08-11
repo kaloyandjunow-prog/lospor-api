@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "8.4.0",
+  "version": "9.0.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -23,6 +23,8 @@
     "research-exports:work": "tsx scripts/process-research-exports.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:pg": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run postgres.test.ts",
+    "test:pg:governance": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/research-governance-postgres.test.ts",
     "e2e:seed": "tsx scripts/seed-e2e-user.ts",
     "smoke:autosave": "tsx scripts/smoke-autosave.ts",
     "smoke:transfer": "tsx scripts/smoke-transfer.ts",
@@ -55,7 +57,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1095.0",
     "@aws-sdk/lib-storage": "^3.1095.0",
-    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v8.4.0",
+    "@lospor/core": "github:kaloyandjunow-prog/lospor-core#v9.0.0",
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
     "@sparticuz/chromium": "^149.0.0",

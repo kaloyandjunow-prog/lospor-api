@@ -1,163 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { mapCasesToOmop } from "@/lib/omop-mapper"
 
-function completeCase(overrides: Record<string, unknown> = {}) {
-  const createdAt = new Date("2026-06-01T07:30:00Z")
-  const startTime = new Date("2026-06-01T08:00:00Z")
-  const endTime = new Date("2026-06-01T09:00:00Z")
-  return {
-    id: "case-omop-1",
-    caseCode: "2026-0001",
-    createdAt,
-    status: "COMPLETE",
-    institutionId: "inst-1",
-    user: { institution: { name: "Fallback Hospital" } },
-    fieldStatuses: [{ section: "preop", fieldKey: "ageYears", presence: "PRESENT" }],
-    snapshot: { id: "snapshot-1" },
-    updatedAt: new Date("2026-06-01T09:01:00Z"),
-    finalizedAt: new Date("2026-06-01T09:01:00Z"),
-    selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0 }],
-    complications: [{ section: "postop", label: "PONV", note: "treated", timestamp: endTime, source: "relational-sync", ordinal: 0 }],
-    events: [
-      {
-        type: "vital",
-        timestamp: new Date("2026-06-01T08:15:00Z"),
-        label: null,
-        value: null,
-        unit: null,
-        systolic: 118,
-        diastolic: 70,
-        heartRate: 76,
-        spO2: 99,
-        etco2: 36,
-        temp: 36.5,
-        bgl: 5.6,
-        bglLoincCode: "2345-7",
-        bglUnitCanon: "mmol/L",
-        atcCode: null,
-        drugId: null,
-        drugRoute: null,
-        metadataJson: {},
-      },
-      {
-        type: "drug",
-        timestamp: new Date("2026-06-01T08:20:00Z"),
-        label: "Fentanyl",
-        value: null,
-        unit: "mcg",
-        bgl: null,
-        bglLoincCode: null,
-        bglUnitCanon: null,
-        atcCode: "N01AH01",
-        drugId: "drug-1",
-        drugRoute: "IV",
-        metadataJson: { dose: "50", name: "Fentanyl" },
-      },
-      {
-        type: "gas_change",
-        timestamp: new Date("2026-06-01T08:30:00Z"),
-        label: null,
-        value: null,
-        unit: null,
-        fgfLitersPerMin: 2,
-        carrierGas: "AIR/O2",
-        fio2Percent: 50,
-        fiAirPercent: 50,
-        fiN2OPercent: 0,
-        bgl: null,
-        bglLoincCode: null,
-        bglUnitCanon: null,
-        atcCode: null,
-        drugId: null,
-        drugRoute: null,
-        metadataJson: {},
-      },
-    ],
-    preop: {
-      ageYears: 14,
-      sex: "MALE",
-      heightCm: 165,
-      weightKg: 60,
-      bpSystolic: 126,
-      bpDiastolic: 74,
-      heartRate: 82,
-      spO2: 99,
-      temperature: 36.7,
-      respiratoryRate: 14,
-      diagnosis: "fallback diagnosis",
-      diagnosesJson: [],
-      plannedProcedure: "fallback procedure",
-      proceduresJson: [],
-      comorbidities: [],
-      asaScore: "I",
-      emergencySurgery: false,
-      highRiskSurgery: false,
-      allergies: true,
-      allergyDetails: null,
-      smoking: false,
-      substanceAbuse: false,
-      currentMedications: null,
-      rcriScore: 0,
-      apfelScore: 1,
-      stopBangScore: 1,
-      difficultAirwayHistory: true,
-      mallampati: "I",
-      labResults: [],
-      labRows: [
-        { test: "Hemoglobin", valueNum: 180, value: "180", unitCanon: "g/L", loincCode: "718-7", abnormalFlag: "high", standardConceptId: 3000963, mappingStatus: "MAPPED" },
-        { test: "Unknown lab", valueNum: 7, value: "7", unitCanon: null, loincCode: null, abnormalFlag: null, standardConceptId: null, mappingStatus: "UNMAPPED" },
-      ],
-      diagnoses: [
-        { code: "K35", label: "Acute appendicitis", labelEn: "Acute appendicitis", labelBg: null, sourceVocabulary: "ICD10", sourceCode: "K35", standardConceptId: 12345, mappingStatus: "MAPPED", ordinal: 0 },
-      ],
-      procedureRows: [
-        { code: "APPY", group: "Appendectomy", domain: "LOSPOR_PROCEDURE", description: "Laparoscopic appendectomy", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "APPY", standardConceptId: 23456, mappingStatus: "MAPPED", ordinal: 0 },
-      ],
-      comorbidityRows: [
-        { label: "Source-only condition", labelEn: "Source-only condition", labelBg: null, code: "Z99", icd10Code: "Z99", sourceVocabulary: "ICD10", sourceCode: "Z99", standardConceptId: null, mappingStatus: "SOURCE_ONLY", ordinal: 0 },
-      ],
-      medications: [
-        { kind: "CURRENT", nameRaw: "Diazepam", inn: "diazepam", atcCode: "N05BA01", dose: "5 mg", route: "PO", sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905, mappingStatus: "MAPPED", ordinal: 0 },
-      ],
-    },
-    intraop: {
-      startTime,
-      endTime,
-      durationMinutes: 60,
-      monthYear: "2026-06",
-      techniques: ["general"],
-      keyEvents: {},
-      crystalloidsMl: 500,
-      colloidsMl: 0,
-      bloodMl: 0,
-      urineMl: 100,
-      complications: null,
-      premedicationEvening: null,
-      premedicationMorning: null,
-      airwayDevice: "ett",
-      vascularAccessRows: [{ site: "IJ", siteLabel: "Internal jugular", size: "18", sizeUnit: "G", depthCm: "8", lumens: "2", preexisting: true, ordinal: 0 }],
-      premedicationRows: [{ phase: "evening", nameRaw: "Midazolam 2 mg PO", inn: null, atcCode: null, standardConceptId: null, mappingStatus: "SOURCE_ONLY", dose: "2 mg", route: "PO", ordinal: 0 }],
-    },
-    postop: {
-      aldreteActivity: 2,
-      aldreteRespiration: 2,
-      aldreteCirculation: 2,
-      aldreteConsciousness: 2,
-      aldreteSpO2: 2,
-      aldreteTotal: 10,
-      recoveryBpSystolic: 120,
-      recoveryBpDiastolic: 70,
-      recoveryHeartRate: 80,
-      recoverySpO2: 98,
-      temperatureCelsius: 36.8,
-      painScoreNRS: 2,
-      ponv: false,
-      disposition: "WARD",
-      complications: null,
-    },
-    ...overrides,
-  }
-}
+import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
 
 describe("mapCasesToOmop", () => {
   it("exports finalized relational rows into OMOP CDM tables", () => {
@@ -175,7 +19,7 @@ describe("mapCasesToOmop", () => {
       generated_by_user_id: "admin-1",
       generated_by_role: "ADMIN",
       source: "LOSPOR",
-      source_version: "3.6.0",
+      source_version: "3.7.0",
       included_case_count: 1,
       excluded_case_count: 2,
       app_git_commit: "abc123",
@@ -190,9 +34,9 @@ describe("mapCasesToOmop", () => {
       visit_occurrence: 1,
       condition_occurrence: 2,
       drug_exposure: 3,
-      measurement: 24,
+      measurement: 26,
       procedure_occurrence: 3,
-      observation: 23,
+      observation: 28,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -256,7 +100,7 @@ describe("mapCasesToOmop", () => {
         measurement_datetime: "2026-06-01T08:15:00.000Z",
       }),
       expect.objectContaining({
-        measurement_source_value: "INTRAOP_FIO2_PERCENT",
+        measurement_source_value: "LOINC:3150-0",
         value_as_number: 50,
       }),
       expect.objectContaining({
@@ -264,14 +108,44 @@ describe("mapCasesToOmop", () => {
         value_as_number: 120,
       }),
     ]))
+    // A textual observation carries no number: an ASA class is "I", not 1, and
+    // writing it as 1 would make it addable to something.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "ASA_PHYSICAL_STATUS", value_as_string: "I" }),
-      expect.objectContaining({ observation_source_value: "INTRAOP_CARRIER_GAS", value_as_string: "AIR/O2" }),
-      expect.objectContaining({ observation_source_value: "PREMEDICATION_PHASE", value_as_string: "evening" }),
-      expect.objectContaining({ observation_source_value: "INTRAOP_MONITORING", value_as_string: "ecg" }),
-      expect.objectContaining({ observation_source_value: "POSTOP_COMPLICATION", value_as_string: "PONV; treated" }),
-      expect.objectContaining({ observation_source_value: "POSTOP_DISPOSITION", value_as_string: "WARD" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ASA_CLASS", value_as_string: "I", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION", value_as_string: "PONV; treated", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DISPOSITION", value_as_string: "WARD", value_as_number: null }),
     ]))
+    // Every score, on the other hand, has to arrive as a number. Until 3.7.0
+    // these were strings in a column the OBSERVATION row did not have, so a
+    // researcher could not average an Aldrete total or threshold an RCRI
+    // without casting the whole column back from text.
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:RCRI", value_as_number: 0, value_as_string: "0" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:APFEL", value_as_number: 1 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:STOP_BANG", value_as_number: 1 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:AGE_YEARS", value_as_number: 14 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_TOTAL", value_as_number: 10 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_ACTIVITY", value_as_number: 2 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CRYSTALLOIDS_ML", value_as_number: 500 }),
+      // A zero total is a recorded zero, not a missing value: it has to survive
+      // as 0 rather than being dropped as falsy.
+      expect.objectContaining({ observation_source_value: "LOSPOR:COLLOIDS_ML", value_as_number: 0, value_as_string: "0" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:ANAESTHESIA_DURATION_MIN", value_as_number: 60 }),
+      expect.objectContaining({ observation_source_value: "LOINC:72514-3", value_as_number: 2 }),
+    ]))
+    // A boolean is a fact, not a quantity: "true" in value_as_number would be
+    // indistinguishable from a score of 1.
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:EMERGENCY_SURGERY", value_as_string: "false", value_as_number: null }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DIFFICULT_AIRWAY_HISTORY", value_as_string: "true", value_as_number: null }),
+    ]))
+    // The NRS pain score used to be emitted under concept 3020891 — body
+    // temperature, copied from the vital map — which would have put a pain
+    // score of 2 into any OHDSI temperature query.
+    expect(bundle.observation.find(row => row.observation_source_value === "LOINC:72514-3")?.observation_concept_id).toBe(0)
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
       expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 2 }),
@@ -308,7 +182,7 @@ describe("mapCasesToOmop", () => {
       forcedOverride: false,
     })
 
-    expect(bundle.metadata.source_version).toBe("3.6.0")
+    expect(bundle.metadata.source_version).toBe("3.7.0")
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
       visit_start_date: "2026-07-21",
       visit_end_date: "2026-07-21",
@@ -345,19 +219,21 @@ describe("mapCasesToOmop", () => {
     const bundle = mapCasesToOmop([completeCase({ events }) as never])
 
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR_DRUG_CONCENTRATION", value_as_string: "0.5%" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_DRUG_FORMULATION", value_as_string: "HYPERBARIC" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_DOSE_CALCULATION_BASIS", value_as_string: "IBW" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_DOSE_CALCULATION_METHOD", value_as_string: "MCLAREN_CDC_2000" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_KEY", value_as_string: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_VERSION", value_as_string: "rules.v2.7" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_ID", value_as_string: "user-preset" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_VERSION", value_as_string: "7" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_PRESET_SCOPE", value_as_string: "USER" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR_CLINICAL_RULE_SOURCE_IDS", value_as_string: "user-preset|institution-preset|platform-preset" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_CONCENTRATION", value_as_string: "0.5%", value_as_number: 0.5 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_FORMULATION", value_as_string: "HYPERBARIC" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_BASIS", value_as_string: "IBW" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_METHOD", value_as_string: "MCLAREN_CDC_2000" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_KEY", value_as_string: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_VERSION", value_as_string: "rules.v2.7" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_ID", value_as_string: "user-preset" }),
+      // Both columns: the text is the canonical rendering a clinician would
+      // recognise, the number is the one a query can use.
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_VERSION", value_as_string: "7", value_as_number: 7 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_SCOPE", value_as_string: "USER" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_SOURCE_IDS", value_as_string: "user-preset|institution-preset|platform-preset" }),
     ]))
     expect(bundle.measurement).toContainEqual(expect.objectContaining({
-      measurement_source_value: "LOSPOR_DOSE_CALCULATION_WEIGHT_KG",
+      measurement_source_value: "LOSPOR:DOSE_CALCULATION_WEIGHT_KG",
       value_as_number: 18.25,
       unit_source_value: "kg",
     }))
