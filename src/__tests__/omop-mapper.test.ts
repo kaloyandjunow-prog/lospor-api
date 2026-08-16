@@ -26,7 +26,7 @@ describe("mapCasesToOmop", () => {
       data_quality_status: "WARNING",
       // Five mapped rows, not four: the second planned procedure the export
       // used to discard is now counted like the rest.
-      mapping_summary: { mapped_rows: 5, source_only_rows: 2, unmapped_rows: 1 },
+      mapping_summary: { mapped_rows: 5, source_only_rows: 3, unmapped_rows: 1 },
     }))
     expect(bundle.metadata.table_counts).toEqual({
       // PERSON and OBSERVATION_PERIOD are the OMOP root tables — without them
@@ -39,10 +39,10 @@ describe("mapCasesToOmop", () => {
       // infusion + the sevoflurane agent + the fluid administration. The last
       // three used to be one, two, or none of these.
       drug_exposure: 6,
-      measurement: 26,
+      measurement: 27,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 40,
+      observation: 64,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -158,7 +158,7 @@ describe("mapCasesToOmop", () => {
     expect(bundle.observation.find(row => row.observation_source_value === "LOINC:72514-3")?.observation_concept_id).toBe(0)
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
-      expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 2 }),
+      expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 3 }),
       expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 8 }),
       expect.objectContaining({ code: "INSTITUTION_LINKAGE", severity: "info", count: 1 }),
       expect.objectContaining({ code: "REDACTED_FREE_TEXT_PRESENT", severity: "warning", count: 1 }),
@@ -766,5 +766,127 @@ describe("AIRWAY_ACTS", () => {
     // this pins which devices are held to have no procedure.
     const noAct = Object.entries(AIRWAY_ACTS).filter(([, act]) => act == null).map(([d]) => d)
     expect(noAct.sort()).toEqual(["FACE_MASK", "NPA", "OPA"])
+  })
+})
+
+describe("clinical data that used to never leave", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never], {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  })
+  const obs = (code: string) =>
+    bundle().observation.filter(o => o.observation_source_value === code)
+
+  it("exports smoking and substance use", () => {
+    // A register exists partly to study these, and they left the appliance
+    // nowhere at all: read out of the database, carried through the mapper's
+    // row types, written to no table.
+    expect(obs("LOSPOR:SMOKING")[0]?.value_as_string).toBe("false")
+    expect(obs("LOSPOR:SUBSTANCE_ABUSE")[0]?.value_as_string).toBe("false")
+  })
+
+  it("exports the rest of the preop history", () => {
+    expect(obs("LOSPOR:LATEX_ALLERGY")[0]?.value_as_string).toBe("false")
+    expect(obs("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")[0]?.value_as_string).toBe("true")
+    expect(obs("LOSPOR:DENTAL_PROSTHETICS")[0]?.value_as_string).toBe("false")
+    expect(obs("LOSPOR:HEART_ARRHYTHMIA")[0]?.value_as_string).toBe("false")
+    expect(obs("LOSPOR:BMI")[0]?.value_as_number).toBe(24.2)
+    expect(obs("LOSPOR:BLOOD_TYPE")[0]?.value_as_string).toBe("A")
+    expect(obs("LOSPOR:RH_FACTOR")[0]?.value_as_string).toBe("POSITIVE")
+    expect(obs("LOSPOR:GUTA_SCORE")[0]?.value_as_number).toBe(2)
+  })
+
+  it("exports the airway examination separately from the airway history", () => {
+    // A predictive study needs what was found on examining this patient, not
+    // only whether a previous anaesthetist had trouble.
+    expect(obs("LOSPOR:MOUTH_OPENING_CM")[0]?.value_as_number).toBe(4.5)
+    expect(obs("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.value_as_number).toBe(6.5)
+    expect(obs("LOSPOR:NECK_MOBILITY")[0]?.value_as_string).toBe("FULL")
+    expect(obs("LOSPOR:UPPER_LIP_BITE_TEST")[0]?.value_as_string).toBe("CLASS_I")
+    expect(obs("LOSPOR:RETROGNATHIA")[0]?.value_as_string).toBe("false")
+    expect(obs("LOSPOR:PROMINENT_INCISORS")[0]?.value_as_string).toBe("true")
+  })
+
+  it("still says nothing about a question nobody asked", () => {
+    // looseTeeth and facialHair are null in the fixture. The point of the
+    // nullable columns is that this stays distinguishable from a "no", and a
+    // stage that exports everything must not quietly undo it.
+    expect(obs("LOSPOR:LOOSE_TEETH")).toEqual([])
+    expect(obs("LOSPOR:FACIAL_HAIR")).toEqual([])
+  })
+
+  it("carries free-text detail, redacted upstream", () => {
+    expect(obs("LOSPOR:ALLERGY_DETAILS")[0]?.value_as_string).toBe("Penicillin, shellfish")
+    expect(obs("LOSPOR:DIFFICULT_AIRWAY_NOTES")[0]?.value_as_string)
+      .toBe("Grade III view at previous laparotomy")
+  })
+})
+
+describe("laboratory results", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never], {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  })
+  const lab = (source: string) =>
+    bundle().measurement.find(m => m.measurement_source_value === source)
+
+  it("keeps a result the lab reported as text", () => {
+    // This used to be skipped for having no parsed number, so a culture, a
+    // dipstick or a blood group left no trace of having been recorded at all.
+    const culture = lab("LAB:Urine culture")
+    expect(culture).toBeDefined()
+    expect(culture?.value_as_number).toBeNull()
+    expect(culture?.value_source_value).toBe("No growth")
+  })
+
+  it("carries the reference range a result was judged against", () => {
+    // Reference ranges differ by laboratory, assay and patient age. Without
+    // the range, "high" is an assertion the export cannot support.
+    const hb = lab("LOINC:718-7")
+    expect(hb?.value_as_number).toBe(180)
+    expect(hb?.range_low).toBe(130)
+    expect(hb?.range_high).toBe(175)
+  })
+
+  it("carries the abnormal flag, keyed to the measurement it describes", () => {
+    // CDM 5.4 has no abnormal-flag column, so the flag rides as its own
+    // observation using the same source value the measurement row carries.
+    const flags = bundle().observation
+      .filter(o => o.observation_source_value === "LOSPOR:LAB_ABNORMAL_FLAG")
+      .map(o => o.value_as_string)
+    expect(flags).toContain("LOINC:718-7=high")
+  })
+
+  it("drops a row that is neither a number nor text", () => {
+    // A result with no value is not a result, and exporting an empty
+    // measurement would inflate every count of tests performed.
+    const base = completeCase() as unknown as { preop: { labRows: unknown[] } }
+    const withEmpty = mapCasesToOmop([{
+      ...base,
+      preop: { ...base.preop, labRows: [{ test: "Nothing", valueNum: null, value: null, unitCanon: null, loincCode: null, abnormalFlag: null, referenceLow: null, referenceHigh: null, standardConceptId: null, mappingStatus: "UNMAPPED" }] },
+    } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    expect(withEmpty.measurement.find(m => m.measurement_source_value === "LAB:Nothing")).toBeUndefined()
+  })
+})
+
+describe("vascular access", () => {
+  const bundle = mapCasesToOmop([completeCase() as never], {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  })
+  const obs = (code: string) =>
+    bundle.observation.filter(o => o.observation_source_value === code)
+
+  it("exports depth, lumens and whether the line was already there", () => {
+    // The last one matters most: a pre-existing line was not placed during
+    // this case, so counting its procedure row as work done here overstates
+    // what the anaesthetist did.
+    expect(obs("LOSPOR:VASCULAR_ACCESS_DEPTH_CM")[0]?.value_as_number).toBe(8)
+    expect(obs("LOSPOR:VASCULAR_ACCESS_LUMENS")[0]?.value_as_number).toBe(2)
+    expect(obs("LOSPOR:VASCULAR_ACCESS_PREEXISTING")[0]?.value_as_string)
+      .toBe("Internal jugular=true")
   })
 })

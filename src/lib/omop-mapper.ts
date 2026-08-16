@@ -31,6 +31,28 @@
  *         PEEP. Placing an instrumented airway is also emitted as a
  *         PROCEDURE_OCCURRENCE, separating what was done to the patient from
  *         what was true of them.
+ *
+ *         Preop findings that were read out of the database and written to no
+ *         table now leave: smoking, substance use, latex allergy, family
+ *         anaesthesia history, dental state, cardiac arrhythmia, BMI, blood
+ *         group and Rh, GUTA, the airway examination (mouth opening,
+ *         thyromental distance, neck mobility, upper lip bite test,
+ *         retrognathia, prominent incisors, facial hair), and the free-text
+ *         allergy, family-history and difficult-airway notes, redacted.
+ *
+ *         MEASUREMENT gains value_source_value, range_low and range_high.
+ *         A lab result with no parsed number used to be skipped entirely, so a
+ *         culture, a dipstick or a blood group left no trace of having been
+ *         recorded; it is now exported with the value the lab reported. The
+ *         reference range travels with the result, because ranges differ by
+ *         laboratory, assay and patient age, and "high" is not a claim the
+ *         export can support without the range that produced it. The abnormal
+ *         flag rides as its own observation, keyed to the measurement's source
+ *         value, since CDM 5.4 has no column for it.
+ *
+ *         Vascular lines carry their depth, lumen count and whether they were
+ *         already in place. A pre-existing line was not placed during this
+ *         case, so its procedure row overstates the work without that flag.
  * 3.7.0 — OBSERVATION gains value_as_number, the CDM column a numeric
  *         observation belongs in. Every score the export carries (RCRI, Apfel,
  *         STOP-BANG, the Aldrete subscores and total, POVOC, COLDS, PAED, the
@@ -287,6 +309,11 @@ interface OmopMeasurement {
   unit_concept_id: number
   unit_source_value: string | null
   measurement_source_value: string | null
+  /** The value as the source reported it, including qualitative results. */
+  value_source_value: string | null
+  /** The reference range this result was judged against, where the lab gave one. */
+  range_low: number | null
+  range_high: number | null
   visit_occurrence_id: number
 }
 
@@ -439,6 +466,25 @@ type CaseRow = {
     coldsScore?: number | null
     difficultAirwayHistory: boolean | null
     mallampati: string | null
+    // Clinical detail the export used to read and discard.
+    bmi?: number | null
+    bloodType?: string | null
+    rhFactor?: string | null
+    gutaScore?: number | null
+    latexAllergy?: boolean | null
+    familyAnesthesiaProblems?: boolean | null
+    familyAnesthesiaDetails?: string | null
+    dentalProsthetics?: boolean | null
+    looseTeeth?: boolean | null
+    heartArrhythmia?: boolean | null
+    mouthOpeningCm?: number | null
+    thyromental?: number | null
+    neckMobility?: string | null
+    upperLipBiteTest?: string | null
+    retrognathia?: boolean | null
+    prominentIncisors?: boolean | null
+    facialHair?: boolean | null
+    difficultAirwayNotes?: string | null
     labResults: unknown
     labRows?: {
       test: string
@@ -447,6 +493,8 @@ type CaseRow = {
       unitCanon: string | null
       loincCode: string | null
       abnormalFlag: string | null
+      referenceLow?: number | null
+      referenceHigh?: number | null
       standardConceptId?: number | null
       mappingStatus?: string
     }[]
@@ -934,6 +982,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           unit_concept_id:           0,
           unit_source_value:         cfg.unit,
           measurement_source_value:  `LOINC:${cfg.loinc}`,
+          // Vitals carry no source text and no laboratory reference range.
+          value_source_value:        null,
+          range_low:                 null,
+          range_high:                null,
           visit_occurrence_id:       visitId,
         })
       }
@@ -942,8 +994,13 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // Use SQL LabResult rows (LOINC-coded) instead of raw JSON
       const labRows = preop.labRows ?? []
       for (const lab of labRows) {
-        if (lab.valueNum == null) continue
+        // A result with neither a number nor text is not a result. Anything
+        // else is exported: this used to skip every row without a parsed
+        // number, so a qualitative result -- a blood group, a culture, a
+        // dipstick -- was dropped with no trace that it had been recorded.
+        if (lab.valueNum == null && !lab.value) continue
         trackMapping(lab.mappingStatus)
+        const labSource = lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`
         measurements.push({
           measurement_id:              nextId(),
           person_id:                   personId,
@@ -954,9 +1011,25 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           value_as_number:             lab.valueNum,
           unit_concept_id:             0,
           unit_source_value:           lab.unitCanon ?? null,
-          measurement_source_value:    lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`,
+          measurement_source_value:    labSource,
+          // The value as the lab reported it. For a numeric result this is the
+          // unparsed original; for a qualitative one it is the only value there
+          // is.
+          value_source_value:          lab.value ?? null,
+          // The range this result was judged against. Reference ranges differ
+          // by laboratory, assay and patient age, so "high" is not a claim the
+          // export can support without carrying the range that produced it.
+          range_low:                   lab.referenceLow ?? null,
+          range_high:                  lab.referenceHigh ?? null,
           visit_occurrence_id:         visitId,
         })
+        // CDM 5.4 has no abnormal-flag column, and value_as_concept_id would
+        // need a standard concept this export does not assign. The flag is
+        // LOSPOR's own judgement, so it is carried as its own observation,
+        // keyed by the same source value the measurement row uses.
+        if (lab.abnormalFlag) {
+          sourceObservation("LOSPOR:LAB_ABNORMAL_FLAG", `${labSource}=${lab.abnormalFlag}`, vitDate)
+        }
       }
 
       // ── Comorbidities -> CONDITION_OCCURRENCE ─────────────────────────────
@@ -1035,6 +1108,52 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // being rounded off to silence.
       sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", preop.difficultAirwayHistory, preopDate)
       sourceObservation("LOSPOR:MALLAMPATI", preop.mallampati, preopDate)
+
+      // ── Preop findings that used to be read and discarded ────────────────
+      //
+      // All of this was selected out of the database, carried through the
+      // mapper's row types, and written to no table. Smoking status is the
+      // plainest example: a register exists partly to study it, and it left
+      // the appliance nowhere at all.
+      //
+      // Everything below follows the same rule as the airway history above --
+      // an answered "no" is a finding and reaches the export, and only an
+      // unasked question stays silent.
+      sourceObservation("LOSPOR:SMOKING", preop.smoking, preopDate)
+      sourceObservation("LOSPOR:SUBSTANCE_ABUSE", preop.substanceAbuse, preopDate)
+      sourceObservation("LOSPOR:LATEX_ALLERGY", preop.latexAllergy, preopDate)
+      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate)
+      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_DETAILS", preop.familyAnesthesiaDetails, preopDate)
+      sourceObservation("LOSPOR:DENTAL_PROSTHETICS", preop.dentalProsthetics, preopDate)
+      sourceObservation("LOSPOR:LOOSE_TEETH", preop.looseTeeth, preopDate)
+      sourceObservation("LOSPOR:HEART_ARRHYTHMIA", preop.heartArrhythmia, preopDate)
+
+      // The allergy flag already reaches DRUG_ALLERGY observations per
+      // substance, but the free-text detail carries allergens that were never
+      // resolved to a drug -- redacted upstream like every other note.
+      sourceObservation("LOSPOR:ALLERGY_DETAILS", preop.allergyDetails, preopDate)
+
+      // Body mass index is stored, not derived at export time, because the
+      // height and weight it was computed from may since have been corrected.
+      sourceObservation("LOSPOR:BMI", preop.bmi, preopDate)
+      sourceObservation("LOSPOR:BLOOD_TYPE", preop.bloodType, preopDate)
+      sourceObservation("LOSPOR:RH_FACTOR", preop.rhFactor, preopDate)
+      sourceObservation("LOSPOR:GUTA_SCORE", preop.gutaScore, preopDate)
+
+      // ── The airway examination ───────────────────────────────────────────
+      //
+      // Distinct from the difficult-airway history: this is what the
+      // anaesthetist found on examining this patient, and it is what a
+      // predictive study needs alongside the Cormack-Lehane grade the intraop
+      // record now carries.
+      sourceObservation("LOSPOR:MOUTH_OPENING_CM", preop.mouthOpeningCm, preopDate)
+      sourceObservation("LOSPOR:THYROMENTAL_DISTANCE_CM", preop.thyromental, preopDate)
+      sourceObservation("LOSPOR:NECK_MOBILITY", preop.neckMobility, preopDate)
+      sourceObservation("LOSPOR:UPPER_LIP_BITE_TEST", preop.upperLipBiteTest, preopDate)
+      sourceObservation("LOSPOR:RETROGNATHIA", preop.retrognathia, preopDate)
+      sourceObservation("LOSPOR:PROMINENT_INCISORS", preop.prominentIncisors, preopDate)
+      sourceObservation("LOSPOR:FACIAL_HAIR", preop.facialHair, preopDate)
+      sourceObservation("LOSPOR:DIFFICULT_AIRWAY_NOTES", preop.difficultAirwayNotes, preopDate)
     }
 
     // ── Planned procedure -> PROCEDURE_OCCURRENCE ─────────────────────────────
@@ -1256,6 +1375,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               unit_concept_id:           0,
               unit_source_value:         key === "bgl" ? ev.bglUnitCanon ?? cfg.unit : cfg.unit,
               measurement_source_value:  `LOINC:${loincOverride ?? cfg.loinc}`,
+              // Vitals carry no source text and no laboratory reference range.
+              value_source_value:        null,
+              range_low:                 null,
+              range_high:                null,
               visit_occurrence_id:       visitId,
             })
           }
@@ -1282,6 +1405,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               unit_concept_id: 0,
               unit_source_value: unit,
               measurement_source_value: source,
+              // Vitals carry no source text and no laboratory reference range.
+              value_source_value:        null,
+              range_low:                 null,
+              range_high:                null,
               visit_occurrence_id: visitId,
             })
           }
@@ -1366,6 +1493,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               unit_concept_id: 0,
               unit_source_value: "kg",
               measurement_source_value: "LOSPOR:DOSE_CALCULATION_WEIGHT_KG",
+              // Vitals carry no source text and no laboratory reference range.
+              value_source_value:        null,
+              range_low:                 null,
+              range_high:                null,
               visit_occurrence_id: visitId,
             })
           }
@@ -1405,6 +1536,14 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           procedure_source_value: `VASCULAR_ACCESS:${line.siteLabel ?? line.site ?? "unknown"}${line.size ? ` ${line.size}${line.sizeUnit ?? ""}` : ""}`,
           visit_occurrence_id: visitId,
         })
+        // Depth, lumen count and whether the line was already there were
+        // selected and discarded. The last one matters most: a pre-existing
+        // line was not placed during this case, so counting it as a procedure
+        // performed here overstates what the anaesthetist did.
+        const lineKey = line.siteLabel ?? line.site ?? "unknown"
+        if (line.depthCm) sourceObservation("LOSPOR:VASCULAR_ACCESS_DEPTH_CM", `${lineKey}=${line.depthCm}`, startDate, Number(line.depthCm))
+        if (line.lumens) sourceObservation("LOSPOR:VASCULAR_ACCESS_LUMENS", `${lineKey}=${line.lumens}`, startDate, Number(line.lumens))
+        sourceObservation("LOSPOR:VASCULAR_ACCESS_PREEXISTING", `${lineKey}=${line.preexisting}`, startDate)
       }
 
       // Fluid totals as observations. Millilitres given: a quantity, and one
@@ -1460,7 +1599,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const [key, val] of postopVitals) {
         if (val == null) continue
         const cfg = VITAL_CONCEPTS[key]
-        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val, unit_concept_id: 0, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, visit_occurrence_id: visitId })
+        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val, unit_concept_id: 0, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
       }
       // Aldrete subscores and their total: 0-2 each, 0-10 summed. A discharge
       // threshold is a numeric comparison, so these have to be numbers.

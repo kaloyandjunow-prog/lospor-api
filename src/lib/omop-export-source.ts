@@ -18,6 +18,10 @@ export function redactExportRow(c: ExportRow) {
       plannedProcedure: c.preop.plannedProcedure ? redactText(c.preop.plannedProcedure) : c.preop.plannedProcedure,
       allergyDetails: c.preop.allergyDetails ? redactText(c.preop.allergyDetails) : c.preop.allergyDetails,
       currentMedications: c.preop.currentMedications ? redactText(c.preop.currentMedications) : c.preop.currentMedications,
+      // Free prose written by a clinician, so it goes through the same
+      // redaction as every other note before it can leave.
+      familyAnesthesiaDetails: c.preop.familyAnesthesiaDetails ? redactText(c.preop.familyAnesthesiaDetails) : c.preop.familyAnesthesiaDetails,
+      difficultAirwayNotes: c.preop.difficultAirwayNotes ? redactText(c.preop.difficultAirwayNotes) : c.preop.difficultAirwayNotes,
       medications: c.preop.medications.map(row => ({
         ...row,
         nameRaw: row.nameRaw ? redactText(row.nameRaw) : row.nameRaw,
@@ -121,12 +125,25 @@ export const CASE_SELECT = {
       diagnosis: true, diagnosesJson: true, plannedProcedure: true, proceduresJson: true,
       comorbidities: true, asaScore: true, emergencySurgery: true, highRiskSurgery: true,
       allergies: true, allergyDetails: true, smoking: true, substanceAbuse: true,
+      // Clinical detail that was read into the mapper's row types but never
+      // written to any table, so it left the appliance nowhere.
+      bmi: true, bloodType: true, rhFactor: true, gutaScore: true,
+      latexAllergy: true, familyAnesthesiaProblems: true, familyAnesthesiaDetails: true,
+      dentalProsthetics: true, looseTeeth: true, heartArrhythmia: true,
+      // The airway examination, as distinct from the difficult-airway history.
+      mouthOpeningCm: true, thyromental: true, neckMobility: true, upperLipBiteTest: true,
+      retrognathia: true, prominentIncisors: true, facialHair: true,
+      difficultAirwayNotes: true,
       currentMedications: true, rcriScore: true, apfelScore: true, stopBangScore: true,
       povocScore: true, povocRiskPercent: true, coldsScore: true, pediatricFasting: true,
       difficultAirwayHistory: true, mallampati: true, labResults: true,
       labRows: {
         select: {
           test: true, valueNum: true, value: true, unitCanon: true, loincCode: true, abnormalFlag: true,
+          // A result the lab reported as text, and the range it was judged
+          // against. Without the range, "high" is an assertion the export
+          // cannot support; without the text, a qualitative result vanished.
+          referenceLow: true, referenceHigh: true,
           standardConceptId: true, mappingStatus: true,
         },
       },
