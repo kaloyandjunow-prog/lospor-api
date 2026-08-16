@@ -810,20 +810,20 @@ export type PreoperativeAssessmentGroupByOutputType = {
   physicalExamReport: string | null
   notes: string | null
   comorbidities: runtime.JsonValue
-  allergies: boolean
+  allergies: boolean | null
   allergyDetails: string | null
-  latexAllergy: boolean
+  latexAllergy: boolean | null
   currentMedications: string | null
-  familyAnesthesiaProblems: boolean
+  familyAnesthesiaProblems: boolean | null
   familyAnesthesiaDetails: string | null
-  dentalProsthetics: boolean
-  looseTeeth: boolean
-  smoking: boolean
-  substanceAbuse: boolean
+  dentalProsthetics: boolean | null
+  looseTeeth: boolean | null
+  smoking: boolean | null
+  substanceAbuse: boolean | null
   bpSystolic: number | null
   bpDiastolic: number | null
   heartRate: number | null
-  heartArrhythmia: boolean
+  heartArrhythmia: boolean | null
   spO2: number | null
   temperature: number | null
   respiratoryRate: number | null
@@ -837,10 +837,10 @@ export type PreoperativeAssessmentGroupByOutputType = {
   thyromental: number | null
   neckMobility: $Enums.NeckMobility | null
   upperLipBiteTest: $Enums.UpperLipBiteTest | null
-  retrognathia: boolean
-  prominentIncisors: boolean
-  facialHair: boolean
-  difficultAirwayHistory: boolean
+  retrognathia: boolean | null
+  prominentIncisors: boolean | null
+  facialHair: boolean | null
+  difficultAirwayHistory: boolean | null
   difficultAirwayNotes: string | null
   cormackLehane: $Enums.CormackLehane | null
   airwayUnobtainable: boolean
@@ -848,28 +848,28 @@ export type PreoperativeAssessmentGroupByOutputType = {
   elective: boolean
   emergencySurgery: boolean
   highRiskSurgery: boolean
-  rcriIschemicHeart: boolean
-  rcriCHF: boolean
-  rcriCVD: boolean
-  rcriInsulinDM: boolean
-  rcriCreatinine: boolean
+  rcriIschemicHeart: boolean | null
+  rcriCHF: boolean | null
+  rcriCVD: boolean | null
+  rcriInsulinDM: boolean | null
+  rcriCreatinine: boolean | null
   rcriScore: number | null
   gutaScore: number | null
   apfelScore: number | null
   stopBangScore: number | null
-  apfelPONVHistory: boolean
-  apfelPostopOpioids: boolean
-  stopbangSnoring: boolean
-  stopbangTired: boolean
-  stopbangObserved: boolean
-  stopbangBP: boolean
-  stopbangNeck: boolean
+  apfelPONVHistory: boolean | null
+  apfelPostopOpioids: boolean | null
+  stopbangSnoring: boolean | null
+  stopbangTired: boolean | null
+  stopbangObserved: boolean | null
+  stopbangBP: boolean | null
+  stopbangNeck: boolean | null
   povocScore: number | null
   povocRiskPercent: number | null
-  povocSurgeryAtLeast30Minutes: boolean
-  povocAgeAtLeast3Years: boolean
-  povocStrabismusSurgery: boolean
-  povocHistory: boolean
+  povocSurgeryAtLeast30Minutes: boolean | null
+  povocAgeAtLeast3Years: boolean | null
+  povocStrabismusSurgery: boolean | null
+  povocHistory: boolean | null
   coldsApplicable: boolean
   coldsScore: number | null
   coldsCurrentSymptoms: string | null
@@ -931,20 +931,20 @@ export type PreoperativeAssessmentWhereInput = {
   physicalExamReport?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   notes?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   comorbidities?: Prisma.JsonFilter<"PreoperativeAssessment">
-  allergies?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  allergies?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   allergyDetails?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
-  latexAllergy?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  latexAllergy?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   currentMedications?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  familyAnesthesiaProblems?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   familyAnesthesiaDetails?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
-  dentalProsthetics?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  looseTeeth?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  smoking?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  substanceAbuse?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  dentalProsthetics?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  looseTeeth?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  smoking?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  substanceAbuse?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   bpSystolic?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   bpDiastolic?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   heartRate?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
-  heartArrhythmia?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  heartArrhythmia?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   spO2?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   temperature?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   respiratoryRate?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
@@ -958,10 +958,10 @@ export type PreoperativeAssessmentWhereInput = {
   thyromental?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   neckMobility?: Prisma.EnumNeckMobilityNullableFilter<"PreoperativeAssessment"> | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.EnumUpperLipBiteTestNullableFilter<"PreoperativeAssessment"> | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  prominentIncisors?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  facialHair?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  difficultAirwayHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  retrognathia?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  prominentIncisors?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  facialHair?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  difficultAirwayHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   difficultAirwayNotes?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   cormackLehane?: Prisma.EnumCormackLehaneNullableFilter<"PreoperativeAssessment"> | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
@@ -969,28 +969,28 @@ export type PreoperativeAssessmentWhereInput = {
   elective?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   emergencySurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   highRiskSurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriIschemicHeart?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriCHF?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriCVD?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriInsulinDM?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriCreatinine?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  rcriIschemicHeart?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCHF?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCVD?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriInsulinDM?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCreatinine?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   rcriScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   gutaScore?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   apfelScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   stopBangScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
-  apfelPONVHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  apfelPostopOpioids?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangSnoring?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangTired?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangObserved?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangBP?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangNeck?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  apfelPONVHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  apfelPostopOpioids?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangSnoring?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangTired?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangObserved?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangBP?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangNeck?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   povocScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   povocRiskPercent?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  povocStrabismusSurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  povocHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  povocAgeAtLeast3Years?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  povocStrabismusSurgery?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  povocHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   coldsApplicable?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   coldsScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   coldsCurrentSymptoms?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
@@ -1035,20 +1035,20 @@ export type PreoperativeAssessmentOrderByWithRelationInput = {
   physicalExamReport?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   comorbidities?: Prisma.SortOrder
-  allergies?: Prisma.SortOrder
+  allergies?: Prisma.SortOrderInput | Prisma.SortOrder
   allergyDetails?: Prisma.SortOrderInput | Prisma.SortOrder
-  latexAllergy?: Prisma.SortOrder
+  latexAllergy?: Prisma.SortOrderInput | Prisma.SortOrder
   currentMedications?: Prisma.SortOrderInput | Prisma.SortOrder
-  familyAnesthesiaProblems?: Prisma.SortOrder
+  familyAnesthesiaProblems?: Prisma.SortOrderInput | Prisma.SortOrder
   familyAnesthesiaDetails?: Prisma.SortOrderInput | Prisma.SortOrder
-  dentalProsthetics?: Prisma.SortOrder
-  looseTeeth?: Prisma.SortOrder
-  smoking?: Prisma.SortOrder
-  substanceAbuse?: Prisma.SortOrder
+  dentalProsthetics?: Prisma.SortOrderInput | Prisma.SortOrder
+  looseTeeth?: Prisma.SortOrderInput | Prisma.SortOrder
+  smoking?: Prisma.SortOrderInput | Prisma.SortOrder
+  substanceAbuse?: Prisma.SortOrderInput | Prisma.SortOrder
   bpSystolic?: Prisma.SortOrderInput | Prisma.SortOrder
   bpDiastolic?: Prisma.SortOrderInput | Prisma.SortOrder
   heartRate?: Prisma.SortOrderInput | Prisma.SortOrder
-  heartArrhythmia?: Prisma.SortOrder
+  heartArrhythmia?: Prisma.SortOrderInput | Prisma.SortOrder
   spO2?: Prisma.SortOrderInput | Prisma.SortOrder
   temperature?: Prisma.SortOrderInput | Prisma.SortOrder
   respiratoryRate?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1062,10 +1062,10 @@ export type PreoperativeAssessmentOrderByWithRelationInput = {
   thyromental?: Prisma.SortOrderInput | Prisma.SortOrder
   neckMobility?: Prisma.SortOrderInput | Prisma.SortOrder
   upperLipBiteTest?: Prisma.SortOrderInput | Prisma.SortOrder
-  retrognathia?: Prisma.SortOrder
-  prominentIncisors?: Prisma.SortOrder
-  facialHair?: Prisma.SortOrder
-  difficultAirwayHistory?: Prisma.SortOrder
+  retrognathia?: Prisma.SortOrderInput | Prisma.SortOrder
+  prominentIncisors?: Prisma.SortOrderInput | Prisma.SortOrder
+  facialHair?: Prisma.SortOrderInput | Prisma.SortOrder
+  difficultAirwayHistory?: Prisma.SortOrderInput | Prisma.SortOrder
   difficultAirwayNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   cormackLehane?: Prisma.SortOrderInput | Prisma.SortOrder
   airwayUnobtainable?: Prisma.SortOrder
@@ -1073,28 +1073,28 @@ export type PreoperativeAssessmentOrderByWithRelationInput = {
   elective?: Prisma.SortOrder
   emergencySurgery?: Prisma.SortOrder
   highRiskSurgery?: Prisma.SortOrder
-  rcriIschemicHeart?: Prisma.SortOrder
-  rcriCHF?: Prisma.SortOrder
-  rcriCVD?: Prisma.SortOrder
-  rcriInsulinDM?: Prisma.SortOrder
-  rcriCreatinine?: Prisma.SortOrder
+  rcriIschemicHeart?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriCHF?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriCVD?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriInsulinDM?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriCreatinine?: Prisma.SortOrderInput | Prisma.SortOrder
   rcriScore?: Prisma.SortOrderInput | Prisma.SortOrder
   gutaScore?: Prisma.SortOrderInput | Prisma.SortOrder
   apfelScore?: Prisma.SortOrderInput | Prisma.SortOrder
   stopBangScore?: Prisma.SortOrderInput | Prisma.SortOrder
-  apfelPONVHistory?: Prisma.SortOrder
-  apfelPostopOpioids?: Prisma.SortOrder
-  stopbangSnoring?: Prisma.SortOrder
-  stopbangTired?: Prisma.SortOrder
-  stopbangObserved?: Prisma.SortOrder
-  stopbangBP?: Prisma.SortOrder
-  stopbangNeck?: Prisma.SortOrder
+  apfelPONVHistory?: Prisma.SortOrderInput | Prisma.SortOrder
+  apfelPostopOpioids?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangSnoring?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangTired?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangObserved?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangBP?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangNeck?: Prisma.SortOrderInput | Prisma.SortOrder
   povocScore?: Prisma.SortOrderInput | Prisma.SortOrder
   povocRiskPercent?: Prisma.SortOrderInput | Prisma.SortOrder
-  povocSurgeryAtLeast30Minutes?: Prisma.SortOrder
-  povocAgeAtLeast3Years?: Prisma.SortOrder
-  povocStrabismusSurgery?: Prisma.SortOrder
-  povocHistory?: Prisma.SortOrder
+  povocSurgeryAtLeast30Minutes?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocAgeAtLeast3Years?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocStrabismusSurgery?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocHistory?: Prisma.SortOrderInput | Prisma.SortOrder
   coldsApplicable?: Prisma.SortOrder
   coldsScore?: Prisma.SortOrderInput | Prisma.SortOrder
   coldsCurrentSymptoms?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1142,20 +1142,20 @@ export type PreoperativeAssessmentWhereUniqueInput = Prisma.AtLeast<{
   physicalExamReport?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   notes?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   comorbidities?: Prisma.JsonFilter<"PreoperativeAssessment">
-  allergies?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  allergies?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   allergyDetails?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
-  latexAllergy?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  latexAllergy?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   currentMedications?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  familyAnesthesiaProblems?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   familyAnesthesiaDetails?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
-  dentalProsthetics?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  looseTeeth?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  smoking?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  substanceAbuse?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  dentalProsthetics?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  looseTeeth?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  smoking?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  substanceAbuse?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   bpSystolic?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   bpDiastolic?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   heartRate?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
-  heartArrhythmia?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  heartArrhythmia?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   spO2?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   temperature?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   respiratoryRate?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
@@ -1169,10 +1169,10 @@ export type PreoperativeAssessmentWhereUniqueInput = Prisma.AtLeast<{
   thyromental?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   neckMobility?: Prisma.EnumNeckMobilityNullableFilter<"PreoperativeAssessment"> | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.EnumUpperLipBiteTestNullableFilter<"PreoperativeAssessment"> | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  prominentIncisors?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  facialHair?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  difficultAirwayHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  retrognathia?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  prominentIncisors?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  facialHair?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  difficultAirwayHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   difficultAirwayNotes?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   cormackLehane?: Prisma.EnumCormackLehaneNullableFilter<"PreoperativeAssessment"> | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
@@ -1180,28 +1180,28 @@ export type PreoperativeAssessmentWhereUniqueInput = Prisma.AtLeast<{
   elective?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   emergencySurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   highRiskSurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriIschemicHeart?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriCHF?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriCVD?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriInsulinDM?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  rcriCreatinine?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  rcriIschemicHeart?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCHF?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCVD?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriInsulinDM?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCreatinine?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   rcriScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   gutaScore?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
   apfelScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   stopBangScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
-  apfelPONVHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  apfelPostopOpioids?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangSnoring?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangTired?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangObserved?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangBP?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  stopbangNeck?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  apfelPONVHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  apfelPostopOpioids?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangSnoring?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangTired?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangObserved?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangBP?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangNeck?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   povocScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   povocRiskPercent?: Prisma.FloatNullableFilter<"PreoperativeAssessment"> | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  povocStrabismusSurgery?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
-  povocHistory?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  povocAgeAtLeast3Years?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  povocStrabismusSurgery?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  povocHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   coldsApplicable?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   coldsScore?: Prisma.IntNullableFilter<"PreoperativeAssessment"> | number | null
   coldsCurrentSymptoms?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
@@ -1246,20 +1246,20 @@ export type PreoperativeAssessmentOrderByWithAggregationInput = {
   physicalExamReport?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   comorbidities?: Prisma.SortOrder
-  allergies?: Prisma.SortOrder
+  allergies?: Prisma.SortOrderInput | Prisma.SortOrder
   allergyDetails?: Prisma.SortOrderInput | Prisma.SortOrder
-  latexAllergy?: Prisma.SortOrder
+  latexAllergy?: Prisma.SortOrderInput | Prisma.SortOrder
   currentMedications?: Prisma.SortOrderInput | Prisma.SortOrder
-  familyAnesthesiaProblems?: Prisma.SortOrder
+  familyAnesthesiaProblems?: Prisma.SortOrderInput | Prisma.SortOrder
   familyAnesthesiaDetails?: Prisma.SortOrderInput | Prisma.SortOrder
-  dentalProsthetics?: Prisma.SortOrder
-  looseTeeth?: Prisma.SortOrder
-  smoking?: Prisma.SortOrder
-  substanceAbuse?: Prisma.SortOrder
+  dentalProsthetics?: Prisma.SortOrderInput | Prisma.SortOrder
+  looseTeeth?: Prisma.SortOrderInput | Prisma.SortOrder
+  smoking?: Prisma.SortOrderInput | Prisma.SortOrder
+  substanceAbuse?: Prisma.SortOrderInput | Prisma.SortOrder
   bpSystolic?: Prisma.SortOrderInput | Prisma.SortOrder
   bpDiastolic?: Prisma.SortOrderInput | Prisma.SortOrder
   heartRate?: Prisma.SortOrderInput | Prisma.SortOrder
-  heartArrhythmia?: Prisma.SortOrder
+  heartArrhythmia?: Prisma.SortOrderInput | Prisma.SortOrder
   spO2?: Prisma.SortOrderInput | Prisma.SortOrder
   temperature?: Prisma.SortOrderInput | Prisma.SortOrder
   respiratoryRate?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1273,10 +1273,10 @@ export type PreoperativeAssessmentOrderByWithAggregationInput = {
   thyromental?: Prisma.SortOrderInput | Prisma.SortOrder
   neckMobility?: Prisma.SortOrderInput | Prisma.SortOrder
   upperLipBiteTest?: Prisma.SortOrderInput | Prisma.SortOrder
-  retrognathia?: Prisma.SortOrder
-  prominentIncisors?: Prisma.SortOrder
-  facialHair?: Prisma.SortOrder
-  difficultAirwayHistory?: Prisma.SortOrder
+  retrognathia?: Prisma.SortOrderInput | Prisma.SortOrder
+  prominentIncisors?: Prisma.SortOrderInput | Prisma.SortOrder
+  facialHair?: Prisma.SortOrderInput | Prisma.SortOrder
+  difficultAirwayHistory?: Prisma.SortOrderInput | Prisma.SortOrder
   difficultAirwayNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   cormackLehane?: Prisma.SortOrderInput | Prisma.SortOrder
   airwayUnobtainable?: Prisma.SortOrder
@@ -1284,28 +1284,28 @@ export type PreoperativeAssessmentOrderByWithAggregationInput = {
   elective?: Prisma.SortOrder
   emergencySurgery?: Prisma.SortOrder
   highRiskSurgery?: Prisma.SortOrder
-  rcriIschemicHeart?: Prisma.SortOrder
-  rcriCHF?: Prisma.SortOrder
-  rcriCVD?: Prisma.SortOrder
-  rcriInsulinDM?: Prisma.SortOrder
-  rcriCreatinine?: Prisma.SortOrder
+  rcriIschemicHeart?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriCHF?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriCVD?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriInsulinDM?: Prisma.SortOrderInput | Prisma.SortOrder
+  rcriCreatinine?: Prisma.SortOrderInput | Prisma.SortOrder
   rcriScore?: Prisma.SortOrderInput | Prisma.SortOrder
   gutaScore?: Prisma.SortOrderInput | Prisma.SortOrder
   apfelScore?: Prisma.SortOrderInput | Prisma.SortOrder
   stopBangScore?: Prisma.SortOrderInput | Prisma.SortOrder
-  apfelPONVHistory?: Prisma.SortOrder
-  apfelPostopOpioids?: Prisma.SortOrder
-  stopbangSnoring?: Prisma.SortOrder
-  stopbangTired?: Prisma.SortOrder
-  stopbangObserved?: Prisma.SortOrder
-  stopbangBP?: Prisma.SortOrder
-  stopbangNeck?: Prisma.SortOrder
+  apfelPONVHistory?: Prisma.SortOrderInput | Prisma.SortOrder
+  apfelPostopOpioids?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangSnoring?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangTired?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangObserved?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangBP?: Prisma.SortOrderInput | Prisma.SortOrder
+  stopbangNeck?: Prisma.SortOrderInput | Prisma.SortOrder
   povocScore?: Prisma.SortOrderInput | Prisma.SortOrder
   povocRiskPercent?: Prisma.SortOrderInput | Prisma.SortOrder
-  povocSurgeryAtLeast30Minutes?: Prisma.SortOrder
-  povocAgeAtLeast3Years?: Prisma.SortOrder
-  povocStrabismusSurgery?: Prisma.SortOrder
-  povocHistory?: Prisma.SortOrder
+  povocSurgeryAtLeast30Minutes?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocAgeAtLeast3Years?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocStrabismusSurgery?: Prisma.SortOrderInput | Prisma.SortOrder
+  povocHistory?: Prisma.SortOrderInput | Prisma.SortOrder
   coldsApplicable?: Prisma.SortOrder
   coldsScore?: Prisma.SortOrderInput | Prisma.SortOrder
   coldsCurrentSymptoms?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1352,20 +1352,20 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
   physicalExamReport?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
   comorbidities?: Prisma.JsonWithAggregatesFilter<"PreoperativeAssessment">
-  allergies?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  allergies?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   allergyDetails?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
-  latexAllergy?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  latexAllergy?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   currentMedications?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
-  familyAnesthesiaProblems?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  familyAnesthesiaProblems?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   familyAnesthesiaDetails?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
-  dentalProsthetics?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  looseTeeth?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  smoking?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  substanceAbuse?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  dentalProsthetics?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  looseTeeth?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  smoking?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  substanceAbuse?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   bpSystolic?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   bpDiastolic?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   heartRate?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
-  heartArrhythmia?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  heartArrhythmia?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   spO2?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   temperature?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   respiratoryRate?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
@@ -1379,10 +1379,10 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
   thyromental?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   neckMobility?: Prisma.EnumNeckMobilityNullableWithAggregatesFilter<"PreoperativeAssessment"> | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.EnumUpperLipBiteTestNullableWithAggregatesFilter<"PreoperativeAssessment"> | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  prominentIncisors?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  facialHair?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  difficultAirwayHistory?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  retrognathia?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  prominentIncisors?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  facialHair?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  difficultAirwayHistory?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   difficultAirwayNotes?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
   cormackLehane?: Prisma.EnumCormackLehaneNullableWithAggregatesFilter<"PreoperativeAssessment"> | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
@@ -1390,28 +1390,28 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
   elective?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
   emergencySurgery?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
   highRiskSurgery?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  rcriIschemicHeart?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  rcriCHF?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  rcriCVD?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  rcriInsulinDM?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  rcriCreatinine?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  rcriIschemicHeart?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCHF?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCVD?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  rcriInsulinDM?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  rcriCreatinine?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   rcriScore?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   gutaScore?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   apfelScore?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   stopBangScore?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
-  apfelPONVHistory?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  apfelPostopOpioids?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  stopbangSnoring?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  stopbangTired?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  stopbangObserved?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  stopbangBP?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  stopbangNeck?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  apfelPONVHistory?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  apfelPostopOpioids?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangSnoring?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangTired?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangObserved?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangBP?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  stopbangNeck?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   povocScore?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   povocRiskPercent?: Prisma.FloatNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  povocStrabismusSurgery?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
-  povocHistory?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  povocAgeAtLeast3Years?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  povocStrabismusSurgery?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  povocHistory?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   coldsApplicable?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
   coldsScore?: Prisma.IntNullableWithAggregatesFilter<"PreoperativeAssessment"> | number | null
   coldsCurrentSymptoms?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
@@ -1449,20 +1449,20 @@ export type PreoperativeAssessmentCreateInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -1476,10 +1476,10 @@ export type PreoperativeAssessmentCreateInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -1487,28 +1487,28 @@ export type PreoperativeAssessmentCreateInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -1553,20 +1553,20 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -1580,10 +1580,10 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -1591,28 +1591,28 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -1655,20 +1655,20 @@ export type PreoperativeAssessmentUpdateInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1682,10 +1682,10 @@ export type PreoperativeAssessmentUpdateInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1693,28 +1693,28 @@ export type PreoperativeAssessmentUpdateInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1759,20 +1759,20 @@ export type PreoperativeAssessmentUncheckedUpdateInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1786,10 +1786,10 @@ export type PreoperativeAssessmentUncheckedUpdateInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1797,28 +1797,28 @@ export type PreoperativeAssessmentUncheckedUpdateInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1862,20 +1862,20 @@ export type PreoperativeAssessmentCreateManyInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -1889,10 +1889,10 @@ export type PreoperativeAssessmentCreateManyInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -1900,28 +1900,28 @@ export type PreoperativeAssessmentCreateManyInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -1959,20 +1959,20 @@ export type PreoperativeAssessmentUpdateManyMutationInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1986,10 +1986,10 @@ export type PreoperativeAssessmentUpdateManyMutationInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1997,28 +1997,28 @@ export type PreoperativeAssessmentUpdateManyMutationInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2057,20 +2057,20 @@ export type PreoperativeAssessmentUncheckedUpdateManyInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2084,10 +2084,10 @@ export type PreoperativeAssessmentUncheckedUpdateManyInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2095,28 +2095,28 @@ export type PreoperativeAssessmentUncheckedUpdateManyInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2526,6 +2526,10 @@ export type NullableEnumRhFactorFieldUpdateOperationsInput = {
   set?: $Enums.RhFactor | null
 }
 
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
+}
+
 export type NullableEnumMallampatiClassFieldUpdateOperationsInput = {
   set?: $Enums.MallampatiClass | null
 }
@@ -2638,20 +2642,20 @@ export type PreoperativeAssessmentCreateWithoutCaseInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -2665,10 +2669,10 @@ export type PreoperativeAssessmentCreateWithoutCaseInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -2676,28 +2680,28 @@ export type PreoperativeAssessmentCreateWithoutCaseInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -2740,20 +2744,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutCaseInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -2767,10 +2771,10 @@ export type PreoperativeAssessmentUncheckedCreateWithoutCaseInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -2778,28 +2782,28 @@ export type PreoperativeAssessmentUncheckedCreateWithoutCaseInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -2858,20 +2862,20 @@ export type PreoperativeAssessmentUpdateWithoutCaseInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2885,10 +2889,10 @@ export type PreoperativeAssessmentUpdateWithoutCaseInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2896,28 +2900,28 @@ export type PreoperativeAssessmentUpdateWithoutCaseInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2960,20 +2964,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2987,10 +2991,10 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2998,28 +3002,28 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3062,20 +3066,20 @@ export type PreoperativeAssessmentCreateWithoutDiagnosesInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -3089,10 +3093,10 @@ export type PreoperativeAssessmentCreateWithoutDiagnosesInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -3100,28 +3104,28 @@ export type PreoperativeAssessmentCreateWithoutDiagnosesInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -3165,20 +3169,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutDiagnosesInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -3192,10 +3196,10 @@ export type PreoperativeAssessmentUncheckedCreateWithoutDiagnosesInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -3203,28 +3207,28 @@ export type PreoperativeAssessmentUncheckedCreateWithoutDiagnosesInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -3282,20 +3286,20 @@ export type PreoperativeAssessmentUpdateWithoutDiagnosesInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3309,10 +3313,10 @@ export type PreoperativeAssessmentUpdateWithoutDiagnosesInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3320,28 +3324,28 @@ export type PreoperativeAssessmentUpdateWithoutDiagnosesInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3385,20 +3389,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3412,10 +3416,10 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3423,28 +3427,28 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3486,20 +3490,20 @@ export type PreoperativeAssessmentCreateWithoutProcedureRowsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -3513,10 +3517,10 @@ export type PreoperativeAssessmentCreateWithoutProcedureRowsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -3524,28 +3528,28 @@ export type PreoperativeAssessmentCreateWithoutProcedureRowsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -3589,20 +3593,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutProcedureRowsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -3616,10 +3620,10 @@ export type PreoperativeAssessmentUncheckedCreateWithoutProcedureRowsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -3627,28 +3631,28 @@ export type PreoperativeAssessmentUncheckedCreateWithoutProcedureRowsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -3706,20 +3710,20 @@ export type PreoperativeAssessmentUpdateWithoutProcedureRowsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3733,10 +3737,10 @@ export type PreoperativeAssessmentUpdateWithoutProcedureRowsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3744,28 +3748,28 @@ export type PreoperativeAssessmentUpdateWithoutProcedureRowsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3809,20 +3813,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3836,10 +3840,10 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3847,28 +3851,28 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3910,20 +3914,20 @@ export type PreoperativeAssessmentCreateWithoutComorbidityRowsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -3937,10 +3941,10 @@ export type PreoperativeAssessmentCreateWithoutComorbidityRowsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -3948,28 +3952,28 @@ export type PreoperativeAssessmentCreateWithoutComorbidityRowsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -4013,20 +4017,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutComorbidityRowsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -4040,10 +4044,10 @@ export type PreoperativeAssessmentUncheckedCreateWithoutComorbidityRowsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -4051,28 +4055,28 @@ export type PreoperativeAssessmentUncheckedCreateWithoutComorbidityRowsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -4130,20 +4134,20 @@ export type PreoperativeAssessmentUpdateWithoutComorbidityRowsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4157,10 +4161,10 @@ export type PreoperativeAssessmentUpdateWithoutComorbidityRowsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4168,28 +4172,28 @@ export type PreoperativeAssessmentUpdateWithoutComorbidityRowsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4233,20 +4237,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4260,10 +4264,10 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4271,28 +4275,28 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4334,20 +4338,20 @@ export type PreoperativeAssessmentCreateWithoutLabRowsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -4361,10 +4365,10 @@ export type PreoperativeAssessmentCreateWithoutLabRowsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -4372,28 +4376,28 @@ export type PreoperativeAssessmentCreateWithoutLabRowsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -4437,20 +4441,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -4464,10 +4468,10 @@ export type PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -4475,28 +4479,28 @@ export type PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -4554,20 +4558,20 @@ export type PreoperativeAssessmentUpdateWithoutLabRowsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4581,10 +4585,10 @@ export type PreoperativeAssessmentUpdateWithoutLabRowsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4592,28 +4596,28 @@ export type PreoperativeAssessmentUpdateWithoutLabRowsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4657,20 +4661,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4684,10 +4688,10 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4695,28 +4699,28 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4758,20 +4762,20 @@ export type PreoperativeAssessmentCreateWithoutMedicationsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -4785,10 +4789,10 @@ export type PreoperativeAssessmentCreateWithoutMedicationsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -4796,28 +4800,28 @@ export type PreoperativeAssessmentCreateWithoutMedicationsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -4861,20 +4865,20 @@ export type PreoperativeAssessmentUncheckedCreateWithoutMedicationsInput = {
   physicalExamReport?: string | null
   notes?: string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: boolean
+  allergies?: boolean | null
   allergyDetails?: string | null
-  latexAllergy?: boolean
+  latexAllergy?: boolean | null
   currentMedications?: string | null
-  familyAnesthesiaProblems?: boolean
+  familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
-  dentalProsthetics?: boolean
-  looseTeeth?: boolean
-  smoking?: boolean
-  substanceAbuse?: boolean
+  dentalProsthetics?: boolean | null
+  looseTeeth?: boolean | null
+  smoking?: boolean | null
+  substanceAbuse?: boolean | null
   bpSystolic?: number | null
   bpDiastolic?: number | null
   heartRate?: number | null
-  heartArrhythmia?: boolean
+  heartArrhythmia?: boolean | null
   spO2?: number | null
   temperature?: number | null
   respiratoryRate?: number | null
@@ -4888,10 +4892,10 @@ export type PreoperativeAssessmentUncheckedCreateWithoutMedicationsInput = {
   thyromental?: number | null
   neckMobility?: $Enums.NeckMobility | null
   upperLipBiteTest?: $Enums.UpperLipBiteTest | null
-  retrognathia?: boolean
-  prominentIncisors?: boolean
-  facialHair?: boolean
-  difficultAirwayHistory?: boolean
+  retrognathia?: boolean | null
+  prominentIncisors?: boolean | null
+  facialHair?: boolean | null
+  difficultAirwayHistory?: boolean | null
   difficultAirwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
   airwayUnobtainable?: boolean
@@ -4899,28 +4903,28 @@ export type PreoperativeAssessmentUncheckedCreateWithoutMedicationsInput = {
   elective?: boolean
   emergencySurgery?: boolean
   highRiskSurgery?: boolean
-  rcriIschemicHeart?: boolean
-  rcriCHF?: boolean
-  rcriCVD?: boolean
-  rcriInsulinDM?: boolean
-  rcriCreatinine?: boolean
+  rcriIschemicHeart?: boolean | null
+  rcriCHF?: boolean | null
+  rcriCVD?: boolean | null
+  rcriInsulinDM?: boolean | null
+  rcriCreatinine?: boolean | null
   rcriScore?: number | null
   gutaScore?: number | null
   apfelScore?: number | null
   stopBangScore?: number | null
-  apfelPONVHistory?: boolean
-  apfelPostopOpioids?: boolean
-  stopbangSnoring?: boolean
-  stopbangTired?: boolean
-  stopbangObserved?: boolean
-  stopbangBP?: boolean
-  stopbangNeck?: boolean
+  apfelPONVHistory?: boolean | null
+  apfelPostopOpioids?: boolean | null
+  stopbangSnoring?: boolean | null
+  stopbangTired?: boolean | null
+  stopbangObserved?: boolean | null
+  stopbangBP?: boolean | null
+  stopbangNeck?: boolean | null
   povocScore?: number | null
   povocRiskPercent?: number | null
-  povocSurgeryAtLeast30Minutes?: boolean
-  povocAgeAtLeast3Years?: boolean
-  povocStrabismusSurgery?: boolean
-  povocHistory?: boolean
+  povocSurgeryAtLeast30Minutes?: boolean | null
+  povocAgeAtLeast3Years?: boolean | null
+  povocStrabismusSurgery?: boolean | null
+  povocHistory?: boolean | null
   coldsApplicable?: boolean
   coldsScore?: number | null
   coldsCurrentSymptoms?: string | null
@@ -4978,20 +4982,20 @@ export type PreoperativeAssessmentUpdateWithoutMedicationsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5005,10 +5009,10 @@ export type PreoperativeAssessmentUpdateWithoutMedicationsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5016,28 +5020,28 @@ export type PreoperativeAssessmentUpdateWithoutMedicationsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5081,20 +5085,20 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutMedicationsInput = {
   physicalExamReport?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   comorbidities?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  allergies?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  allergies?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   allergyDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  latexAllergy?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  latexAllergy?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  familyAnesthesiaProblems?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  dentalProsthetics?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  looseTeeth?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  smoking?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  substanceAbuse?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  substanceAbuse?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   bpSystolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bpDiastolic?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  heartArrhythmia?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heartArrhythmia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   spO2?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   temperature?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   respiratoryRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5108,10 +5112,10 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutMedicationsInput = {
   thyromental?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   neckMobility?: Prisma.NullableEnumNeckMobilityFieldUpdateOperationsInput | $Enums.NeckMobility | null
   upperLipBiteTest?: Prisma.NullableEnumUpperLipBiteTestFieldUpdateOperationsInput | $Enums.UpperLipBiteTest | null
-  retrognathia?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  prominentIncisors?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  facialHair?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  difficultAirwayHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  retrognathia?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  prominentIncisors?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  facialHair?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  difficultAirwayHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   difficultAirwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayUnobtainable?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5119,28 +5123,28 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutMedicationsInput = {
   elective?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emergencySurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
   highRiskSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriIschemicHeart?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCHF?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCVD?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriInsulinDM?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  rcriCreatinine?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  rcriIschemicHeart?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCHF?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCVD?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriInsulinDM?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  rcriCreatinine?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   rcriScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gutaScore?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   apfelScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   stopBangScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  apfelPONVHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  apfelPostopOpioids?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangSnoring?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangTired?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangObserved?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  stopbangNeck?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  apfelPONVHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  apfelPostopOpioids?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangSnoring?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangTired?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangObserved?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangBP?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  stopbangNeck?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   povocScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   povocRiskPercent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  povocSurgeryAtLeast30Minutes?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocAgeAtLeast3Years?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocStrabismusSurgery?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  povocHistory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  povocSurgeryAtLeast30Minutes?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocAgeAtLeast3Years?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocStrabismusSurgery?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  povocHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   coldsApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   coldsScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   coldsCurrentSymptoms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5678,20 +5682,20 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     physicalExamReport: string | null
     notes: string | null
     comorbidities: runtime.JsonValue
-    allergies: boolean
+    allergies: boolean | null
     allergyDetails: string | null
-    latexAllergy: boolean
+    latexAllergy: boolean | null
     currentMedications: string | null
-    familyAnesthesiaProblems: boolean
+    familyAnesthesiaProblems: boolean | null
     familyAnesthesiaDetails: string | null
-    dentalProsthetics: boolean
-    looseTeeth: boolean
-    smoking: boolean
-    substanceAbuse: boolean
+    dentalProsthetics: boolean | null
+    looseTeeth: boolean | null
+    smoking: boolean | null
+    substanceAbuse: boolean | null
     bpSystolic: number | null
     bpDiastolic: number | null
     heartRate: number | null
-    heartArrhythmia: boolean
+    heartArrhythmia: boolean | null
     spO2: number | null
     temperature: number | null
     respiratoryRate: number | null
@@ -5705,10 +5709,10 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     thyromental: number | null
     neckMobility: $Enums.NeckMobility | null
     upperLipBiteTest: $Enums.UpperLipBiteTest | null
-    retrognathia: boolean
-    prominentIncisors: boolean
-    facialHair: boolean
-    difficultAirwayHistory: boolean
+    retrognathia: boolean | null
+    prominentIncisors: boolean | null
+    facialHair: boolean | null
+    difficultAirwayHistory: boolean | null
     difficultAirwayNotes: string | null
     cormackLehane: $Enums.CormackLehane | null
     airwayUnobtainable: boolean
@@ -5716,28 +5720,28 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     elective: boolean
     emergencySurgery: boolean
     highRiskSurgery: boolean
-    rcriIschemicHeart: boolean
-    rcriCHF: boolean
-    rcriCVD: boolean
-    rcriInsulinDM: boolean
-    rcriCreatinine: boolean
+    rcriIschemicHeart: boolean | null
+    rcriCHF: boolean | null
+    rcriCVD: boolean | null
+    rcriInsulinDM: boolean | null
+    rcriCreatinine: boolean | null
     rcriScore: number | null
     gutaScore: number | null
     apfelScore: number | null
     stopBangScore: number | null
-    apfelPONVHistory: boolean
-    apfelPostopOpioids: boolean
-    stopbangSnoring: boolean
-    stopbangTired: boolean
-    stopbangObserved: boolean
-    stopbangBP: boolean
-    stopbangNeck: boolean
+    apfelPONVHistory: boolean | null
+    apfelPostopOpioids: boolean | null
+    stopbangSnoring: boolean | null
+    stopbangTired: boolean | null
+    stopbangObserved: boolean | null
+    stopbangBP: boolean | null
+    stopbangNeck: boolean | null
     povocScore: number | null
     povocRiskPercent: number | null
-    povocSurgeryAtLeast30Minutes: boolean
-    povocAgeAtLeast3Years: boolean
-    povocStrabismusSurgery: boolean
-    povocHistory: boolean
+    povocSurgeryAtLeast30Minutes: boolean | null
+    povocAgeAtLeast3Years: boolean | null
+    povocStrabismusSurgery: boolean | null
+    povocHistory: boolean | null
     coldsApplicable: boolean
     coldsScore: number | null
     coldsCurrentSymptoms: string | null

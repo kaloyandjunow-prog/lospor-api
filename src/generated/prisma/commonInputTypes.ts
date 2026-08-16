@@ -495,6 +495,11 @@ export type EnumRhFactorNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumRhFactorNullableFilter<$PrismaModel> | $Enums.RhFactor | null
 }
 
+export type BoolNullableFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
+}
+
 export type EnumMallampatiClassNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.MallampatiClass | Prisma.EnumMallampatiClassFieldRefInput<$PrismaModel> | null
   in?: $Enums.MallampatiClass[] | Prisma.ListEnumMallampatiClassFieldRefInput<$PrismaModel> | null
@@ -570,6 +575,14 @@ export type EnumRhFactorNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumRhFactorNullableFilter<$PrismaModel>
 }
 
+export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+}
+
 export type EnumMallampatiClassNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.MallampatiClass | Prisma.EnumMallampatiClassFieldRefInput<$PrismaModel> | null
   in?: $Enums.MallampatiClass[] | Prisma.ListEnumMallampatiClassFieldRefInput<$PrismaModel> | null
@@ -627,11 +640,6 @@ export type EnumAirwayDeviceNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAirwayDeviceNullableFilter<$PrismaModel> | $Enums.AirwayDevice | null
 }
 
-export type BoolNullableFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
-}
-
 export type EnumVolatileAgentNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.VolatileAgent | Prisma.EnumVolatileAgentFieldRefInput<$PrismaModel> | null
   in?: $Enums.VolatileAgent[] | Prisma.ListEnumVolatileAgentFieldRefInput<$PrismaModel> | null
@@ -668,14 +676,6 @@ export type EnumAirwayDeviceNullableWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAirwayDeviceNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAirwayDeviceNullableFilter<$PrismaModel>
-}
-
-export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
 }
 
 export type EnumVolatileAgentNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -1310,6 +1310,11 @@ export type NestedEnumRhFactorNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumRhFactorNullableFilter<$PrismaModel> | $Enums.RhFactor | null
 }
 
+export type NestedBoolNullableFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
+}
+
 export type NestedEnumMallampatiClassNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.MallampatiClass | Prisma.EnumMallampatiClassFieldRefInput<$PrismaModel> | null
   in?: $Enums.MallampatiClass[] | Prisma.ListEnumMallampatiClassFieldRefInput<$PrismaModel> | null
@@ -1385,6 +1390,14 @@ export type NestedEnumRhFactorNullableWithAggregatesFilter<$PrismaModel = never>
   _max?: Prisma.NestedEnumRhFactorNullableFilter<$PrismaModel>
 }
 
+export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
+}
+
 export type NestedEnumMallampatiClassNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.MallampatiClass | Prisma.EnumMallampatiClassFieldRefInput<$PrismaModel> | null
   in?: $Enums.MallampatiClass[] | Prisma.ListEnumMallampatiClassFieldRefInput<$PrismaModel> | null
@@ -1442,11 +1455,6 @@ export type NestedEnumAirwayDeviceNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAirwayDeviceNullableFilter<$PrismaModel> | $Enums.AirwayDevice | null
 }
 
-export type NestedBoolNullableFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedBoolNullableFilter<$PrismaModel> | boolean | null
-}
-
 export type NestedEnumVolatileAgentNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.VolatileAgent | Prisma.EnumVolatileAgentFieldRefInput<$PrismaModel> | null
   in?: $Enums.VolatileAgent[] | Prisma.ListEnumVolatileAgentFieldRefInput<$PrismaModel> | null
@@ -1483,14 +1491,6 @@ export type NestedEnumAirwayDeviceNullableWithAggregatesFilter<$PrismaModel = ne
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAirwayDeviceNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAirwayDeviceNullableFilter<$PrismaModel>
-}
-
-export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedBoolNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedBoolNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumVolatileAgentNullableWithAggregatesFilter<$PrismaModel = never> = {

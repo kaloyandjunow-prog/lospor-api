@@ -71,12 +71,12 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
   const upperLipBiteTest =
     preop.upperLipBiteTest ??
     (preop.ulbt === "I" ? "CLASS_I" : preop.ulbt === "II" ? "CLASS_II" : preop.ulbt === "III" ? "CLASS_III" : null)
-  const difficultAirwayHistory = preop.difficultAirwayHistory ?? preop.difficultAirway ?? false
-  const familyAnesthesiaProblems = preop.familyAnesthesiaProblems ?? preop.familyProblems ?? false
+  const difficultAirwayHistory = preop.difficultAirwayHistory ?? preop.difficultAirway ?? null
+  const familyAnesthesiaProblems = preop.familyAnesthesiaProblems ?? preop.familyProblems ?? null
   const familyAnesthesiaDetails = familyAnesthesiaProblems
     ? preop.familyAnesthesiaDetails ?? preop.familyProblemNotes ?? null
     : null
-  const allergies = preop.allergies ?? false
+  const allergies = preop.allergies ?? null
   const allergyDetails = allergies ? taggedListToStorage(preop.allergyDetails) : null
   // Item 20: Validate/compute BMI from height+weight; discard client BMI if it diverges >10%
   //
@@ -186,19 +186,19 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
 
     allergies,
     allergyDetails,
-    latexAllergy:             preop.latexAllergy             ?? false,
+    latexAllergy: preop.latexAllergy ?? null,
     currentMedications:       taggedListToStorage(preop.currentMedications),
     familyAnesthesiaProblems,
     familyAnesthesiaDetails,
-    dentalProsthetics:        preop.dentalProsthetics        ?? false,
-    looseTeeth:               preop.looseTeeth               ?? false,
-    smoking:                  preop.smoking                  ?? false,
-    substanceAbuse:           preop.substanceAbuse           ?? false,
+    dentalProsthetics: preop.dentalProsthetics ?? null,
+    looseTeeth: preop.looseTeeth ?? null,
+    smoking: preop.smoking ?? null,
+    substanceAbuse: preop.substanceAbuse ?? null,
 
     bpSystolic:       preop.bpSystolic      ?? null,
     bpDiastolic:      preop.bpDiastolic     ?? null,
     heartRate:        preop.heartRate       ?? null,
-    heartArrhythmia:  preop.heartArrhythmia ?? false,
+    heartArrhythmia: preop.heartArrhythmia ?? null,
     spO2:             preop.spO2            ?? null,
     temperature:      preop.temperature     ?? null,
     respiratoryRate:  preop.respiratoryRate ?? null,
@@ -213,9 +213,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     thyromental:            preop.thyromental            ?? null,
     neckMobility:           preop.neckMobility           ?? null,
     upperLipBiteTest,
-    retrognathia:           preop.retrognathia           ?? false,
-    prominentIncisors:      preop.prominentIncisors      ?? false,
-    facialHair:             preop.facialHair             ?? false,
+    retrognathia: preop.retrognathia ?? null,
+    prominentIncisors: preop.prominentIncisors ?? null,
+    facialHair: preop.facialHair ?? null,
     difficultAirwayHistory,
     difficultAirwayNotes:   difficultAirwayHistory ? preop.difficultAirwayNotes ?? null : null,
     cormackLehane:          preop.cormackLehane          ?? null,
@@ -226,22 +226,22 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     emergencySurgery: preop.emergencySurgery ?? false,
     highRiskSurgery:  preop.highRiskSurgery  ?? false,
 
-    rcriIschemicHeart:  preop.rcriIschemicHeart  ?? false,
-    rcriCHF:            preop.rcriCHF            ?? false,
-    rcriCVD:            preop.rcriCVD            ?? false,
-    rcriInsulinDM:      preop.rcriInsulinDM      ?? false,
-    rcriCreatinine:     preop.rcriCreatinine     ?? false,
+    rcriIschemicHeart: preop.rcriIschemicHeart ?? null,
+    rcriCHF: preop.rcriCHF ?? null,
+    rcriCVD: preop.rcriCVD ?? null,
+    rcriInsulinDM: preop.rcriInsulinDM ?? null,
+    rcriCreatinine: preop.rcriCreatinine ?? null,
 
     rcriScore:     pediatric ? null : toIntOrNull(preop.rcriScore),
     gutaScore:     pediatric ? null : toFloatOrNull(preop.gutaScore),
     apfelScore:    pediatric ? null : toIntOrNull(preop.apfelScore),
     stopBangScore: pediatric ? null : toIntOrNull(preop.stopBangScore),
 
-    apfelPONVHistory:   preop.apfelPONVHistory   ?? false,
-    apfelPostopOpioids: preop.apfelPostopOpioids ?? false,
+    apfelPONVHistory: preop.apfelPONVHistory ?? null,
+    apfelPostopOpioids: preop.apfelPostopOpioids ?? null,
 
-    stopbangSnoring:  preop.stopbangSnoring  ?? false,
-    stopbangTired:    preop.stopbangTired    ?? false,
+    stopbangSnoring: preop.stopbangSnoring ?? null,
+    stopbangTired: preop.stopbangTired ?? null,
     povocScore:                   povoc?.score ?? null,
     povocRiskPercent:             povoc?.riskPercent ?? null,
     povocSurgeryAtLeast30Minutes: povoc?.factors.surgeryAtLeast30Minutes ?? false,
@@ -257,9 +257,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     coldsSurgery:                 pediatric ? coldsSurgery : null,
     pediatricFasting:            pediatric ? preop.pediatricFasting ?? [] : [],
 
-    stopbangObserved: preop.stopbangObserved ?? false,
-    stopbangBP:       preop.stopbangBP       ?? false,
-    stopbangNeck:     preop.stopbangNeck     ?? false,
+    stopbangObserved: preop.stopbangObserved ?? null,
+    stopbangBP: preop.stopbangBP ?? null,
+    stopbangNeck: preop.stopbangNeck ?? null,
 
     labResults: preop.labResults ?? [],
   }
@@ -729,7 +729,7 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
     pediatricPainScore: toIntOrNull(postop.pediatricPainScore),
     paedScore:          toIntOrNull(postop.paedScore),
     painScoreNRS:       toIntOrNull(postop.painScoreNRS),
-    ponv:               postop.ponv               ?? false,
+    ponv: postop.ponv ?? null,
     temperatureCelsius: toFloatOrNull(postop.temperatureCelsius ?? postop.temperaturePostop),
     recoveryBpUnobtainable:          postop.recoveryBpUnobtainable          ?? false,
     recoveryHeartRateUnobtainable:   postop.recoveryHeartRateUnobtainable   ?? false,

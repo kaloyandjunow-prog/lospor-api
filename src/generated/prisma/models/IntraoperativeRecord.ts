@@ -1859,10 +1859,6 @@ export type NullableEnumAirwayDeviceFieldUpdateOperationsInput = {
   set?: $Enums.AirwayDevice | null
 }
 
-export type NullableBoolFieldUpdateOperationsInput = {
-  set?: boolean | null
-}
-
 export type NullableEnumVolatileAgentFieldUpdateOperationsInput = {
   set?: $Enums.VolatileAgent | null
 }

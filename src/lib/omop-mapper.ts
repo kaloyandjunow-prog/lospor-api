@@ -374,10 +374,10 @@ type CaseRow = {
     asaScore: string | null
     emergencySurgery: boolean
     highRiskSurgery: boolean
-    allergies: boolean
+    allergies: boolean | null
     allergyDetails: string | null
-    smoking: boolean
-    substanceAbuse: boolean
+    smoking: boolean | null
+    substanceAbuse: boolean | null
     currentMedications: string | null
     rcriScore: number | null
     apfelScore: number | null
@@ -385,7 +385,7 @@ type CaseRow = {
     povocScore?: number | null
     povocRiskPercent?: number | null
     coldsScore?: number | null
-    difficultAirwayHistory: boolean
+    difficultAirwayHistory: boolean | null
     mallampati: string | null
     labResults: unknown
     labRows?: {
@@ -510,7 +510,7 @@ type CaseRow = {
     pediatricPainScale?: "FLACC" | "FPS_R" | "NRS" | null
     pediatricPainScore?: number | null
     paedScore?: number | null
-    ponv: boolean
+    ponv: boolean | null
     disposition: string | null
     complications: string | null
   } | null
@@ -947,11 +947,19 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:RCRI", preop.rcriScore, preopDate)
       sourceObservation("LOSPOR:APFEL", preop.apfelScore, preopDate)
       sourceObservation("LOSPOR:STOP_BANG", preop.stopBangScore, preopDate)
-      // Only recorded when true: absence is "no history noted", which is not
-      // the same claim as "no history".
-      if (preop.difficultAirwayHistory) {
-        sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", true, preopDate)
-      }
+      // Recorded for yes and for no, but not when nobody asked.
+      //
+      // This used to emit only on true, and that was right at the time: the
+      // column was Boolean @default(false), so a false meant "either answered
+      // no, or never touched" and exporting it would have asserted "no
+      // difficult airway history" for every patient nobody had asked. Silence
+      // was the honest option when the schema could not tell them apart.
+      //
+      // The column is now nullable, so false is an answer and null is the
+      // absence of one. sourceObservation already skips null and writes false,
+      // so an answered "no" finally reaches the export as a finding rather than
+      // being rounded off to silence.
+      sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", preop.difficultAirwayHistory, preopDate)
       sourceObservation("LOSPOR:MALLAMPATI", preop.mallampati, preopDate)
     }
 
