@@ -199,7 +199,10 @@ interface OmopDrug {
   drug_exposure_start_date: string | null
   drug_type_concept_id: number
   drug_source_value: string | null
-  drug_source_concept_id: string | null
+  // A concept id, per the CDM: an integer or nothing. Source vocabulary text
+  // belongs in drug_source_value. This column held strings like "ATC:N01AH01",
+  // which a loader must either reject or silently coerce away.
+  drug_source_concept_id: number | null
   dose_value: number | null
   dose_unit_source_value: string | null
   route_source_value: string | null
@@ -548,7 +551,10 @@ function buildQualityWarnings(
   const casesWithoutFieldStatus = cases.filter(c => (c.fieldStatuses ?? []).length === 0).length
   const exactTimestampRows = cases.reduce((sum, c) => sum + (c.events ?? []).length, 0)
   const freeTextComplications = cases.reduce((sum, c) => sum + (c.complications ?? []).filter(comp => Boolean(comp.note)).length, 0)
-  const institutionLinked = cases.filter(c => Boolean(c.institutionId ?? c.user?.institution?.name)).length
+  // Counted from the case alone, matching what the export actually writes as
+  // the care site. Counting the author's institution here would report cases as
+  // institution-linked whose exported care site is null.
+  const institutionLinked = cases.filter(c => Boolean(c.institutionId)).length
 
   if (mappingSummary.unmapped_rows > 0) {
     warnings.push({
@@ -650,8 +656,17 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     const startDate = isoDate(c.intraop?.startedAt ?? legacyDay(c.intraop?.startTime) ?? c.createdAt)
     const endDate   = isoDate(c.intraop?.endedAt ?? legacyDay(c.intraop?.endTime) ?? c.intraop?.startedAt ?? c.createdAt)
 
-    // care_site: prefer case-level institutionId, fall back to user institution
-    const careSite = c.institutionId ?? c.user?.institution?.name ?? null
+    // The case's own institution, stamped at creation and never updated,
+    // because a case belongs to the institution it was performed at — see
+    // access-control.ts, which scopes reads the same way.
+    //
+    // There is deliberately no fallback to the author's institution. That was
+    // joined live at export time, so a case with no institution of its own was
+    // attributed to wherever its author happened to work on the day of the
+    // export, and could move hospital between two exports because a colleague
+    // changed jobs. It also mixed two kinds of value in one column: an id from
+    // the case, a name from the user. Unknown now stays unknown.
+    const careSite = c.institutionId ?? null
 
     // ── PERSON ───────────────────────────────────────────────────────────────
     // One person per case: LOSPOR deliberately stores no patient identifier, so
@@ -695,7 +710,18 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     visits.push({
       visit_occurrence_id:   visitId,
       person_id:             personId,
-      visit_concept_id:      9201,  // Inpatient Visit
+      // 9201 Inpatient Visit, and it is a description rather than a guess:
+      // LOSPOR documents admitted surgical care only. The Disposition enum
+      // carries the evidence — WARD, PACU, ICU, with no home-discharge value —
+      // so a patient who went home the same day cannot be recorded here at all.
+      //
+      // This is therefore an assumption about the register's scope, not a fact
+      // read off the case. If day surgery is ever recorded, this must stop being
+      // a constant and derive from the setting: 9201 inpatient, 9202
+      // outpatient, 581379 day surgery. Until then, exporting 0 would be worse
+      // than exporting 9201 — it would hide every visit from the OHDSI tools
+      // that filter on visit type, to avoid stating something that is true.
+      visit_concept_id:      9201,
       visit_start_date:      startDate,
       visit_end_date:        endDate,
       visit_type_concept_id: 32817, // EHR
@@ -900,6 +926,23 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // ── Intraop techniques -> PROCEDURE_OCCURRENCE ────────────────────────────
     for (const med of preop?.medications ?? []) {
       trackMapping(med.mappingStatus)
+      // Medication.kind is CURRENT | ALLERGY, and they are opposite claims: one
+      // says the patient takes this drug, the other says they must never be
+      // given it. Both used to become DRUG_EXPOSURE, which asserts
+      // administration — so an allergy was exported as a dose, in the dangerous
+      // direction, and no downstream query could tell it apart from a real one.
+      //
+      // The allergy is not dropped. It becomes an observation carrying the
+      // substance, because "no allergy recorded" and "allergy lost on export"
+      // must not look identical to a researcher.
+      if (med.kind === "ALLERGY") {
+        sourceObservation(
+          "LOSPOR:DRUG_ALLERGY",
+          sourceValue("MEDICATION", med.sourceVocabulary, med.sourceCode, med.nameRaw),
+          isoDate(c.createdAt),
+        )
+        continue
+      }
       const dose = med.dose ? parseFloat(med.dose) || null : null
       drugs.push({
         drug_exposure_id: nextId(),
@@ -908,7 +951,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         drug_exposure_start_date: isoDate(c.createdAt),
         drug_type_concept_id: 32817,
         drug_source_value: sourceValue("MEDICATION", med.sourceVocabulary, med.sourceCode, med.nameRaw),
-        drug_source_concept_id: med.atcCode ? `ATC:${med.atcCode}` : med.inn ? `INN:${med.inn}` : null,
+        // The ATC/INN text is already carried by drug_source_value above. No
+        // OMOP *source* concept is resolved for it today, so this stays null
+        // rather than being filled with something that is not a concept id.
+        drug_source_concept_id: null,
         dose_value: dose,
         dose_unit_source_value: med.dose,
         route_source_value: med.route,
@@ -1002,8 +1048,14 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           drug_concept_id:            0,
           drug_exposure_start_date:   isoDate(ev.timestamp),
           drug_type_concept_id:       32817,
-          drug_source_value:          (meta.name as string | undefined) ?? ev.label ?? null,
-          drug_source_concept_id:     ev.atcCode ? `ATC:${ev.atcCode}` : null,
+          // The ATC moves into the source value, where source codes belong. It
+          // was previously the only place the code appeared, so dropping it
+          // from the concept id column without doing this would lose the one
+          // identifier an unmapped intraoperative drug still had.
+          drug_source_value:          ev.atcCode
+            ? `ATC:${ev.atcCode} - ${(meta.name as string | undefined) ?? ev.label ?? ""}`.trimEnd()
+            : (meta.name as string | undefined) ?? ev.label ?? null,
+          drug_source_concept_id:     null,
           dose_value:                 dose,
           dose_unit_source_value:     ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
           route_source_value:         ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV"),
@@ -1067,8 +1119,12 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           drug_concept_id: prem.standardConceptId ?? 0,
           drug_exposure_start_date: startDate,
           drug_type_concept_id: 32817,
-          drug_source_value: prem.nameRaw,
-          drug_source_concept_id: prem.atcCode ? `ATC:${prem.atcCode}` : null,
+          // Same correction as the other two drug sites: the ATC is source text
+          // and belongs in the source value, not in a numeric concept column.
+          // Only prefixed when there is a code to carry, so rows without one
+          // read exactly as they did before.
+          drug_source_value: prem.atcCode ? `ATC:${prem.atcCode} - ${prem.nameRaw}` : prem.nameRaw,
+          drug_source_concept_id: null,
           dose_value: dose,
           dose_unit_source_value: prem.dose,
           route_source_value: prem.route,

@@ -66,13 +66,15 @@ describe("mapCasesToOmop", () => {
       expect.objectContaining({
         drug_concept_id: 19019905,
         drug_source_value: "ATC:N05BA01 - Diazepam",
-        drug_source_concept_id: "ATC:N05BA01",
+        // The ATC lives in the source value; the concept id column is numeric
+        // and stays null until a real OMOP source concept is resolved.
+        drug_source_concept_id: null,
         dose_value: 5,
       }),
       expect.objectContaining({
         drug_concept_id: 0,
-        drug_source_value: "Fentanyl",
-        drug_source_concept_id: "ATC:N01AH01",
+        drug_source_value: "ATC:N01AH01 - Fentanyl",
+        drug_source_concept_id: null,
         dose_value: 50,
         route_source_value: "IV",
       }),
@@ -268,5 +270,135 @@ describe("mapCasesToOmop", () => {
       expect.objectContaining({ code: "NO_FIELD_STATUS_ROWS", severity: "error" }),
     ]))
     expect(bundle.metadata.forced_override).toBe(true)
+  })
+})
+
+/**
+ * A recorded allergy is a statement that a drug must NOT be given. Exporting it
+ * as a DRUG_EXPOSURE says the opposite: that the patient received it. A
+ * researcher reading the dataset cannot tell the two apart, and the mistake
+ * runs in the dangerous direction.
+ */
+describe("allergies are not drug administrations", () => {
+  function caseWithAllergy() {
+    const c = completeCase() as never as { preop: { medications: unknown[] } }
+    c.preop.medications = [
+      { kind: "CURRENT", nameRaw: "Diazepam", inn: "diazepam", atcCode: "N05BA01", dose: "5 mg", route: "PO", sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905, mappingStatus: "MAPPED", ordinal: 0 },
+      { kind: "ALLERGY", nameRaw: "Penicillin", inn: "benzylpenicillin", atcCode: "J01CE01", dose: null, route: null, sourceVocabulary: "ATC", sourceCode: "J01CE01", standardConceptId: 1728416, mappingStatus: "MAPPED", ordinal: 1 },
+    ]
+    return c
+  }
+
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("keeps current medication in DRUG_EXPOSURE", () => {
+    // The positive half. Asserting only the absence of the allergy would also
+    // pass on a mapper that exported no medications at all.
+    const bundle = mapCasesToOmop([caseWithAllergy() as never], options as never)
+    expect(bundle.drug_exposure.some(row => /Diazepam/.test(String(row.drug_source_value)))).toBe(true)
+  })
+
+  it("never exports an allergy as a drug administration", () => {
+    const bundle = mapCasesToOmop([caseWithAllergy() as never], options as never)
+    expect(bundle.drug_exposure.some(row => /Penicillin/.test(String(row.drug_source_value)))).toBe(false)
+  })
+
+  it("still records the allergy somewhere, rather than dropping it", () => {
+    // Silence would be its own defect: "no allergy recorded" and "allergy lost
+    // in export" must not look the same to a researcher.
+    const bundle = mapCasesToOmop([caseWithAllergy() as never], options as never)
+    const recorded = [...bundle.observation, ...bundle.condition_occurrence]
+      .some(row => /Penicillin/i.test(JSON.stringify(row)))
+    expect(recorded).toBe(true)
+  })
+})
+
+/**
+ * drug_source_concept_id is defined by the CDM as a concept id: an integer.
+ * Writing "ATC:N01AH01" there puts a vocabulary string in a numeric column, so
+ * a loader either rejects the row or coerces it to nothing. The ATC belongs in
+ * drug_source_value, which is the column for source text.
+ */
+describe("drug source columns hold the right kinds of value", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("never puts a vocabulary string in the concept id column", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    for (const row of bundle.drug_exposure) {
+      expect(
+        typeof row.drug_source_concept_id === "string",
+        `drug_source_concept_id held the string ${JSON.stringify(row.drug_source_concept_id)}`,
+      ).toBe(false)
+    }
+  })
+
+  it("keeps the ATC code visible in the source value instead", () => {
+    // Losing the code entirely would trade one defect for another: an
+    // unmapped drug is still identifiable by its source code.
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    const fentanyl = bundle.drug_exposure.find(row => /Fentanyl/.test(String(row.drug_source_value)))
+    expect(fentanyl, "fixture must contain the intraoperative fentanyl event").toBeDefined()
+    expect(String(fentanyl!.drug_source_value)).toContain("N01AH01")
+  })
+})
+
+describe("visit type states the register's scope", () => {
+  it("marks every case an inpatient visit, because LOSPOR records only admitted care", () => {
+    // Not an unexamined constant. LOSPOR documents admitted surgical care, and
+    // the Disposition enum shows it: WARD, PACU, ICU, with no home-discharge
+    // value, so a same-day discharge cannot be recorded at all.
+    //
+    // This test exists to fail the day that changes. If a day-case or
+    // home-discharge disposition is ever added, this constant is no longer
+    // true and must derive from the setting instead.
+    const bundle = mapCasesToOmop([completeCase() as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    expect(bundle.visit_occurrence.length).toBeGreaterThan(0)
+    for (const visit of bundle.visit_occurrence) {
+      expect(visit.visit_concept_id).toBe(9201)
+      expect(visit.visit_source_value).toBeTruthy()
+    }
+  })
+})
+
+/**
+ * A case belongs to the institution it was performed at — access-control.ts
+ * says so, and Case.institutionId is stamped once at creation and never
+ * updated, so the relational model honours it.
+ *
+ * The exporter used to undo that: when institutionId was null it fell back to
+ * the author's institution, joined live at export time. So a case could change
+ * hospital between two exports because its author changed jobs, and an
+ * unaffiliated author's case was attributed to whichever hospital they later
+ * joined. On the appliance this cannot arise — accounts are site-local — but
+ * the serverless register is exactly where authors move between institutions.
+ */
+describe("care site comes from the case, not from where its author works now", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("uses the institution recorded on the case", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    expect(bundle.visit_occurrence[0].care_site_source_value).toBe("inst-1")
+  })
+
+  it("does not borrow the author's current institution when the case has none", () => {
+    const c = completeCase() as never as { institutionId: string | null }
+    c.institutionId = null
+    const bundle = mapCasesToOmop([c as never], options as never)
+    // The fixture's author sits at "Fallback Hospital". An unknown care site
+    // must stay unknown rather than quietly becoming theirs.
+    expect(bundle.visit_occurrence[0].care_site_source_value).not.toBe("Fallback Hospital")
+    expect(bundle.visit_occurrence[0].care_site_source_value).toBeNull()
   })
 })
