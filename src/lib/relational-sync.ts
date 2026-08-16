@@ -27,7 +27,7 @@ const flt = (v: unknown): number | null => {
   return isFinite(n) ? n : null
 }
 
-type MappingStatus = "MAPPED" | "SOURCE_ONLY" | "UNMAPPED"
+type MappingStatus = "MAPPED" | "MANUALLY_CURATED" | "REJECTED" | "SOURCE_ONLY" | "UNMAPPED"
 type ConceptInfo = {
   sourceVocabulary: string | null
   sourceCode: string | null
@@ -65,12 +65,18 @@ function concept(
   if (!sourceVocabulary || !sourceCode) {
     return { sourceVocabulary: null, sourceCode: null, standardConceptId: null, mappingStatus: "UNMAPPED" }
   }
-  return concepts.get(conceptKey(domain, sourceVocabulary, sourceCode)) ?? {
-    sourceVocabulary,
-    sourceCode,
-    standardConceptId: null,
-    mappingStatus: "SOURCE_ONLY",
+  const found = concepts.get(conceptKey(domain, sourceVocabulary, sourceCode))
+  if (!found) {
+    return { sourceVocabulary, sourceCode, standardConceptId: null, mappingStatus: "SOURCE_ONLY" }
   }
+  // A rejected mapping keeps its row so the rejection is remembered and the
+  // same candidate is not proposed again, but the concept it names must never
+  // be applied -- that is the whole point of having rejected it. The source
+  // vocabulary and code still travel, so the row stays searchable.
+  if (found.mappingStatus === "REJECTED") {
+    return { ...found, standardConceptId: null }
+  }
+  return found
 }
 
 /**

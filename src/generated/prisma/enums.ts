@@ -142,6 +142,8 @@ export type LibraryCategory = (typeof LibraryCategory)[keyof typeof LibraryCateg
 
 export const ConceptMappingStatus = {
   MAPPED: 'MAPPED',
+  MANUALLY_CURATED: 'MANUALLY_CURATED',
+  REJECTED: 'REJECTED',
   SOURCE_ONLY: 'SOURCE_ONLY',
   UNMAPPED: 'UNMAPPED'
 } as const

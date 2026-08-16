@@ -26,7 +26,7 @@ describe("mapCasesToOmop", () => {
       data_quality_status: "WARNING",
       // Five mapped rows, not four: the second planned procedure the export
       // used to discard is now counted like the rest.
-      mapping_summary: { mapped_rows: 5, source_only_rows: 3, unmapped_rows: 1 },
+      mapping_summary: { mapped_rows: 5, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 3, unmapped_rows: 1 },
     }))
     expect(bundle.metadata.table_counts).toEqual({
       // PERSON and OBSERVATION_PERIOD are the OMOP root tables — without them
@@ -888,5 +888,48 @@ describe("vascular access", () => {
     expect(obs("LOSPOR:VASCULAR_ACCESS_LUMENS")[0]?.value_as_number).toBe(2)
     expect(obs("LOSPOR:VASCULAR_ACCESS_PREEXISTING")[0]?.value_as_string)
       .toBe("Internal jugular=true")
+  })
+})
+
+describe("mapping summary provenance", () => {
+  const summaryFor = (mappingStatus: string) => {
+    const base = completeCase() as unknown as { preop: { diagnoses: Record<string, unknown>[] } }
+    const bundle = mapCasesToOmop([{
+      ...base,
+      preop: {
+        ...base.preop,
+        diagnoses: [{ ...base.preop.diagnoses[0], mappingStatus }],
+      },
+    } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    return bundle.metadata.mapping_summary
+  }
+
+  it("counts a curated mapping as mapped, and also on its own", () => {
+    // The concept applies, so it belongs in mapped_rows. It is also counted
+    // separately, because a summary that reports only "mapped" invites a
+    // reader to trust a string-similarity score as if a clinician had signed
+    // it off.
+    const curated = summaryFor("MANUALLY_CURATED")
+    const automatic = summaryFor("MAPPED")
+    expect(curated.mapped_rows).toBe(automatic.mapped_rows)
+    expect(curated.manually_curated_rows).toBe(1)
+    expect(automatic.manually_curated_rows).toBe(0)
+  })
+
+  it("does not count a rejected mapping as part of the unmapped backlog", () => {
+    // Unmapped means nobody has looked. Rejected means someone looked and said
+    // no. Folding them together makes finished review work look like an
+    // outstanding task forever.
+    const rejected = summaryFor("REJECTED")
+    const unmapped = summaryFor("UNMAPPED")
+    expect(rejected.rejected_rows).toBe(1)
+    expect(unmapped.rejected_rows).toBe(0)
+    // The one row that differs moved out of the backlog, and nowhere else.
+    expect(rejected.unmapped_rows).toBe(unmapped.unmapped_rows - 1)
+    expect(rejected.mapped_rows).toBe(unmapped.mapped_rows)
+    expect(rejected.source_only_rows).toBe(unmapped.source_only_rows)
   })
 })

@@ -53,6 +53,12 @@
  *         Vascular lines carry their depth, lumen count and whether they were
  *         already in place. A pre-existing line was not placed during this
  *         case, so its procedure row overstates the work without that flag.
+ *
+ *         mapping_summary gains manually_curated_rows and rejected_rows.
+ *         MAPPED covered both an automatic resolution and one a human signed
+ *         off, and UNMAPPED covered both "nobody has looked" and "a candidate
+ *         was rejected" -- so the summary could not distinguish evidence from
+ *         guesswork, or finished review work from a backlog.
  * 3.7.0 — OBSERVATION gains value_as_number, the CDM column a numeric
  *         observation belongs in. Every score the export carries (RCRI, Apfel,
  *         STOP-BANG, the Aldrete subscores and total, POVOC, COLDS, PAED, the
@@ -188,6 +194,10 @@ export interface OmopBundle {
     case_count: number
     mapping_summary: {
       mapped_rows: number
+      /** Of mapped_rows, how many a human reviewed and signed off. */
+      manually_curated_rows: number
+      /** Candidates considered and rejected. Not part of the unmapped backlog. */
+      rejected_rows: number
       source_only_rows: number
       unmapped_rows: number
     }
@@ -648,7 +658,7 @@ type CaseRow = {
 
 function buildQualityWarnings(
   cases: CaseRow[],
-  mappingSummary: { mapped_rows: number; source_only_rows: number; unmapped_rows: number },
+  mappingSummary: { mapped_rows: number; manually_curated_rows: number; rejected_rows: number; source_only_rows: number; unmapped_rows: number },
 ): ExportQualityWarning[] {
   const warnings: ExportQualityWarning[] = []
 
@@ -792,10 +802,20 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
   const measurements: OmopMeasurement[] = []
   const procedures: OmopProcedure[] = []
   const observations: OmopObservation[] = []
-  const mappingSummary = { mapped_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
+  const mappingSummary = { mapped_rows: 0, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
 
   const trackMapping = (status: string | null | undefined) => {
     if (status === "MAPPED") mappingSummary.mapped_rows++
+    // A mapping a human reviewed and signed off counts as mapped, because the
+    // concept is applied either way, and is also counted on its own: an
+    // automatic string match and a curated mapping are different levels of
+    // evidence, and a summary that reports only "mapped" invites a reader to
+    // trust a similarity score as if a clinician had checked it.
+    else if (status === "MANUALLY_CURATED") { mappingSummary.mapped_rows++; mappingSummary.manually_curated_rows++ }
+    // Rejected is not unmapped. Unmapped means nobody has looked; rejected
+    // means someone looked and said no, and the export must not present the
+    // two as the same backlog.
+    else if (status === "REJECTED") mappingSummary.rejected_rows++
     else if (status === "UNMAPPED") mappingSummary.unmapped_rows++
     else if (status === "SOURCE_ONLY") mappingSummary.source_only_rows++
   }

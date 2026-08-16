@@ -813,7 +813,7 @@ async function prepareOmopExport(
       procedure_occurrence: 0,
       observation: 0,
     }
-    const mappingSummary = { mapped_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
+    const mappingSummary = { mapped_rows: 0, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
     let baseMetadata: OmopBundle["metadata"] | null = null
     let rowIdStart = 1
     let rangeFrom: string | null = null
@@ -846,6 +846,8 @@ async function prepareOmopExport(
       }
 
       mappingSummary.mapped_rows += bundle.metadata.mapping_summary.mapped_rows
+      mappingSummary.manually_curated_rows += bundle.metadata.mapping_summary.manually_curated_rows
+      mappingSummary.rejected_rows += bundle.metadata.mapping_summary.rejected_rows
       mappingSummary.source_only_rows += bundle.metadata.mapping_summary.source_only_rows
       mappingSummary.unmapped_rows += bundle.metadata.mapping_summary.unmapped_rows
       for (const warning of bundle.metadata.quality_warnings) mergeQualityWarning(warnings, warning)
