@@ -573,3 +573,44 @@ describe("fluids are exported as the events they were, not only as totals", () =
     ]))
   })
 })
+
+/**
+ * The institution used to be written onto every visit as care_site_source_value
+ * — free text in a column no OHDSI tool reads, so "break these results down by
+ * hospital" could not be answered by standard tooling. CARE_SITE is the CDM's
+ * answer: one row per place, referenced by id.
+ */
+describe("care site is a dimension, not text repeated on every visit", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("emits one care site and links the visit to it by id", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    expect(bundle.care_site).toHaveLength(1)
+    expect(bundle.care_site[0].care_site_source_value).toBe("inst-1")
+    expect(bundle.visit_occurrence[0].care_site_id).toBe(bundle.care_site[0].care_site_id)
+    // The source value stays: an unmatched care site must still be identifiable.
+    expect(bundle.visit_occurrence[0].care_site_source_value).toBe("inst-1")
+  })
+
+  it("emits one row per place, not one per case", () => {
+    // A hundred cases at one hospital is one care site. Emitting a row per case
+    // would make the dimension useless for exactly the grouping it exists for.
+    const a = completeCase() as never as { id: string; caseCode: string }
+    const b = completeCase() as never as { id: string; caseCode: string }
+    b.id = "case-2"; b.caseCode = "2026-0002"
+    const bundle = mapCasesToOmop([a as never, b as never], options as never)
+    expect(bundle.visit_occurrence).toHaveLength(2)
+    expect(bundle.care_site).toHaveLength(1)
+  })
+
+  it("emits no care site when the case records no institution", () => {
+    const c = completeCase() as never as { institutionId: string | null }
+    c.institutionId = null
+    const bundle = mapCasesToOmop([c as never], options as never)
+    expect(bundle.care_site).toHaveLength(0)
+    expect(bundle.visit_occurrence[0].care_site_id).toBeNull()
+  })
+})

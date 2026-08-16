@@ -133,6 +133,10 @@ export interface OmopBundle {
   // and OBSERVATION_PERIOD is what OHDSI tooling (ATLAS, ACHILLES) uses to
   // decide when a person was under observation. Without both, the bundle is
   // OMOP-shaped but not loadable.
+  // A dimension rather than a clinical event: one row per place, referenced by
+  // VISIT_OCCURRENCE. The institution used to be written onto every visit as
+  // free text, in a column no OHDSI tool reads.
+  care_site: OmopCareSite[]
   person: OmopPerson[]
   observation_period: OmopObservationPeriod[]
   visit_occurrence: OmopVisit[]
@@ -141,6 +145,13 @@ export interface OmopBundle {
   measurement: OmopMeasurement[]
   procedure_occurrence: OmopProcedure[]
   observation: OmopObservation[]
+}
+
+export interface OmopCareSite {
+  care_site_id: number
+  care_site_name: string | null
+  place_of_service_concept_id: number
+  care_site_source_value: string | null
 }
 
 export interface OmopPerson {
@@ -179,6 +190,7 @@ interface OmopVisit {
   visit_end_date: string | null
   visit_type_concept_id: number
   visit_source_value: string | null
+  care_site_id: number | null
   care_site_source_value: string | null
 }
 
@@ -646,6 +658,10 @@ export interface ExportContext {
 export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundle {
   resetIds(ctx?.rowIdStart ?? 1)
 
+  // One row per distinct institution seen, keyed by the same pseudonym the
+  // visits reference. Built as a map so a hundred cases at one hospital emit
+  // one care site rather than a hundred.
+  const careSites = new Map<number, OmopCareSite>()
   const persons: OmopPerson[] = []
   const observationPeriods: OmopObservationPeriod[] = []
   const visits: OmopVisit[] = []
@@ -689,6 +705,18 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // changed jobs. It also mixed two kinds of value in one column: an id from
     // the case, a name from the user. Unknown now stays unknown.
     const careSite = c.institutionId ?? null
+    const careSiteId = careSite ? pseudonymId("caresite", careSite) : null
+    if (careSite && careSiteId && !careSites.has(careSiteId)) {
+      careSites.set(careSiteId, {
+        care_site_id: careSiteId,
+        // LOSPOR records the institution, not the department or theatre, so
+        // there is no name beyond the source identifier and no reviewed
+        // place-of-service concept to claim.
+        care_site_name: null,
+        place_of_service_concept_id: 0,
+        care_site_source_value: careSite,
+      })
+    }
 
     // ── PERSON ───────────────────────────────────────────────────────────────
     // One person per case: LOSPOR deliberately stores no patient identifier, so
@@ -749,6 +777,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       visit_type_concept_id: 32817, // EHR
       visit_source_value:    c.caseCode,
       care_site_source_value: careSite,
+      // The reference a CDM consumer reads. Null when the case records no
+      // institution, which is a real state; the source value stays alongside.
+      care_site_id: careSiteId,
     })
 
     const sourceObservation = (
@@ -1371,6 +1402,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       },
       note: "Numeric observations carry their value in observation.value_as_number and, unchanged, as text in observation.value_as_string; genuinely textual observations populate value_as_string only. OMOP concept IDs are emitted only where LOSPOR has a confident local mapping. Source vocabulary, source code, English/Bulgarian labels, and source-only rows are preserved for research traceability. Pediatric mode, precise age at procedure, rule provenance, pediatric risk scores, and recovery scores are preserved as source observations with concept_id 0 until reviewed mappings exist. person_id is a deterministic pseudonym derived from SHA-256 of the internal case ID — no patient names, national IDs, or direct identifiers are stored. PERSON carries an approximate year_of_birth derived from age at operation (month and day are unknown, not defaulted); race and ethnicity are not collected and are emitted as concept 0. OBSERVATION_PERIOD spans the operation only. Intraoperative event timestamps are preserved at exact DateTime precision for clinical sequence analysis — see residual_linkage_risks.",
     },
+    care_site:             [...careSites.values()],
     person:                persons,
     observation_period:    observationPeriods,
     visit_occurrence:      visits,

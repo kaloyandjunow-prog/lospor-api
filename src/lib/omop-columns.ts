@@ -23,6 +23,10 @@ export type OmopTableName = Exclude<keyof OmopBundle, "metadata">
  * place that has to change.
  */
 export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
+  care_site: [
+    "care_site_id", "care_site_name", "place_of_service_concept_id",
+    "care_site_source_value",
+  ],
   person: [
     "person_id", "gender_concept_id", "year_of_birth", "month_of_birth", "day_of_birth",
     "birth_datetime", "race_concept_id", "ethnicity_concept_id", "person_source_value",
@@ -34,7 +38,7 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   ],
   visit_occurrence: [
     "visit_occurrence_id", "person_id", "visit_concept_id", "visit_start_date", "visit_end_date",
-    "visit_type_concept_id", "visit_source_value", "care_site_source_value",
+    "visit_type_concept_id", "visit_source_value", "care_site_source_value", "care_site_id",
   ],
   condition_occurrence: [
     "condition_occurrence_id", "person_id", "condition_concept_id", "condition_start_date",
