@@ -1,5 +1,30 @@
 # Changelog - LOSPOR API
 
+## [9.1.1] - 2026-08-17
+
+### Fixed
+
+- **A clinical question answered "not asked" was rejected at the API boundary
+  and dropped.**
+
+  The request schema declared these fields as `z.boolean().optional()`, which
+  accepts `undefined` and refuses `null`. 9.1.0 made the clients send an
+  explicit null for an unasked question, so the lenient parser discarded every
+  one of them and reported them as rejected fields.
+
+  Nothing failed loudly. The case was created, the response was 201, and the
+  answers were simply not there. The web form refused to advance past preop
+  with "correct the rejected fields", and a client that ignored the rejection
+  list lost the answer silently instead — which is the worse half.
+
+  Seventeen declared fields now accept null. The RCRI, Apfel and STOP-BANG
+  criteria were never declared and pass through untouched, so they were not
+  affected.
+
+  `emergencySurgery`, the "unobtainable" ticks and the other genuinely binary
+  fields still refuse null, and a test pins that: a null there is a client bug
+  and the API should keep saying so.
+
 ## [9.1.0] - 2026-08-16
 
 ### Changed
