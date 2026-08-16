@@ -529,6 +529,8 @@ export const CaseEventScalarFieldEnum = {
   drugId: 'drugId',
   inn: 'inn',
   drugRoute: 'drugRoute',
+  standardConceptId: 'standardConceptId',
+  mappingStatus: 'mappingStatus',
   concentrationValue: 'concentrationValue',
   concentrationUnit: 'concentrationUnit',
   formulation: 'formulation',

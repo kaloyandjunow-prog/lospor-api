@@ -393,3 +393,45 @@ describe("syncCaseRelational", () => {
     expect(logAuditMock).toHaveBeenCalledWith("user-1", "RELATIONAL_SYNC_FAILED", "case-1", { error: "database unavailable" })
   })
 })
+
+describe("concept mapping provenance", () => {
+  // getConceptMap caches the whole map in module scope, so each case needs a
+  // fresh module or it resolves against whatever a previous test loaded.
+  beforeEach(() => { vi.resetModules() })
+
+  const db = (rows: Record<string, unknown>[]) => ({
+    conceptMap: { findMany: vi.fn().mockResolvedValue(rows) },
+  }) as never
+
+  it("applies a mapping a human curated, like any other mapping", async () => {
+    const { resolveDrugConcept } = await import("@/lib/relational-sync")
+    const resolved = await resolveDrugConcept(db([
+      { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N01AH01", standardConceptId: 1154029, mappingStatus: "MANUALLY_CURATED" },
+    ]), "N01AH01", null, "Fentanyl")
+    // The concept applies either way. What changes is that the export can now
+    // say a clinician chose it, instead of presenting a string-similarity
+    // match and a signed-off mapping as the same claim.
+    expect(resolved.standardConceptId).toBe(1154029)
+    expect(resolved.mappingStatus).toBe("MANUALLY_CURATED")
+  })
+
+  it("never applies the concept named by a rejected mapping", async () => {
+    const { resolveDrugConcept } = await import("@/lib/relational-sync")
+    const resolved = await resolveDrugConcept(db([
+      { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N01AH01", standardConceptId: 999999, mappingStatus: "REJECTED" },
+    ]), "N01AH01", null, "Fentanyl")
+    // The row is kept so the rejection is remembered and the same candidate is
+    // not proposed again on the next review pass -- but applying the concept
+    // would defeat the entire point of having rejected it.
+    expect(resolved.standardConceptId).toBeNull()
+    expect(resolved.mappingStatus).toBe("REJECTED")
+  })
+
+  it("keeps rejected distinct from never-looked-at", async () => {
+    const { resolveDrugConcept } = await import("@/lib/relational-sync")
+    const unseen = await resolveDrugConcept(db([]), "N01AH01", null, "Fentanyl")
+    // Both end with no concept, but they are different states of the work: one
+    // is a decision, the other is a backlog item.
+    expect(unseen.mappingStatus).toBe("SOURCE_ONLY")
+  })
+})

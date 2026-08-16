@@ -8,6 +8,8 @@
 import "dotenv/config"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import fs from "fs"
+import path from "path"
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
 const SOURCE_VERSION = "local-bilingual-map-v2"
@@ -397,6 +399,31 @@ async function main() {
     })
   }
 
+  // Procedures. The catalogue is a static ICD-10-PCS file rather than a table,
+  // and it was the one vocabulary this script never seeded -- so every planned
+  // procedure fell through `concept()` to an implicit SOURCE_ONLY with no row
+  // behind it. The mapping existed only as an absence: nothing to audit,
+  // nothing to review, and nothing for a later Athena import to fill in.
+  //
+  // The key must match what relational-sync writes, which uses the entry's
+  // `domain` as the source vocabulary and falls back to LOSPOR_PROCEDURE.
+  //
+  // Standard resolution is attempted against ICD10PCS. That vocabulary is not
+  // in the local Athena import today, so these stay SOURCE_ONLY; when it is
+  // imported, re-running this script fills them in without touching any case.
+  const pcs = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "pcs.json"), "utf8"),
+  ) as { code: string; description?: string; group?: string; domain?: string }[]
+  const pcsStandards = await resolveStandardMap("ICD10PCS", pcs.map(p => p.code), athenaVersion)
+  for (const proc of pcs) {
+    seeds.push(withStandard({
+      domain: "procedure",
+      sourceVocabulary: proc.domain || "LOSPOR_PROCEDURE",
+      sourceCode: proc.code,
+      sourceLabelEn: proc.group || proc.description || proc.code,
+    }, pcsStandards.get(proc.code)))
+  }
+
   const options = await prisma.optionLibrary.findMany({ where: { active: true } })
   for (const option of options) {
     seeds.push({
@@ -423,15 +450,17 @@ async function main() {
 
   count += await createManyConcepts(seeds)
 
-  const [total, mapped, sourceOnly, unmapped] = await Promise.all([
+  const [total, mapped, curated, rejected, sourceOnly, unmapped] = await Promise.all([
     prisma.conceptMap.count({ where: { active: true } }),
     prisma.conceptMap.count({ where: { active: true, mappingStatus: ConceptMappingStatus.MAPPED } }),
+    prisma.conceptMap.count({ where: { active: true, mappingStatus: ConceptMappingStatus.MANUALLY_CURATED } }),
+    prisma.conceptMap.count({ where: { active: true, mappingStatus: ConceptMappingStatus.REJECTED } }),
     prisma.conceptMap.count({ where: { active: true, mappingStatus: ConceptMappingStatus.SOURCE_ONLY } }),
     prisma.conceptMap.count({ where: { active: true, mappingStatus: ConceptMappingStatus.UNMAPPED } }),
   ])
 
   console.log(`Seeded/updated ${count} local concept map rows.`)
-  console.log(`Active concept maps: total=${total} mapped=${mapped} source_only=${sourceOnly} unmapped=${unmapped}`)
+  console.log(`Active concept maps: total=${total} mapped=${mapped} manually_curated=${curated} rejected=${rejected} source_only=${sourceOnly} unmapped=${unmapped}`)
 }
 
 main().catch((e) => { console.error(e); process.exit(1) }).finally(() => prisma.$disconnect())

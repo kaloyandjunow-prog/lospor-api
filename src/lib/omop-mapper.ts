@@ -1,9 +1,64 @@
 /**
- * OMOP CDM v5.4 mapper — export contract `source_version` 3.7.0.
+ * OMOP CDM v5.4 mapper — export contract `source_version` 3.8.0.
  *
  * `source_version` tracks the shape of the export, not the app version: bump it
  * whenever a table or column is added, removed or reinterpreted.
  *
+ * 3.8.0 — the shape changes since 3.7.0, none of which had been released.
+ *
+ *         CARE_SITE is emitted as its own table and referenced by
+ *         care_site_id, instead of the site being written onto
+ *         VISIT_OCCURRENCE as a bare string.
+ *
+ *         Allergies stop being exported as DRUG_EXPOSURE. Medication.kind is
+ *         CURRENT | ALLERGY, and the export iterated both, so a substance the
+ *         patient reacts to was recorded as one they were given. Allergies now
+ *         become observations, which is a different claim in the right place.
+ *
+ *         Continuous administrations gain drug_exposure_end_date, paired from
+ *         their stop events. Every planned procedure is exported, not the
+ *         first. Intraoperative drugs resolve their ATC through the same
+ *         concept pipeline as relational medications.
+ *
+ *         Clinical yes/no questions emit for a recorded "no" as well as a
+ *         "yes". They were nullable-free booleans, so silence was the only
+ *         honest option; the columns are now nullable and silence means the
+ *         question was never asked.
+ *
+ *         Airway management is exported: device list, Cormack-Lehane grade,
+ *         tools, per-device sizes and cuff status, DLT type/side/size,
+ *         endobronchial size, ventilation modes, IPPV, jet ventilation and
+ *         PEEP. Placing an instrumented airway is also emitted as a
+ *         PROCEDURE_OCCURRENCE, separating what was done to the patient from
+ *         what was true of them.
+ *
+ *         Preop findings that were read out of the database and written to no
+ *         table now leave: smoking, substance use, latex allergy, family
+ *         anaesthesia history, dental state, cardiac arrhythmia, BMI, blood
+ *         group and Rh, GUTA, the airway examination (mouth opening,
+ *         thyromental distance, neck mobility, upper lip bite test,
+ *         retrognathia, prominent incisors, facial hair), and the free-text
+ *         allergy, family-history and difficult-airway notes, redacted.
+ *
+ *         MEASUREMENT gains value_source_value, range_low and range_high.
+ *         A lab result with no parsed number used to be skipped entirely, so a
+ *         culture, a dipstick or a blood group left no trace of having been
+ *         recorded; it is now exported with the value the lab reported. The
+ *         reference range travels with the result, because ranges differ by
+ *         laboratory, assay and patient age, and "high" is not a claim the
+ *         export can support without the range that produced it. The abnormal
+ *         flag rides as its own observation, keyed to the measurement's source
+ *         value, since CDM 5.4 has no column for it.
+ *
+ *         Vascular lines carry their depth, lumen count and whether they were
+ *         already in place. A pre-existing line was not placed during this
+ *         case, so its procedure row overstates the work without that flag.
+ *
+ *         mapping_summary gains manually_curated_rows and rejected_rows.
+ *         MAPPED covered both an automatic resolution and one a human signed
+ *         off, and UNMAPPED covered both "nobody has looked" and "a candidate
+ *         was rejected" -- so the summary could not distinguish evidence from
+ *         guesswork, or finished review work from a backlog.
  * 3.7.0 — OBSERVATION gains value_as_number, the CDM column a numeric
  *         observation belongs in. Every score the export carries (RCRI, Apfel,
  *         STOP-BANG, the Aldrete subscores and total, POVOC, COLDS, PAED, the
@@ -62,6 +117,31 @@ function pseudonymId(kind: string, key: string): number {
   return hi * 0x100000 + lo + 1             // 52 bits, never zero
 }
 
+/**
+ * The act of placing each airway device, where placing it is a procedure.
+ *
+ * A device is a state of the patient; putting it there is something done to
+ * them, and only the second belongs in a procedure count. Devices that are
+ * applied rather than instrumented map to null: a face mask is held on a face,
+ * and counting that as an airway procedure would inflate every such count.
+ *
+ * Exhaustive over `AIRWAY_DEVICES` in @lospor/core, and asserted so by test.
+ * The list is seeded from that catalogue and can grow, and a device missing
+ * from here would silently export no procedure at all -- the failure would be
+ * an absence, which nothing else in the pipeline would notice.
+ */
+export const AIRWAY_ACTS: Record<string, string | null> = {
+  FACE_MASK:          null,
+  OPA:                null,
+  NPA:                null,
+  LMA:                "SUPRAGLOTTIC_AIRWAY_PLACEMENT",
+  ORAL_ETT:           "TRACHEAL_INTUBATION_ORAL",
+  NASAL_ETT:          "TRACHEAL_INTUBATION_NASAL",
+  DOUBLE_LUMEN_TUBE:  "DOUBLE_LUMEN_TUBE_PLACEMENT",
+  ENDOBRONCHIAL_TUBE: "ENDOBRONCHIAL_TUBE_PLACEMENT",
+  SURGICAL_AIRWAY:    "SURGICAL_AIRWAY",
+}
+
 function isoDate(d: Date | string | null | undefined): string | null {
   if (!d) return null
   const dt = typeof d === "string" ? new Date(d) : d
@@ -114,6 +194,10 @@ export interface OmopBundle {
     case_count: number
     mapping_summary: {
       mapped_rows: number
+      /** Of mapped_rows, how many a human reviewed and signed off. */
+      manually_curated_rows: number
+      /** Candidates considered and rejected. Not part of the unmapped backlog. */
+      rejected_rows: number
       source_only_rows: number
       unmapped_rows: number
     }
@@ -133,6 +217,10 @@ export interface OmopBundle {
   // and OBSERVATION_PERIOD is what OHDSI tooling (ATLAS, ACHILLES) uses to
   // decide when a person was under observation. Without both, the bundle is
   // OMOP-shaped but not loadable.
+  // A dimension rather than a clinical event: one row per place, referenced by
+  // VISIT_OCCURRENCE. The institution used to be written onto every visit as
+  // free text, in a column no OHDSI tool reads.
+  care_site: OmopCareSite[]
   person: OmopPerson[]
   observation_period: OmopObservationPeriod[]
   visit_occurrence: OmopVisit[]
@@ -141,6 +229,13 @@ export interface OmopBundle {
   measurement: OmopMeasurement[]
   procedure_occurrence: OmopProcedure[]
   observation: OmopObservation[]
+}
+
+export interface OmopCareSite {
+  care_site_id: number
+  care_site_name: string | null
+  place_of_service_concept_id: number
+  care_site_source_value: string | null
 }
 
 export interface OmopPerson {
@@ -179,6 +274,7 @@ interface OmopVisit {
   visit_end_date: string | null
   visit_type_concept_id: number
   visit_source_value: string | null
+  care_site_id: number | null
   care_site_source_value: string | null
 }
 
@@ -197,9 +293,15 @@ interface OmopDrug {
   person_id: number
   drug_concept_id: number
   drug_exposure_start_date: string | null
+  // Null means genuinely open — an administration still running when the case
+  // ended — not "unknown". A single-shot drug has no interval and is null too.
+  drug_exposure_end_date: string | null
   drug_type_concept_id: number
   drug_source_value: string | null
-  drug_source_concept_id: string | null
+  // A concept id, per the CDM: an integer or nothing. Source vocabulary text
+  // belongs in drug_source_value. This column held strings like "ATC:N01AH01",
+  // which a loader must either reject or silently coerce away.
+  drug_source_concept_id: number | null
   dose_value: number | null
   dose_unit_source_value: string | null
   route_source_value: string | null
@@ -217,6 +319,11 @@ interface OmopMeasurement {
   unit_concept_id: number
   unit_source_value: string | null
   measurement_source_value: string | null
+  /** The value as the source reported it, including qualitative results. */
+  value_source_value: string | null
+  /** The reference range this result was judged against, where the lab gave one. */
+  range_low: number | null
+  range_high: number | null
   visit_occurrence_id: number
 }
 
@@ -299,6 +406,13 @@ type CaseRow = {
     bglUnitCanon: string | null
     atcCode: string | null
     drugId: string | null
+    standardConceptId?: number | null
+    mappingStatus?: string
+    // Pairing keys: an infusion's start and stop share infId, a fluid's share
+    // fluidId. Volatile agents have no key — only one runs at a time, so a stop
+    // closes whichever is open, which is how the intraop engine reads them too.
+    infId?: string | null
+    fluidId?: string | null
     inn?: string | null
     drugRoute?: string | null
     metadataJson: unknown
@@ -308,6 +422,10 @@ type CaseRow = {
     category: string
     value: string
     ordinal: number
+    sourceVocabulary?: string | null
+    sourceCode?: string | null
+    standardConceptId?: number | null
+    mappingStatus?: string
   }[]
   complications?: {
     section: string
@@ -316,6 +434,10 @@ type CaseRow = {
     timestamp: Date | null
     source: string | null
     ordinal: number
+    sourceVocabulary?: string | null
+    sourceCode?: string | null
+    standardConceptId?: number | null
+    mappingStatus?: string
   }[]
   preop?: {
     ageYears: number | null
@@ -341,10 +463,10 @@ type CaseRow = {
     asaScore: string | null
     emergencySurgery: boolean
     highRiskSurgery: boolean
-    allergies: boolean
+    allergies: boolean | null
     allergyDetails: string | null
-    smoking: boolean
-    substanceAbuse: boolean
+    smoking: boolean | null
+    substanceAbuse: boolean | null
     currentMedications: string | null
     rcriScore: number | null
     apfelScore: number | null
@@ -352,8 +474,27 @@ type CaseRow = {
     povocScore?: number | null
     povocRiskPercent?: number | null
     coldsScore?: number | null
-    difficultAirwayHistory: boolean
+    difficultAirwayHistory: boolean | null
     mallampati: string | null
+    // Clinical detail the export used to read and discard.
+    bmi?: number | null
+    bloodType?: string | null
+    rhFactor?: string | null
+    gutaScore?: number | null
+    latexAllergy?: boolean | null
+    familyAnesthesiaProblems?: boolean | null
+    familyAnesthesiaDetails?: string | null
+    dentalProsthetics?: boolean | null
+    looseTeeth?: boolean | null
+    heartArrhythmia?: boolean | null
+    mouthOpeningCm?: number | null
+    thyromental?: number | null
+    neckMobility?: string | null
+    upperLipBiteTest?: string | null
+    retrognathia?: boolean | null
+    prominentIncisors?: boolean | null
+    facialHair?: boolean | null
+    difficultAirwayNotes?: string | null
     labResults: unknown
     labRows?: {
       test: string
@@ -362,6 +503,8 @@ type CaseRow = {
       unitCanon: string | null
       loincCode: string | null
       abnormalFlag: string | null
+      referenceLow?: number | null
+      referenceHigh?: number | null
       standardConceptId?: number | null
       mappingStatus?: string
     }[]
@@ -435,6 +578,28 @@ type CaseRow = {
     premedicationEvening: string | null
     premedicationMorning: string | null
     airwayDevice: string | null
+    // Airway management detail. `airwayDevices` is the current multi-device
+    // list; `airwayDevice` is the older single value and both may be set.
+    airwayDevices?: unknown
+    cormackLehane?: string | null
+    airwayTools?: unknown
+    fob?: boolean | null
+    lmaSize?: number | null
+    oralTubeSize?: number | null
+    oralCuffed?: boolean | null
+    nasalTubeSize?: number | null
+    nasalCuffed?: boolean | null
+    dltType?: string | null
+    dltSide?: string | null
+    dltSize?: number | null
+    endobronchialSize?: number | null
+    // Legacy shared size/cuff, written before the per-device columns existed.
+    tubeSize?: number | null
+    cuffed?: boolean | null
+    ventilationModes?: unknown
+    ippv?: boolean | null
+    jetVentilation?: boolean | null
+    peepCmH2O?: number | null
     vascularAccessRows?: {
       site: string | null
       siteLabel: string | null
@@ -444,6 +609,10 @@ type CaseRow = {
       lumens: string | null
       preexisting: boolean
       ordinal: number
+      sourceVocabulary?: string | null
+      sourceCode?: string | null
+      standardConceptId?: number | null
+      mappingStatus?: string
     }[]
     premedicationRows?: {
       phase: string
@@ -473,7 +642,7 @@ type CaseRow = {
     pediatricPainScale?: "FLACC" | "FPS_R" | "NRS" | null
     pediatricPainScore?: number | null
     paedScore?: number | null
-    ponv: boolean
+    ponv: boolean | null
     disposition: string | null
     complications: string | null
   } | null
@@ -489,7 +658,7 @@ type CaseRow = {
 
 function buildQualityWarnings(
   cases: CaseRow[],
-  mappingSummary: { mapped_rows: number; source_only_rows: number; unmapped_rows: number },
+  mappingSummary: { mapped_rows: number; manually_curated_rows: number; rejected_rows: number; source_only_rows: number; unmapped_rows: number },
 ): ExportQualityWarning[] {
   const warnings: ExportQualityWarning[] = []
 
@@ -548,7 +717,10 @@ function buildQualityWarnings(
   const casesWithoutFieldStatus = cases.filter(c => (c.fieldStatuses ?? []).length === 0).length
   const exactTimestampRows = cases.reduce((sum, c) => sum + (c.events ?? []).length, 0)
   const freeTextComplications = cases.reduce((sum, c) => sum + (c.complications ?? []).filter(comp => Boolean(comp.note)).length, 0)
-  const institutionLinked = cases.filter(c => Boolean(c.institutionId ?? c.user?.institution?.name)).length
+  // Counted from the case alone, matching what the export actually writes as
+  // the care site. Counting the author's institution here would report cases as
+  // institution-linked whose exported care site is null.
+  const institutionLinked = cases.filter(c => Boolean(c.institutionId)).length
 
   if (mappingSummary.unmapped_rows > 0) {
     warnings.push({
@@ -618,6 +790,10 @@ export interface ExportContext {
 export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundle {
   resetIds(ctx?.rowIdStart ?? 1)
 
+  // One row per distinct institution seen, keyed by the same pseudonym the
+  // visits reference. Built as a map so a hundred cases at one hospital emit
+  // one care site rather than a hundred.
+  const careSites = new Map<number, OmopCareSite>()
   const persons: OmopPerson[] = []
   const observationPeriods: OmopObservationPeriod[] = []
   const visits: OmopVisit[] = []
@@ -626,10 +802,20 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
   const measurements: OmopMeasurement[] = []
   const procedures: OmopProcedure[] = []
   const observations: OmopObservation[] = []
-  const mappingSummary = { mapped_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
+  const mappingSummary = { mapped_rows: 0, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
 
   const trackMapping = (status: string | null | undefined) => {
     if (status === "MAPPED") mappingSummary.mapped_rows++
+    // A mapping a human reviewed and signed off counts as mapped, because the
+    // concept is applied either way, and is also counted on its own: an
+    // automatic string match and a curated mapping are different levels of
+    // evidence, and a summary that reports only "mapped" invites a reader to
+    // trust a similarity score as if a clinician had checked it.
+    else if (status === "MANUALLY_CURATED") { mappingSummary.mapped_rows++; mappingSummary.manually_curated_rows++ }
+    // Rejected is not unmapped. Unmapped means nobody has looked; rejected
+    // means someone looked and said no, and the export must not present the
+    // two as the same backlog.
+    else if (status === "REJECTED") mappingSummary.rejected_rows++
     else if (status === "UNMAPPED") mappingSummary.unmapped_rows++
     else if (status === "SOURCE_ONLY") mappingSummary.source_only_rows++
   }
@@ -650,8 +836,29 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     const startDate = isoDate(c.intraop?.startedAt ?? legacyDay(c.intraop?.startTime) ?? c.createdAt)
     const endDate   = isoDate(c.intraop?.endedAt ?? legacyDay(c.intraop?.endTime) ?? c.intraop?.startedAt ?? c.createdAt)
 
-    // care_site: prefer case-level institutionId, fall back to user institution
-    const careSite = c.institutionId ?? c.user?.institution?.name ?? null
+    // The case's own institution, stamped at creation and never updated,
+    // because a case belongs to the institution it was performed at — see
+    // access-control.ts, which scopes reads the same way.
+    //
+    // There is deliberately no fallback to the author's institution. That was
+    // joined live at export time, so a case with no institution of its own was
+    // attributed to wherever its author happened to work on the day of the
+    // export, and could move hospital between two exports because a colleague
+    // changed jobs. It also mixed two kinds of value in one column: an id from
+    // the case, a name from the user. Unknown now stays unknown.
+    const careSite = c.institutionId ?? null
+    const careSiteId = careSite ? pseudonymId("caresite", careSite) : null
+    if (careSite && careSiteId && !careSites.has(careSiteId)) {
+      careSites.set(careSiteId, {
+        care_site_id: careSiteId,
+        // LOSPOR records the institution, not the department or theatre, so
+        // there is no name beyond the source identifier and no reviewed
+        // place-of-service concept to claim.
+        care_site_name: null,
+        place_of_service_concept_id: 0,
+        care_site_source_value: careSite,
+      })
+    }
 
     // ── PERSON ───────────────────────────────────────────────────────────────
     // One person per case: LOSPOR deliberately stores no patient identifier, so
@@ -695,12 +902,26 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     visits.push({
       visit_occurrence_id:   visitId,
       person_id:             personId,
-      visit_concept_id:      9201,  // Inpatient Visit
+      // 9201 Inpatient Visit, and it is a description rather than a guess:
+      // LOSPOR documents admitted surgical care only. The Disposition enum
+      // carries the evidence — WARD, PACU, ICU, with no home-discharge value —
+      // so a patient who went home the same day cannot be recorded here at all.
+      //
+      // This is therefore an assumption about the register's scope, not a fact
+      // read off the case. If day surgery is ever recorded, this must stop being
+      // a constant and derive from the setting: 9201 inpatient, 9202
+      // outpatient, 581379 day surgery. Until then, exporting 0 would be worse
+      // than exporting 9201 — it would hide every visit from the OHDSI tools
+      // that filter on visit type, to avoid stating something that is true.
+      visit_concept_id:      9201,
       visit_start_date:      startDate,
       visit_end_date:        endDate,
       visit_type_concept_id: 32817, // EHR
       visit_source_value:    c.caseCode,
       care_site_source_value: careSite,
+      // The reference a CDM consumer reads. Null when the case records no
+      // institution, which is a real state; the source value stays alongside.
+      care_site_id: careSiteId,
     })
 
     const sourceObservation = (
@@ -781,6 +1002,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           unit_concept_id:           0,
           unit_source_value:         cfg.unit,
           measurement_source_value:  `LOINC:${cfg.loinc}`,
+          // Vitals carry no source text and no laboratory reference range.
+          value_source_value:        null,
+          range_low:                 null,
+          range_high:                null,
           visit_occurrence_id:       visitId,
         })
       }
@@ -789,8 +1014,13 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // Use SQL LabResult rows (LOINC-coded) instead of raw JSON
       const labRows = preop.labRows ?? []
       for (const lab of labRows) {
-        if (lab.valueNum == null) continue
+        // A result with neither a number nor text is not a result. Anything
+        // else is exported: this used to skip every row without a parsed
+        // number, so a qualitative result -- a blood group, a culture, a
+        // dipstick -- was dropped with no trace that it had been recorded.
+        if (lab.valueNum == null && !lab.value) continue
         trackMapping(lab.mappingStatus)
+        const labSource = lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`
         measurements.push({
           measurement_id:              nextId(),
           person_id:                   personId,
@@ -801,9 +1031,25 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           value_as_number:             lab.valueNum,
           unit_concept_id:             0,
           unit_source_value:           lab.unitCanon ?? null,
-          measurement_source_value:    lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`,
+          measurement_source_value:    labSource,
+          // The value as the lab reported it. For a numeric result this is the
+          // unparsed original; for a qualitative one it is the only value there
+          // is.
+          value_source_value:          lab.value ?? null,
+          // The range this result was judged against. Reference ranges differ
+          // by laboratory, assay and patient age, so "high" is not a claim the
+          // export can support without carrying the range that produced it.
+          range_low:                   lab.referenceLow ?? null,
+          range_high:                  lab.referenceHigh ?? null,
           visit_occurrence_id:         visitId,
         })
+        // CDM 5.4 has no abnormal-flag column, and value_as_concept_id would
+        // need a standard concept this export does not assign. The flag is
+        // LOSPOR's own judgement, so it is carried as its own observation,
+        // keyed by the same source value the measurement row uses.
+        if (lab.abnormalFlag) {
+          sourceObservation("LOSPOR:LAB_ABNORMAL_FLAG", `${labSource}=${lab.abnormalFlag}`, vitDate)
+        }
       }
 
       // ── Comorbidities -> CONDITION_OCCURRENCE ─────────────────────────────
@@ -868,31 +1114,98 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:RCRI", preop.rcriScore, preopDate)
       sourceObservation("LOSPOR:APFEL", preop.apfelScore, preopDate)
       sourceObservation("LOSPOR:STOP_BANG", preop.stopBangScore, preopDate)
-      // Only recorded when true: absence is "no history noted", which is not
-      // the same claim as "no history".
-      if (preop.difficultAirwayHistory) {
-        sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", true, preopDate)
-      }
+      // Recorded for yes and for no, but not when nobody asked.
+      //
+      // This used to emit only on true, and that was right at the time: the
+      // column was Boolean @default(false), so a false meant "either answered
+      // no, or never touched" and exporting it would have asserted "no
+      // difficult airway history" for every patient nobody had asked. Silence
+      // was the honest option when the schema could not tell them apart.
+      //
+      // The column is now nullable, so false is an answer and null is the
+      // absence of one. sourceObservation already skips null and writes false,
+      // so an answered "no" finally reaches the export as a finding rather than
+      // being rounded off to silence.
+      sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", preop.difficultAirwayHistory, preopDate)
       sourceObservation("LOSPOR:MALLAMPATI", preop.mallampati, preopDate)
+
+      // ── Preop findings that used to be read and discarded ────────────────
+      //
+      // All of this was selected out of the database, carried through the
+      // mapper's row types, and written to no table. Smoking status is the
+      // plainest example: a register exists partly to study it, and it left
+      // the appliance nowhere at all.
+      //
+      // Everything below follows the same rule as the airway history above --
+      // an answered "no" is a finding and reaches the export, and only an
+      // unasked question stays silent.
+      sourceObservation("LOSPOR:SMOKING", preop.smoking, preopDate)
+      sourceObservation("LOSPOR:SUBSTANCE_ABUSE", preop.substanceAbuse, preopDate)
+      sourceObservation("LOSPOR:LATEX_ALLERGY", preop.latexAllergy, preopDate)
+      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate)
+      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_DETAILS", preop.familyAnesthesiaDetails, preopDate)
+      sourceObservation("LOSPOR:DENTAL_PROSTHETICS", preop.dentalProsthetics, preopDate)
+      sourceObservation("LOSPOR:LOOSE_TEETH", preop.looseTeeth, preopDate)
+      sourceObservation("LOSPOR:HEART_ARRHYTHMIA", preop.heartArrhythmia, preopDate)
+
+      // The allergy flag already reaches DRUG_ALLERGY observations per
+      // substance, but the free-text detail carries allergens that were never
+      // resolved to a drug -- redacted upstream like every other note.
+      sourceObservation("LOSPOR:ALLERGY_DETAILS", preop.allergyDetails, preopDate)
+
+      // Body mass index is stored, not derived at export time, because the
+      // height and weight it was computed from may since have been corrected.
+      sourceObservation("LOSPOR:BMI", preop.bmi, preopDate)
+      sourceObservation("LOSPOR:BLOOD_TYPE", preop.bloodType, preopDate)
+      sourceObservation("LOSPOR:RH_FACTOR", preop.rhFactor, preopDate)
+      sourceObservation("LOSPOR:GUTA_SCORE", preop.gutaScore, preopDate)
+
+      // ── The airway examination ───────────────────────────────────────────
+      //
+      // Distinct from the difficult-airway history: this is what the
+      // anaesthetist found on examining this patient, and it is what a
+      // predictive study needs alongside the Cormack-Lehane grade the intraop
+      // record now carries.
+      sourceObservation("LOSPOR:MOUTH_OPENING_CM", preop.mouthOpeningCm, preopDate)
+      sourceObservation("LOSPOR:THYROMENTAL_DISTANCE_CM", preop.thyromental, preopDate)
+      sourceObservation("LOSPOR:NECK_MOBILITY", preop.neckMobility, preopDate)
+      sourceObservation("LOSPOR:UPPER_LIP_BITE_TEST", preop.upperLipBiteTest, preopDate)
+      sourceObservation("LOSPOR:RETROGNATHIA", preop.retrognathia, preopDate)
+      sourceObservation("LOSPOR:PROMINENT_INCISORS", preop.prominentIncisors, preopDate)
+      sourceObservation("LOSPOR:FACIAL_HAIR", preop.facialHair, preopDate)
+      sourceObservation("LOSPOR:DIFFICULT_AIRWAY_NOTES", preop.difficultAirwayNotes, preopDate)
     }
 
     // ── Planned procedure -> PROCEDURE_OCCURRENCE ─────────────────────────────
-    const procLabel = (() => {
-      if (!preop) return null
-      const row = preop.procedureRows?.[0]
-      if (row) return sourceValue("PROCEDURE", row.sourceVocabulary, row.sourceCode, row.group ?? row.description)
-      return preop.plannedProcedure
-    })()
-    if (procLabel) {
-      const row = preop?.procedureRows?.[0]
-      trackMapping(row?.mappingStatus)
+    // Every planned procedure, not just the first. This read procedureRows[0]
+    // and discarded the rest silently: a case with two planned procedures
+    // exported one, with nothing to show the others had been dropped. A
+    // combined operation therefore appeared in the register as a lesser one.
+    //
+    // The unstructured plannedProcedure text is the fallback for cases recorded
+    // before procedure rows existed, and only when there are no rows at all.
+    const procedureRows = preop?.procedureRows ?? []
+    if (procedureRows.length > 0) {
+      for (const row of procedureRows) {
+        trackMapping(row.mappingStatus)
+        procedures.push({
+          procedure_occurrence_id:    nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      row.standardConceptId ?? 0,
+          procedure_date:            startDate,
+          procedure_type_concept_id: 32817,
+          procedure_source_value:    sourceValue("PROCEDURE", row.sourceVocabulary, row.sourceCode, row.group ?? row.description),
+          visit_occurrence_id:       visitId,
+        })
+      }
+    } else if (preop?.plannedProcedure) {
       procedures.push({
         procedure_occurrence_id:    nextId(),
         person_id:                 personId,
-        procedure_concept_id:      row?.standardConceptId ?? 0,
+        procedure_concept_id:      0,
         procedure_date:            startDate,
         procedure_type_concept_id: 32817,
-        procedure_source_value:    procLabel,
+        procedure_source_value:    preop.plannedProcedure,
         visit_occurrence_id:       visitId,
       })
     }
@@ -900,15 +1213,37 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // ── Intraop techniques -> PROCEDURE_OCCURRENCE ────────────────────────────
     for (const med of preop?.medications ?? []) {
       trackMapping(med.mappingStatus)
+      // Medication.kind is CURRENT | ALLERGY, and they are opposite claims: one
+      // says the patient takes this drug, the other says they must never be
+      // given it. Both used to become DRUG_EXPOSURE, which asserts
+      // administration — so an allergy was exported as a dose, in the dangerous
+      // direction, and no downstream query could tell it apart from a real one.
+      //
+      // The allergy is not dropped. It becomes an observation carrying the
+      // substance, because "no allergy recorded" and "allergy lost on export"
+      // must not look identical to a researcher.
+      if (med.kind === "ALLERGY") {
+        sourceObservation(
+          "LOSPOR:DRUG_ALLERGY",
+          sourceValue("MEDICATION", med.sourceVocabulary, med.sourceCode, med.nameRaw),
+          isoDate(c.createdAt),
+        )
+        continue
+      }
       const dose = med.dose ? parseFloat(med.dose) || null : null
       drugs.push({
         drug_exposure_id: nextId(),
         person_id: personId,
         drug_concept_id: med.standardConceptId ?? 0,
         drug_exposure_start_date: isoDate(c.createdAt),
+        // A single administration, not an interval: no end to record.
+        drug_exposure_end_date: null,
         drug_type_concept_id: 32817,
         drug_source_value: sourceValue("MEDICATION", med.sourceVocabulary, med.sourceCode, med.nameRaw),
-        drug_source_concept_id: med.atcCode ? `ATC:${med.atcCode}` : med.inn ? `INN:${med.inn}` : null,
+        // The ATC/INN text is already carried by drug_source_value above. No
+        // OMOP *source* concept is resolved for it today, so this stays null
+        // rather than being filled with something that is not a concept id.
+        drug_source_concept_id: null,
         dose_value: dose,
         dose_unit_source_value: med.dose,
         route_source_value: med.route,
@@ -918,7 +1253,75 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
 
     if (c.intraop) {
       sourceObservation("LOSPOR:ANAESTHESIA_DURATION_MIN", c.intraop.durationMinutes)
-      sourceObservation("LOSPOR:AIRWAY_DEVICE", c.intraop.airwayDevice)
+
+      // ── Airway management ────────────────────────────────────────────────
+      //
+      // The device, its size and the laryngoscopic view are states of the
+      // patient during the case, so they are OBSERVATIONs. Placing the device
+      // is an act performed on the patient, so it is a PROCEDURE_OCCURRENCE.
+      // Exporting only the first conflates the two: "an endotracheal tube was
+      // present" and "this patient was intubated" are different claims, and
+      // only the second belongs in a procedure count.
+      //
+      // Until this, none of the detail left at all. An export could say a tube
+      // was placed but not which, what size, whether it was cuffed, or how
+      // difficult the view was -- which is the whole substance of a
+      // difficult-airway study.
+      const ia = c.intraop
+      const strList = (v: unknown): string[] =>
+        Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x !== "") : []
+
+      // airwayDevice is the older single column; airwayDevices is the current
+      // list. Both may be populated, so they are merged and de-duplicated
+      // rather than one being preferred and the other silently dropped.
+      const devices = [...new Set([...(ia.airwayDevice ? [ia.airwayDevice] : []), ...strList(ia.airwayDevices)])]
+      for (const device of devices) sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
+
+      sourceObservation("LOSPOR:CORMACK_LEHANE", ia.cormackLehane)
+      for (const tool of strList(ia.airwayTools)) sourceObservation("LOSPOR:AIRWAY_TOOL", tool)
+      sourceObservation("LOSPOR:FIBREOPTIC_BRONCHOSCOPY", ia.fob)
+
+      // Sizes are recorded per device. The legacy tubeSize/cuffed pair is the
+      // only size older rows carry, so it is exported under its own code
+      // rather than being guessed onto one of the per-device ones.
+      sourceObservation("LOSPOR:LMA_SIZE", ia.lmaSize)
+      sourceObservation("LOSPOR:ORAL_TUBE_SIZE", ia.oralTubeSize)
+      sourceObservation("LOSPOR:ORAL_TUBE_CUFFED", ia.oralCuffed)
+      sourceObservation("LOSPOR:NASAL_TUBE_SIZE", ia.nasalTubeSize)
+      sourceObservation("LOSPOR:NASAL_TUBE_CUFFED", ia.nasalCuffed)
+      sourceObservation("LOSPOR:DLT_TYPE", ia.dltType)
+      sourceObservation("LOSPOR:DLT_SIDE", ia.dltSide)
+      sourceObservation("LOSPOR:DLT_SIZE", ia.dltSize)
+      sourceObservation("LOSPOR:ENDOBRONCHIAL_TUBE_SIZE", ia.endobronchialSize)
+      sourceObservation("LOSPOR:TUBE_SIZE_LEGACY", ia.tubeSize)
+      sourceObservation("LOSPOR:TUBE_CUFFED_LEGACY", ia.cuffed)
+
+      // ── Ventilation ──────────────────────────────────────────────────────
+      for (const mode of strList(ia.ventilationModes)) sourceObservation("LOSPOR:VENTILATION_MODE", mode)
+      sourceObservation("LOSPOR:IPPV", ia.ippv)
+      sourceObservation("LOSPOR:JET_VENTILATION", ia.jetVentilation)
+      sourceObservation("LOSPOR:PEEP_CMH2O", ia.peepCmH2O)
+
+      // ── Airway acts -> PROCEDURE_OCCURRENCE ──────────────────────────────
+      //
+      // Derived from the devices actually recorded, so a case documents the
+      // intubation it performed and not the one it might have. Devices with no
+      // corresponding act -- a face mask, a nasal cannula -- produce no
+      // procedure, which is correct: nothing was placed.
+      for (const device of devices) {
+        const act = AIRWAY_ACTS[device]
+        if (!act) continue
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      0,
+          procedure_date:            startDate,
+          procedure_type_concept_id: 32817,
+          procedure_source_value:    `AIRWAY_MANAGEMENT:${act}`,
+          visit_occurrence_id:       visitId,
+        })
+      }
+
       const techs: string[] = Array.isArray(c.intraop.techniques) ? c.intraop.techniques as string[] : []
       for (const tech of techs) {
         procedures.push({
@@ -936,7 +1339,38 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // Read from SQL CaseEvent rows (type="drug", status="active")
       // instead of parsing the legacy keyEvents.log JSON blob
       const drugEvents = c.events ?? []
-      for (const ev of drugEvents) {
+
+      // When each continuous administration stopped.
+      //
+      // infusion_stop and agent_stop used to be skipped entirely, so every
+      // infusion and every volatile exported with a start and no end — which in
+      // the CDM reads as "still running". Duration, the quantity most
+      // anaesthetic research is built on, could not be derived at all.
+      //
+      // Infusions pair by infId. Volatiles have no key because only one runs at
+      // a time, so a stop closes whichever is currently open; that is exactly
+      // how the intraop engine reads the same events. An administration with no
+      // stop stays open, because still running when the case ended is a real
+      // state and inventing an end would manufacture a duration nobody recorded.
+      const ordered = [...drugEvents].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      const infusionEnd = new Map<string, Date>()
+      const agentEnd = new Map<number, Date>()
+      let openAgentIndex: number | null = null
+      ordered.forEach((ev, index) => {
+        if (ev.type === "infusion_stop" && ev.infId) infusionEnd.set(ev.infId, ev.timestamp)
+        if (ev.type === "agent_start") openAgentIndex = index
+        if (ev.type === "agent_stop" && openAgentIndex != null) {
+          agentEnd.set(openAgentIndex, ev.timestamp)
+          openAgentIndex = null
+        }
+      })
+      const endFor = (ev: typeof drugEvents[number], index: number): string | null => {
+        if (ev.type === "infusion_start") return ev.infId ? isoDate(infusionEnd.get(ev.infId)) : null
+        if (ev.type === "agent_start") return isoDate(agentEnd.get(index))
+        return null
+      }
+
+      for (const [index, ev] of ordered.entries()) {
         if (ev.type === "vital") {
           const eventVitals: [keyof typeof VITAL_CONCEPTS, number | null | undefined, string | null | undefined][] = [
             ["systolic", ev.systolic, null],
@@ -961,6 +1395,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               unit_concept_id:           0,
               unit_source_value:         key === "bgl" ? ev.bglUnitCanon ?? cfg.unit : cfg.unit,
               measurement_source_value:  `LOINC:${loincOverride ?? cfg.loinc}`,
+              // Vitals carry no source text and no laboratory reference range.
+              value_source_value:        null,
+              range_low:                 null,
+              range_high:                null,
               visit_occurrence_id:       visitId,
             })
           }
@@ -987,23 +1425,45 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               unit_concept_id: 0,
               unit_source_value: unit,
               measurement_source_value: source,
+              // Vitals carry no source text and no laboratory reference range.
+              value_source_value:        null,
+              range_low:                 null,
+              range_high:                null,
               visit_occurrence_id: visitId,
             })
           }
           sourceObservation("LOSPOR:CARRIER_GAS", ev.carrierGas, isoDate(ev.timestamp))
         }
-        if (ev.type !== "drug" && ev.type !== "agent_start" && ev.type !== "infusion_start") continue
+        // fluid_start joins the administration types: the volume and category
+        // were selected from the database and then discarded, leaving only case
+        // totals, so when a litre went in was unanswerable — the question in any
+        // resuscitation study. Totals are still emitted, as a derived summary.
+        if (ev.type !== "drug" && ev.type !== "agent_start"
+          && ev.type !== "infusion_start" && ev.type !== "fluid_start") continue
         const meta = (ev.metadataJson ?? {}) as Record<string, unknown>
-        const doseSource = ev.type === "infusion_start" ? ev.rate : meta.dose
+        const doseSource = ev.type === "infusion_start" ? ev.rate
+          : ev.type === "fluid_start" ? ev.volume
+            : meta.dose
         const dose = doseSource != null ? parseFloat(String(doseSource)) || null : null
         drugs.push({
           drug_exposure_id:           nextId(),
           person_id:                  personId,
-          drug_concept_id:            0,
+          // The concept resolved when the event was written. It used to be
+          // hardcoded 0, so every drug given during a case exported as unmapped
+          // while its ATC sat in the row unused — and the same drug listed
+          // preoperatively exported mapped.
+          drug_concept_id:            ev.standardConceptId ?? 0,
           drug_exposure_start_date:   isoDate(ev.timestamp),
+          drug_exposure_end_date:     endFor(ev, index),
           drug_type_concept_id:       32817,
-          drug_source_value:          (meta.name as string | undefined) ?? ev.label ?? null,
-          drug_source_concept_id:     ev.atcCode ? `ATC:${ev.atcCode}` : null,
+          // The ATC moves into the source value, where source codes belong. It
+          // was previously the only place the code appeared, so dropping it
+          // from the concept id column without doing this would lose the one
+          // identifier an unmapped intraoperative drug still had.
+          drug_source_value:          ev.atcCode
+            ? `ATC:${ev.atcCode} - ${(meta.name as string | undefined) ?? ev.label ?? ""}`.trimEnd()
+            : (meta.name as string | undefined) ?? ev.label ?? null,
+          drug_source_concept_id:     null,
           dose_value:                 dose,
           dose_unit_source_value:     ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
           route_source_value:         ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV"),
@@ -1053,6 +1513,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               unit_concept_id: 0,
               unit_source_value: "kg",
               measurement_source_value: "LOSPOR:DOSE_CALCULATION_WEIGHT_KG",
+              // Vitals carry no source text and no laboratory reference range.
+              value_source_value:        null,
+              range_low:                 null,
+              range_high:                null,
               visit_occurrence_id: visitId,
             })
           }
@@ -1066,9 +1530,15 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           drug_exposure_id: nextId(), person_id: personId,
           drug_concept_id: prem.standardConceptId ?? 0,
           drug_exposure_start_date: startDate,
+          // A single administration, not an interval: no end to record.
+          drug_exposure_end_date: null,
           drug_type_concept_id: 32817,
-          drug_source_value: prem.nameRaw,
-          drug_source_concept_id: prem.atcCode ? `ATC:${prem.atcCode}` : null,
+          // Same correction as the other two drug sites: the ATC is source text
+          // and belongs in the source value, not in a numeric concept column.
+          // Only prefixed when there is a code to carry, so rows without one
+          // read exactly as they did before.
+          drug_source_value: prem.atcCode ? `ATC:${prem.atcCode} - ${prem.nameRaw}` : prem.nameRaw,
+          drug_source_concept_id: null,
           dose_value: dose,
           dose_unit_source_value: prem.dose,
           route_source_value: prem.route,
@@ -1080,12 +1550,20 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const line of c.intraop.vascularAccessRows ?? []) {
         procedures.push({
           procedure_occurrence_id: nextId(), person_id: personId,
-          procedure_concept_id: 0,
+          procedure_concept_id: line.standardConceptId ?? 0,
           procedure_date: startDate,
           procedure_type_concept_id: 32817,
           procedure_source_value: `VASCULAR_ACCESS:${line.siteLabel ?? line.site ?? "unknown"}${line.size ? ` ${line.size}${line.sizeUnit ?? ""}` : ""}`,
           visit_occurrence_id: visitId,
         })
+        // Depth, lumen count and whether the line was already there were
+        // selected and discarded. The last one matters most: a pre-existing
+        // line was not placed during this case, so counting it as a procedure
+        // performed here overstates what the anaesthetist did.
+        const lineKey = line.siteLabel ?? line.site ?? "unknown"
+        if (line.depthCm) sourceObservation("LOSPOR:VASCULAR_ACCESS_DEPTH_CM", `${lineKey}=${line.depthCm}`, startDate, Number(line.depthCm))
+        if (line.lumens) sourceObservation("LOSPOR:VASCULAR_ACCESS_LUMENS", `${lineKey}=${line.lumens}`, startDate, Number(line.lumens))
+        sourceObservation("LOSPOR:VASCULAR_ACCESS_PREEXISTING", `${lineKey}=${line.preexisting}`, startDate)
       }
 
       // Fluid totals as observations. Millilitres given: a quantity, and one
@@ -1101,7 +1579,11 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // a quantity, even when the label happens to read as a number.
       observations.push({
         observation_id: nextId(), person_id: personId,
-        observation_concept_id: 0,
+        // The option library's reviewed concept when there is one. CaseSelection
+        // has carried standardConceptId all along; the export simply never
+        // asked for it, so a mapped monitoring line still claimed to map to
+        // nothing.
+        observation_concept_id: sel.standardConceptId ?? 0,
         observation_date: startDate,
         observation_type_concept_id: 32817,
         value_as_number: null,
@@ -1114,7 +1596,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     for (const comp of c.complications ?? []) {
       observations.push({
         observation_id: nextId(), person_id: personId,
-        observation_concept_id: 0,
+        observation_concept_id: comp.standardConceptId ?? 0,
         observation_date: isoDate(comp.timestamp) ?? (comp.section === "postop" ? endDate : startDate),
         observation_type_concept_id: 32817,
         value_as_number: null,
@@ -1137,7 +1619,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const [key, val] of postopVitals) {
         if (val == null) continue
         const cfg = VITAL_CONCEPTS[key]
-        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val, unit_concept_id: 0, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, visit_occurrence_id: visitId })
+        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val, unit_concept_id: 0, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
       }
       // Aldrete subscores and their total: 0-2 each, 0-10 summed. A discharge
       // threshold is a numeric comparison, so these have to be numbers.
@@ -1198,7 +1680,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       generated_by_user_id:    ctx?.userId ?? "unknown",
       generated_by_role:       ctx?.userRole ?? "unknown",
       source:                  "LOSPOR",
-      source_version:          "3.7.0",
+      source_version:          "3.8.0",
       schema_version:          "3.6.0",
       concept_map_version:     "local-bilingual-map-v2",
       data_dictionary_version: DICTIONARY_VERSION,
@@ -1229,6 +1711,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       },
       note: "Numeric observations carry their value in observation.value_as_number and, unchanged, as text in observation.value_as_string; genuinely textual observations populate value_as_string only. OMOP concept IDs are emitted only where LOSPOR has a confident local mapping. Source vocabulary, source code, English/Bulgarian labels, and source-only rows are preserved for research traceability. Pediatric mode, precise age at procedure, rule provenance, pediatric risk scores, and recovery scores are preserved as source observations with concept_id 0 until reviewed mappings exist. person_id is a deterministic pseudonym derived from SHA-256 of the internal case ID — no patient names, national IDs, or direct identifiers are stored. PERSON carries an approximate year_of_birth derived from age at operation (month and day are unknown, not defaulted); race and ethnicity are not collected and are emitted as concept 0. OBSERVATION_PERIOD spans the operation only. Intraoperative event timestamps are preserved at exact DateTime precision for clinical sequence analysis — see residual_linkage_risks.",
     },
+    care_site:             [...careSites.values()],
     person:                persons,
     observation_period:    observationPeriods,
     visit_occurrence:      visits,

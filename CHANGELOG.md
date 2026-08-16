@@ -1,5 +1,93 @@
 # Changelog - LOSPOR API
 
+## [9.1.0] - 2026-08-16
+
+### Changed
+
+- Clinical yes/no questions can now record three answers: yes, no, and not
+  asked. 29 columns become nullable.
+
+  They were `Boolean @default(false)`, which cannot hold the distinction. An
+  untouched field and a recorded "no" both reached the register as a documented
+  negative, and on export the difference matters: a negative difficult-airway
+  history is a finding, an unasked one is not, and a study that counts them
+  together is counting something it did not measure.
+
+  Existing rows are deliberately left as they are. Rewriting them to NULL would
+  discard the genuine "no" answers among them, and nothing can tell those apart
+  after the fact.
+
+  `emergencySurgery` and `highRiskSurgery` stay boolean — not emergent means
+  elective. So do the vitals "unobtainable" ticks and the monitoring and
+  equipment flags, which are marks a clinician makes rather than questions put
+  to a patient. The risk calculators still treat an unasked criterion as absent,
+  since it must not count toward an RCRI, Apfel, STOP-BANG or POVOC score.
+
+- OMOP export contract `source_version` 3.7.0 → 3.8.0.
+
+### Fixed
+
+- Allergies are no longer exported as drug administrations. `Medication.kind` is
+  `CURRENT | ALLERGY` and the export iterated both, so a substance a patient
+  reacts to was recorded as one they were given. Allergies now become
+  observations.
+- CARE_SITE is emitted as its own table and referenced by `care_site_id`,
+  instead of the site being written onto every VISIT_OCCURRENCE as free text no
+  OHDSI tool reads.
+- Continuous administrations gain `drug_exposure_end_date`, paired from their
+  stop events. An infusion with no end was indistinguishable from one still
+  running.
+- Every planned procedure is exported, not only the first.
+- Intraoperative drugs resolve their ATC through the same concept pipeline as
+  preoperative medications, instead of carrying the code unused beside a
+  hardcoded concept id of 0.
+- `drug_source_concept_id` holds a concept id or null, not the string
+  `ATC:<code>`.
+- Curated mappings on `CaseSelection`, `CaseComplication` and `VascularAccess`
+  are read. The database held the mapping while the export said the row mapped
+  to nothing.
+
+### Added
+
+- Airway management leaves the appliance: the device list, Cormack-Lehane grade,
+  tools, per-device sizes and cuff status, DLT type/side/size, endobronchial
+  size, ventilation modes, IPPV, jet ventilation and PEEP. None of it was
+  exported before, so a case could say a tube was placed but not which, what
+  size, or how difficult the view was.
+- Placing an instrumented airway is emitted as a PROCEDURE_OCCURRENCE. A device
+  is a state of the patient; putting it there is something done to them, and
+  only the second belongs in a procedure count. A face mask produces no
+  procedure, because nothing was placed.
+- The preop findings that were read out of the database and written to no table:
+  smoking, substance use, latex allergy, family anaesthesia history, dental
+  state, cardiac arrhythmia, BMI, blood group and Rh, GUTA, and the airway
+  examination — mouth opening, thyromental distance, neck mobility, upper lip
+  bite test, retrognathia, prominent incisors and facial hair.
+- MEASUREMENT gains `value_source_value`, `range_low` and `range_high`. A lab
+  result with no parsed number was skipped entirely, so a culture, a dipstick or
+  a blood group left no trace of having been recorded. Reference ranges now
+  travel with the result: they differ by laboratory, assay and patient age, and
+  "high" is not a claim an export can support without the range behind it.
+- Vascular lines carry depth, lumen count and whether they were already in
+  place. A pre-existing line was not placed during this case, so its procedure
+  row overstated the work without that flag.
+- `ConceptMappingStatus` gains `MANUALLY_CURATED` and `REJECTED`. MAPPED covered
+  both an automatic match and one a human signed off; UNMAPPED covered both
+  "nobody has looked" and "a candidate was rejected". A rejected mapping keeps
+  its row so the rejection is remembered, but never applies its concept id.
+- `mapping_summary` gains `manually_curated_rows` and `rejected_rows`.
+- The procedure catalogue is seeded into the concept map. It was the one
+  vocabulary the seed script never covered, so every planned procedure fell
+  through to an implicit SOURCE_ONLY with no row behind it — a mapping that
+  existed only as an absence.
+
+### Migrations
+
+- `20260816160000_tristate_clinical_questions`
+- `20260816180000_concept_mapping_provenance`
+
+Both are additive or relaxing and rewrite no data.
+
 ## [9.0.0] - 2026-08-11
 
 ### Breaking

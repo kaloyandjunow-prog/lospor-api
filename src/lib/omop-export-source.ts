@@ -18,6 +18,10 @@ export function redactExportRow(c: ExportRow) {
       plannedProcedure: c.preop.plannedProcedure ? redactText(c.preop.plannedProcedure) : c.preop.plannedProcedure,
       allergyDetails: c.preop.allergyDetails ? redactText(c.preop.allergyDetails) : c.preop.allergyDetails,
       currentMedications: c.preop.currentMedications ? redactText(c.preop.currentMedications) : c.preop.currentMedications,
+      // Free prose written by a clinician, so it goes through the same
+      // redaction as every other note before it can leave.
+      familyAnesthesiaDetails: c.preop.familyAnesthesiaDetails ? redactText(c.preop.familyAnesthesiaDetails) : c.preop.familyAnesthesiaDetails,
+      difficultAirwayNotes: c.preop.difficultAirwayNotes ? redactText(c.preop.difficultAirwayNotes) : c.preop.difficultAirwayNotes,
       medications: c.preop.medications.map(row => ({
         ...row,
         nameRaw: row.nameRaw ? redactText(row.nameRaw) : row.nameRaw,
@@ -54,11 +58,11 @@ export const CASE_SELECT = {
     select: { section: true, fieldKey: true, presence: true },
   },
   selections: {
-    select: { section: true, category: true, value: true, ordinal: true },
+    select: { section: true, category: true, value: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
     orderBy: [{ section: "asc" }, { category: "asc" }, { ordinal: "asc" }],
   },
   complications: {
-    select: { section: true, label: true, note: true, timestamp: true, source: true, ordinal: true },
+    select: { section: true, label: true, note: true, timestamp: true, source: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
     orderBy: [{ section: "asc" }, { ordinal: "asc" }],
   },
   events: {
@@ -87,6 +91,8 @@ export const CASE_SELECT = {
       drugId: true,
       inn: true,
       drugRoute: true,
+      standardConceptId: true,
+      mappingStatus: true,
       rate: true,
       concentration: true,
       concentrationValue: true,
@@ -101,6 +107,8 @@ export const CASE_SELECT = {
       clinicalPresetId: true,
       clinicalPresetVersion: true,
       clinicalPresetScope: true,
+      infId: true,
+      fluidId: true,
       volume: true,
       fluidCategory: true,
       agentPercent: true,
@@ -117,12 +125,25 @@ export const CASE_SELECT = {
       diagnosis: true, diagnosesJson: true, plannedProcedure: true, proceduresJson: true,
       comorbidities: true, asaScore: true, emergencySurgery: true, highRiskSurgery: true,
       allergies: true, allergyDetails: true, smoking: true, substanceAbuse: true,
+      // Clinical detail that was read into the mapper's row types but never
+      // written to any table, so it left the appliance nowhere.
+      bmi: true, bloodType: true, rhFactor: true, gutaScore: true,
+      latexAllergy: true, familyAnesthesiaProblems: true, familyAnesthesiaDetails: true,
+      dentalProsthetics: true, looseTeeth: true, heartArrhythmia: true,
+      // The airway examination, as distinct from the difficult-airway history.
+      mouthOpeningCm: true, thyromental: true, neckMobility: true, upperLipBiteTest: true,
+      retrognathia: true, prominentIncisors: true, facialHair: true,
+      difficultAirwayNotes: true,
       currentMedications: true, rcriScore: true, apfelScore: true, stopBangScore: true,
       povocScore: true, povocRiskPercent: true, coldsScore: true, pediatricFasting: true,
       difficultAirwayHistory: true, mallampati: true, labResults: true,
       labRows: {
         select: {
           test: true, valueNum: true, value: true, unitCanon: true, loincCode: true, abnormalFlag: true,
+          // A result the lab reported as text, and the range it was judged
+          // against. Without the range, "high" is an assertion the export
+          // cannot support; without the text, a qualitative result vanished.
+          referenceLow: true, referenceHigh: true,
           standardConceptId: true, mappingStatus: true,
         },
       },
@@ -161,10 +182,21 @@ export const CASE_SELECT = {
       startedAt: true, endedAt: true, timezone: true,
       startTime: true, endTime: true, durationMinutes: true, monthYear: true,
       techniques: true, keyEvents: true, airwayDevice: true,
+      // Airway management detail. None of this used to leave the appliance, so
+      // an export could say a tube was placed but never which one, what size,
+      // whether it was cuffed, or how hard the laryngoscopy was -- the part a
+      // difficult-airway study is actually about.
+      airwayDevices: true, cormackLehane: true, airwayTools: true, fob: true,
+      lmaSize: true,
+      oralTubeSize: true, oralCuffed: true, nasalTubeSize: true, nasalCuffed: true,
+      dltType: true, dltSide: true, dltSize: true, endobronchialSize: true,
+      // Legacy single-device columns, still the only size on older rows.
+      tubeSize: true, cuffed: true,
+      ventilationModes: true, ippv: true, jetVentilation: true, peepCmH2O: true,
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true,
       complications: true, premedicationEvening: true, premedicationMorning: true,
       vascularAccessRows: {
-        select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true },
+        select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
         orderBy: { ordinal: "asc" },
       },
       premedicationRows: {

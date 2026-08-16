@@ -10,12 +10,22 @@ describe("mapPreop", () => {
     expect(result.bmi).toBeNull()
   })
 
-  it("defaults boolean fields to false", () => {
+  it("leaves an unanswered clinical question unanswered", () => {
+    // These used to default to false, so a case created from an empty payload
+    // asserted "no" to every question before anyone had been asked one. A
+    // clinician answering no and a question nobody asked were the same value.
     const result = mapPreop({})
-    expect(result.smoking).toBe(false)
-    expect(result.allergies).toBe(false)
-    expect(result.difficultAirwayHistory).toBe(false)
+    expect(result.smoking).toBeNull()
+    expect(result.allergies).toBeNull()
+    expect(result.difficultAirwayHistory).toBeNull()
+  })
+
+  it("still defaults the genuinely binary fields to false", () => {
+    // Not every boolean is a question. High-risk surgery is binary by nature —
+    // not high risk means not high risk — so it keeps a definite default.
+    const result = mapPreop({})
     expect(result.highRiskSurgery).toBe(false)
+    expect(result.emergencySurgery).toBe(false)
   })
 
   it("computes BMI from height and weight", () => {

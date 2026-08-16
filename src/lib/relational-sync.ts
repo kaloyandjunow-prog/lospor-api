@@ -27,7 +27,7 @@ const flt = (v: unknown): number | null => {
   return isFinite(n) ? n : null
 }
 
-type MappingStatus = "MAPPED" | "SOURCE_ONLY" | "UNMAPPED"
+type MappingStatus = "MAPPED" | "MANUALLY_CURATED" | "REJECTED" | "SOURCE_ONLY" | "UNMAPPED"
 type ConceptInfo = {
   sourceVocabulary: string | null
   sourceCode: string | null
@@ -65,12 +65,41 @@ function concept(
   if (!sourceVocabulary || !sourceCode) {
     return { sourceVocabulary: null, sourceCode: null, standardConceptId: null, mappingStatus: "UNMAPPED" }
   }
-  return concepts.get(conceptKey(domain, sourceVocabulary, sourceCode)) ?? {
-    sourceVocabulary,
-    sourceCode,
-    standardConceptId: null,
-    mappingStatus: "SOURCE_ONLY",
+  const found = concepts.get(conceptKey(domain, sourceVocabulary, sourceCode))
+  if (!found) {
+    return { sourceVocabulary, sourceCode, standardConceptId: null, mappingStatus: "SOURCE_ONLY" }
   }
+  // A rejected mapping keeps its row so the rejection is remembered and the
+  // same candidate is not proposed again, but the concept it names must never
+  // be applied -- that is the whole point of having rejected it. The source
+  // vocabulary and code still travel, so the row stays searchable.
+  if (found.mappingStatus === "REJECTED") {
+    return { ...found, standardConceptId: null }
+  }
+  return found
+}
+
+/**
+ * Resolve a drug's standard concept the same way preop medications do.
+ *
+ * Exported so the intraoperative event writer resolves through this exact
+ * path rather than a second copy of it. A drug given during a case and the
+ * same drug listed preoperatively must not map differently depending on which
+ * screen recorded it.
+ *
+ * ATC first, then INN, then the raw label — mirroring medicationRows above.
+ */
+export async function resolveDrugConcept(
+  db: Db,
+  atcCode: string | null | undefined,
+  inn: string | null | undefined,
+  label: string | null | undefined,
+): Promise<{ standardConceptId: number | null; mappingStatus: MappingStatus }> {
+  const concepts = await getConceptMap(db)
+  const mapped = atcCode
+    ? concept(concepts, "drug", "ATC", atcCode)
+    : concept(concepts, "drug", inn ? "INN" : "LOSPOR_DRUG_RAW", inn ?? label)
+  return { standardConceptId: mapped.standardConceptId, mappingStatus: mapped.mappingStatus }
 }
 
 // LabLoinc cache (loaded once per process, tiny table)

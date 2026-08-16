@@ -398,8 +398,22 @@ model OptionLibrary {
 }
 
 enum ConceptMappingStatus {
+  /// An automatic resolution found a standard concept for this source code.
   MAPPED
+  /// A human reviewed this mapping and chose it. Behaves like MAPPED for
+  /// export, but stays distinguishable: an automatic match and a curated one
+  /// are different levels of evidence, and a study that treats them alike is
+  /// trusting a string-similarity score as if a clinician had signed it off.
+  MANUALLY_CURATED
+  /// A candidate mapping was considered and rejected. Distinct from UNMAPPED,
+  /// which means nobody has looked yet -- without the distinction a rejected
+  /// candidate is indistinguishable from unfinished work and gets proposed
+  /// again on every review pass. The concept id is never applied.
+  REJECTED
+  /// The source vocabulary and code are preserved, but no standard concept has
+  /// been resolved.
   SOURCE_ONLY
+  /// No source vocabulary and code either.
   UNMAPPED
 }
 
@@ -624,6 +638,19 @@ model CaseEvent {
   drugId            String?
   inn               String?
   drugRoute         String?
+  // The standard vocabulary concept for this event's drug, resolved once when
+  // the event is written rather than looked up again on every export.
+  //
+  // Preop medications have worked this way all along; intraoperative drugs did
+  // not, so every drug given during a case exported with drug_concept_id 0 even
+  // though its ATC was known and mapped. Resolving here keeps the export a pure
+  // function of the stored record: the same case exported twice produces the
+  // same file, which is what makes a research dataset defensible.
+  //
+  // SOURCE_ONLY by default, so existing rows keep behaving exactly as before
+  // until something resolves them.
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
   // Drug-selection audit fields. `concentration` remains the legacy display
   // value (for example "0.5%"); the typed value/unit pair is canonical for new
   // writes while preserving old rows and clients.
@@ -733,21 +760,21 @@ model PreoperativeAssessment {
   comorbidities Json @default("[]")
 
   // Safety-critical fields kept explicit
-  allergies                Boolean @default(false)
+  allergies                Boolean?
   allergyDetails           String?
-  latexAllergy             Boolean @default(false)
+  latexAllergy             Boolean?
   currentMedications       String?
-  familyAnesthesiaProblems Boolean @default(false)
+  familyAnesthesiaProblems Boolean?
   familyAnesthesiaDetails  String?
-  dentalProsthetics        Boolean @default(false)
-  looseTeeth               Boolean @default(false)
-  smoking                  Boolean @default(false)
-  substanceAbuse           Boolean @default(false)
+  dentalProsthetics        Boolean?
+  looseTeeth               Boolean?
+  smoking                  Boolean?
+  substanceAbuse           Boolean?
 
   bpSystolic                  Int?
   bpDiastolic                 Int?
   heartRate                   Int?
-  heartArrhythmia             Boolean @default(false)
+  heartArrhythmia             Boolean?
   spO2                        Float?
   temperature                 Float?
   respiratoryRate             Int?
@@ -762,10 +789,10 @@ model PreoperativeAssessment {
   thyromental            Float?
   neckMobility           NeckMobility?
   upperLipBiteTest       UpperLipBiteTest?
-  retrognathia           Boolean           @default(false)
-  prominentIncisors      Boolean           @default(false)
-  facialHair             Boolean           @default(false)
-  difficultAirwayHistory Boolean           @default(false)
+  retrognathia           Boolean?
+  prominentIncisors      Boolean?
+  facialHair             Boolean?
+  difficultAirwayHistory Boolean?
   difficultAirwayNotes   String?
   cormackLehane          CormackLehane?
   airwayUnobtainable     Boolean           @default(false)
@@ -776,11 +803,11 @@ model PreoperativeAssessment {
   highRiskSurgery  Boolean   @default(false)
 
   // Individual RCRI inputs — stored so the form can be restored accurately
-  rcriIschemicHeart Boolean @default(false)
-  rcriCHF           Boolean @default(false)
-  rcriCVD           Boolean @default(false)
-  rcriInsulinDM     Boolean @default(false)
-  rcriCreatinine    Boolean @default(false)
+  rcriIschemicHeart Boolean?
+  rcriCHF           Boolean?
+  rcriCVD           Boolean?
+  rcriInsulinDM     Boolean?
+  rcriCreatinine    Boolean?
 
   // Computed risk scores
   rcriScore     Int?
@@ -789,22 +816,22 @@ model PreoperativeAssessment {
   stopBangScore Int?
 
   // Individual Apfel inputs
-  apfelPONVHistory   Boolean @default(false)
-  apfelPostopOpioids Boolean @default(false)
+  apfelPONVHistory   Boolean?
+  apfelPostopOpioids Boolean?
 
   // Individual STOP-BANG inputs
-  stopbangSnoring  Boolean @default(false)
-  stopbangTired    Boolean @default(false)
-  stopbangObserved Boolean @default(false)
-  stopbangBP       Boolean @default(false)
-  stopbangNeck     Boolean @default(false)
+  stopbangSnoring  Boolean?
+  stopbangTired    Boolean?
+  stopbangObserved Boolean?
+  stopbangBP       Boolean?
+  stopbangNeck     Boolean?
 
   povocScore                   Int?
   povocRiskPercent             Float?
-  povocSurgeryAtLeast30Minutes Boolean @default(false)
-  povocAgeAtLeast3Years        Boolean @default(false)
-  povocStrabismusSurgery       Boolean @default(false)
-  povocHistory                 Boolean @default(false)
+  povocSurgeryAtLeast30Minutes Boolean?
+  povocAgeAtLeast3Years        Boolean?
+  povocStrabismusSurgery       Boolean?
+  povocHistory                 Boolean?
 
   coldsApplicable      Boolean @default(false)
   coldsScore           Int?
@@ -960,7 +987,7 @@ model PostoperativeRecord {
   pediatricPainScale              PediatricPainScale?
   pediatricPainScore              Int?
   paedScore                       Int?
-  ponv                            Boolean             @default(false)
+  ponv                            Boolean?
   temperatureCelsius              Float?
   recoveryBpUnobtainable          Boolean             @default(false)
   recoveryHeartRateUnobtainable   Boolean             @default(false)
