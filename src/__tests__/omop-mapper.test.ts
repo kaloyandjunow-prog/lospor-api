@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mapCasesToOmop } from "@/lib/omop-mapper"
+import { AIRWAY_ACTS, mapCasesToOmop } from "@/lib/omop-mapper"
 
 import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
 
@@ -19,7 +19,7 @@ describe("mapCasesToOmop", () => {
       generated_by_user_id: "admin-1",
       generated_by_role: "ADMIN",
       source: "LOSPOR",
-      source_version: "3.7.0",
+      source_version: "3.8.0",
       included_case_count: 1,
       excluded_case_count: 2,
       app_git_commit: "abc123",
@@ -41,8 +41,8 @@ describe("mapCasesToOmop", () => {
       drug_exposure: 6,
       measurement: 26,
       // Two planned procedures + anaesthesia technique + vascular access.
-      procedure_occurrence: 4,
-      observation: 29,
+      procedure_occurrence: 5,
+      observation: 40,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -192,7 +192,7 @@ describe("mapCasesToOmop", () => {
       forcedOverride: false,
     })
 
-    expect(bundle.metadata.source_version).toBe("3.7.0")
+    expect(bundle.metadata.source_version).toBe("3.8.0")
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
       visit_start_date: "2026-07-21",
       visit_end_date: "2026-07-21",
@@ -648,5 +648,123 @@ describe("a clinical question distinguishes no from never asked", () => {
 
   it("exports nothing at all when the question was never asked", () => {
     expect(airwayRow(withAirwayHistory(null))).toBeUndefined()
+  })
+})
+
+describe("airway management", () => {
+  const omop = (intraop: Record<string, unknown>) => {
+    const base = completeCase() as unknown as { intraop: Record<string, unknown> }
+    return mapCasesToOmop([{ ...base, intraop: { ...base.intraop, ...intraop } } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+  }
+  const obs = (bundle: ReturnType<typeof omop>, code: string) =>
+    bundle.observation.filter(o => o.observation_source_value === code)
+  const airwayProcs = (bundle: ReturnType<typeof omop>) =>
+    bundle.procedure_occurrence
+      .filter(p => p.procedure_source_value?.startsWith("AIRWAY_MANAGEMENT:"))
+      .map(p => p.procedure_source_value)
+
+  it("exports the detail that used to never leave", () => {
+    // None of this reached an export before. A case could say a tube was
+    // placed but not which, what size, whether it was cuffed, or how difficult
+    // the view was -- the substance of any difficult-airway study.
+    const bundle = omop({})
+    expect(obs(bundle, "LOSPOR:CORMACK_LEHANE")[0]?.value_as_string).toBe("IIa")
+    expect(obs(bundle, "LOSPOR:ORAL_TUBE_SIZE")[0]?.value_as_number).toBe(7.5)
+    expect(obs(bundle, "LOSPOR:ORAL_TUBE_CUFFED")[0]?.value_as_string).toBe("true")
+    expect(obs(bundle, "LOSPOR:PEEP_CMH2O")[0]?.value_as_number).toBe(5)
+    expect(obs(bundle, "LOSPOR:AIRWAY_TOOL").map(o => o.value_as_string).sort())
+      .toEqual(["BOUGIE", "VIDEO_LARY"])
+    expect(obs(bundle, "LOSPOR:VENTILATION_MODE")[0]?.value_as_string).toBe("VCV")
+  })
+
+  it("puts a size in value_as_number, not only in text", () => {
+    // A size written only as a string cannot be averaged or thresholded
+    // without casting it back, which is the mistake 3.7.0 fixed elsewhere.
+    const bundle = omop({ dltSize: 39, lmaSize: 4 })
+    expect(obs(bundle, "LOSPOR:DLT_SIZE")[0]?.value_as_number).toBe(39)
+    expect(obs(bundle, "LOSPOR:LMA_SIZE")[0]?.value_as_number).toBe(4)
+  })
+
+  it("records a boolean airway finding as text, not as a number", () => {
+    // "true" in value_as_number would be indistinguishable from a score of 1.
+    const bundle = omop({})
+    expect(obs(bundle, "LOSPOR:JET_VENTILATION")[0]).toMatchObject({
+      value_as_string: "false", value_as_number: null,
+    })
+  })
+
+  it("merges the legacy device column with the current list without duplicating", () => {
+    // Rows written across the single-column-to-list change carry both. Taking
+    // one and ignoring the other would drop a device; taking both naively
+    // would export the same device twice.
+    const both = omop({ airwayDevice: "ORAL_ETT", airwayDevices: ["ORAL_ETT", "LMA"] })
+    expect(obs(both, "LOSPOR:AIRWAY_DEVICE").map(o => o.value_as_string).sort())
+      .toEqual(["LMA", "ORAL_ETT"])
+
+    // A legacy row has only the single column, and it must still be exported.
+    const legacyOnly = omop({ airwayDevice: "NASAL_ETT", airwayDevices: [] })
+    expect(obs(legacyOnly, "LOSPOR:AIRWAY_DEVICE").map(o => o.value_as_string))
+      .toEqual(["NASAL_ETT"])
+  })
+
+  it("separates being intubated from having a tube", () => {
+    // A device is a state of the patient; placing it is an act performed on
+    // them. Exporting only the observation means no procedure count can ever
+    // find the intubation.
+    const bundle = omop({ airwayDevice: null, airwayDevices: ["ORAL_ETT"] })
+    expect(obs(bundle, "LOSPOR:AIRWAY_DEVICE")).toHaveLength(1)
+    expect(airwayProcs(bundle)).toEqual(["AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL"])
+  })
+
+  it("does not invent a procedure for an airway that was applied, not placed", () => {
+    // Counting a face mask as an airway procedure would inflate every such
+    // count, and the inflation would look like a real clinical signal.
+    const bundle = omop({ airwayDevice: null, airwayDevices: ["FACE_MASK", "OPA", "NPA"] })
+    expect(obs(bundle, "LOSPOR:AIRWAY_DEVICE")).toHaveLength(3)
+    expect(airwayProcs(bundle)).toEqual([])
+  })
+
+  it("emits one act per instrumented device", () => {
+    const bundle = omop({
+      airwayDevice: null,
+      airwayDevices: ["FACE_MASK", "LMA", "DOUBLE_LUMEN_TUBE"],
+    })
+    expect(airwayProcs(bundle).sort()).toEqual([
+      "AIRWAY_MANAGEMENT:DOUBLE_LUMEN_TUBE_PLACEMENT",
+      "AIRWAY_MANAGEMENT:SUPRAGLOTTIC_AIRWAY_PLACEMENT",
+    ])
+  })
+
+  it("stays silent about an airway nobody recorded", () => {
+    const bundle = omop({
+      airwayDevice: null, airwayDevices: [], cormackLehane: null,
+      airwayTools: [], ventilationModes: [], oralTubeSize: null, oralCuffed: null,
+      peepCmH2O: null, fob: null, ippv: null, jetVentilation: null,
+    })
+    expect(obs(bundle, "LOSPOR:AIRWAY_DEVICE")).toEqual([])
+    expect(obs(bundle, "LOSPOR:CORMACK_LEHANE")).toEqual([])
+    expect(airwayProcs(bundle)).toEqual([])
+  })
+})
+
+describe("AIRWAY_ACTS", () => {
+  it("classifies every device the catalogue offers", async () => {
+    // The device list is seeded from @lospor/core and can grow. A device
+    // missing from the map exports no procedure at all, and the failure would
+    // be an absence -- no error, no warning, a case that was intubated simply
+    // not counted as one. Adding a device must break this test, not the data.
+    const { AIRWAY_DEVICES } = await import("@lospor/core/catalog")
+    const catalogued = AIRWAY_DEVICES.map(([value]) => value).sort()
+    expect(Object.keys(AIRWAY_ACTS).sort()).toEqual(catalogued)
+  })
+
+  it("names an act for every device that is instrumented", () => {
+    // The null entries are a deliberate classification, not an oversight, so
+    // this pins which devices are held to have no procedure.
+    const noAct = Object.entries(AIRWAY_ACTS).filter(([, act]) => act == null).map(([d]) => d)
+    expect(noAct.sort()).toEqual(["FACE_MASK", "NPA", "OPA"])
   })
 })

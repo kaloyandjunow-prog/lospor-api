@@ -1,9 +1,36 @@
 /**
- * OMOP CDM v5.4 mapper — export contract `source_version` 3.7.0.
+ * OMOP CDM v5.4 mapper — export contract `source_version` 3.8.0.
  *
  * `source_version` tracks the shape of the export, not the app version: bump it
  * whenever a table or column is added, removed or reinterpreted.
  *
+ * 3.8.0 — the shape changes since 3.7.0, none of which had been released.
+ *
+ *         CARE_SITE is emitted as its own table and referenced by
+ *         care_site_id, instead of the site being written onto
+ *         VISIT_OCCURRENCE as a bare string.
+ *
+ *         Allergies stop being exported as DRUG_EXPOSURE. Medication.kind is
+ *         CURRENT | ALLERGY, and the export iterated both, so a substance the
+ *         patient reacts to was recorded as one they were given. Allergies now
+ *         become observations, which is a different claim in the right place.
+ *
+ *         Continuous administrations gain drug_exposure_end_date, paired from
+ *         their stop events. Every planned procedure is exported, not the
+ *         first. Intraoperative drugs resolve their ATC through the same
+ *         concept pipeline as relational medications.
+ *
+ *         Clinical yes/no questions emit for a recorded "no" as well as a
+ *         "yes". They were nullable-free booleans, so silence was the only
+ *         honest option; the columns are now nullable and silence means the
+ *         question was never asked.
+ *
+ *         Airway management is exported: device list, Cormack-Lehane grade,
+ *         tools, per-device sizes and cuff status, DLT type/side/size,
+ *         endobronchial size, ventilation modes, IPPV, jet ventilation and
+ *         PEEP. Placing an instrumented airway is also emitted as a
+ *         PROCEDURE_OCCURRENCE, separating what was done to the patient from
+ *         what was true of them.
  * 3.7.0 — OBSERVATION gains value_as_number, the CDM column a numeric
  *         observation belongs in. Every score the export carries (RCRI, Apfel,
  *         STOP-BANG, the Aldrete subscores and total, POVOC, COLDS, PAED, the
@@ -60,6 +87,31 @@ function pseudonymId(kind: string, key: string): number {
   const hi = digest.readUInt32BE(0)         // 32 bits
   const lo = digest.readUInt32BE(4) >>> 12  // top 20 bits of the next word
   return hi * 0x100000 + lo + 1             // 52 bits, never zero
+}
+
+/**
+ * The act of placing each airway device, where placing it is a procedure.
+ *
+ * A device is a state of the patient; putting it there is something done to
+ * them, and only the second belongs in a procedure count. Devices that are
+ * applied rather than instrumented map to null: a face mask is held on a face,
+ * and counting that as an airway procedure would inflate every such count.
+ *
+ * Exhaustive over `AIRWAY_DEVICES` in @lospor/core, and asserted so by test.
+ * The list is seeded from that catalogue and can grow, and a device missing
+ * from here would silently export no procedure at all -- the failure would be
+ * an absence, which nothing else in the pipeline would notice.
+ */
+export const AIRWAY_ACTS: Record<string, string | null> = {
+  FACE_MASK:          null,
+  OPA:                null,
+  NPA:                null,
+  LMA:                "SUPRAGLOTTIC_AIRWAY_PLACEMENT",
+  ORAL_ETT:           "TRACHEAL_INTUBATION_ORAL",
+  NASAL_ETT:          "TRACHEAL_INTUBATION_NASAL",
+  DOUBLE_LUMEN_TUBE:  "DOUBLE_LUMEN_TUBE_PLACEMENT",
+  ENDOBRONCHIAL_TUBE: "ENDOBRONCHIAL_TUBE_PLACEMENT",
+  SURGICAL_AIRWAY:    "SURGICAL_AIRWAY",
 }
 
 function isoDate(d: Date | string | null | undefined): string | null {
@@ -468,6 +520,28 @@ type CaseRow = {
     premedicationEvening: string | null
     premedicationMorning: string | null
     airwayDevice: string | null
+    // Airway management detail. `airwayDevices` is the current multi-device
+    // list; `airwayDevice` is the older single value and both may be set.
+    airwayDevices?: unknown
+    cormackLehane?: string | null
+    airwayTools?: unknown
+    fob?: boolean | null
+    lmaSize?: number | null
+    oralTubeSize?: number | null
+    oralCuffed?: boolean | null
+    nasalTubeSize?: number | null
+    nasalCuffed?: boolean | null
+    dltType?: string | null
+    dltSide?: string | null
+    dltSize?: number | null
+    endobronchialSize?: number | null
+    // Legacy shared size/cuff, written before the per-device columns existed.
+    tubeSize?: number | null
+    cuffed?: boolean | null
+    ventilationModes?: unknown
+    ippv?: boolean | null
+    jetVentilation?: boolean | null
+    peepCmH2O?: number | null
     vascularAccessRows?: {
       site: string | null
       siteLabel: string | null
@@ -1040,7 +1114,75 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
 
     if (c.intraop) {
       sourceObservation("LOSPOR:ANAESTHESIA_DURATION_MIN", c.intraop.durationMinutes)
-      sourceObservation("LOSPOR:AIRWAY_DEVICE", c.intraop.airwayDevice)
+
+      // ── Airway management ────────────────────────────────────────────────
+      //
+      // The device, its size and the laryngoscopic view are states of the
+      // patient during the case, so they are OBSERVATIONs. Placing the device
+      // is an act performed on the patient, so it is a PROCEDURE_OCCURRENCE.
+      // Exporting only the first conflates the two: "an endotracheal tube was
+      // present" and "this patient was intubated" are different claims, and
+      // only the second belongs in a procedure count.
+      //
+      // Until this, none of the detail left at all. An export could say a tube
+      // was placed but not which, what size, whether it was cuffed, or how
+      // difficult the view was -- which is the whole substance of a
+      // difficult-airway study.
+      const ia = c.intraop
+      const strList = (v: unknown): string[] =>
+        Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x !== "") : []
+
+      // airwayDevice is the older single column; airwayDevices is the current
+      // list. Both may be populated, so they are merged and de-duplicated
+      // rather than one being preferred and the other silently dropped.
+      const devices = [...new Set([...(ia.airwayDevice ? [ia.airwayDevice] : []), ...strList(ia.airwayDevices)])]
+      for (const device of devices) sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
+
+      sourceObservation("LOSPOR:CORMACK_LEHANE", ia.cormackLehane)
+      for (const tool of strList(ia.airwayTools)) sourceObservation("LOSPOR:AIRWAY_TOOL", tool)
+      sourceObservation("LOSPOR:FIBREOPTIC_BRONCHOSCOPY", ia.fob)
+
+      // Sizes are recorded per device. The legacy tubeSize/cuffed pair is the
+      // only size older rows carry, so it is exported under its own code
+      // rather than being guessed onto one of the per-device ones.
+      sourceObservation("LOSPOR:LMA_SIZE", ia.lmaSize)
+      sourceObservation("LOSPOR:ORAL_TUBE_SIZE", ia.oralTubeSize)
+      sourceObservation("LOSPOR:ORAL_TUBE_CUFFED", ia.oralCuffed)
+      sourceObservation("LOSPOR:NASAL_TUBE_SIZE", ia.nasalTubeSize)
+      sourceObservation("LOSPOR:NASAL_TUBE_CUFFED", ia.nasalCuffed)
+      sourceObservation("LOSPOR:DLT_TYPE", ia.dltType)
+      sourceObservation("LOSPOR:DLT_SIDE", ia.dltSide)
+      sourceObservation("LOSPOR:DLT_SIZE", ia.dltSize)
+      sourceObservation("LOSPOR:ENDOBRONCHIAL_TUBE_SIZE", ia.endobronchialSize)
+      sourceObservation("LOSPOR:TUBE_SIZE_LEGACY", ia.tubeSize)
+      sourceObservation("LOSPOR:TUBE_CUFFED_LEGACY", ia.cuffed)
+
+      // ── Ventilation ──────────────────────────────────────────────────────
+      for (const mode of strList(ia.ventilationModes)) sourceObservation("LOSPOR:VENTILATION_MODE", mode)
+      sourceObservation("LOSPOR:IPPV", ia.ippv)
+      sourceObservation("LOSPOR:JET_VENTILATION", ia.jetVentilation)
+      sourceObservation("LOSPOR:PEEP_CMH2O", ia.peepCmH2O)
+
+      // ── Airway acts -> PROCEDURE_OCCURRENCE ──────────────────────────────
+      //
+      // Derived from the devices actually recorded, so a case documents the
+      // intubation it performed and not the one it might have. Devices with no
+      // corresponding act -- a face mask, a nasal cannula -- produce no
+      // procedure, which is correct: nothing was placed.
+      for (const device of devices) {
+        const act = AIRWAY_ACTS[device]
+        if (!act) continue
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      0,
+          procedure_date:            startDate,
+          procedure_type_concept_id: 32817,
+          procedure_source_value:    `AIRWAY_MANAGEMENT:${act}`,
+          visit_occurrence_id:       visitId,
+        })
+      }
+
       const techs: string[] = Array.isArray(c.intraop.techniques) ? c.intraop.techniques as string[] : []
       for (const tech of techs) {
         procedures.push({
@@ -1379,7 +1521,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       generated_by_user_id:    ctx?.userId ?? "unknown",
       generated_by_role:       ctx?.userRole ?? "unknown",
       source:                  "LOSPOR",
-      source_version:          "3.7.0",
+      source_version:          "3.8.0",
       schema_version:          "3.6.0",
       concept_map_version:     "local-bilingual-map-v2",
       data_dictionary_version: DICTIONARY_VERSION,

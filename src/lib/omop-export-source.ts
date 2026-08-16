@@ -165,6 +165,17 @@ export const CASE_SELECT = {
       startedAt: true, endedAt: true, timezone: true,
       startTime: true, endTime: true, durationMinutes: true, monthYear: true,
       techniques: true, keyEvents: true, airwayDevice: true,
+      // Airway management detail. None of this used to leave the appliance, so
+      // an export could say a tube was placed but never which one, what size,
+      // whether it was cuffed, or how hard the laryngoscopy was -- the part a
+      // difficult-airway study is actually about.
+      airwayDevices: true, cormackLehane: true, airwayTools: true, fob: true,
+      lmaSize: true,
+      oralTubeSize: true, oralCuffed: true, nasalTubeSize: true, nasalCuffed: true,
+      dltType: true, dltSide: true, dltSize: true, endobronchialSize: true,
+      // Legacy single-device columns, still the only size on older rows.
+      tubeSize: true, cuffed: true,
+      ventilationModes: true, ippv: true, jetVentilation: true, peepCmH2O: true,
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true,
       complications: true, premedicationEvening: true, premedicationMorning: true,
       vascularAccessRows: {
