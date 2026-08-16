@@ -33,6 +33,7 @@ import {
   RESEARCH_SUMMARY_SELECT,
   mapResearchSummary,
 } from "./mappers"
+import { OMOP_COLUMNS } from "@/lib/omop-columns"
 
 const EXPORT_PAGE_SIZE = 250
 const EXPORT_LEASE_MS = 5 * 60 * 1000
@@ -652,59 +653,8 @@ const OMOP_TABLES: OmopTableName[] = [
   "observation",
 ]
 
-/**
- * The CSV column set, per table, in OMOP CDM v5.4 column order.
- *
- * This list is the only thing that reaches a CSV file: a field the mapper emits
- * but this list omits is written nowhere and no error is raised. That is how
- * every numeric observation was silently dropped — OBSERVATION gained
- * `value_as_number`, ~22 scores started arriving as real numbers, and the eight
- * columns below wrote out the string form only. `omopCsvColumnsMatchMapper` in
- * the test suite now holds this list against the keys the mapper actually
- * produces, so the next added field fails a test instead of vanishing.
- *
- * `value_as_number` sits immediately before `value_as_string` here because that
- * is CDM v5.4's order for OBSERVATION, and it matches where MEASUREMENT below
- * puts its own `value_as_number` — directly after the type concept.
- */
-const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
-  person: [
-    "person_id", "gender_concept_id", "year_of_birth", "month_of_birth", "day_of_birth",
-    "birth_datetime", "race_concept_id", "ethnicity_concept_id", "person_source_value",
-    "gender_source_value",
-  ],
-  observation_period: [
-    "observation_period_id", "person_id", "observation_period_start_date",
-    "observation_period_end_date", "period_type_concept_id",
-  ],
-  visit_occurrence: [
-    "visit_occurrence_id", "person_id", "visit_concept_id", "visit_start_date", "visit_end_date",
-    "visit_type_concept_id", "visit_source_value", "care_site_source_value",
-  ],
-  condition_occurrence: [
-    "condition_occurrence_id", "person_id", "condition_concept_id", "condition_start_date",
-    "condition_type_concept_id", "condition_source_value", "visit_occurrence_id",
-  ],
-  drug_exposure: [
-    "drug_exposure_id", "person_id", "drug_concept_id", "drug_exposure_start_date", "drug_exposure_end_date",
-    "drug_type_concept_id", "drug_source_value", "drug_source_concept_id", "dose_value",
-    "dose_unit_source_value", "route_source_value", "visit_occurrence_id",
-  ],
-  measurement: [
-    "measurement_id", "person_id", "measurement_concept_id", "measurement_date",
-    "measurement_datetime", "measurement_type_concept_id", "value_as_number", "unit_concept_id",
-    "unit_source_value", "measurement_source_value", "visit_occurrence_id",
-  ],
-  procedure_occurrence: [
-    "procedure_occurrence_id", "person_id", "procedure_concept_id", "procedure_date",
-    "procedure_type_concept_id", "procedure_source_value", "visit_occurrence_id",
-  ],
-  observation: [
-    "observation_id", "person_id", "observation_concept_id", "observation_date",
-    "observation_type_concept_id", "value_as_number", "value_as_string",
-    "observation_source_value", "visit_occurrence_id",
-  ],
-}
+// The column set now lives in one place, imported by every serializer; see
+// lib/omop-columns.ts for why.
 
 /**
  * The header line and the value lines are produced from one list, so a header
