@@ -32,6 +32,8 @@
     "smoke:start-time": "tsx scripts/smoke-start-time.ts",
     "report:intraop-time": "tsx scripts/intraop-time-anomalies.ts",
     "repair:intraop-time": "tsx scripts/intraop-time-anomalies.ts --apply",
+    "report:event-concepts": "tsx scripts/resolve-event-concepts.ts",
+    "resolve:event-concepts": "tsx scripts/resolve-event-concepts.ts --apply",
     "clinical-rules:reset-dev": "tsx scripts/reset-dev-clinical-rulesets.ts",
     "clinical-rules:create-platform-drafts": "tsx scripts/create-platform-clinical-drafts.ts",
     "clinical-rules:create-pediatric-v2": "tsx scripts/create-pediatric-v2-platform-draft.ts",
