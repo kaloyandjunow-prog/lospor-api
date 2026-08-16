@@ -39,6 +39,7 @@ export type CaseEventAvgAggregateOutputType = {
   fio2Percent: number | null
   fiAirPercent: number | null
   fiN2OPercent: number | null
+  standardConceptId: number | null
   concentrationValue: number | null
   calculationWeightKg: number | null
   clinicalPresetVersion: number | null
@@ -58,6 +59,7 @@ export type CaseEventSumAggregateOutputType = {
   fio2Percent: number | null
   fiAirPercent: number | null
   fiN2OPercent: number | null
+  standardConceptId: number | null
   concentrationValue: number | null
   calculationWeightKg: number | null
   clinicalPresetVersion: number | null
@@ -94,6 +96,8 @@ export type CaseEventMinAggregateOutputType = {
   drugId: string | null
   inn: string | null
   drugRoute: string | null
+  standardConceptId: number | null
+  mappingStatus: $Enums.ConceptMappingStatus | null
   concentrationValue: number | null
   concentrationUnit: string | null
   formulation: string | null
@@ -151,6 +155,8 @@ export type CaseEventMaxAggregateOutputType = {
   drugId: string | null
   inn: string | null
   drugRoute: string | null
+  standardConceptId: number | null
+  mappingStatus: $Enums.ConceptMappingStatus | null
   concentrationValue: number | null
   concentrationUnit: string | null
   formulation: string | null
@@ -208,6 +214,8 @@ export type CaseEventCountAggregateOutputType = {
   drugId: number
   inn: number
   drugRoute: number
+  standardConceptId: number
+  mappingStatus: number
   concentrationValue: number
   concentrationUnit: number
   formulation: number
@@ -252,6 +260,7 @@ export type CaseEventAvgAggregateInputType = {
   fio2Percent?: true
   fiAirPercent?: true
   fiN2OPercent?: true
+  standardConceptId?: true
   concentrationValue?: true
   calculationWeightKg?: true
   clinicalPresetVersion?: true
@@ -271,6 +280,7 @@ export type CaseEventSumAggregateInputType = {
   fio2Percent?: true
   fiAirPercent?: true
   fiN2OPercent?: true
+  standardConceptId?: true
   concentrationValue?: true
   calculationWeightKg?: true
   clinicalPresetVersion?: true
@@ -307,6 +317,8 @@ export type CaseEventMinAggregateInputType = {
   drugId?: true
   inn?: true
   drugRoute?: true
+  standardConceptId?: true
+  mappingStatus?: true
   concentrationValue?: true
   concentrationUnit?: true
   formulation?: true
@@ -364,6 +376,8 @@ export type CaseEventMaxAggregateInputType = {
   drugId?: true
   inn?: true
   drugRoute?: true
+  standardConceptId?: true
+  mappingStatus?: true
   concentrationValue?: true
   concentrationUnit?: true
   formulation?: true
@@ -421,6 +435,8 @@ export type CaseEventCountAggregateInputType = {
   drugId?: true
   inn?: true
   drugRoute?: true
+  standardConceptId?: true
+  mappingStatus?: true
   concentrationValue?: true
   concentrationUnit?: true
   formulation?: true
@@ -567,6 +583,8 @@ export type CaseEventGroupByOutputType = {
   drugId: string | null
   inn: string | null
   drugRoute: string | null
+  standardConceptId: number | null
+  mappingStatus: $Enums.ConceptMappingStatus
   concentrationValue: number | null
   concentrationUnit: string | null
   formulation: string | null
@@ -649,6 +667,8 @@ export type CaseEventWhereInput = {
   drugId?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   inn?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   drugRoute?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
+  standardConceptId?: Prisma.IntNullableFilter<"CaseEvent"> | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"CaseEvent"> | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   concentrationUnit?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   formulation?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
@@ -709,6 +729,8 @@ export type CaseEventOrderByWithRelationInput = {
   drugId?: Prisma.SortOrderInput | Prisma.SortOrder
   inn?: Prisma.SortOrderInput | Prisma.SortOrder
   drugRoute?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  mappingStatus?: Prisma.SortOrder
   concentrationValue?: Prisma.SortOrderInput | Prisma.SortOrder
   concentrationUnit?: Prisma.SortOrderInput | Prisma.SortOrder
   formulation?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -773,6 +795,8 @@ export type CaseEventWhereUniqueInput = Prisma.AtLeast<{
   drugId?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   inn?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   drugRoute?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
+  standardConceptId?: Prisma.IntNullableFilter<"CaseEvent"> | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"CaseEvent"> | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   concentrationUnit?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   formulation?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
@@ -832,6 +856,8 @@ export type CaseEventOrderByWithAggregationInput = {
   drugId?: Prisma.SortOrderInput | Prisma.SortOrder
   inn?: Prisma.SortOrderInput | Prisma.SortOrder
   drugRoute?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  mappingStatus?: Prisma.SortOrder
   concentrationValue?: Prisma.SortOrderInput | Prisma.SortOrder
   concentrationUnit?: Prisma.SortOrderInput | Prisma.SortOrder
   formulation?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -899,6 +925,8 @@ export type CaseEventScalarWhereWithAggregatesInput = {
   drugId?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
   inn?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
   drugRoute?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
+  standardConceptId?: Prisma.IntNullableWithAggregatesFilter<"CaseEvent"> | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusWithAggregatesFilter<"CaseEvent"> | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.FloatNullableWithAggregatesFilter<"CaseEvent"> | number | null
   concentrationUnit?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
   formulation?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
@@ -957,6 +985,8 @@ export type CaseEventCreateInput = {
   drugId?: string | null
   inn?: string | null
   drugRoute?: string | null
+  standardConceptId?: number | null
+  mappingStatus?: $Enums.ConceptMappingStatus
   concentrationValue?: number | null
   concentrationUnit?: string | null
   formulation?: string | null
@@ -1017,6 +1047,8 @@ export type CaseEventUncheckedCreateInput = {
   drugId?: string | null
   inn?: string | null
   drugRoute?: string | null
+  standardConceptId?: number | null
+  mappingStatus?: $Enums.ConceptMappingStatus
   concentrationValue?: number | null
   concentrationUnit?: string | null
   formulation?: string | null
@@ -1075,6 +1107,8 @@ export type CaseEventUpdateInput = {
   drugId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   inn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drugRoute?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   concentrationUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   formulation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1135,6 +1169,8 @@ export type CaseEventUncheckedUpdateInput = {
   drugId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   inn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drugRoute?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   concentrationUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   formulation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1194,6 +1230,8 @@ export type CaseEventCreateManyInput = {
   drugId?: string | null
   inn?: string | null
   drugRoute?: string | null
+  standardConceptId?: number | null
+  mappingStatus?: $Enums.ConceptMappingStatus
   concentrationValue?: number | null
   concentrationUnit?: string | null
   formulation?: string | null
@@ -1252,6 +1290,8 @@ export type CaseEventUpdateManyMutationInput = {
   drugId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   inn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drugRoute?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   concentrationUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   formulation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1311,6 +1351,8 @@ export type CaseEventUncheckedUpdateManyInput = {
   drugId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   inn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drugRoute?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   concentrationUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   formulation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1380,6 +1422,8 @@ export type CaseEventCountOrderByAggregateInput = {
   drugId?: Prisma.SortOrder
   inn?: Prisma.SortOrder
   drugRoute?: Prisma.SortOrder
+  standardConceptId?: Prisma.SortOrder
+  mappingStatus?: Prisma.SortOrder
   concentrationValue?: Prisma.SortOrder
   concentrationUnit?: Prisma.SortOrder
   formulation?: Prisma.SortOrder
@@ -1422,6 +1466,7 @@ export type CaseEventAvgOrderByAggregateInput = {
   fio2Percent?: Prisma.SortOrder
   fiAirPercent?: Prisma.SortOrder
   fiN2OPercent?: Prisma.SortOrder
+  standardConceptId?: Prisma.SortOrder
   concentrationValue?: Prisma.SortOrder
   calculationWeightKg?: Prisma.SortOrder
   clinicalPresetVersion?: Prisma.SortOrder
@@ -1458,6 +1503,8 @@ export type CaseEventMaxOrderByAggregateInput = {
   drugId?: Prisma.SortOrder
   inn?: Prisma.SortOrder
   drugRoute?: Prisma.SortOrder
+  standardConceptId?: Prisma.SortOrder
+  mappingStatus?: Prisma.SortOrder
   concentrationValue?: Prisma.SortOrder
   concentrationUnit?: Prisma.SortOrder
   formulation?: Prisma.SortOrder
@@ -1515,6 +1562,8 @@ export type CaseEventMinOrderByAggregateInput = {
   drugId?: Prisma.SortOrder
   inn?: Prisma.SortOrder
   drugRoute?: Prisma.SortOrder
+  standardConceptId?: Prisma.SortOrder
+  mappingStatus?: Prisma.SortOrder
   concentrationValue?: Prisma.SortOrder
   concentrationUnit?: Prisma.SortOrder
   formulation?: Prisma.SortOrder
@@ -1555,6 +1604,7 @@ export type CaseEventSumOrderByAggregateInput = {
   fio2Percent?: Prisma.SortOrder
   fiAirPercent?: Prisma.SortOrder
   fiN2OPercent?: Prisma.SortOrder
+  standardConceptId?: Prisma.SortOrder
   concentrationValue?: Prisma.SortOrder
   calculationWeightKg?: Prisma.SortOrder
   clinicalPresetVersion?: Prisma.SortOrder
@@ -1632,6 +1682,8 @@ export type CaseEventCreateWithoutCaseInput = {
   drugId?: string | null
   inn?: string | null
   drugRoute?: string | null
+  standardConceptId?: number | null
+  mappingStatus?: $Enums.ConceptMappingStatus
   concentrationValue?: number | null
   concentrationUnit?: string | null
   formulation?: string | null
@@ -1690,6 +1742,8 @@ export type CaseEventUncheckedCreateWithoutCaseInput = {
   drugId?: string | null
   inn?: string | null
   drugRoute?: string | null
+  standardConceptId?: number | null
+  mappingStatus?: $Enums.ConceptMappingStatus
   concentrationValue?: number | null
   concentrationUnit?: string | null
   formulation?: string | null
@@ -1778,6 +1832,8 @@ export type CaseEventScalarWhereInput = {
   drugId?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   inn?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   drugRoute?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
+  standardConceptId?: Prisma.IntNullableFilter<"CaseEvent"> | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"CaseEvent"> | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   concentrationUnit?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   formulation?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
@@ -1836,6 +1892,8 @@ export type CaseEventCreateManyCaseInput = {
   drugId?: string | null
   inn?: string | null
   drugRoute?: string | null
+  standardConceptId?: number | null
+  mappingStatus?: $Enums.ConceptMappingStatus
   concentrationValue?: number | null
   concentrationUnit?: string | null
   formulation?: string | null
@@ -1894,6 +1952,8 @@ export type CaseEventUpdateWithoutCaseInput = {
   drugId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   inn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drugRoute?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   concentrationUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   formulation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1952,6 +2012,8 @@ export type CaseEventUncheckedUpdateWithoutCaseInput = {
   drugId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   inn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drugRoute?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   concentrationUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   formulation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2010,6 +2072,8 @@ export type CaseEventUncheckedUpdateManyWithoutCaseInput = {
   drugId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   inn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   drugRoute?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   concentrationValue?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   concentrationUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   formulation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2071,6 +2135,8 @@ export type CaseEventSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   drugId?: boolean
   inn?: boolean
   drugRoute?: boolean
+  standardConceptId?: boolean
+  mappingStatus?: boolean
   concentrationValue?: boolean
   concentrationUnit?: boolean
   formulation?: boolean
@@ -2131,6 +2197,8 @@ export type CaseEventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   drugId?: boolean
   inn?: boolean
   drugRoute?: boolean
+  standardConceptId?: boolean
+  mappingStatus?: boolean
   concentrationValue?: boolean
   concentrationUnit?: boolean
   formulation?: boolean
@@ -2191,6 +2259,8 @@ export type CaseEventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   drugId?: boolean
   inn?: boolean
   drugRoute?: boolean
+  standardConceptId?: boolean
+  mappingStatus?: boolean
   concentrationValue?: boolean
   concentrationUnit?: boolean
   formulation?: boolean
@@ -2251,6 +2321,8 @@ export type CaseEventSelectScalar = {
   drugId?: boolean
   inn?: boolean
   drugRoute?: boolean
+  standardConceptId?: boolean
+  mappingStatus?: boolean
   concentrationValue?: boolean
   concentrationUnit?: boolean
   formulation?: boolean
@@ -2280,7 +2352,7 @@ export type CaseEventSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CaseEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "userId" | "logicalId" | "version" | "status" | "type" | "timestamp" | "label" | "value" | "unit" | "systolic" | "diastolic" | "heartRate" | "spO2" | "etco2" | "temp" | "bgl" | "bglLoincCode" | "bglUnitCanon" | "fgfLitersPerMin" | "carrierGas" | "fio2Percent" | "fiAirPercent" | "fiN2OPercent" | "atcCode" | "drugId" | "inn" | "drugRoute" | "concentrationValue" | "concentrationUnit" | "formulation" | "calculationBasis" | "calculationWeightKg" | "calculationMethod" | "clinicalRuleKey" | "clinicalRuleVersion" | "clinicalRuleSourceIds" | "clinicalPresetId" | "clinicalPresetVersion" | "clinicalPresetScope" | "infId" | "fluidId" | "rate" | "concentration" | "volume" | "fluidCategory" | "agentPercent" | "clinicalEventCode" | "metadataJson" | "source" | "sourceVersion" | "schemaVersion" | "idempotencyKey" | "createdAt" | "updatedAt", ExtArgs["result"]["caseEvent"]>
+export type CaseEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "userId" | "logicalId" | "version" | "status" | "type" | "timestamp" | "label" | "value" | "unit" | "systolic" | "diastolic" | "heartRate" | "spO2" | "etco2" | "temp" | "bgl" | "bglLoincCode" | "bglUnitCanon" | "fgfLitersPerMin" | "carrierGas" | "fio2Percent" | "fiAirPercent" | "fiN2OPercent" | "atcCode" | "drugId" | "inn" | "drugRoute" | "standardConceptId" | "mappingStatus" | "concentrationValue" | "concentrationUnit" | "formulation" | "calculationBasis" | "calculationWeightKg" | "calculationMethod" | "clinicalRuleKey" | "clinicalRuleVersion" | "clinicalRuleSourceIds" | "clinicalPresetId" | "clinicalPresetVersion" | "clinicalPresetScope" | "infId" | "fluidId" | "rate" | "concentration" | "volume" | "fluidCategory" | "agentPercent" | "clinicalEventCode" | "metadataJson" | "source" | "sourceVersion" | "schemaVersion" | "idempotencyKey" | "createdAt" | "updatedAt", ExtArgs["result"]["caseEvent"]>
 export type CaseEventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
 }
@@ -2326,6 +2398,8 @@ export type $CaseEventPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     drugId: string | null
     inn: string | null
     drugRoute: string | null
+    standardConceptId: number | null
+    mappingStatus: $Enums.ConceptMappingStatus
     concentrationValue: number | null
     concentrationUnit: string | null
     formulation: string | null
@@ -2806,6 +2880,8 @@ export interface CaseEventFieldRefs {
   readonly drugId: Prisma.FieldRef<"CaseEvent", 'String'>
   readonly inn: Prisma.FieldRef<"CaseEvent", 'String'>
   readonly drugRoute: Prisma.FieldRef<"CaseEvent", 'String'>
+  readonly standardConceptId: Prisma.FieldRef<"CaseEvent", 'Int'>
+  readonly mappingStatus: Prisma.FieldRef<"CaseEvent", 'ConceptMappingStatus'>
   readonly concentrationValue: Prisma.FieldRef<"CaseEvent", 'Float'>
   readonly concentrationUnit: Prisma.FieldRef<"CaseEvent", 'String'>
   readonly formulation: Prisma.FieldRef<"CaseEvent", 'String'>

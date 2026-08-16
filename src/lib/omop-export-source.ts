@@ -54,11 +54,11 @@ export const CASE_SELECT = {
     select: { section: true, fieldKey: true, presence: true },
   },
   selections: {
-    select: { section: true, category: true, value: true, ordinal: true },
+    select: { section: true, category: true, value: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
     orderBy: [{ section: "asc" }, { category: "asc" }, { ordinal: "asc" }],
   },
   complications: {
-    select: { section: true, label: true, note: true, timestamp: true, source: true, ordinal: true },
+    select: { section: true, label: true, note: true, timestamp: true, source: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
     orderBy: [{ section: "asc" }, { ordinal: "asc" }],
   },
   events: {
@@ -87,6 +87,8 @@ export const CASE_SELECT = {
       drugId: true,
       inn: true,
       drugRoute: true,
+      standardConceptId: true,
+      mappingStatus: true,
       rate: true,
       concentration: true,
       concentrationValue: true,
@@ -101,6 +103,8 @@ export const CASE_SELECT = {
       clinicalPresetId: true,
       clinicalPresetVersion: true,
       clinicalPresetScope: true,
+      infId: true,
+      fluidId: true,
       volume: true,
       fluidCategory: true,
       agentPercent: true,
@@ -164,7 +168,7 @@ export const CASE_SELECT = {
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true,
       complications: true, premedicationEvening: true, premedicationMorning: true,
       vascularAccessRows: {
-        select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true },
+        select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
         orderBy: { ordinal: "asc" },
       },
       premedicationRows: {

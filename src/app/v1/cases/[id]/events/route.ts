@@ -5,6 +5,7 @@ import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinic
 import { logAudit } from "@/lib/audit"
 import { addEvent, reconcileFullLog, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
 import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
+import { resolveDrugConcept } from "@/lib/relational-sync"
 import { corsHeaders } from "@/lib/cors"
 import {
   CaseWriteError,
@@ -107,6 +108,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       select: { id: true },
     })
     if (drug) event.drugId = drug.id
+  }
+
+  // Resolve the standard concept once, here, rather than on every export.
+  // Preop medications have always stored theirs; intraoperative drugs did not,
+  // so every drug given during a case exported as unmapped even when its ATC
+  // was known. Resolved through the same helper the medication path uses, so
+  // the same drug cannot map differently depending on which screen recorded it.
+  if (event.type === "drug") {
+    // The event schema is deliberately permissive, so these arrive as unknown.
+    // Narrow rather than assert: a non-string here would resolve against a
+    // nonsense key and quietly return no concept.
+    const asString = (value: unknown) => typeof value === "string" ? value : null
+    const resolved = await resolveDrugConcept(
+      prisma,
+      asString(event.atcCode),
+      asString(event.inn),
+      asString(event.name) ?? asString(event.label),
+    )
+    Object.assign(event, {
+      standardConceptId: resolved.standardConceptId,
+      mappingStatus: resolved.mappingStatus,
+    })
   }
 
   const source = sourceFrom(req)

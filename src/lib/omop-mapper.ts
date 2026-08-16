@@ -197,6 +197,9 @@ interface OmopDrug {
   person_id: number
   drug_concept_id: number
   drug_exposure_start_date: string | null
+  // Null means genuinely open — an administration still running when the case
+  // ended — not "unknown". A single-shot drug has no interval and is null too.
+  drug_exposure_end_date: string | null
   drug_type_concept_id: number
   drug_source_value: string | null
   // A concept id, per the CDM: an integer or nothing. Source vocabulary text
@@ -302,6 +305,13 @@ type CaseRow = {
     bglUnitCanon: string | null
     atcCode: string | null
     drugId: string | null
+    standardConceptId?: number | null
+    mappingStatus?: string
+    // Pairing keys: an infusion's start and stop share infId, a fluid's share
+    // fluidId. Volatile agents have no key — only one runs at a time, so a stop
+    // closes whichever is open, which is how the intraop engine reads them too.
+    infId?: string | null
+    fluidId?: string | null
     inn?: string | null
     drugRoute?: string | null
     metadataJson: unknown
@@ -311,6 +321,10 @@ type CaseRow = {
     category: string
     value: string
     ordinal: number
+    sourceVocabulary?: string | null
+    sourceCode?: string | null
+    standardConceptId?: number | null
+    mappingStatus?: string
   }[]
   complications?: {
     section: string
@@ -319,6 +333,10 @@ type CaseRow = {
     timestamp: Date | null
     source: string | null
     ordinal: number
+    sourceVocabulary?: string | null
+    sourceCode?: string | null
+    standardConceptId?: number | null
+    mappingStatus?: string
   }[]
   preop?: {
     ageYears: number | null
@@ -447,6 +465,10 @@ type CaseRow = {
       lumens: string | null
       preexisting: boolean
       ordinal: number
+      sourceVocabulary?: string | null
+      sourceCode?: string | null
+      standardConceptId?: number | null
+      mappingStatus?: string
     }[]
     premedicationRows?: {
       phase: string
@@ -903,22 +925,35 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     }
 
     // ── Planned procedure -> PROCEDURE_OCCURRENCE ─────────────────────────────
-    const procLabel = (() => {
-      if (!preop) return null
-      const row = preop.procedureRows?.[0]
-      if (row) return sourceValue("PROCEDURE", row.sourceVocabulary, row.sourceCode, row.group ?? row.description)
-      return preop.plannedProcedure
-    })()
-    if (procLabel) {
-      const row = preop?.procedureRows?.[0]
-      trackMapping(row?.mappingStatus)
+    // Every planned procedure, not just the first. This read procedureRows[0]
+    // and discarded the rest silently: a case with two planned procedures
+    // exported one, with nothing to show the others had been dropped. A
+    // combined operation therefore appeared in the register as a lesser one.
+    //
+    // The unstructured plannedProcedure text is the fallback for cases recorded
+    // before procedure rows existed, and only when there are no rows at all.
+    const procedureRows = preop?.procedureRows ?? []
+    if (procedureRows.length > 0) {
+      for (const row of procedureRows) {
+        trackMapping(row.mappingStatus)
+        procedures.push({
+          procedure_occurrence_id:    nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      row.standardConceptId ?? 0,
+          procedure_date:            startDate,
+          procedure_type_concept_id: 32817,
+          procedure_source_value:    sourceValue("PROCEDURE", row.sourceVocabulary, row.sourceCode, row.group ?? row.description),
+          visit_occurrence_id:       visitId,
+        })
+      }
+    } else if (preop?.plannedProcedure) {
       procedures.push({
         procedure_occurrence_id:    nextId(),
         person_id:                 personId,
-        procedure_concept_id:      row?.standardConceptId ?? 0,
+        procedure_concept_id:      0,
         procedure_date:            startDate,
         procedure_type_concept_id: 32817,
-        procedure_source_value:    procLabel,
+        procedure_source_value:    preop.plannedProcedure,
         visit_occurrence_id:       visitId,
       })
     }
@@ -949,6 +984,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         person_id: personId,
         drug_concept_id: med.standardConceptId ?? 0,
         drug_exposure_start_date: isoDate(c.createdAt),
+        // A single administration, not an interval: no end to record.
+        drug_exposure_end_date: null,
         drug_type_concept_id: 32817,
         drug_source_value: sourceValue("MEDICATION", med.sourceVocabulary, med.sourceCode, med.nameRaw),
         // The ATC/INN text is already carried by drug_source_value above. No
@@ -982,7 +1019,38 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // Read from SQL CaseEvent rows (type="drug", status="active")
       // instead of parsing the legacy keyEvents.log JSON blob
       const drugEvents = c.events ?? []
-      for (const ev of drugEvents) {
+
+      // When each continuous administration stopped.
+      //
+      // infusion_stop and agent_stop used to be skipped entirely, so every
+      // infusion and every volatile exported with a start and no end — which in
+      // the CDM reads as "still running". Duration, the quantity most
+      // anaesthetic research is built on, could not be derived at all.
+      //
+      // Infusions pair by infId. Volatiles have no key because only one runs at
+      // a time, so a stop closes whichever is currently open; that is exactly
+      // how the intraop engine reads the same events. An administration with no
+      // stop stays open, because still running when the case ended is a real
+      // state and inventing an end would manufacture a duration nobody recorded.
+      const ordered = [...drugEvents].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      const infusionEnd = new Map<string, Date>()
+      const agentEnd = new Map<number, Date>()
+      let openAgentIndex: number | null = null
+      ordered.forEach((ev, index) => {
+        if (ev.type === "infusion_stop" && ev.infId) infusionEnd.set(ev.infId, ev.timestamp)
+        if (ev.type === "agent_start") openAgentIndex = index
+        if (ev.type === "agent_stop" && openAgentIndex != null) {
+          agentEnd.set(openAgentIndex, ev.timestamp)
+          openAgentIndex = null
+        }
+      })
+      const endFor = (ev: typeof drugEvents[number], index: number): string | null => {
+        if (ev.type === "infusion_start") return ev.infId ? isoDate(infusionEnd.get(ev.infId)) : null
+        if (ev.type === "agent_start") return isoDate(agentEnd.get(index))
+        return null
+      }
+
+      for (const [index, ev] of ordered.entries()) {
         if (ev.type === "vital") {
           const eventVitals: [keyof typeof VITAL_CONCEPTS, number | null | undefined, string | null | undefined][] = [
             ["systolic", ev.systolic, null],
@@ -1038,15 +1106,27 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           }
           sourceObservation("LOSPOR:CARRIER_GAS", ev.carrierGas, isoDate(ev.timestamp))
         }
-        if (ev.type !== "drug" && ev.type !== "agent_start" && ev.type !== "infusion_start") continue
+        // fluid_start joins the administration types: the volume and category
+        // were selected from the database and then discarded, leaving only case
+        // totals, so when a litre went in was unanswerable — the question in any
+        // resuscitation study. Totals are still emitted, as a derived summary.
+        if (ev.type !== "drug" && ev.type !== "agent_start"
+          && ev.type !== "infusion_start" && ev.type !== "fluid_start") continue
         const meta = (ev.metadataJson ?? {}) as Record<string, unknown>
-        const doseSource = ev.type === "infusion_start" ? ev.rate : meta.dose
+        const doseSource = ev.type === "infusion_start" ? ev.rate
+          : ev.type === "fluid_start" ? ev.volume
+            : meta.dose
         const dose = doseSource != null ? parseFloat(String(doseSource)) || null : null
         drugs.push({
           drug_exposure_id:           nextId(),
           person_id:                  personId,
-          drug_concept_id:            0,
+          // The concept resolved when the event was written. It used to be
+          // hardcoded 0, so every drug given during a case exported as unmapped
+          // while its ATC sat in the row unused — and the same drug listed
+          // preoperatively exported mapped.
+          drug_concept_id:            ev.standardConceptId ?? 0,
           drug_exposure_start_date:   isoDate(ev.timestamp),
+          drug_exposure_end_date:     endFor(ev, index),
           drug_type_concept_id:       32817,
           // The ATC moves into the source value, where source codes belong. It
           // was previously the only place the code appeared, so dropping it
@@ -1118,6 +1198,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           drug_exposure_id: nextId(), person_id: personId,
           drug_concept_id: prem.standardConceptId ?? 0,
           drug_exposure_start_date: startDate,
+          // A single administration, not an interval: no end to record.
+          drug_exposure_end_date: null,
           drug_type_concept_id: 32817,
           // Same correction as the other two drug sites: the ATC is source text
           // and belongs in the source value, not in a numeric concept column.
@@ -1136,7 +1218,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const line of c.intraop.vascularAccessRows ?? []) {
         procedures.push({
           procedure_occurrence_id: nextId(), person_id: personId,
-          procedure_concept_id: 0,
+          procedure_concept_id: line.standardConceptId ?? 0,
           procedure_date: startDate,
           procedure_type_concept_id: 32817,
           procedure_source_value: `VASCULAR_ACCESS:${line.siteLabel ?? line.site ?? "unknown"}${line.size ? ` ${line.size}${line.sizeUnit ?? ""}` : ""}`,
@@ -1157,7 +1239,11 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // a quantity, even when the label happens to read as a number.
       observations.push({
         observation_id: nextId(), person_id: personId,
-        observation_concept_id: 0,
+        // The option library's reviewed concept when there is one. CaseSelection
+        // has carried standardConceptId all along; the export simply never
+        // asked for it, so a mapped monitoring line still claimed to map to
+        // nothing.
+        observation_concept_id: sel.standardConceptId ?? 0,
         observation_date: startDate,
         observation_type_concept_id: 32817,
         value_as_number: null,
@@ -1170,7 +1256,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     for (const comp of c.complications ?? []) {
       observations.push({
         observation_id: nextId(), person_id: personId,
-        observation_concept_id: 0,
+        observation_concept_id: comp.standardConceptId ?? 0,
         observation_date: isoDate(comp.timestamp) ?? (comp.section === "postop" ? endDate : startDate),
         observation_type_concept_id: 32817,
         value_as_number: null,

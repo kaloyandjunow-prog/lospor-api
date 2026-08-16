@@ -24,7 +24,9 @@ describe("mapCasesToOmop", () => {
       excluded_case_count: 2,
       app_git_commit: "abc123",
       data_quality_status: "WARNING",
-      mapping_summary: { mapped_rows: 4, source_only_rows: 2, unmapped_rows: 1 },
+      // Five mapped rows, not four: the second planned procedure the export
+      // used to discard is now counted like the rest.
+      mapping_summary: { mapped_rows: 5, source_only_rows: 2, unmapped_rows: 1 },
     }))
     expect(bundle.metadata.table_counts).toEqual({
       // PERSON and OBSERVATION_PERIOD are the OMOP root tables — without them
@@ -33,10 +35,14 @@ describe("mapCasesToOmop", () => {
       observation_period: 1,
       visit_occurrence: 1,
       condition_occurrence: 2,
-      drug_exposure: 3,
+      // Six: two preop (diazepam, premedication) + fentanyl + the propofol
+      // infusion + the sevoflurane agent + the fluid administration. The last
+      // three used to be one, two, or none of these.
+      drug_exposure: 6,
       measurement: 26,
-      procedure_occurrence: 3,
-      observation: 28,
+      // Two planned procedures + anaesthesia technique + vascular access.
+      procedure_occurrence: 4,
+      observation: 29,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -72,7 +78,9 @@ describe("mapCasesToOmop", () => {
         dose_value: 5,
       }),
       expect.objectContaining({
-        drug_concept_id: 0,
+        // Resolved when the event was written, like preop medications always
+        // were. This was 0 while the ATC sat unused in the same row.
+        drug_concept_id: 1154029,
         drug_source_value: "ATC:N01AH01 - Fentanyl",
         drug_source_concept_id: null,
         dose_value: 50,
@@ -151,7 +159,7 @@ describe("mapCasesToOmop", () => {
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
       expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 2 }),
-      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 3 }),
+      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 8 }),
       expect.objectContaining({ code: "INSTITUTION_LINKAGE", severity: "info", count: 1 }),
       expect.objectContaining({ code: "REDACTED_FREE_TEXT_PRESENT", severity: "warning", count: 1 }),
     ]))
@@ -400,5 +408,168 @@ describe("care site comes from the case, not from where its author works now", (
     // must stay unknown rather than quietly becoming theirs.
     expect(bundle.visit_occurrence[0].care_site_source_value).not.toBe("Fallback Hospital")
     expect(bundle.visit_occurrence[0].care_site_source_value).toBeNull()
+  })
+})
+
+/**
+ * Three relations carry curated mappings that the export threw away.
+ *
+ * CaseSelection, CaseComplication and VascularAccess each hold
+ * sourceVocabulary, sourceCode, standardConceptId and mappingStatus in the
+ * database — someone reviewed and recorded them. CASE_SELECT fetched those
+ * columns for six other relations and not for these three, so the mapper's row
+ * types never had them and every concept_id was hardcoded 0.
+ *
+ * The effect was not a missing row. It was a row that said "this maps to
+ * nothing", while the database held the mapping.
+ */
+describe("curated mappings reach the export", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("uses the reviewed concept for a vascular access procedure", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(line, "fixture must contain a vascular access row").toBeDefined()
+    expect(line!.procedure_concept_id).toBe(4052341)
+  })
+
+  it("uses the reviewed concept for a complication", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    const comp = bundle.observation.find(row => /COMPLICATION/.test(String(row.observation_source_value)))
+    expect(comp, "fixture must contain a complication row").toBeDefined()
+    expect(comp!.observation_concept_id).toBe(4166237)
+  })
+
+  it("uses the reviewed concept for a case selection", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    const sel = bundle.observation.find(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")
+    expect(sel, "fixture must contain a monitoring selection").toBeDefined()
+    expect(sel!.observation_concept_id).toBe(4145586)
+  })
+
+  it("still emits 0 when nothing was reviewed, rather than inventing one", () => {
+    // The rule this file already follows: an unmapped row keeps its source
+    // value and claims no concept. Fixing the three above must not turn into
+    // guessing for the rest.
+    const c = completeCase() as never as { selections: { standardConceptId: number | null }[] }
+    c.selections[0].standardConceptId = null
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const sel = bundle.observation.find(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")
+    expect(sel!.observation_concept_id).toBe(0)
+    expect(sel!.value_as_string).toBe("ecg")
+  })
+})
+
+describe("every planned procedure is exported", () => {
+  it("does not stop at the first one", () => {
+    // Only procedureRows[0] was read. A case with two planned procedures
+    // exported one, and nothing recorded that the rest had been discarded —
+    // the count simply looked plausible.
+    const bundle = mapCasesToOmop([completeCase() as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const planned = bundle.procedure_occurrence.filter(row => /LOSPOR_PROCEDURE:/.test(String(row.procedure_source_value)))
+    expect(planned).toHaveLength(2)
+    expect(planned.map(row => row.procedure_concept_id).sort()).toEqual([23456, 34567])
+  })
+})
+
+describe("intraoperative drugs use the concept resolved when they were given", () => {
+  it("maps a drug event whose ATC was resolved at write time", () => {
+    // Preop medications have always exported a real drug_concept_id because
+    // relational-sync resolved and stored one. Intraoperative drugs carried the
+    // same ATC and exported 0, so the drugs actually administered — the ones a
+    // pharmacovigilance or dosing study needs — were the unmapped half.
+    const bundle = mapCasesToOmop([completeCase() as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const fentanyl = bundle.drug_exposure.find(row => /Fentanyl/.test(String(row.drug_source_value)))
+    expect(fentanyl, "fixture must contain the intraoperative fentanyl event").toBeDefined()
+    expect(fentanyl!.drug_concept_id).toBe(1154029)
+    // The source code stays alongside it: a resolved concept never replaces the
+    // evidence it was resolved from.
+    expect(String(fentanyl!.drug_source_value)).toContain("N01AH01")
+  })
+
+  it("still exports 0 for an event nothing resolved", () => {
+    const c = completeCase() as never as { events: { type: string; standardConceptId?: number | null }[] }
+    for (const ev of c.events) if (ev.type === "drug") ev.standardConceptId = null
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const fentanyl = bundle.drug_exposure.find(row => /Fentanyl/.test(String(row.drug_source_value)))
+    expect(fentanyl!.drug_concept_id).toBe(0)
+  })
+})
+
+/**
+ * A DRUG_EXPOSURE with a start and no end says the drug is still running.
+ *
+ * infusion_stop and agent_stop were skipped outright, so every infusion and
+ * every volatile exported as open-ended. Duration — the thing most anaesthetic
+ * research is actually about — could not be computed at all, and a forty-minute
+ * infusion was indistinguishable from one that ran all day.
+ */
+describe("infusions and volatiles carry the interval they actually ran", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("closes an infusion at its stop event", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    const inf = bundle.drug_exposure.find(row => /Propofol/.test(String(row.drug_source_value)))
+    expect(inf, "fixture must contain the propofol infusion").toBeDefined()
+    expect(inf!.drug_exposure_start_date).toBe("2026-06-01")
+    expect(inf!.drug_exposure_end_date).toBe("2026-06-01")
+  })
+
+  it("closes a volatile agent at its stop event", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    const agent = bundle.drug_exposure.find(row => /Sevoflurane/.test(String(row.drug_source_value)))
+    expect(agent, "fixture must contain the sevoflurane agent").toBeDefined()
+    expect(agent!.drug_exposure_end_date).toBe("2026-06-01")
+  })
+
+  it("leaves an unstopped infusion open rather than inventing an end", () => {
+    // Still running when the case ended is a real state. Filling it in with the
+    // case end time would manufacture a duration nobody recorded.
+    const c = completeCase() as never as { events: { type: string }[] }
+    c.events = c.events.filter(ev => ev.type !== "infusion_stop")
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const inf = bundle.drug_exposure.find(row => /Propofol/.test(String(row.drug_source_value)))
+    expect(inf!.drug_exposure_end_date).toBeNull()
+  })
+})
+
+describe("fluids are exported as the events they were, not only as totals", () => {
+  it("keeps the individual administration with its volume and time", () => {
+    // CaseEvent.volume and fluidCategory were read from the database and
+    // discarded, leaving only case totals — so when a litre went in was
+    // unanswerable, which is the question in any resuscitation study.
+    const bundle = mapCasesToOmop([completeCase() as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const fluid = bundle.drug_exposure.find(row => /Ringer/.test(String(row.drug_source_value)))
+    expect(fluid, "fixture must contain the fluid event").toBeDefined()
+    expect(fluid!.dose_value).toBe(500)
+    expect(fluid!.drug_exposure_start_date).toBe("2026-06-01")
+  })
+
+  it("still reports the case totals alongside", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:CRYSTALLOIDS_ML", value_as_number: 500 }),
+    ]))
   })
 })

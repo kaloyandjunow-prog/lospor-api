@@ -22,8 +22,8 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
     snapshot: { id: "snapshot-1" },
     updatedAt: new Date("2026-06-01T09:01:00Z"),
     finalizedAt: new Date("2026-06-01T09:01:00Z"),
-    selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0 }],
-    complications: [{ section: "postop", label: "PONV", note: "treated", timestamp: endTime, source: "relational-sync", ordinal: 0 }],
+    selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0, sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_ECG", standardConceptId: 4145586, mappingStatus: "MAPPED" }],
+    complications: [{ section: "postop", label: "PONV", note: "treated", timestamp: endTime, source: "relational-sync", ordinal: 0, sourceVocabulary: "LOSPOR_COMPLICATION", sourceCode: "PONV", standardConceptId: 4166237, mappingStatus: "MAPPED" }],
     events: [
       {
         type: "vital",
@@ -56,8 +56,41 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         bglUnitCanon: null,
         atcCode: "N01AH01",
         drugId: "drug-1",
+        standardConceptId: 1154029,
+        mappingStatus: "MAPPED",
         drugRoute: "IV",
         metadataJson: { dose: "50", name: "Fentanyl" },
+      },
+      {
+        type: "infusion_start",
+        timestamp: new Date("2026-06-01T08:25:00Z"),
+        label: "Propofol TCI",
+        value: null, unit: "mg/kg/h", infId: "inf-1",
+        atcCode: "N01AX10", drugId: null, standardConceptId: 19020053, mappingStatus: "MAPPED",
+        rate: "6", metadataJson: { name: "Propofol" },
+      },
+      {
+        type: "infusion_stop",
+        timestamp: new Date("2026-06-01T09:10:00Z"),
+        label: "Propofol TCI", value: null, unit: null, infId: "inf-1",
+        metadataJson: {},
+      },
+      {
+        type: "agent_start",
+        timestamp: new Date("2026-06-01T08:35:00Z"),
+        label: "Sevoflurane", value: null, unit: "%",
+        agentPercent: 2, metadataJson: { name: "Sevoflurane" },
+      },
+      {
+        type: "agent_stop",
+        timestamp: new Date("2026-06-01T09:05:00Z"),
+        label: "Sevoflurane", value: null, unit: null, metadataJson: {},
+      },
+      {
+        type: "fluid_start",
+        timestamp: new Date("2026-06-01T08:40:00Z"),
+        label: "Ringer lactate", value: null, unit: "mL", fluidId: "fl-1",
+        volume: 500, fluidCategory: "CRYSTALLOID", metadataJson: { name: "Ringer lactate" },
       },
       {
         type: "gas_change",
@@ -118,6 +151,7 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
       ],
       procedureRows: [
         { code: "APPY", group: "Appendectomy", domain: "LOSPOR_PROCEDURE", description: "Laparoscopic appendectomy", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "APPY", standardConceptId: 23456, mappingStatus: "MAPPED", ordinal: 0 },
+        { code: "CHOLE", group: "Cholecystectomy", domain: "LOSPOR_PROCEDURE", description: "Laparoscopic cholecystectomy", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "CHOLE", standardConceptId: 34567, mappingStatus: "MAPPED", ordinal: 1 },
       ],
       comorbidityRows: [
         { label: "Source-only condition", labelEn: "Source-only condition", labelBg: null, code: "Z99", icd10Code: "Z99", sourceVocabulary: "ICD10", sourceCode: "Z99", standardConceptId: null, mappingStatus: "SOURCE_ONLY", ordinal: 0 },
@@ -141,7 +175,7 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
       premedicationEvening: null,
       premedicationMorning: null,
       airwayDevice: "ett",
-      vascularAccessRows: [{ site: "IJ", siteLabel: "Internal jugular", size: "18", sizeUnit: "G", depthCm: "8", lumens: "2", preexisting: true, ordinal: 0 }],
+      vascularAccessRows: [{ site: "IJ", siteLabel: "Internal jugular", size: "18", sizeUnit: "G", depthCm: "8", lumens: "2", preexisting: true, ordinal: 0, sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "IJ_CVC", standardConceptId: 4052341, mappingStatus: "MAPPED" }],
       premedicationRows: [{ phase: "evening", nameRaw: "Midazolam 2 mg PO", inn: null, atcCode: null, standardConceptId: null, mappingStatus: "SOURCE_ONLY", dose: "2 mg", route: "PO", ordinal: 0 }],
     },
     postop: {

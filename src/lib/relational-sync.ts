@@ -73,6 +73,29 @@ function concept(
   }
 }
 
+/**
+ * Resolve a drug's standard concept the same way preop medications do.
+ *
+ * Exported so the intraoperative event writer resolves through this exact
+ * path rather than a second copy of it. A drug given during a case and the
+ * same drug listed preoperatively must not map differently depending on which
+ * screen recorded it.
+ *
+ * ATC first, then INN, then the raw label — mirroring medicationRows above.
+ */
+export async function resolveDrugConcept(
+  db: Db,
+  atcCode: string | null | undefined,
+  inn: string | null | undefined,
+  label: string | null | undefined,
+): Promise<{ standardConceptId: number | null; mappingStatus: MappingStatus }> {
+  const concepts = await getConceptMap(db)
+  const mapped = atcCode
+    ? concept(concepts, "drug", "ATC", atcCode)
+    : concept(concepts, "drug", inn ? "INN" : "LOSPOR_DRUG_RAW", inn ?? label)
+  return { standardConceptId: mapped.standardConceptId, mappingStatus: mapped.mappingStatus }
+}
+
 // LabLoinc cache (loaded once per process, tiny table)
 let loincCache: Map<string, { loincCode: string; unitCanon: string; referenceLow: number | null; referenceHigh: number | null }> | null = null
 

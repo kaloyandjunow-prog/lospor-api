@@ -686,7 +686,7 @@ const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     "condition_type_concept_id", "condition_source_value", "visit_occurrence_id",
   ],
   drug_exposure: [
-    "drug_exposure_id", "person_id", "drug_concept_id", "drug_exposure_start_date",
+    "drug_exposure_id", "person_id", "drug_concept_id", "drug_exposure_start_date", "drug_exposure_end_date",
     "drug_type_concept_id", "drug_source_value", "drug_source_concept_id", "dose_value",
     "dose_unit_source_value", "route_source_value", "visit_occurrence_id",
   ],

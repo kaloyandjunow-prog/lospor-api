@@ -624,6 +624,19 @@ model CaseEvent {
   drugId            String?
   inn               String?
   drugRoute         String?
+  // The standard vocabulary concept for this event's drug, resolved once when
+  // the event is written rather than looked up again on every export.
+  //
+  // Preop medications have worked this way all along; intraoperative drugs did
+  // not, so every drug given during a case exported with drug_concept_id 0 even
+  // though its ATC was known and mapped. Resolving here keeps the export a pure
+  // function of the stored record: the same case exported twice produces the
+  // same file, which is what makes a research dataset defensible.
+  //
+  // SOURCE_ONLY by default, so existing rows keep behaving exactly as before
+  // until something resolves them.
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
   // Drug-selection audit fields. `concentration` remains the legacy display
   // value (for example "0.5%"); the typed value/unit pair is canonical for new
   // writes while preserving old rows and clients.

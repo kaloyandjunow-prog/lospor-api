@@ -154,7 +154,14 @@ function buildRow(
   idempotencyKey: string,
   source: string,
 ) {
-  const audited = ev as LogEvent & Partial<CaseEventInput>
+  // The resolved drug concept rides along on the event the caller passes in.
+  // It is not part of LogEvent, which lives in @lospor/core and describes what
+  // a client sends; this is server-resolved provenance, so it is widened here
+  // rather than pushed into the shared clinical type.
+  const audited = ev as LogEvent & Partial<CaseEventInput> & {
+    standardConceptId?: number | null
+    mappingStatus?: string | null
+  }
   const fluidVolume = audited.administeredVolumeMl ?? audited.bagVolumeMl ?? ev.volume
   const primary = ev.dose ?? ev.value ?? ev.rate ?? fluidVolume
   // Typed vital columns (only for vital events) so vitals are queryable as columns.
@@ -200,6 +207,12 @@ function buildRow(
     drugId:         ev.drugId ?? null,
     inn:            ev.inn ?? null,
     drugRoute:      ev.drugRoute ?? null,
+    // Resolved by the caller before the row is written, so the export reads a
+    // stored concept instead of looking one up per drug on every run. Absent
+    // for non-drug events and for callers that do not resolve, where the schema
+    // default (SOURCE_ONLY, no concept) is the honest answer.
+    ...(audited.standardConceptId == null ? {} : { standardConceptId: audited.standardConceptId }),
+    ...(audited.mappingStatus == null ? {} : { mappingStatus: audited.mappingStatus as never }),
     ...caseEventDrugAuditColumns(audited),
     infId:          ev.infId ?? null,
     fluidId:        ev.fluidId ?? null,
