@@ -51,6 +51,15 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+      # The web suite reseeds in its Playwright global setup, through
+      # lospor-app/scripts/e2e-db.mjs. Left unset, that script falls back to the
+      # local development container on port 55433 and the whole suite dies in
+      # setup with "Can't reach database server" — before a single test runs,
+      # and buried under enough Postgres log noise to read like a broken app.
+      #
+      # Setting it means "use this server": the script migrates and seeds the
+      # service container above and never tries to start or destroy one.
+      E2E_DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       LOSPOR_AUTH_SECRET: release-gate-only-secret
       NEXTAUTH_SECRET: release-gate-only-secret
       NEXTAUTH_URL: http://localhost:3000
