@@ -3,7 +3,9 @@ import { canHaveHeadOfDepartment } from "@/lib/institutions"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
 import { prisma } from "@/lib/prisma"
-import { invalidateAccountState } from "@/lib/password-epoch"
+import { invalidateAccountState, notePasswordChanged } from "@/lib/password-epoch"
+import { logAuditInTransaction } from "@/lib/audit"
+import { RETENTION_DAYS } from "@/lib/purge-deleted"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 
@@ -67,6 +69,42 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 })
   }
 
-  await prisma.user.delete({ where: { id } })
-  return NextResponse.json({ ok: true })
+  // Soft-delete, exactly as an account deleting itself does.
+  //
+  // This was `prisma.user.delete()`. Case.user declares no onDelete, so Prisma
+  // defaults to Restrict: deleting any clinician who holds a case raised a
+  // foreign-key error, and with no try/catch it surfaced as an unhandled 500.
+  // The endpoint therefore worked only for accounts with no clinical record,
+  // which is the population it least needs to exist for.
+  //
+  // Where it did succeed it cascaded through nine relations, including
+  // ResearchAccessGrant, ResearchCohort and ResearchExport -- destroying the
+  // record of what the account had been permitted to see, at the moment someone
+  // was most likely to want it.
+  //
+  // Marking the account deleted hands it to the retention job, which anonymises
+  // it after RETENTION_DAYS. Until then the deletion is reversible, and the
+  // clinical records the account authored keep their author.
+  const now = new Date()
+  const removed = await prisma.$transaction(async tx => {
+    const updated = await tx.user.update({
+      where: { id },
+      // Bumping passwordChangedAt kills every token issued before now, not just
+      // the session that happens to be open. Without it a deleted account keeps
+      // full API access from any other signed-in device until its token
+      // expires.
+      data: { deletedAt: now, passwordChangedAt: now },
+      select: { id: true, deletedAt: true },
+    })
+    await logAuditInTransaction(tx, user.id, "ADMIN_ACCOUNT_DELETE", id, {
+      retentionDays: RETENTION_DAYS,
+    })
+    return updated
+  })
+  // Prime this instance's cache so the revocation takes effect without waiting
+  // for the next read.
+  notePasswordChanged(id, now)
+  invalidateAccountState(id)
+
+  return NextResponse.json({ ok: true, deletedAt: removed.deletedAt })
 }
