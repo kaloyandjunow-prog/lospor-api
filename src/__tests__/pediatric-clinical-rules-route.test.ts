@@ -17,7 +17,7 @@ class MockServiceError extends Error {
 }
 
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: getAuthUserMock }))
-vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock }))
+vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
 vi.mock("@/lib/clinical-rules/service", () => ({
   ClinicalRuleServiceError: MockServiceError,
   loadClinicalRulesWorkbench: loadWorkbenchMock,

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse, after } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { logAudit } from "@/lib/audit"
+import { logAuditInTransaction } from "@/lib/audit"
 import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import { FINALIZE_UNDO_WINDOW_MS } from "@/lib/constants"
@@ -45,14 +45,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: "Undo window expired" }, { status: 403 })
       }
 
-      return tx.case.update({
+      const updated = await tx.case.update({
         where: { id },
         data: { status: "IN_PROGRESS", finalizedAt: null },
       })
+      // Undoing an attestation is itself an act that has to be provable, so
+      // its record commits with it rather than after the response.
+      await logAuditInTransaction(tx, user.id, "CASE_UNFINALIZED", id, {
+        finalizedAt: caseRecord.finalizedAt?.toISOString() ?? null,
+      })
+      return updated
     })
 
     if (result instanceof Response) return result
-    after(() => logAudit(user.id, "CASE_UNFINALIZED", id, { by: user.id }))
     return NextResponse.json(result)
   } catch (error: unknown) {
     if (error instanceof CaseWriteError) {

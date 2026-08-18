@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse, after } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { logAudit } from "@/lib/audit"
+import { logAuditInTransaction } from "@/lib/audit"
 import { writeSnapshotAsync } from "@/lib/case-audit"
 import { syncCaseRelational } from "@/lib/relational-sync"
 import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
@@ -132,11 +132,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         ))
       }
 
+      // In the transaction, not after the response. Finalization is an
+      // attestation; a commit with no record of who made it is the failure
+      // this endpoint exists to prevent.
+      await logAuditInTransaction(tx, userId, "CASE_FINALIZED", id, {
+        from: caseRecord.status, to: "COMPLETE",
+      })
       return { from: caseRecord.status, finalizedAt }
     })
 
     if (result instanceof Response) return result
-    after(() => logAudit(userId, "CASE_FINALIZED", id, { from: result.from, to: "COMPLETE" }))
     return NextResponse.json({ id, status: "COMPLETE", finalizedAt: result.finalizedAt })
   } catch (error: unknown) {
     if (error instanceof FinalizeResponse) return error.response

@@ -20,7 +20,7 @@ vi.mock("@/lib/clinical-transaction", () => ({
   withLockedCaseTransaction: vi.fn((_caseId: string, operation: (tx: unknown) => Promise<unknown>) =>
     operation({ case: { findUnique: findUniqueMock, update: updateMock } })),
 }))
-vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock }))
+vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
 
 function makeRequest(caseId = "case-1") {
   return new Request(`http://localhost/api/cases/${caseId}/unfinalize`, { method: "POST" }) as Parameters<typeof POST>[0]
