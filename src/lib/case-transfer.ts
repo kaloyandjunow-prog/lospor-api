@@ -20,9 +20,18 @@ export type TransferOutcome = {
  *    recipient already holds the code, the case is renumbered into their
  *    sequence and the old code is recorded on the transfer row, so the paper
  *    record can still be reconciled with the database.
- * 2. **The institution travels with the case.** Leaving `institutionId` behind
- *    puts the wrong hospital on the printed record and in the OMOP export's
- *    care_site.
+ * 2. **The institution does not move.** It used to: the case was rewritten to
+ *    the recipient's institution, on the reasoning that leaving it behind put
+ *    the wrong hospital on the printed record. That is true only if a transfer
+ *    means "this was entered under the wrong account". Read as "responsibility
+ *    has moved", it made the record, the printed protocol and the OMOP
+ *    care_site all claim the operation had happened somewhere it had not, and
+ *    it desynchronised patient identity at the Central boundary.
+ *
+ *    Cross-institution transfer is refused outright now, so this function
+ *    only ever moves a case between clinicians at the same hospital and the
+ *    institution is left exactly as recorded. The caller enforces that; the
+ *    assertion below is here so a future caller cannot quietly reintroduce it.
  *
  * Everything runs in one transaction, including superseding any other pending
  * transfer, so a case can never end up half-moved.
@@ -35,7 +44,7 @@ export async function transferCaseOwnershipInTransaction(
 ): Promise<TransferOutcome> {
   const current = await tx.case.findUniqueOrThrow({
     where: { id: caseId },
-    select: { caseCode: true },
+    select: { caseCode: true, institutionId: true },
   })
   const recipient = await tx.user.findUniqueOrThrow({
     where: { id: toUserId },
@@ -68,12 +77,16 @@ export async function transferCaseOwnershipInTransaction(
     })
   }
 
+  if (current.institutionId !== recipient.institutionId) {
+    throw new Error("CROSS_INSTITUTION_TRANSFER")
+  }
+
   await tx.case.update({
     where: { id: caseId },
-    data: { userId: toUserId, institutionId: recipient.institutionId, caseCode },
+    data: { userId: toUserId, caseCode },
   })
 
-  return { previousCaseCode, caseCode, institutionId: recipient.institutionId }
+  return { previousCaseCode, caseCode, institutionId: current.institutionId }
 }
 
 /** Standalone/script wrapper. API routes use the in-transaction variant after
