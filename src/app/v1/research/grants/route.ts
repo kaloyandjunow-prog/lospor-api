@@ -1,6 +1,6 @@
-import { NextResponse, after } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { logAudit } from "@/lib/audit"
+import { logAuditInTransaction } from "@/lib/audit"
 import { authorizeResearchRequest, researchRouteError } from "@/lib/research/request"
 import { researchGrantCreateSchema } from "@/lib/research/schemas"
 
@@ -44,31 +44,37 @@ export async function POST(request: Request) {
         { status: 422 },
       )
     }
-    const grant = await prisma.researchAccessGrant.create({
-      data: {
-        userId: parsed.data.userId,
-        institutionId: parsed.data.allInstitutions
-          ? null
-          : parsed.data.institutionId ?? null,
-        allInstitutions: parsed.data.allInstitutions,
-        canInspectCases: parsed.data.canInspectCases,
-        canExport: parsed.data.canExport,
-        canExportOmop: parsed.data.canExportOmop,
-        expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
-        grantedById: auth.context.user.id,
-      },
-      include: {
-        user: { select: { id: true, name: true, email: true, role: true } },
-        institution: { select: { id: true, name: true } },
-      },
+    // The grant and the record of who issued it commit together. Granting
+    // someone access to the register is exactly the kind of act whose audit
+    // entry must not be able to go missing on its own.
+    const grant = await prisma.$transaction(async tx => {
+      const created = await tx.researchAccessGrant.create({
+        data: {
+          userId: parsed.data.userId,
+          institutionId: parsed.data.allInstitutions
+            ? null
+            : parsed.data.institutionId ?? null,
+          allInstitutions: parsed.data.allInstitutions,
+          canInspectCases: parsed.data.canInspectCases,
+          canExport: parsed.data.canExport,
+          canExportOmop: parsed.data.canExportOmop,
+          expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
+          grantedById: auth.context.user.id,
+        },
+        include: {
+          user: { select: { id: true, name: true, email: true, role: true } },
+          institution: { select: { id: true, name: true } },
+        },
+      })
+      await logAuditInTransaction(tx, auth.context.user.id, "RESEARCH_GRANT_CREATE", created.id, {
+        targetUserId: created.userId,
+        institutionId: created.institutionId,
+        allInstitutions: created.allInstitutions,
+        canExport: created.canExport,
+        canExportOmop: created.canExportOmop,
+      })
+      return created
     })
-    after(() => logAudit(auth.context.user.id, "RESEARCH_GRANT_CREATE", grant.id, {
-      targetUserId: grant.userId,
-      institutionId: grant.institutionId,
-      allInstitutions: grant.allInstitutions,
-      canExport: grant.canExport,
-      canExportOmop: grant.canExportOmop,
-    }))
     return NextResponse.json(grant, { status: 201 })
   } catch (error) {
     return researchRouteError(error)

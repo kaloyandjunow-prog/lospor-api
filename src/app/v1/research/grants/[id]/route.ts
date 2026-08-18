@@ -1,6 +1,6 @@
-import { NextResponse, after } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { logAudit } from "@/lib/audit"
+import { logAuditInTransaction } from "@/lib/audit"
 import { authorizeResearchRequest, researchRouteError } from "@/lib/research/request"
 import { researchGrantPatchSchema } from "@/lib/research/schemas"
 
@@ -21,28 +21,33 @@ export async function PATCH(
     }
     const existing = await prisma.researchAccessGrant.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: "Grant not found" }, { status: 404 })
-    const grant = await prisma.researchAccessGrant.update({
-      where: { id },
-      data: {
-        ...(parsed.data.canInspectCases !== undefined
-          ? { canInspectCases: parsed.data.canInspectCases }
-          : {}),
-        ...(parsed.data.canExport !== undefined ? { canExport: parsed.data.canExport } : {}),
-        ...(parsed.data.canExportOmop !== undefined
-          ? { canExportOmop: parsed.data.canExportOmop }
-          : {}),
-        ...(parsed.data.expiresAt !== undefined
-          ? { expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null }
-          : {}),
-        ...(parsed.data.revoked !== undefined
-          ? { revokedAt: parsed.data.revoked ? new Date() : null }
-          : {}),
-      },
+    // Changing what someone may see, and the record of who changed it,
+    // commit together.
+    const grant = await prisma.$transaction(async tx => {
+      const updated = await tx.researchAccessGrant.update({
+        where: { id },
+        data: {
+          ...(parsed.data.canInspectCases !== undefined
+            ? { canInspectCases: parsed.data.canInspectCases }
+            : {}),
+          ...(parsed.data.canExport !== undefined ? { canExport: parsed.data.canExport } : {}),
+          ...(parsed.data.canExportOmop !== undefined
+            ? { canExportOmop: parsed.data.canExportOmop }
+            : {}),
+          ...(parsed.data.expiresAt !== undefined
+            ? { expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null }
+            : {}),
+          ...(parsed.data.revoked !== undefined
+            ? { revokedAt: parsed.data.revoked ? new Date() : null }
+            : {}),
+        },
+      })
+      await logAuditInTransaction(tx, auth.context.user.id, "RESEARCH_GRANT_UPDATE", id, {
+        targetUserId: updated.userId,
+        revoked: !!updated.revokedAt,
+      })
+      return updated
     })
-    after(() => logAudit(auth.context.user.id, "RESEARCH_GRANT_UPDATE", id, {
-      targetUserId: grant.userId,
-      revoked: !!grant.revokedAt,
-    }))
     return NextResponse.json(grant)
   } catch (error) {
     return researchRouteError(error)
@@ -59,13 +64,17 @@ export async function DELETE(
     const { id } = await params
     const existing = await prisma.researchAccessGrant.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: "Grant not found" }, { status: 404 })
-    const grant = await prisma.researchAccessGrant.update({
-      where: { id },
-      data: { revokedAt: new Date() },
+    // Revoking access is the act most likely to be questioned later, so
+    // its record commits with it.
+    await prisma.$transaction(async tx => {
+      const revoked = await tx.researchAccessGrant.update({
+        where: { id },
+        data: { revokedAt: new Date() },
+      })
+      await logAuditInTransaction(tx, auth.context.user.id, "RESEARCH_GRANT_REVOKE", id, {
+        targetUserId: revoked.userId,
+      })
     })
-    after(() => logAudit(auth.context.user.id, "RESEARCH_GRANT_REVOKE", id, {
-      targetUserId: grant.userId,
-    }))
     return NextResponse.json({ ok: true })
   } catch (error) {
     return researchRouteError(error)

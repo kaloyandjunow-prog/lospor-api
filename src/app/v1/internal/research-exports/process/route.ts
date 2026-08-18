@@ -1,6 +1,6 @@
-import { timingSafeEqual } from "node:crypto"
 import { NextResponse } from "next/server"
 import { cleanupResearchExportArtifacts, processResearchExport } from "@/lib/research/exports"
+import { bearerToken, matchesSecret } from "@/lib/constant-time-secret"
 
 function configuredSecrets(): string[] {
   return [
@@ -9,16 +9,8 @@ function configuredSecrets(): string[] {
   ].filter((secret): secret is string => Boolean(secret))
 }
 
-function matchesSecret(presented: string, secret: string): boolean {
-  const expectedBytes = Buffer.from(secret)
-  const presentedBytes = Buffer.from(presented)
-  return expectedBytes.length === presentedBytes.length
-    && timingSafeEqual(expectedBytes, presentedBytes)
-}
-
 function authorized(request: Request, secrets: string[]): boolean {
-  const header = request.headers.get("authorization")
-  const presented = header?.startsWith("Bearer ") ? header.slice(7) : ""
+  const presented = bearerToken(request)
   return secrets.some(secret => matchesSecret(presented, secret))
 }
 

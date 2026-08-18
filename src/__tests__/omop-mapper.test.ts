@@ -252,7 +252,9 @@ describe("mapCasesToOmop", () => {
   it("fails the quality gate for unsafe export inputs", () => {
     const drifted = completeCase({
       fieldStatuses: [],
-      snapshot: null,
+      // Finalised, but holding no finalization record: an interrupted or
+      // corrupted finalization, which the export must refuse to treat as sound.
+      finalizations: [],
       updatedAt: new Date("2026-06-01T10:00:00Z"),
       finalizedAt: new Date("2026-06-01T09:00:00Z"),
       intraop: {

@@ -1,5 +1,103 @@
 # Changelog - LOSPOR API
 
+## [9.2.0] - 2026-08-18
+
+Five clinical-integrity fixes from an audit of the 1.0.0 appliance. They apply
+to this deployment too, which is why they are here rather than in the appliance.
+
+### Clinical record
+
+- **Finalization records are append-only.** `CaseSnapshot` described itself as
+  immutable, held `caseId @unique`, and was written with an upsert whose update
+  branch replaced both the document and its timestamp. A
+  finalize → unfinalize → edit → finalize cycle therefore destroyed the original
+  attestation with no trace, and the surviving row kept the schemaVersion it was
+  first created with over a document of a different shape.
+
+  `CaseFinalization` appends instead: each finalization takes the next sequence,
+  records who performed it, and for a correction why and which record it
+  supersedes. A database trigger rejects UPDATE and DELETE, so the guarantee no
+  longer depends on every future caller remembering it. Deleting the parent case
+  still cascades, because that is the erasure path.
+
+  The document is stored as text rather than JSONB. JSONB does not preserve key
+  order, so a hash taken before storage could never be recomputed from what came
+  back out — and an integrity check that cannot be run is worse than none.
+
+  Existing snapshots migrate to sequence 1. `finalizedById` and `snapshotHash`
+  stay null on them: those rows never recorded an actor and were never hashed,
+  and a hash computed during the migration would attest to nothing while looking
+  exactly like one taken at the time.
+
+- **A case stays at the hospital that recorded it.** An administrator could
+  transfer a case to a clinician at another institution, and the transfer
+  rewrote the case's `institutionId` to the recipient's — so the record, the
+  printed protocol and the OMOP `care_site` all said the operation had happened
+  somewhere it had not.
+
+  Cross-institution transfer is refused outright now, administrators included,
+  comparing against the case's institution rather than the actor's. The
+  institution is never rewritten, and the transfer helper asserts that rather
+  than trusting its caller.
+
+  Transferring a finalised case is refused as well: it is an attested record, so
+  reassigning it means unfinalising it first.
+
+### Audit
+
+- **Audit entries commit with the acts they record.** Transfer, finalization,
+  unfinalization and research access grants wrote theirs through
+  `after(() => logAudit(...))` — which runs once the response has been sent,
+  using a helper that swallows its own failures. An interruption between the
+  commit and that callback left the change in place with nothing recording it.
+
+  `logAuditInTransaction` writes through the caller's transaction and throws
+  rather than swallowing: if the evidence cannot be written, the act it describes
+  should not stand. `logAudit` remains for routine, high-volume records where
+  losing an entry is survivable.
+
+- **Every conflict override is recorded.** `forceUpdate` guarded nine conflict
+  responses, and setting it erased any evidence that there had been a conflict at
+  all — a colleague's edits were replaced with no error and nothing afterwards to
+  show it. Any authenticated caller could set it, from the body or a header.
+
+  The capability stays, because a queued offline save is stale by definition. It
+  is named `overrideConflict` now and writes down which sections were
+  overwritten, which revision the client believed it held, and which it
+  discarded. Setting the flag when there was no conflict records nothing.
+
+### Accounts
+
+- **Deleting an account as an administrator soft-deletes it.** It was
+  `prisma.user.delete()`. `Case.user` declares no `onDelete`, so Prisma defaults
+  to Restrict and deleting any clinician holding a case raised a foreign-key
+  error with no try/catch — an unhandled 500. The endpoint worked only for
+  accounts with no clinical record.
+
+  Where it did succeed it cascaded through nine relations, including
+  `ResearchAccessGrant`, `ResearchCohort` and `ResearchExport`, destroying the
+  record of what the account had been permitted to see.
+
+  It now does what self-deletion already did: sets `deletedAt`, bumps
+  `passwordChangedAt` so every existing token dies, and hands the account to the
+  retention job. Until then the deletion is reversible, and the clinical records
+  the account authored keep their author.
+
+  Self-deletion was previously the only thing that set `deletedAt`, so the
+  retention job had no input at all on a deployment where clinicians do not
+  delete their own accounts.
+
+- **`/v1/internal/purge-deleted` compares its bearer in constant time.** It used
+  `===` while the research-export worker beside it used `timingSafeEqual` — on
+  the endpoint that anonymises accounts.
+
+### Database
+
+Two migrations, applied on deploy:
+
+- `20260818120000_append_only_finalization`
+- `20260818160000_drop_include_exact_times`
+
 ## [9.1.1] - 2026-08-17
 
 ### Fixed

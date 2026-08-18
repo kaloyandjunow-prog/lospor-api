@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse, after } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { caseWhereForUser } from "@/lib/access-control"
-import { logAudit } from "@/lib/audit"
+import { logAuditInTransaction } from "@/lib/audit"
 import { transferCaseOwnershipInTransaction } from "@/lib/case-transfer"
 import { isPrismaUniqueError } from "@/lib/case-code"
 import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
@@ -50,8 +50,37 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         const recipient = await tx.user.findUnique({ where: { id: toUserId, deletedAt: null } })
         if (!recipient) return NextResponse.json({ error: "Recipient not found" }, { status: 400 })
-        if (!isAdmin && recipient.institutionId !== user.institutionId) {
-          return NextResponse.json({ error: "Recipient must be in your institution" }, { status: 403 })
+
+        // A case stays at the hospital that recorded it. No exception for
+        // administrators.
+        //
+        // An admin used to be able to transfer across institutions, and
+        // transferCaseOwnershipInTransaction rewrote the case's institutionId
+        // to the recipient's — so the record, the printed protocol and the OMOP
+        // care_site all said the operation had happened somewhere it had not.
+        // It also broke patient identity at the Central boundary: the patient
+        // link's identifierHash is HMAC'd with the institution, and the export
+        // pseudonym is built from the case's institution plus that hash, so
+        // after such a move the two disagreed and the same patient reached
+        // Central under an identity matching no link row anywhere.
+        //
+        // Where a case was genuinely recorded under the wrong account, the
+        // correction belongs at the hospital that made it, not to a transfer
+        // that quietly relocates the operation.
+        if (recipient.institutionId !== caseRecord.institutionId) {
+          return NextResponse.json({
+            error: "A case cannot be transferred to another institution",
+            code: "CROSS_INSTITUTION_TRANSFER",
+          }, { status: 403 })
+        }
+
+        // A finalized case is an attested record. Reassigning it means
+        // unfinalising it first, so the change is captured in a new
+        // finalization rather than applied underneath the existing one.
+        if (caseRecord.status === "COMPLETE") {
+          return NextResponse.json({
+            error: "Unfinalise the case before transferring it",
+          }, { status: 409 })
         }
 
         const outcome = await transferCaseOwnershipInTransaction(tx, caseId, toUserId, {
@@ -68,16 +97,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             previousCaseCode: outcome.previousCaseCode,
           },
         })
+        // In the transaction. A transfer changes who a clinical record
+        // belongs to; committing that without a record of who did it is
+        // the case where an audit log most needs to be trustworthy.
+        await logAuditInTransaction(tx, user.id, "CASE_TRANSFER_ASSIGN", caseId, {
+          toUserId,
+          instant: true,
+          previousCaseCode: outcome.previousCaseCode,
+          caseCode: outcome.caseCode,
+        })
         return { outcome, transfer }
       })
 
       if (result instanceof Response) return result
-      after(() => logAudit(user.id, "CASE_TRANSFER_ASSIGN", caseId, {
-        toUserId,
-        instant: true,
-        previousCaseCode: result.outcome.previousCaseCode,
-        caseCode: result.outcome.caseCode,
-      }))
       return NextResponse.json({
         instant: true,
         transfer: result.transfer,
@@ -116,6 +148,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           const outcome = await transferCaseOwnershipInTransaction(tx, caseId, user.id, {
             acceptTransferId: transfer.id,
           })
+          await logAuditInTransaction(tx, user.id, "CASE_TRANSFER_ACCEPT", caseId, {
+            previousCaseCode: outcome.previousCaseCode,
+            caseCode: outcome.caseCode,
+          })
           return { action: "accept" as const, outcome }
         }
 
@@ -123,15 +159,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           where: { id: transfer.id },
           data: { status: "DECLINED", resolvedAt: new Date() },
         })
+        await logAuditInTransaction(tx, user.id, "CASE_TRANSFER_DECLINE", caseId)
         return { action: "decline" as const }
       })
 
       if (result instanceof Response) return result
       if (result.action === "accept") {
-        after(() => logAudit(user.id, "CASE_TRANSFER_ACCEPT", caseId, {
-          previousCaseCode: result.outcome.previousCaseCode,
-          caseCode: result.outcome.caseCode,
-        }))
         return NextResponse.json({
           accepted: true,
           caseCode: result.outcome.caseCode,
@@ -139,7 +172,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         })
       }
 
-      after(() => logAudit(user.id, "CASE_TRANSFER_DECLINE", caseId))
       return NextResponse.json({ declined: true })
     } catch (error: unknown) {
       if (isPrismaUniqueError(error, "caseCode") && attempt < 4) continue

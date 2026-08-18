@@ -217,7 +217,11 @@ export const CASE_SELECT = {
       complications: true,
     },
   },
-  snapshot:    { select: { id: true } },
+  finalizations: {
+    orderBy: { sequence: "desc" as const },
+    take: 1,
+    select: { id: true },
+  },
   updatedAt:   true,
   finalizedAt: true,
 } satisfies Prisma.CaseSelect

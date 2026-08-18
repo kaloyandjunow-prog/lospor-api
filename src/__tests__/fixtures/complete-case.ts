@@ -19,7 +19,7 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
     institutionId: "inst-1",
     user: { institution: { name: "Fallback Hospital" } },
     fieldStatuses: [{ section: "preop", fieldKey: "ageYears", presence: "PRESENT" }],
-    snapshot: { id: "snapshot-1" },
+    finalizations: [{ id: "finalization-1" }],
     updatedAt: new Date("2026-06-01T09:01:00Z"),
     finalizedAt: new Date("2026-06-01T09:01:00Z"),
     selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0, sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_ECG", standardConceptId: 4145586, mappingStatus: "MAPPED" }],

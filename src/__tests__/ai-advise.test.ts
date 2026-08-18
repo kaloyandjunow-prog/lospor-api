@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: vi.fn() }))
 vi.mock("@/lib/prisma", () => ({ prisma: { case: { findUnique: vi.fn() } } }))
 vi.mock("@/lib/rate-limit", () => ({ rateLimit: vi.fn() }))
-vi.mock("@/lib/audit", () => ({ logAudit: vi.fn() }))
+vi.mock("@/lib/audit", () => ({ logAudit: vi.fn(), logAuditInTransaction: vi.fn() }))
 vi.mock("@/lib/ai-advisor", () => ({
   SYSTEM_PROMPT: "system-prompt",
   buildPatientSummary: vi.fn().mockReturnValue("patient summary"),

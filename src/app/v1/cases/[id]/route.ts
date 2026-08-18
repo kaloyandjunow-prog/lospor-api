@@ -3,7 +3,7 @@ import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 import { mapPreop, mapPreopUpdate, mapIntraop, mapIntraopUpdate, mapPostop, mapPostopUpdate } from "../_mappers"
 import { z } from "zod"
-import { logAudit } from "@/lib/audit"
+import { logAudit, logAuditInTransaction } from "@/lib/audit"
 import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
 import { parseLenient } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
@@ -59,7 +59,11 @@ const patchBodySchema = z.object({
   intraop:     intraopSchema.optional(),
   clinicalMode: z.enum(["ADULT", "PEDIATRIC"]).optional(),
   postop:      postopSchema.optional(),
-  forceUpdate: z.boolean().optional(),
+  // Acknowledges that this save will overwrite a newer version, and asks
+  // for it anyway. Formerly `forceUpdate`, which read like a retry hint and
+  // silently discarded a colleague's edits. Renamed so a client cannot send
+  // it without meaning it, and always recorded when it takes effect.
+  overrideConflict: z.boolean().optional(),
 })
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -145,15 +149,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (rejectedFields.length) {
       console.warn(`[PATCH /api/cases/:id] rejected fields on ${id}:`, rejectedFields.map(f => f.path).join(", "))
     }
-    const { preop, intraop, postop, status, clinicalMode, notes, forceUpdate: forceUpdateField } = body
+    const { preop, intraop, postop, status, clinicalMode, notes, overrideConflict: overrideField } = body
     const preopBase = req.headers.get("x-lospor-preop-updated-at")
     const postopBase = req.headers.get("x-lospor-postop-updated-at")
     const intraopBase = req.headers.get("x-lospor-intraop-updated-at")
     const preopRevision = readRevision(req, "preop")
     const postopRevision = readRevision(req, "postop")
     const intraopRevision = readRevision(req, "intraop")
-    const forceUpdate = req.headers.get("x-lospor-force-update") === "true" ||
-      forceUpdateField === true
+    const overrideConflict = req.headers.get("x-lospor-override-conflict") === "true" ||
+      overrideField === true
 
     const clientVersion = req.headers.get("x-lospor-client-version")
     for (const [name, revision] of [["preop", preopRevision], ["postop", postopRevision], ["intraop", intraopRevision]] as const) {
@@ -248,81 +252,116 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ? { ...(preop ?? {}), clinicalMode: pediatricDecision.clinicalMode }
         : null
 
+      // Every conflict this save would hit, evaluated once.
+      //
+      // These used to be nine early returns each guarded by `!forceUpdate`, so
+      // the flag did not merely skip the 409 -- it erased any record that there
+      // had been a conflict at all. A colleague's edits were replaced with no
+      // error, no warning, and nothing afterwards to show it had happened.
+      //
+      // Collecting them first keeps the same response (the first conflict wins,
+      // in the same order) while leaving something to write down when the save
+      // proceeds anyway.
+      type DetectedConflict = {
+        section: "preop" | "postop" | "intraop"
+        reason?: "missing_conflict_timestamp"
+        serverVersion: unknown
+        clientRevision: number | null
+        clientBase: string | null
+        serverRevision: number | null
+        serverUpdatedAt: string | null
+      }
+      const conflicts: DetectedConflict[] = []
+      const at = (value: Date | null | undefined) => value?.toISOString() ?? null
+
       // Missing-timestamp guard stays scoped to different users: clients that
       // legitimately send no base header (fresh loads, older mobile flows) must
       // not 409 against their own case.
-    if (!forceUpdate && differentUser && preopTouched && existing.preop && !preopBase) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "preop",
-        reason: "missing_conflict_timestamp",
-        serverVersion: existing.preop,
-      }, { status: 409 })
-    }
-    if (!forceUpdate && differentUser && postop && existing.postop && !postopBase) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "postop",
-        reason: "missing_conflict_timestamp",
-        serverVersion: existing.postop,
-      }, { status: 409 })
-    }
-    if (!forceUpdate && differentUser && intraop && existing.intraop && !intraopBase) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "intraop",
-        reason: "missing_conflict_timestamp",
-        serverVersion: { updatedAt: existing.intraop.updatedAt },
-      }, { status: 409 })
-    }
+      if (differentUser && preopTouched && existing.preop && !preopBase) {
+        conflicts.push({
+          section: "preop", reason: "missing_conflict_timestamp",
+          serverVersion: existing.preop,
+          clientRevision: null, clientBase: null,
+          serverRevision: existing.preop.syncRevision, serverUpdatedAt: at(existing.preop.updatedAt),
+        })
+      }
+      if (differentUser && postop && existing.postop && !postopBase) {
+        conflicts.push({
+          section: "postop", reason: "missing_conflict_timestamp",
+          serverVersion: existing.postop,
+          clientRevision: null, clientBase: null,
+          serverRevision: existing.postop.syncRevision, serverUpdatedAt: at(existing.postop.updatedAt),
+        })
+      }
+      if (differentUser && intraop && existing.intraop && !intraopBase) {
+        conflicts.push({
+          section: "intraop", reason: "missing_conflict_timestamp",
+          serverVersion: { updatedAt: existing.intraop.updatedAt },
+          clientRevision: null, clientBase: null,
+          serverRevision: existing.intraop.syncRevision, serverUpdatedAt: at(existing.intraop.updatedAt),
+        })
+      }
 
-    // Stale-timestamp guard applies to EVERYONE (v5): a client whose base
-    // timestamp is older than the server's gets a 409 even for the case
-    // owner's own writes — the same user in two tabs/devices could previously
-    // silently overwrite themselves. Clients self-heal via the shared
-    // conflict-retry engine or surface the conflict-resolution UI.
-    if (!forceUpdate && preopTouched && preopRevision != null && preopRevision !== "invalid" && existing.preop && existing.preop.syncRevision !== preopRevision) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "preop",
-        serverVersion: existing.preop,
-      }, { status: 409 })
-    }
-    if (!forceUpdate && postop && postopRevision != null && postopRevision !== "invalid" && existing.postop && existing.postop.syncRevision !== postopRevision) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "postop",
-        serverVersion: existing.postop,
-      }, { status: 409 })
-    }
-    if (!forceUpdate && intraop && intraopRevision != null && intraopRevision !== "invalid" && existing.intraop && existing.intraop.syncRevision !== intraopRevision) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "intraop",
-        serverVersion: { updatedAt: existing.intraop.updatedAt, revision: existing.intraop.syncRevision },
-      }, { status: 409 })
-    }
-    if (!forceUpdate && preopTouched && preopRevision == null && preopBase && existing.preop?.updatedAt && existing.preop.updatedAt.getTime() > new Date(preopBase).getTime()) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "preop",
-        serverVersion: existing.preop,
-      }, { status: 409 })
-    }
-    if (!forceUpdate && postop && postopRevision == null && postopBase && existing.postop?.updatedAt && existing.postop.updatedAt.getTime() > new Date(postopBase).getTime()) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "postop",
-        serverVersion: existing.postop,
-      }, { status: 409 })
-    }
-    if (!forceUpdate && intraop && intraopRevision == null && intraopBase && existing.intraop?.updatedAt && existing.intraop.updatedAt.getTime() > new Date(intraopBase).getTime()) {
-      return NextResponse.json({
-        error: "conflict",
-        section: "intraop",
-        serverVersion: { updatedAt: existing.intraop.updatedAt },
-      }, { status: 409 })
-    }
+      // Stale-revision guard applies to EVERYONE: a client whose revision is
+      // behind the server's conflicts even for the case owner's own writes --
+      // the same user in two tabs or on two devices could otherwise silently
+      // overwrite themselves.
+      if (preopTouched && preopRevision != null && preopRevision !== "invalid" && existing.preop && existing.preop.syncRevision !== preopRevision) {
+        conflicts.push({
+          section: "preop", serverVersion: existing.preop,
+          clientRevision: preopRevision, clientBase: preopBase,
+          serverRevision: existing.preop.syncRevision, serverUpdatedAt: at(existing.preop.updatedAt),
+        })
+      }
+      if (postop && postopRevision != null && postopRevision !== "invalid" && existing.postop && existing.postop.syncRevision !== postopRevision) {
+        conflicts.push({
+          section: "postop", serverVersion: existing.postop,
+          clientRevision: postopRevision, clientBase: postopBase,
+          serverRevision: existing.postop.syncRevision, serverUpdatedAt: at(existing.postop.updatedAt),
+        })
+      }
+      if (intraop && intraopRevision != null && intraopRevision !== "invalid" && existing.intraop && existing.intraop.syncRevision !== intraopRevision) {
+        conflicts.push({
+          section: "intraop",
+          serverVersion: { updatedAt: existing.intraop.updatedAt, revision: existing.intraop.syncRevision },
+          clientRevision: intraopRevision, clientBase: intraopBase,
+          serverRevision: existing.intraop.syncRevision, serverUpdatedAt: at(existing.intraop.updatedAt),
+        })
+      }
+
+      // Stale-timestamp guard, for clients that send a base timestamp but no
+      // revision.
+      if (preopTouched && preopRevision == null && preopBase && existing.preop?.updatedAt && existing.preop.updatedAt.getTime() > new Date(preopBase).getTime()) {
+        conflicts.push({
+          section: "preop", serverVersion: existing.preop,
+          clientRevision: null, clientBase: preopBase,
+          serverRevision: existing.preop.syncRevision, serverUpdatedAt: at(existing.preop.updatedAt),
+        })
+      }
+      if (postop && postopRevision == null && postopBase && existing.postop?.updatedAt && existing.postop.updatedAt.getTime() > new Date(postopBase).getTime()) {
+        conflicts.push({
+          section: "postop", serverVersion: existing.postop,
+          clientRevision: null, clientBase: postopBase,
+          serverRevision: existing.postop.syncRevision, serverUpdatedAt: at(existing.postop.updatedAt),
+        })
+      }
+      if (intraop && intraopRevision == null && intraopBase && existing.intraop?.updatedAt && existing.intraop.updatedAt.getTime() > new Date(intraopBase).getTime()) {
+        conflicts.push({
+          section: "intraop", serverVersion: { updatedAt: existing.intraop.updatedAt },
+          clientRevision: null, clientBase: intraopBase,
+          serverRevision: existing.intraop.syncRevision, serverUpdatedAt: at(existing.intraop.updatedAt),
+        })
+      }
+
+      if (conflicts.length && !overrideConflict) {
+        const [first] = conflicts
+        return NextResponse.json({
+          error: "conflict",
+          section: first.section,
+          ...(first.reason ? { reason: first.reason } : {}),
+          serverVersion: first.serverVersion,
+        }, { status: 409 })
+      }
 
     // Helper: compute the next status once, reused by both transaction and audit log
     function computeNextStatus(currentStatus: string): CaseStatus | undefined {
@@ -352,7 +391,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         const updated = await tx.preoperativeAssessment.updateMany({
           where: {
             caseId: id,
-            ...(!forceUpdate && preopRevision != null && preopRevision !== "invalid"
+            ...(!overrideConflict && preopRevision != null && preopRevision !== "invalid"
               ? { syncRevision: preopRevision }
               : {}),
           },
@@ -413,7 +452,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         const updated = await tx.intraoperativeRecord.updateMany({
           where: {
             caseId: id,
-            ...(!forceUpdate && intraopRevision != null && intraopRevision !== "invalid"
+            ...(!overrideConflict && intraopRevision != null && intraopRevision !== "invalid"
               ? { syncRevision: intraopRevision }
               : {}),
           },
@@ -491,7 +530,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         const updated = await tx.postoperativeRecord.updateMany({
           where: {
             caseId: id,
-            ...(!forceUpdate && postopRevision != null && postopRevision !== "invalid"
+            ...(!overrideConflict && postopRevision != null && postopRevision !== "invalid"
               ? { syncRevision: postopRevision }
               : {}),
           },
@@ -570,6 +609,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const updated = updatedCase
       ? { ...updatedCase, preop: updatedPreop, postop: updatedPostop, intraop: updatedIntraop }
       : null
+      // An override that actually overrode something is written down, in the
+      // same transaction as the write it permitted. Previously the flag simply
+      // skipped the 409 and left nothing behind, so a colleague's edits were
+      // replaced with no error and no trace.
+      //
+      // The discarded values themselves are not copied here: they are clinical
+      // data, and CaseFieldChange already holds the field-level history. What
+      // this records is that an overwrite happened, to which sections, and
+      // which version the client believed it was working from.
+      if (conflicts.length) {
+        await logAuditInTransaction(tx, userId, "CASE_CONFLICT_OVERRIDE", id, {
+          sections: conflicts.map(conflict => ({
+            section: conflict.section,
+            reason: conflict.reason ?? "stale_revision",
+            clientRevision: conflict.clientRevision,
+            clientBase: conflict.clientBase,
+            overriddenRevision: conflict.serverRevision,
+            overriddenUpdatedAt: conflict.serverUpdatedAt,
+          })),
+        })
+      }
       return { existing, finalStatus, updated }
     })
 

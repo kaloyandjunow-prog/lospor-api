@@ -33,7 +33,7 @@ vi.mock("@/lib/clinical-transaction", () => ({
 vi.mock("@/lib/case-audit", () => ({ writeSnapshotAsync: writeSnapshotAsyncMock }))
 vi.mock("@/lib/relational-sync", () => ({ syncCaseRelational: syncCaseRelationalMock }))
 vi.mock("@/lib/access-control", () => ({ canAccessCaseWithOwnerFallback: canAccessCaseMock }))
-vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock }))
+vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
 
 const VALID_CASE = {
   userId: "user-1",

@@ -65,7 +65,13 @@ export type ResearchSummaryRow = Prisma.CaseGetPayload<{
 
 export const RESEARCH_DETAIL_SELECT = {
   ...RESEARCH_SUMMARY_SELECT,
-  snapshot: { select: { finalizedAt: true } },
+  // The finalization currently in force. A corrected case holds earlier ones
+  // too, but research reads what the record says now.
+  finalizations: {
+    orderBy: { sequence: "desc" as const },
+    take: 1,
+    select: { finalizedAt: true },
+  },
   preop: {
     select: {
       ageYears: true,
@@ -366,7 +372,7 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
   const selections = (category: string) =>
     row.selections.filter(item => item.category === category).map(item => item.value)
   const warnings: string[] = []
-  if (!row.snapshot) warnings.push("MISSING_FINALIZATION_SNAPSHOT")
+  if (row.finalizations.length === 0) warnings.push("MISSING_FINALIZATION_SNAPSHOT")
   if (!row.intraop?.startedAt || !row.intraop?.endedAt) warnings.push("MISSING_INTRAOP_TIMES")
   if (
     row.intraop?.startedAt &&
@@ -479,7 +485,7 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       labelBg: null,
     })),
     quality: {
-      snapshotPresent: !!row.snapshot,
+      snapshotPresent: row.finalizations.length > 0,
       finalized: row.status === "COMPLETE",
       fieldCompleteness: completeness(row.fieldStatuses),
       warnings,

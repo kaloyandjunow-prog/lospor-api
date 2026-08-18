@@ -136,7 +136,7 @@ model Case {
   complications        CaseComplication[]
   fieldStatuses        ClinicalFieldStatus[]
   fieldChanges         CaseFieldChange[]
-  snapshot             CaseSnapshot?
+  finalizations        CaseFinalization[]
   clinicalCalculations CaseClinicalCalculation[]
 
   @@unique([userId, caseCode])
@@ -575,14 +575,55 @@ model CaseFieldChange {
   @@index([caseId, section])
 }
 
-// Immutable snapshot written on finalization (Theme E)
-model CaseSnapshot {
+// The record of each time a case was finalized.
+//
+// This replaces CaseSnapshot, which called itself immutable, held `caseId
+// @unique`, and was written with an upsert whose update branch replaced both
+// the document and its timestamp. A case that was finalized, unfinalized,
+// edited and finalized again therefore kept no trace of what was first
+// attested to -- the earlier record was gone, and the row that remained
+// carried the schemaVersion of the original over the shape of the new one,
+// because the update branch never set it.
+//
+// Corrections append and supersede. Nothing here is ever rewritten: a database
+// trigger rejects UPDATE and DELETE, so the guarantee does not depend on every
+// future caller remembering it.
+model CaseFinalization {
   id            String   @id @default(cuid())
-  caseId        String   @unique
+  caseId        String
   case          Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  schemaVersion String   @default("3.0.0")
-  snapshotJson  Json
+  // 1 for the first finalization of a case, incrementing per correction.
+  sequence      Int
+  schemaVersion String
+  // Stored as the exact text that was serialized at finalization, not as JSONB.
+  // JSONB is normalised on the way in -- key order is not preserved -- so a
+  // hash taken over the document before storage can never be recomputed from
+  // what comes back out, and an integrity check that cannot be run is worse
+  // than none. Nothing queries inside this document; it is read whole.
+  snapshotDocument String
+  // sha256 over the serialized document, so a stored finalization can be shown
+  // to be the one that was attested to. Null only for rows migrated from
+  // CaseSnapshot: they were never hashed when they were written, and a hash
+  // computed during the migration would attest to nothing while being
+  // indistinguishable from one that had been.
+  snapshotHash  String?
   finalizedAt   DateTime @default(now())
+  // Deliberately not a foreign key, for the same reason AuditLog.userId is not
+  // one: this row must outlive the account it names. A cascade would delete the
+  // evidence and SetNull would erase who attested to it, and either is a
+  // mutation of a record that is supposed to be immutable.
+  //
+  // Null only for rows migrated from CaseSnapshot, which never recorded it.
+  finalizedById String?
+  // Why this finalization replaced the previous one. Null on a first
+  // finalization, and required by the API on any later one.
+  correctionReason         String?
+  supersedesFinalizationId String?           @unique
+  supersedes               CaseFinalization? @relation("Supersession", fields: [supersedesFinalizationId], references: [id], onDelete: SetNull)
+  supersededBy             CaseFinalization? @relation("Supersession")
+
+  @@unique([caseId, sequence])
+  @@index([caseId, finalizedAt])
 }
 
 model RevokedToken {
