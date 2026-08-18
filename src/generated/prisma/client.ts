@@ -178,10 +178,10 @@ export type ClinicalFieldStatus = Prisma.ClinicalFieldStatusModel
  */
 export type CaseFieldChange = Prisma.CaseFieldChangeModel
 /**
- * Model CaseSnapshot
+ * Model CaseFinalization
  * 
  */
-export type CaseSnapshot = Prisma.CaseSnapshotModel
+export type CaseFinalization = Prisma.CaseFinalizationModel
 /**
  * Model RevokedToken
  * 

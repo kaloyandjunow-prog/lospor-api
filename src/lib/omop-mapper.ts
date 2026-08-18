@@ -651,7 +651,11 @@ type CaseRow = {
     fieldKey: string
     presence: string
   }[]
-  snapshot?: { id: string } | null
+  // A case now holds one finalization per attestation, so presence is a count
+  // rather than a single row. Declared required, unlike the optional `snapshot`
+  // it replaces: that optionality is what let a rename pass the type checker
+  // while quietly reporting every finalised case as missing its snapshot.
+  finalizations: { id: string }[]
   updatedAt?: Date
   finalizedAt?: Date | null
 }
@@ -674,7 +678,8 @@ function buildQualityWarnings(
     })
   }
 
-  const missingSnapshotCount = cases.filter(c => c.status === "COMPLETE" && !c.snapshot).length
+  const missingSnapshotCount = cases.filter(c =>
+    c.status === "COMPLETE" && c.finalizations.length === 0).length
   if (missingSnapshotCount > 0) {
     warnings.push({
       code: "MISSING_FINALIZATION_SNAPSHOT",

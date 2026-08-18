@@ -111,9 +111,12 @@ describe.skipIf(!runPostgres)("clinical write PostgreSQL serialization", () => {
           intraop: { select: { keyEvents: true } },
         },
       }),
-      prisma.caseSnapshot.findUniqueOrThrow({ where: { caseId } }),
+      prisma.caseFinalization.findFirstOrThrow({
+        where: { caseId },
+        orderBy: { sequence: "desc" },
+      }),
     ])
-    const frozen = snapshot.snapshotJson as {
+    const frozen = JSON.parse(snapshot.snapshotDocument) as {
       status: string
       clinicalRevision: number
       eventRevision: number

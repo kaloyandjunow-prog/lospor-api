@@ -11,37 +11,38 @@ type AnyCase = Parameters<typeof mapCasesToOmop>[0][number]
  * pain-scale code went undocumented. A fixture gap and a documentation gap
  * look identical from inside the test.
  */
-export function pediatricCaseFixture(): AnyCase {
-  return {
-    id: "case-pediatric-omop",
-    caseCode: "2026-P001",
-    createdAt: new Date("2026-07-29T08:00:00Z"),
-    status: "COMPLETE",
-    clinicalMode: "PEDIATRIC",
-    clinicalRulesVersion: "2026.08.04-release.1",
-    preop: {
-      ageYears: 0,
-      ageValue: 14,
-      ageUnit: "DAYS",
-      ageApproxDays: 14,
-      bodySurfaceAreaM2: 0.35,
-      pediatricFasting: { ruleVersion: "APAGBI-2018", compliant: true },
-      sex: "FEMALE",
-      povocScore: 2,
-      povocRiskPercent: 30,
-      coldsScore: 8,
-    },
-    intraop: {
-      startedAt: new Date("2026-07-29T09:00:00Z"),
-      endedAt: new Date("2026-07-29T10:00:00Z"),
-      startTime: null,
-      endTime: null,
-    },
-    postop: {
-      pediatricPainScale: "FLACC",
-      pediatricPainScore: 3,
-      paedScore: 7,
-      painScoreNRS: null,
-    },
-  } as unknown as AnyCase
-}
+export function pediatricCaseFixture(): AnyCase {
+  return {
+    id: "case-pediatric-omop",
+    caseCode: "2026-P001",
+    createdAt: new Date("2026-07-29T08:00:00Z"),
+    status: "COMPLETE",
+    finalizations: [{ id: "pediatric-finalization-1" }],
+    clinicalMode: "PEDIATRIC",
+    clinicalRulesVersion: "2026.08.04-release.1",
+    preop: {
+      ageYears: 0,
+      ageValue: 14,
+      ageUnit: "DAYS",
+      ageApproxDays: 14,
+      bodySurfaceAreaM2: 0.35,
+      pediatricFasting: { ruleVersion: "APAGBI-2018", compliant: true },
+      sex: "FEMALE",
+      povocScore: 2,
+      povocRiskPercent: 30,
+      coldsScore: 8,
+    },
+    intraop: {
+      startedAt: new Date("2026-07-29T09:00:00Z"),
+      endedAt: new Date("2026-07-29T10:00:00Z"),
+      startTime: null,
+      endTime: null,
+    },
+    postop: {
+      pediatricPainScale: "FLACC",
+      pediatricPainScore: 3,
+      paedScore: 7,
+      painScoreNRS: null,
+    },
+  } as unknown as AnyCase
+}

@@ -8,6 +8,7 @@ const makeCase = (over: Partial<AnyCase> = {}): AnyCase => ({
   caseCode: "2026-0001",
   createdAt: new Date("2026-03-04T08:00:00Z"),
   status: "COMPLETE",
+  finalizations: [{ id: "finalization-1" }],
   preop: { ageYears: 64, sex: "MALE" },
   intraop: { startTime: new Date("2026-03-04T09:00:00Z"), endTime: new Date("2026-03-04T11:30:00Z") },
   ...over,

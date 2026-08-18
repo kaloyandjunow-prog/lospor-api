@@ -123,7 +123,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       try {
         // The snapshot is written after the COMPLETE transition so it contains
         // the exact lifecycle state and revisions committed by this transaction.
-        await writeSnapshotAsync(tx, id)
+        await writeSnapshotAsync(tx, id, userId)
       } catch (error) {
         console.error("[finalize] snapshot failed", id, error)
         throw new FinalizeResponse(NextResponse.json(

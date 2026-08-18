@@ -76,7 +76,7 @@ export const ModelName = {
   OmopVocabularyImport: 'OmopVocabularyImport',
   ClinicalFieldStatus: 'ClinicalFieldStatus',
   CaseFieldChange: 'CaseFieldChange',
-  CaseSnapshot: 'CaseSnapshot',
+  CaseFinalization: 'CaseFinalization',
   RevokedToken: 'RevokedToken',
   RateLimit: 'RateLimit',
   CaseEvent: 'CaseEvent',
@@ -470,15 +470,20 @@ export const CaseFieldChangeScalarFieldEnum = {
 export type CaseFieldChangeScalarFieldEnum = (typeof CaseFieldChangeScalarFieldEnum)[keyof typeof CaseFieldChangeScalarFieldEnum]
 
 
-export const CaseSnapshotScalarFieldEnum = {
+export const CaseFinalizationScalarFieldEnum = {
   id: 'id',
   caseId: 'caseId',
+  sequence: 'sequence',
   schemaVersion: 'schemaVersion',
-  snapshotJson: 'snapshotJson',
-  finalizedAt: 'finalizedAt'
+  snapshotDocument: 'snapshotDocument',
+  snapshotHash: 'snapshotHash',
+  finalizedAt: 'finalizedAt',
+  finalizedById: 'finalizedById',
+  correctionReason: 'correctionReason',
+  supersedesFinalizationId: 'supersedesFinalizationId'
 } as const
 
-export type CaseSnapshotScalarFieldEnum = (typeof CaseSnapshotScalarFieldEnum)[keyof typeof CaseSnapshotScalarFieldEnum]
+export type CaseFinalizationScalarFieldEnum = (typeof CaseFinalizationScalarFieldEnum)[keyof typeof CaseFinalizationScalarFieldEnum]
 
 
 export const RevokedTokenScalarFieldEnum = {

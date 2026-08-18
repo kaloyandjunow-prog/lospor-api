@@ -45,7 +45,10 @@ const CASE_EXPORT_INCLUDE = {
   },
   fieldStatuses: { orderBy: [{ section: "asc" as const }, { fieldKey: "asc" as const }] },
   fieldChanges: { orderBy: [{ at: "asc" as const }, { id: "asc" as const }] },
-  snapshot: true,
+  // Every finalization, oldest first, not just the one in force. This is the
+  // subject's own copy of their data: if a case was corrected, the history of
+  // what was attested to is part of what they are entitled to see.
+  finalizations: { orderBy: { sequence: "asc" as const } },
 } satisfies Prisma.CaseInclude
 
 function lines<T>(rows: T[]): string {

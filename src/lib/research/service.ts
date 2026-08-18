@@ -476,7 +476,13 @@ export async function researchQuality(
         id: true,
         status: true,
         updatedAt: true,
-        snapshot: { select: { finalizedAt: true } },
+        // Newest first, one row: a case may now hold several finalizations, and
+        // drift is measured against the one currently in force.
+        finalizations: {
+          orderBy: { sequence: "desc" },
+          take: 1,
+          select: { finalizedAt: true },
+        },
         intraop: { select: { startedAt: true, endedAt: true } },
       },
     }),
@@ -512,9 +518,9 @@ export async function researchQuality(
     grouped.set(key, item)
   }
   const finalized = cases.filter(item => item.status === "COMPLETE")
-  const snapshotCount = finalized.filter(item => !!item.snapshot).length
+  const snapshotCount = finalized.filter(item => item.finalizations.length > 0).length
   const relationalDriftCount = finalized.filter(item =>
-    item.snapshot && item.updatedAt > item.snapshot.finalizedAt).length
+    item.finalizations[0] && item.updatedAt > item.finalizations[0].finalizedAt).length
   const impossibleTimelineCount = cases.filter(item =>
     item.intraop?.startedAt &&
     item.intraop?.endedAt &&
