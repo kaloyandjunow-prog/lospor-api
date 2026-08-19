@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "9.2.0",
+  "version": "9.2.1",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -54,7 +54,8 @@
     "postcss": "8.5.23",
     "sharp": "0.35.3",
     "serialize-javascript": "^7.0.6",
-    "minimatch": "10.2.6"
+    "minimatch": "10.2.6",
+    "deepmerge-ts": "^8.0.1"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1095.0",
