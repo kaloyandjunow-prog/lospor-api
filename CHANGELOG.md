@@ -1,5 +1,20 @@
 # Changelog - LOSPOR API
 
+## [9.2.1] - 2026-08-19
+
+- **deepmerge-ts is held at 8.0.1.** CVE-2026-40345 is stack exhaustion from
+  uncontrolled recursion: the merge functions have no cycle detection, so two
+  objects that reference each other through the same property path recurse until
+  the stack gives out and the process dies. Only 8.0.0 and later are patched —
+  7.1.6 is not — and `@prisma/config` pins 7.1.5 exactly, so the version has to
+  be forced from here.
+
+  It arrives through `prisma.config.ts` being loaded rather than through any
+  request, so nothing a clinician or an API caller can reach merges untrusted
+  objects with it. The upgrade is not a judgement about that: a vulnerability
+  with a fix available gets the fix, and reasoning about reachability instead is
+  precisely what the appliance release policy refuses to accept.
+
 ## [9.2.0] - 2026-08-18
 
 Five clinical-integrity fixes from an audit of the 1.0.0 appliance. They apply
