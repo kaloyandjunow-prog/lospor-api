@@ -1,5 +1,30 @@
 # Changelog - LOSPOR API
 
+## [9.2.2] - 2026-08-19
+
+- **A diagnosis can be coded on a database with no imported vocabulary.**
+  `scripts/seed-icd10-from-bundle.ts` fills `Icd10Code` from the offline
+  vocabulary Core already ships — 16,175 codes with English and Bulgarian
+  labels, the same rows the phone searches when it has no network.
+
+  `/v1/search/icd10` reads that table and nothing else. Its two neighbours do
+  not: `search/procedures` serves a bundled `pcs.json` and never touches the
+  database, and `search/drugs` queries the database and falls back to a bundled
+  `drugs.json` "for development databases before the Drug seed has run". ICD-10
+  was the one route with no floor beneath it, so wherever the table was empty
+  the diagnosis field returned nothing — and an empty dropdown reads as *no such
+  code*, not *nothing is loaded*.
+
+  Seeding rather than teaching the route a fallback keeps one code path: a
+  fallback would run only where the database is empty, which is the deployment
+  exercised least.
+
+  Insert-only. An institution that has imported its approved package holds
+  labels this bundle does not, and a reseed must never replace curated
+  terminology with generic terminology in a table nothing validates against.
+  Existing codes are left exactly as they are; `seed-vocabularies.ts` still
+  upserts, so a licensed import always wins over the bundle.
+
 ## [9.2.1] - 2026-08-19
 
 - **deepmerge-ts is held at 8.0.1.** CVE-2026-40345 is stack exhaustion from
