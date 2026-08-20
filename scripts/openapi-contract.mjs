@@ -805,7 +805,8 @@ add("DELETE", "/v1/cases/{id}/events/{eventId}", "Delete an intraoperative event
 
 add("POST", "/v1/cases/{id}/transfer", "Offer a case transfer", { parameters: [id], requestBody: body(ref("TransferRequest")), status: 201, result: ref("Transfer") })
 add("PATCH", "/v1/cases/{id}/transfer", "Accept or decline a case transfer", { parameters: [id], requestBody: body(ref("TransferDecisionRequest")), result: ref("Transfer") })
-add("GET", "/v1/cases/transfers/pending", "List pending case transfers", { result: arrayOf("Transfer") })
+add("GET", "/v1/cases/{id}/transfers", "Read a case handover history", { parameters: [id], result: arrayOf("Transfer") })
+add("GET", "/v1/cases/transfers/pending", "List pending case transfers", { parameters: [query("direction", { type: "string", enum: ["incoming", "outgoing"], default: "incoming" })], result: arrayOf("Transfer") })
 add("GET", "/v1/users/colleagues", "List colleagues eligible for transfer", { result: arrayOf("User") })
 
 add("POST", "/v1/cases/{id}/ai/advise", "Generate case-specific AI advice", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })

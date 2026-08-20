@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
-import { generateCaseCode, isPrismaUniqueError } from "@/lib/case-code"
+import { generateCaseCode, isPrismaUniqueError, reserveCaseCode } from "@/lib/case-code"
 
 export type TransferOutcome = {
   /** The code the case carried before the move, when it had to be renumbered. */
@@ -60,9 +60,28 @@ export async function transferCaseOwnershipInTransaction(
     })
     if (clash) {
       previousCaseCode = caseCode
-      caseCode = await generateCaseCode(toUserId, tx)
+      // Renumber inside the year the case already belongs to, not the year the
+      // handover happens to be accepted in.
+      //
+      // A pre-assessment done in December and handed over in January would
+      // otherwise be renumbered into the recipient's 2027 sequence for an
+      // operation performed in 2026 — a year that is printed on the chart and
+      // that anyone counting a year's work would then count it under. The
+      // existing code carries the case's year, so it is the authority; a case
+      // with no code yet has nothing to preserve and falls back to now.
+      const year = Number(caseCode.slice(0, 4))
+      caseCode = await generateCaseCode(
+        toUserId,
+        tx,
+        Number.isFinite(year) && year > 1900 ? year : undefined,
+      )
     }
   }
+
+  // The recipient now holds this number, whether it was renumbered into their
+  // sequence or arrived unchanged. Push their counter past it so it is never
+  // issued a second time.
+  if (caseCode) await reserveCaseCode(toUserId, tx, caseCode)
 
   if (opts.supersedePending) {
     await tx.caseTransfer.updateMany({

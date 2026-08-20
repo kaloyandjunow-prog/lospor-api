@@ -1,4 +1,4 @@
-import { Prisma, UserRole } from "@/generated/prisma/client"
+import { Prisma } from "@/generated/prisma/client"
 
 export type AuthUser = {
   id: string
@@ -103,12 +103,36 @@ export function caseWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereI
   return { ...base, userId: user.id }
 }
 
+/**
+ * Who this person may hand a case to.
+ *
+ * Handing a case on is a peer act, not only a downward one: a shift ends, or a
+ * pre-assessment is done days earlier by someone who will not be in that
+ * theatre. So a member sees their department, and neither a member nor a head
+ * is restricted to handing *down* — a registrar must be able to pass a case to
+ * the consultant, which is the direction that matters most and the one this
+ * returned `null` for.
+ *
+ * Approval is required in every branch. An account still waiting to be approved
+ * cannot document, so making it the owner of a clinical record would strand
+ * that record with someone unable to touch it.
+ *
+ * Institution is the boundary in both non-admin branches, and it is load
+ * bearing rather than cosmetic: a case may not move between hospitals at all
+ * (see the note in case-transfer.ts), so offering a recipient who could only be
+ * refused later would be offering a choice that cannot work.
+ */
 export function colleagueWhereForUser(user: AuthUser): Prisma.UserWhereInput | null {
   if (user.role === "ADMIN") {
     return { id: { not: user.id }, approvedAt: { not: null } }
   }
-  if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
-    return { institutionId: user.institutionId, id: { not: user.id }, role: UserRole.MEMBER }
+  if (user.institutionId) {
+    return {
+      institutionId: user.institutionId,
+      id: { not: user.id },
+      approvedAt: { not: null },
+      deletedAt: null,
+    }
   }
   return null
 }

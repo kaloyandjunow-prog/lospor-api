@@ -23,7 +23,8 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 export const TransferStatus = {
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',
-  DECLINED: 'DECLINED'
+  DECLINED: 'DECLINED',
+  CANCELLED: 'CANCELLED'
 } as const
 
 export type TransferStatus = (typeof TransferStatus)[keyof typeof TransferStatus]

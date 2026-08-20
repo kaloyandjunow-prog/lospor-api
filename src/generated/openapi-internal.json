@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LOSPOR API - internal inventory",
-    "version": "9.2.2",
+    "version": "9.3.0",
     "description": "Complete server contract, including secret maintenance jobs."
   },
   "servers": [
@@ -3973,6 +3973,122 @@
         }
       }
     },
+    "/v1/cases/{id}/transfers": {
+      "get": {
+        "operationId": "get_v1_cases_id_transfers",
+        "summary": "Read a case handover history",
+        "tags": [
+          "cases"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Transfer"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/cases/transfers/pending": {
       "get": {
         "operationId": "get_v1_cases_transfers_pending",
@@ -3982,6 +4098,21 @@
         ],
         "x-lospor-explicit-contract": true,
         "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "incoming",
+                "outgoing"
+              ],
+              "default": "incoming"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful response",

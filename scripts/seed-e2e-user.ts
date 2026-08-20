@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs"
 import {
   E2E_EMAIL, E2E_PASSWORD, E2E_RESEARCH_EMAIL,
   E2E_HOD_A_EMAIL, E2E_MEMBER_A_EMAIL, E2E_HOD_B_EMAIL, E2E_MEMBER_B_EMAIL,
+  E2E_MEMBER_A2_EMAIL,
   E2E_INSTITUTION_B,
 } from "../e2e/credentials"
 // Every account belongs to an institution; a researcher with no department
@@ -179,6 +180,7 @@ async function main() {
     const cast = [
       { email: E2E_HOD_A_EMAIL,    role: "HEAD_OF_DEPT", institutionId: inst.id,  first: "Hod",    last: "Alpha" },
       { email: E2E_MEMBER_A_EMAIL, role: "MEMBER",       institutionId: inst.id,  first: "Member", last: "Alpha" },
+      { email: E2E_MEMBER_A2_EMAIL, role: "MEMBER",      institutionId: inst.id,  first: "Member", last: "Alpha Two" },
       { email: E2E_HOD_B_EMAIL,    role: "HEAD_OF_DEPT", institutionId: instB.id, first: "Hod",    last: "Beta"  },
       { email: E2E_MEMBER_B_EMAIL, role: "MEMBER",       institutionId: instB.id, first: "Member", last: "Beta"  },
     ] as const
