@@ -57,6 +57,7 @@ export const ModelName = {
   Institution: 'Institution',
   Case: 'Case',
   CaseLock: 'CaseLock',
+  CaseCodeSequence: 'CaseCodeSequence',
   CaseTransfer: 'CaseTransfer',
   RoleRequest: 'RoleRequest',
   InstitutionChangeRequest: 'InstitutionChangeRequest',
@@ -211,6 +212,15 @@ export const CaseLockScalarFieldEnum = {
 } as const
 
 export type CaseLockScalarFieldEnum = (typeof CaseLockScalarFieldEnum)[keyof typeof CaseLockScalarFieldEnum]
+
+
+export const CaseCodeSequenceScalarFieldEnum = {
+  userId: 'userId',
+  year: 'year',
+  next: 'next'
+} as const
+
+export type CaseCodeSequenceScalarFieldEnum = (typeof CaseCodeSequenceScalarFieldEnum)[keyof typeof CaseCodeSequenceScalarFieldEnum]
 
 
 export const CaseTransferScalarFieldEnum = {

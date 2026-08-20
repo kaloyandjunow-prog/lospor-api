@@ -156,6 +156,28 @@ model CaseLock {
   @@index([expiresAt])
 }
 
+/// The next case number to issue, per clinician per year.
+///
+/// Case codes used to be derived from the highest code a clinician currently
+/// owned. A handover changes what they own, so that ceiling could move
+/// backwards: hand away your highest case and the next case you create takes
+/// the number you just handed over -- a number already printed on that chart.
+/// The unique constraint is [userId, caseCode] and the handed-over case now
+/// belongs to someone else, so nothing prevented it.
+///
+/// A counter only ever moves forward. Gaps are fine and always were (a deleted
+/// draft leaves one); reuse is not, because the number is the only thing tying
+/// a paper chart to its record.
+model CaseCodeSequence {
+  userId String
+  year   Int
+  /// The next number to hand out. Incremented in the same transaction as the
+  /// write that consumes it, so a rolled-back case does not burn a number.
+  next   Int    @default(1)
+
+  @@id([userId, year])
+}
+
 model CaseTransfer {
   id               String         @id @default(cuid())
   caseId           String
@@ -176,12 +198,26 @@ model CaseTransfer {
 
   @@index([status])
   @@index([toUserId, status])
+  // Who is waiting to hand a case over, for the sender's own "awaiting
+  // acceptance" list. Without it that view scans every transfer ever made.
+  @@index([fromUserId, status])
+  // One pending handover per case is enforced by a partial unique index created
+  // in 20260819120000_member_initiated_handover. Prisma cannot express a
+  // `WHERE status = 'PENDING'` index, so it lives in SQL and is deliberately
+  // absent here — do not "restore" it as a plain @@unique, which would forbid a
+  // case from ever being transferred twice.
 }
 
 enum TransferStatus {
   PENDING
   ACCEPTED
+  // Refused by the recipient.
   DECLINED
+  // Withdrawn by the sender before anyone answered. Distinct from DECLINED
+  // because "my colleague refused this case" and "I thought better of it" are
+  // different events, and a handover trail that cannot tell them apart cannot
+  // answer the question anyone would actually ask of it.
+  CANCELLED
 }
 
 enum CaseStatus {

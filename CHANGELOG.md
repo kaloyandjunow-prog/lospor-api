@@ -1,5 +1,72 @@
 # Changelog - LOSPOR API
 
+## [9.3.0] - 2026-08-20
+
+### Fixed
+
+- **A handover could make a clinician reuse a case number.** Case codes were
+  derived from the highest code a clinician currently owned, and a handover
+  changes what they own — so handing away your highest case lowered the ceiling
+  and the next case you created took the number you had just handed over.
+  Reproduced end to end: a clinician holding 2026-0001 to 0003 who hands 0003 to
+  a colleague was issued 2026-0003 again. Nothing rejected it, because the
+  unique constraint is `(userId, caseCode)` and the handed-over case now belongs
+  to somebody else, so two different operations carried the same number on
+  paper.
+
+  Numbers now come from `CaseCodeSequence`, a counter per clinician per year
+  that only ever moves forward, backfilled from what each clinician has already
+  been issued. Gaps were always possible and still are — a deleted draft leaves
+  one — but the code is the only link between a printed chart and its record, so
+  it must never be handed out twice. A case arriving by handover also pushes the
+  recipient's counter past it, since it usually keeps its number and would
+  otherwise be issued again a few cases later.
+
+- **A renumbered case could be moved into the wrong year.** Renumbering used the
+  current year rather than the case's, so a pre-assessment done in December and
+  accepted in January was renumbered into the recipient's *next* year — a year
+  printed on the chart, and the one anyone totalling a year's work would count
+  it under. Renumbering now stays inside the year the case already belongs to.
+
+- **Three defects in the accept/decline path**, which had never run: accepting a
+  case finalised while the handover sat pending was allowed, reassigning it
+  underneath its own attestation; a cross-institution recipient surfaced as a
+  bare 500; and nothing prevented two pending handovers on one case beyond the
+  route remembering to check. All three now covered, the last by a partial
+  unique index.
+
+- **A member could not see anyone to hand a case to.** `colleagueWhereForUser`
+  returned `null` for a member, and restricted a head of department to members —
+  so the direction that matters most, a registrar passing a case to the
+  consultant who will anaesthetise it, was not offered to either of them.
+
+### Added
+
+- **A member can hand a case to any colleague in their institution.** Until now
+  only a head of department or an administrator could move a case, and only
+  downwards. Handing a case on is an ordinary clinical act — a shift ends, or a
+  pre-assessment is done days earlier by someone who will not be in that theatre
+  — and refusing it did not stop it happening, it stopped the register seeing it.
+
+  A member *asks*: the case, its number and every access rule stay exactly where
+  they are until the recipient accepts, because the sender is usually still
+  documenting it. A head of department *assigns*, unchanged, and it moves at
+  once. The sender may withdraw an offer nobody has answered; `CANCELLED` is a
+  distinct outcome from `DECLINED`, because "my colleague refused this" and "I
+  thought better of it" are the two things anyone asks of a handover trail.
+
+- `GET /v1/cases/{id}/transfers` — who has held a case and who moved it,
+  readable by anyone who may open the case. The audit log has recorded this all
+  along but only an administrator can read it, which answers a compliance
+  question rather than a clinical one.
+
+- `?direction=outgoing` on the pending-transfer list, so a sender can see an
+  offer nobody has answered and reach the withdrawal at all.
+
+- Audit actions `CASE_TRANSFER_REQUEST` and `CASE_TRANSFER_CANCEL`; every
+  transfer action now records `fromUserId`, without which the losing owner was
+  recoverable only from the transfer row.
+
 ## [9.2.2] - 2026-08-19
 
 - **A diagnosis can be coded on a database with no imported vocabulary.**

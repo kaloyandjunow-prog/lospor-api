@@ -72,6 +72,22 @@ export type Case = Prisma.CaseModel
  */
 export type CaseLock = Prisma.CaseLockModel
 /**
+ * Model CaseCodeSequence
+ * The next case number to issue, per clinician per year.
+ * 
+ * Case codes used to be derived from the highest code a clinician currently
+ * owned. A handover changes what they own, so that ceiling could move
+ * backwards: hand away your highest case and the next case you create takes
+ * the number you just handed over -- a number already printed on that chart.
+ * The unique constraint is [userId, caseCode] and the handed-over case now
+ * belongs to someone else, so nothing prevented it.
+ * 
+ * A counter only ever moves forward. Gaps are fine and always were (a deleted
+ * draft leaves one); reuse is not, because the number is the only thing tying
+ * a paper chart to its record.
+ */
+export type CaseCodeSequence = Prisma.CaseCodeSequenceModel
+/**
  * Model CaseTransfer
  * 
  */

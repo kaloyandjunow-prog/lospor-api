@@ -6,6 +6,8 @@ const findUniqueMock    = vi.fn()
 const createMock        = vi.fn()
 const logAuditMock      = vi.fn()
 
+const caseCodeSequenceUpsertMock = vi.fn()
+
 vi.mock("next/server", async importOriginal => {
   const actual = await importOriginal<typeof import("next/server")>()
   return { ...actual, after: vi.fn() }
@@ -14,6 +16,10 @@ vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: getAuthUserMock }))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     case: { findFirst: findFirstMock, findUnique: findUniqueMock, create: createMock },
+    // Case numbers come from a forward-only counter rather than from the
+    // highest case a clinician currently owns, so that handing a case away
+    // cannot lower the ceiling and reissue a number already on a chart.
+    caseCodeSequence: { upsert: caseCodeSequenceUpsertMock },
   },
 }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
@@ -44,6 +50,9 @@ describe("POST /api/cases", () => {
     getAuthUserMock.mockResolvedValue({ id: "user-1", role: "MEMBER", institutionId: "inst-1" })
     findFirstMock.mockResolvedValue(null) // no existing draft
     findUniqueMock.mockResolvedValue(null) // for caseCode uniqueness
+    let nextCaseNumber = 2
+    caseCodeSequenceUpsertMock.mockImplementation(() =>
+      Promise.resolve({ next: nextCaseNumber++ }))
     createMock.mockResolvedValue({
       id: "new-case-1",
       caseCode: "2026-0001",
@@ -79,8 +88,9 @@ describe("POST /api/cases", () => {
 
   it("returns the existing case when a concurrent create wins the same clientDraftId", async () => {
     const existing = { id: "race-winner", caseCode: "2026-0002", preop: { updatedAt: new Date() } }
+    // Two lookups, not three: case codes now come from a counter, so generating
+    // one no longer reads case.findFirst on the way past.
     findFirstMock
-      .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(existing)
     createMock.mockRejectedValueOnce({ code: "P2002", meta: { target: ["userId", "clientDraftId"] } })
