@@ -72,6 +72,7 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "CLINICAL_RULESET_DEV_RESET", category: "CLINICAL_RULES", labels: { bg: "Нулирани клинични правила за разработка", en: "Development clinical rules reset" } },
   { code: "CLINICAL_RULESET_E2E_PROVISION", category: "CLINICAL_RULES", labels: { bg: "Подготвени клинични правила за E2E тест", en: "E2E clinical rules provisioned" } },
   { code: "CLINICAL_BUNDLED_BASELINE_PROVISION", category: "CLINICAL_RULES", labels: { bg: "Инсталиран базов набор от клинични правила", en: "Bundled clinical baseline installed" } },
+  { code: "CLINICAL_RULESET_PRUNE", category: "CLINICAL_RULES", labels: { bg: "Премахнат надживян набор от клинични правила", en: "Superseded clinical ruleset removed" } },
 
   { code: "CASE_CREATE", category: "CASE", labels: { bg: "Създаден случай", en: "Case created" } },
   { code: "CASE_UPDATE", category: "CASE", labels: { bg: "Обновен случай", en: "Case updated" } },
