@@ -69,7 +69,38 @@ describe("administrator MFA primitives", () => {
     const sealed = encryptTotpSecret(secret)
     expect(sealed).not.toContain(secret.toString("hex"))
     expect(decryptTotpSecret(sealed)).toEqual(secret)
-    expect(() => decryptTotpSecret(`${sealed.slice(0, -1)}A`)).toThrow()
+
+    // Tamper at the byte level, not by rewriting a base64url character.
+    //
+    // This used to replace the final character of the sealed value with a
+    // literal "A". The sealed value ends with base64url(ciphertext), and a
+    // 20-byte ciphertext encodes to 27 characters whose last one carries four
+    // significant bits plus two ignored padding bits -- so it is already "A"
+    // about 6.5% of the time, the "tampered" value was byte-identical to the
+    // original, decryption correctly succeeded, and the assertion that this
+    // ciphertext is authenticated failed at random. Worse than a flake: on
+    // those runs the suite went red for no defect, which invites re-running
+    // until green.
+    //
+    // Flipping a character to a neighbouring one would not have fixed it
+    // either -- "A" and "B" differ only in those two ignored bits and decode
+    // to the same bytes.
+    const [version, ivText, tagText, ciphertextText] = sealed.split(".")
+    const reseal = (tag: Buffer, ciphertext: Buffer) =>
+      [version, ivText, tag.toString("base64url"), ciphertext.toString("base64url")].join(".")
+    const tag = Buffer.from(tagText!, "base64url")
+    const ciphertext = Buffer.from(ciphertextText!, "base64url")
+
+    const flippedCiphertext = Buffer.from(ciphertext)
+    flippedCiphertext[0] ^= 0xff
+    expect(() => decryptTotpSecret(reseal(tag, flippedCiphertext))).toThrow()
+
+    // The tag is the authentication. A ciphertext that still decrypts under a
+    // forged tag would mean GCM is being used as if it were CTR.
+    const flippedTag = Buffer.from(tag)
+    flippedTag[0] ^= 0xff
+    expect(() => decryptTotpSecret(reseal(flippedTag, ciphertext))).toThrow()
+
     expect(() => decryptTotpSecret(`${sealed}!`)).toThrow()
     expect(administratorMfaKeyIsReady()).toBe(true)
   })
