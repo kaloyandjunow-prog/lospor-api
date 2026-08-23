@@ -49,7 +49,7 @@ if (typeof setInterval !== "undefined") {
   }, REFRESH_INTERVAL_MS).unref?.()
 }
 
-export async function revokeToken(jti: string, expiresAt: Date): Promise<void> {
+export async function revokeToken(jti: string, expiresAt: Date): Promise<boolean> {
   cache.add(jti)
   try {
     await prisma.revokedToken.upsert({
@@ -57,9 +57,16 @@ export async function revokeToken(jti: string, expiresAt: Date): Promise<void> {
       update: {},
       create: { jti, expiresAt },
     })
+  } catch {
+    // The local cache is protected, but cross-instance revocation is not yet
+    // confirmed. Logout callers use this result to avoid claiming success.
+    return false
+  }
+  try {
     // Lazy prune expired entries from the DB.
     await prisma.revokedToken.deleteMany({ where: { expiresAt: { lt: new Date() } } })
-  } catch { /* non-fatal — in-memory cache still protects this session */ }
+  } catch { /* housekeeping only; the requested JTI is already durable */ }
+  return true
 }
 
 // Async variant — awaits the initial DB load before returning a result, so the
