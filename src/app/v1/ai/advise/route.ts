@@ -13,6 +13,7 @@ import {
   AI_PAYLOAD_MAX_BYTES,
   AI_STREAM_TIMEOUT_MS,
 } from "@/lib/constants"
+import { clinicalAiRefusal } from "@/lib/deployment-capabilities"
 
 const dataSchema = z.record(z.string(), z.unknown())
 
@@ -37,6 +38,8 @@ export async function POST(req: NextRequest) {
   if (!user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+  const refusal = clinicalAiRefusal("clinicalAdvice")
+  if (refusal) return NextResponse.json(refusal.body, { status: refusal.status })
 
   // Item 13: Consume the actual body bytes instead of trusting Content-Length,
   // so chunked requests that omit the header cannot bypass the size check.
@@ -67,10 +70,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const apiKey = process.env.MISTRAL_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI advisor not configured" }, { status: 503 })
-  }
+  const apiKey = process.env.MISTRAL_API_KEY!
 
   let parsed: z.infer<typeof dataSchema>
   try {

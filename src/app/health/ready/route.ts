@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { activeLegalManifest, LegalConfigurationError } from "@/lib/legal-documents"
+import { administratorMfaKeyIsReady } from "@/lib/administrator-mfa"
 
 /**
  * Readiness, plus whether this installation can actually send email.
@@ -19,10 +21,41 @@ export async function GET() {
   const email = process.env.BREVO_API_KEY ? "configured" : "not-configured"
   try {
     await prisma.$queryRaw`SELECT 1`
-    return NextResponse.json({ status: "ready", database: "ok", email })
   } catch {
     return NextResponse.json(
-      { status: "unavailable", database: "error", email },
+      { status: "unavailable", database: "error", email, legalDocuments: "unchecked", administratorMfa: "unchecked" },
+      { status: 503 },
+    )
+  }
+
+  try {
+    const legal = activeLegalManifest()
+    const mfaRequired = process.env.LOSPOR_ADMIN_MFA_REQUIRED === "true"
+    const administratorMfa = mfaRequired
+      ? (administratorMfaKeyIsReady() ? "configured" : "unavailable")
+      : "not-required"
+    if (administratorMfa === "unavailable") {
+      return NextResponse.json({
+        status: "unavailable",
+        database: "ok",
+        email,
+        legalDocuments: "configured",
+        legalDeployment: legal.deployment,
+        administratorMfa,
+      }, { status: 503 })
+    }
+    return NextResponse.json({
+      status: "ready",
+      database: "ok",
+      email,
+      legalDocuments: "configured",
+      legalDeployment: legal.deployment,
+      administratorMfa,
+    })
+  } catch (error) {
+    if (!(error instanceof LegalConfigurationError)) throw error
+    return NextResponse.json(
+      { status: "unavailable", database: "ok", email, legalDocuments: "unavailable", administratorMfa: "unchecked" },
       { status: 503 },
     )
   }

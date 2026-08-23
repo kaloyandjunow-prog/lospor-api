@@ -29,9 +29,9 @@ export async function POST(req: NextRequest) {
     const { totalRows } = await seedOptionLibrary(prisma)
     await logAudit(user.id, "maintenance.seed_option_library.success", "OptionLibrary", { totalRows })
     return NextResponse.json({ ok: true, totalRows })
-  } catch (err) {
+  } catch {
     await logAudit(user.id, "maintenance.seed_option_library.error", "OptionLibrary", {
-      error: err instanceof Error ? err.message : String(err),
+      failureStage: "OPTION_LIBRARY_REFRESH",
     })
     return NextResponse.json({ error: "Seeding failed" }, { status: 500 })
   }

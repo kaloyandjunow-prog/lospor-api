@@ -5,6 +5,7 @@ import { getAuthUser } from "@/lib/mobile-auth"
 import { fetchMistralChatCompletions } from "@/lib/mistral"
 import { rateLimit } from "@/lib/rate-limit"
 import { corsHeaders } from "@/lib/cors"
+import { clinicalAiRefusal } from "@/lib/deployment-capabilities"
 
 const MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const
 const MAX_BYTES = 10_485_760 // 10 MB
@@ -59,6 +60,8 @@ export async function POST(req: NextRequest) {
   if (!user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+  const refusal = clinicalAiRefusal("labImageExtraction")
+  if (refusal) return NextResponse.json(refusal.body, { status: refusal.status })
 
   const contentLength = Number(req.headers.get("content-length") ?? 0)
   if (contentLength > MAX_BYTES * 1.4) {
@@ -72,10 +75,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  const apiKey = process.env.MISTRAL_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI not configured" }, { status: 503 })
-  }
+  const apiKey = process.env.MISTRAL_API_KEY!
 
   let imageBase64: string
   let mimeType: string
