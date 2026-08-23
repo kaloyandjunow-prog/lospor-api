@@ -714,14 +714,6 @@ export type ConceptMapSumOrderByAggregateInput = {
   mappingConfidence?: Prisma.SortOrder
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type EnumConceptMappingStatusFieldUpdateOperationsInput = {
   set?: $Enums.ConceptMappingStatus
 }

@@ -9,6 +9,15 @@
 * 🟢 You can import this file directly.
 */
 
+export const AuthSessionClientType = {
+  WEB: 'WEB',
+  PWA: 'PWA',
+  NATIVE: 'NATIVE'
+} as const
+
+export type AuthSessionClientType = (typeof AuthSessionClientType)[keyof typeof AuthSessionClientType]
+
+
 export const UserRole = {
   MEMBER: 'MEMBER',
   HEAD_OF_DEPT: 'HEAD_OF_DEPT',
@@ -18,6 +27,37 @@ export const UserRole = {
 } as const
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
+export const AccountKind = {
+  CLINICAL: 'CLINICAL',
+  RESEARCH_ONLY: 'RESEARCH_ONLY'
+} as const
+
+export type AccountKind = (typeof AccountKind)[keyof typeof AccountKind]
+
+
+export const TechnicalPrincipalKind = {
+  RELEASE: 'RELEASE'
+} as const
+
+export type TechnicalPrincipalKind = (typeof TechnicalPrincipalKind)[keyof typeof TechnicalPrincipalKind]
+
+
+export const LegalDocumentKind = {
+  TERMS: 'TERMS',
+  PRIVACY: 'PRIVACY'
+} as const
+
+export type LegalDocumentKind = (typeof LegalDocumentKind)[keyof typeof LegalDocumentKind]
+
+
+export const LegalDocumentLocale = {
+  BG: 'BG',
+  EN: 'EN'
+} as const
+
+export type LegalDocumentLocale = (typeof LegalDocumentLocale)[keyof typeof LegalDocumentLocale]
 
 
 export const TransferStatus = {

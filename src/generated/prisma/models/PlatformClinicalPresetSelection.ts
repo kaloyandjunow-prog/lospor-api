@@ -28,6 +28,7 @@ export type PlatformClinicalPresetSelectionMinAggregateOutputType = {
   clinicalMode: $Enums.ClinicalMode | null
   presetId: string | null
   selectedById: string | null
+  selectedByTechnicalPrincipalId: string | null
   selectedAt: Date | null
   updatedAt: Date | null
 }
@@ -36,6 +37,7 @@ export type PlatformClinicalPresetSelectionMaxAggregateOutputType = {
   clinicalMode: $Enums.ClinicalMode | null
   presetId: string | null
   selectedById: string | null
+  selectedByTechnicalPrincipalId: string | null
   selectedAt: Date | null
   updatedAt: Date | null
 }
@@ -44,6 +46,7 @@ export type PlatformClinicalPresetSelectionCountAggregateOutputType = {
   clinicalMode: number
   presetId: number
   selectedById: number
+  selectedByTechnicalPrincipalId: number
   selectedAt: number
   updatedAt: number
   _all: number
@@ -54,6 +57,7 @@ export type PlatformClinicalPresetSelectionMinAggregateInputType = {
   clinicalMode?: true
   presetId?: true
   selectedById?: true
+  selectedByTechnicalPrincipalId?: true
   selectedAt?: true
   updatedAt?: true
 }
@@ -62,6 +66,7 @@ export type PlatformClinicalPresetSelectionMaxAggregateInputType = {
   clinicalMode?: true
   presetId?: true
   selectedById?: true
+  selectedByTechnicalPrincipalId?: true
   selectedAt?: true
   updatedAt?: true
 }
@@ -70,6 +75,7 @@ export type PlatformClinicalPresetSelectionCountAggregateInputType = {
   clinicalMode?: true
   presetId?: true
   selectedById?: true
+  selectedByTechnicalPrincipalId?: true
   selectedAt?: true
   updatedAt?: true
   _all?: true
@@ -151,6 +157,7 @@ export type PlatformClinicalPresetSelectionGroupByOutputType = {
   clinicalMode: $Enums.ClinicalMode
   presetId: string
   selectedById: string | null
+  selectedByTechnicalPrincipalId: string | null
   selectedAt: Date
   updatedAt: Date
   _count: PlatformClinicalPresetSelectionCountAggregateOutputType | null
@@ -180,20 +187,24 @@ export type PlatformClinicalPresetSelectionWhereInput = {
   clinicalMode?: Prisma.EnumClinicalModeFilter<"PlatformClinicalPresetSelection"> | $Enums.ClinicalMode
   presetId?: Prisma.StringFilter<"PlatformClinicalPresetSelection"> | string
   selectedById?: Prisma.StringNullableFilter<"PlatformClinicalPresetSelection"> | string | null
+  selectedByTechnicalPrincipalId?: Prisma.StringNullableFilter<"PlatformClinicalPresetSelection"> | string | null
   selectedAt?: Prisma.DateTimeFilter<"PlatformClinicalPresetSelection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"PlatformClinicalPresetSelection"> | Date | string
   preset?: Prisma.XOR<Prisma.ClinicalPresetScalarRelationFilter, Prisma.ClinicalPresetWhereInput>
   selectedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  selectedByTechnicalPrincipal?: Prisma.XOR<Prisma.TechnicalPrincipalNullableScalarRelationFilter, Prisma.TechnicalPrincipalWhereInput> | null
 }
 
 export type PlatformClinicalPresetSelectionOrderByWithRelationInput = {
   clinicalMode?: Prisma.SortOrder
   presetId?: Prisma.SortOrder
   selectedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedByTechnicalPrincipalId?: Prisma.SortOrderInput | Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   preset?: Prisma.ClinicalPresetOrderByWithRelationInput
   selectedBy?: Prisma.UserOrderByWithRelationInput
+  selectedByTechnicalPrincipal?: Prisma.TechnicalPrincipalOrderByWithRelationInput
 }
 
 export type PlatformClinicalPresetSelectionWhereUniqueInput = Prisma.AtLeast<{
@@ -203,16 +214,19 @@ export type PlatformClinicalPresetSelectionWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.PlatformClinicalPresetSelectionWhereInput | Prisma.PlatformClinicalPresetSelectionWhereInput[]
   presetId?: Prisma.StringFilter<"PlatformClinicalPresetSelection"> | string
   selectedById?: Prisma.StringNullableFilter<"PlatformClinicalPresetSelection"> | string | null
+  selectedByTechnicalPrincipalId?: Prisma.StringNullableFilter<"PlatformClinicalPresetSelection"> | string | null
   selectedAt?: Prisma.DateTimeFilter<"PlatformClinicalPresetSelection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"PlatformClinicalPresetSelection"> | Date | string
   preset?: Prisma.XOR<Prisma.ClinicalPresetScalarRelationFilter, Prisma.ClinicalPresetWhereInput>
   selectedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  selectedByTechnicalPrincipal?: Prisma.XOR<Prisma.TechnicalPrincipalNullableScalarRelationFilter, Prisma.TechnicalPrincipalWhereInput> | null
 }, "clinicalMode">
 
 export type PlatformClinicalPresetSelectionOrderByWithAggregationInput = {
   clinicalMode?: Prisma.SortOrder
   presetId?: Prisma.SortOrder
   selectedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedByTechnicalPrincipalId?: Prisma.SortOrderInput | Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.PlatformClinicalPresetSelectionCountOrderByAggregateInput
@@ -227,6 +241,7 @@ export type PlatformClinicalPresetSelectionScalarWhereWithAggregatesInput = {
   clinicalMode?: Prisma.EnumClinicalModeWithAggregatesFilter<"PlatformClinicalPresetSelection"> | $Enums.ClinicalMode
   presetId?: Prisma.StringWithAggregatesFilter<"PlatformClinicalPresetSelection"> | string
   selectedById?: Prisma.StringNullableWithAggregatesFilter<"PlatformClinicalPresetSelection"> | string | null
+  selectedByTechnicalPrincipalId?: Prisma.StringNullableWithAggregatesFilter<"PlatformClinicalPresetSelection"> | string | null
   selectedAt?: Prisma.DateTimeWithAggregatesFilter<"PlatformClinicalPresetSelection"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"PlatformClinicalPresetSelection"> | Date | string
 }
@@ -237,12 +252,14 @@ export type PlatformClinicalPresetSelectionCreateInput = {
   updatedAt?: Date | string
   preset: Prisma.ClinicalPresetCreateNestedOneWithoutPlatformSelectionsInput
   selectedBy?: Prisma.UserCreateNestedOneWithoutPlatformPresetSelectionsInput
+  selectedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutPlatformSelectionsInput
 }
 
 export type PlatformClinicalPresetSelectionUncheckedCreateInput = {
   clinicalMode: $Enums.ClinicalMode
   presetId: string
   selectedById?: string | null
+  selectedByTechnicalPrincipalId?: string | null
   selectedAt?: Date | string
   updatedAt?: Date | string
 }
@@ -253,12 +270,14 @@ export type PlatformClinicalPresetSelectionUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   preset?: Prisma.ClinicalPresetUpdateOneRequiredWithoutPlatformSelectionsNestedInput
   selectedBy?: Prisma.UserUpdateOneWithoutPlatformPresetSelectionsNestedInput
+  selectedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutPlatformSelectionsNestedInput
 }
 
 export type PlatformClinicalPresetSelectionUncheckedUpdateInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   presetId?: Prisma.StringFieldUpdateOperationsInput | string
   selectedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -267,6 +286,7 @@ export type PlatformClinicalPresetSelectionCreateManyInput = {
   clinicalMode: $Enums.ClinicalMode
   presetId: string
   selectedById?: string | null
+  selectedByTechnicalPrincipalId?: string | null
   selectedAt?: Date | string
   updatedAt?: Date | string
 }
@@ -281,6 +301,7 @@ export type PlatformClinicalPresetSelectionUncheckedUpdateManyInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   presetId?: Prisma.StringFieldUpdateOperationsInput | string
   selectedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -299,6 +320,7 @@ export type PlatformClinicalPresetSelectionCountOrderByAggregateInput = {
   clinicalMode?: Prisma.SortOrder
   presetId?: Prisma.SortOrder
   selectedById?: Prisma.SortOrder
+  selectedByTechnicalPrincipalId?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -307,6 +329,7 @@ export type PlatformClinicalPresetSelectionMaxOrderByAggregateInput = {
   clinicalMode?: Prisma.SortOrder
   presetId?: Prisma.SortOrder
   selectedById?: Prisma.SortOrder
+  selectedByTechnicalPrincipalId?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -315,6 +338,7 @@ export type PlatformClinicalPresetSelectionMinOrderByAggregateInput = {
   clinicalMode?: Prisma.SortOrder
   presetId?: Prisma.SortOrder
   selectedById?: Prisma.SortOrder
+  selectedByTechnicalPrincipalId?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -358,6 +382,48 @@ export type PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByN
   connect?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
   update?: Prisma.PlatformClinicalPresetSelectionUpdateWithWhereUniqueWithoutSelectedByInput | Prisma.PlatformClinicalPresetSelectionUpdateWithWhereUniqueWithoutSelectedByInput[]
   updateMany?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutSelectedByInput | Prisma.PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutSelectedByInput[]
+  deleteMany?: Prisma.PlatformClinicalPresetSelectionScalarWhereInput | Prisma.PlatformClinicalPresetSelectionScalarWhereInput[]
+}
+
+export type PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByTechnicalPrincipalInput = {
+  create?: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput> | Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput[] | Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput[]
+  createMany?: Prisma.PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInputEnvelope
+  connect?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+}
+
+export type PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByTechnicalPrincipalInput = {
+  create?: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput> | Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput[] | Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput[]
+  createMany?: Prisma.PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInputEnvelope
+  connect?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+}
+
+export type PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByTechnicalPrincipalNestedInput = {
+  create?: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput> | Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput[] | Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput[]
+  upsert?: Prisma.PlatformClinicalPresetSelectionUpsertWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionUpsertWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput[]
+  createMany?: Prisma.PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInputEnvelope
+  set?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  disconnect?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  delete?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  connect?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  update?: Prisma.PlatformClinicalPresetSelectionUpdateWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionUpdateWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput[]
+  updateMany?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutSelectedByTechnicalPrincipalInput[]
+  deleteMany?: Prisma.PlatformClinicalPresetSelectionScalarWhereInput | Prisma.PlatformClinicalPresetSelectionScalarWhereInput[]
+}
+
+export type PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByTechnicalPrincipalNestedInput = {
+  create?: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput> | Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput[] | Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput[]
+  upsert?: Prisma.PlatformClinicalPresetSelectionUpsertWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionUpsertWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput[]
+  createMany?: Prisma.PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInputEnvelope
+  set?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  disconnect?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  delete?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  connect?: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput | Prisma.PlatformClinicalPresetSelectionWhereUniqueInput[]
+  update?: Prisma.PlatformClinicalPresetSelectionUpdateWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionUpdateWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput[]
+  updateMany?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutSelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutSelectedByTechnicalPrincipalInput[]
   deleteMany?: Prisma.PlatformClinicalPresetSelectionScalarWhereInput | Prisma.PlatformClinicalPresetSelectionScalarWhereInput[]
 }
 
@@ -408,11 +474,13 @@ export type PlatformClinicalPresetSelectionCreateWithoutSelectedByInput = {
   selectedAt?: Date | string
   updatedAt?: Date | string
   preset: Prisma.ClinicalPresetCreateNestedOneWithoutPlatformSelectionsInput
+  selectedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutPlatformSelectionsInput
 }
 
 export type PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByInput = {
   clinicalMode: $Enums.ClinicalMode
   presetId: string
+  selectedByTechnicalPrincipalId?: string | null
   selectedAt?: Date | string
   updatedAt?: Date | string
 }
@@ -450,8 +518,51 @@ export type PlatformClinicalPresetSelectionScalarWhereInput = {
   clinicalMode?: Prisma.EnumClinicalModeFilter<"PlatformClinicalPresetSelection"> | $Enums.ClinicalMode
   presetId?: Prisma.StringFilter<"PlatformClinicalPresetSelection"> | string
   selectedById?: Prisma.StringNullableFilter<"PlatformClinicalPresetSelection"> | string | null
+  selectedByTechnicalPrincipalId?: Prisma.StringNullableFilter<"PlatformClinicalPresetSelection"> | string | null
   selectedAt?: Prisma.DateTimeFilter<"PlatformClinicalPresetSelection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"PlatformClinicalPresetSelection"> | Date | string
+}
+
+export type PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput = {
+  clinicalMode: $Enums.ClinicalMode
+  selectedAt?: Date | string
+  updatedAt?: Date | string
+  preset: Prisma.ClinicalPresetCreateNestedOneWithoutPlatformSelectionsInput
+  selectedBy?: Prisma.UserCreateNestedOneWithoutPlatformPresetSelectionsInput
+}
+
+export type PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput = {
+  clinicalMode: $Enums.ClinicalMode
+  presetId: string
+  selectedById?: string | null
+  selectedAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type PlatformClinicalPresetSelectionCreateOrConnectWithoutSelectedByTechnicalPrincipalInput = {
+  where: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput
+  create: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput>
+}
+
+export type PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInputEnvelope = {
+  data: Prisma.PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInput | Prisma.PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInput[]
+  skipDuplicates?: boolean
+}
+
+export type PlatformClinicalPresetSelectionUpsertWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput = {
+  where: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput
+  update: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionUpdateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedUpdateWithoutSelectedByTechnicalPrincipalInput>
+  create: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionCreateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedCreateWithoutSelectedByTechnicalPrincipalInput>
+}
+
+export type PlatformClinicalPresetSelectionUpdateWithWhereUniqueWithoutSelectedByTechnicalPrincipalInput = {
+  where: Prisma.PlatformClinicalPresetSelectionWhereUniqueInput
+  data: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionUpdateWithoutSelectedByTechnicalPrincipalInput, Prisma.PlatformClinicalPresetSelectionUncheckedUpdateWithoutSelectedByTechnicalPrincipalInput>
+}
+
+export type PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutSelectedByTechnicalPrincipalInput = {
+  where: Prisma.PlatformClinicalPresetSelectionScalarWhereInput
+  data: Prisma.XOR<Prisma.PlatformClinicalPresetSelectionUpdateManyMutationInput, Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByTechnicalPrincipalInput>
 }
 
 export type PlatformClinicalPresetSelectionCreateWithoutPresetInput = {
@@ -459,11 +570,13 @@ export type PlatformClinicalPresetSelectionCreateWithoutPresetInput = {
   selectedAt?: Date | string
   updatedAt?: Date | string
   selectedBy?: Prisma.UserCreateNestedOneWithoutPlatformPresetSelectionsInput
+  selectedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutPlatformSelectionsInput
 }
 
 export type PlatformClinicalPresetSelectionUncheckedCreateWithoutPresetInput = {
   clinicalMode: $Enums.ClinicalMode
   selectedById?: string | null
+  selectedByTechnicalPrincipalId?: string | null
   selectedAt?: Date | string
   updatedAt?: Date | string
 }
@@ -497,6 +610,7 @@ export type PlatformClinicalPresetSelectionUpdateManyWithWhereWithoutPresetInput
 export type PlatformClinicalPresetSelectionCreateManySelectedByInput = {
   clinicalMode: $Enums.ClinicalMode
   presetId: string
+  selectedByTechnicalPrincipalId?: string | null
   selectedAt?: Date | string
   updatedAt?: Date | string
 }
@@ -506,11 +620,13 @@ export type PlatformClinicalPresetSelectionUpdateWithoutSelectedByInput = {
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   preset?: Prisma.ClinicalPresetUpdateOneRequiredWithoutPlatformSelectionsNestedInput
+  selectedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutPlatformSelectionsNestedInput
 }
 
 export type PlatformClinicalPresetSelectionUncheckedUpdateWithoutSelectedByInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   presetId?: Prisma.StringFieldUpdateOperationsInput | string
+  selectedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -518,6 +634,39 @@ export type PlatformClinicalPresetSelectionUncheckedUpdateWithoutSelectedByInput
 export type PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   presetId?: Prisma.StringFieldUpdateOperationsInput | string
+  selectedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type PlatformClinicalPresetSelectionCreateManySelectedByTechnicalPrincipalInput = {
+  clinicalMode: $Enums.ClinicalMode
+  presetId: string
+  selectedById?: string | null
+  selectedAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type PlatformClinicalPresetSelectionUpdateWithoutSelectedByTechnicalPrincipalInput = {
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  preset?: Prisma.ClinicalPresetUpdateOneRequiredWithoutPlatformSelectionsNestedInput
+  selectedBy?: Prisma.UserUpdateOneWithoutPlatformPresetSelectionsNestedInput
+}
+
+export type PlatformClinicalPresetSelectionUncheckedUpdateWithoutSelectedByTechnicalPrincipalInput = {
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  presetId?: Prisma.StringFieldUpdateOperationsInput | string
+  selectedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByTechnicalPrincipalInput = {
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  presetId?: Prisma.StringFieldUpdateOperationsInput | string
+  selectedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -525,6 +674,7 @@ export type PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByI
 export type PlatformClinicalPresetSelectionCreateManyPresetInput = {
   clinicalMode: $Enums.ClinicalMode
   selectedById?: string | null
+  selectedByTechnicalPrincipalId?: string | null
   selectedAt?: Date | string
   updatedAt?: Date | string
 }
@@ -534,11 +684,13 @@ export type PlatformClinicalPresetSelectionUpdateWithoutPresetInput = {
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   selectedBy?: Prisma.UserUpdateOneWithoutPlatformPresetSelectionsNestedInput
+  selectedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutPlatformSelectionsNestedInput
 }
 
 export type PlatformClinicalPresetSelectionUncheckedUpdateWithoutPresetInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   selectedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -546,6 +698,7 @@ export type PlatformClinicalPresetSelectionUncheckedUpdateWithoutPresetInput = {
 export type PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutPresetInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   selectedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  selectedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -556,52 +709,62 @@ export type PlatformClinicalPresetSelectionSelect<ExtArgs extends runtime.Types.
   clinicalMode?: boolean
   presetId?: boolean
   selectedById?: boolean
+  selectedByTechnicalPrincipalId?: boolean
   selectedAt?: boolean
   updatedAt?: boolean
   preset?: boolean | Prisma.ClinicalPresetDefaultArgs<ExtArgs>
   selectedBy?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs>
+  selectedByTechnicalPrincipal?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs>
 }, ExtArgs["result"]["platformClinicalPresetSelection"]>
 
 export type PlatformClinicalPresetSelectionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   clinicalMode?: boolean
   presetId?: boolean
   selectedById?: boolean
+  selectedByTechnicalPrincipalId?: boolean
   selectedAt?: boolean
   updatedAt?: boolean
   preset?: boolean | Prisma.ClinicalPresetDefaultArgs<ExtArgs>
   selectedBy?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs>
+  selectedByTechnicalPrincipal?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs>
 }, ExtArgs["result"]["platformClinicalPresetSelection"]>
 
 export type PlatformClinicalPresetSelectionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   clinicalMode?: boolean
   presetId?: boolean
   selectedById?: boolean
+  selectedByTechnicalPrincipalId?: boolean
   selectedAt?: boolean
   updatedAt?: boolean
   preset?: boolean | Prisma.ClinicalPresetDefaultArgs<ExtArgs>
   selectedBy?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs>
+  selectedByTechnicalPrincipal?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs>
 }, ExtArgs["result"]["platformClinicalPresetSelection"]>
 
 export type PlatformClinicalPresetSelectionSelectScalar = {
   clinicalMode?: boolean
   presetId?: boolean
   selectedById?: boolean
+  selectedByTechnicalPrincipalId?: boolean
   selectedAt?: boolean
   updatedAt?: boolean
 }
 
-export type PlatformClinicalPresetSelectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"clinicalMode" | "presetId" | "selectedById" | "selectedAt" | "updatedAt", ExtArgs["result"]["platformClinicalPresetSelection"]>
+export type PlatformClinicalPresetSelectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"clinicalMode" | "presetId" | "selectedById" | "selectedByTechnicalPrincipalId" | "selectedAt" | "updatedAt", ExtArgs["result"]["platformClinicalPresetSelection"]>
 export type PlatformClinicalPresetSelectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   preset?: boolean | Prisma.ClinicalPresetDefaultArgs<ExtArgs>
   selectedBy?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs>
+  selectedByTechnicalPrincipal?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs>
 }
 export type PlatformClinicalPresetSelectionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   preset?: boolean | Prisma.ClinicalPresetDefaultArgs<ExtArgs>
   selectedBy?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs>
+  selectedByTechnicalPrincipal?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs>
 }
 export type PlatformClinicalPresetSelectionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   preset?: boolean | Prisma.ClinicalPresetDefaultArgs<ExtArgs>
   selectedBy?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs>
+  selectedByTechnicalPrincipal?: boolean | Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs>
 }
 
 export type $PlatformClinicalPresetSelectionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -609,11 +772,13 @@ export type $PlatformClinicalPresetSelectionPayload<ExtArgs extends runtime.Type
   objects: {
     preset: Prisma.$ClinicalPresetPayload<ExtArgs>
     selectedBy: Prisma.$UserPayload<ExtArgs> | null
+    selectedByTechnicalPrincipal: Prisma.$TechnicalPrincipalPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     clinicalMode: $Enums.ClinicalMode
     presetId: string
     selectedById: string | null
+    selectedByTechnicalPrincipalId: string | null
     selectedAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["platformClinicalPresetSelection"]>
@@ -1012,6 +1177,7 @@ export interface Prisma__PlatformClinicalPresetSelectionClient<T, Null = never, 
   readonly [Symbol.toStringTag]: "PrismaPromise"
   preset<T extends Prisma.ClinicalPresetDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPresetDefaultArgs<ExtArgs>>): Prisma.Prisma__ClinicalPresetClient<runtime.Types.Result.GetResult<Prisma.$ClinicalPresetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   selectedBy<T extends Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PlatformClinicalPresetSelection$selectedByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  selectedByTechnicalPrincipal<T extends Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs>>): Prisma.Prisma__TechnicalPrincipalClient<runtime.Types.Result.GetResult<Prisma.$TechnicalPrincipalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1044,6 +1210,7 @@ export interface PlatformClinicalPresetSelectionFieldRefs {
   readonly clinicalMode: Prisma.FieldRef<"PlatformClinicalPresetSelection", 'ClinicalMode'>
   readonly presetId: Prisma.FieldRef<"PlatformClinicalPresetSelection", 'String'>
   readonly selectedById: Prisma.FieldRef<"PlatformClinicalPresetSelection", 'String'>
+  readonly selectedByTechnicalPrincipalId: Prisma.FieldRef<"PlatformClinicalPresetSelection", 'String'>
   readonly selectedAt: Prisma.FieldRef<"PlatformClinicalPresetSelection", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"PlatformClinicalPresetSelection", 'DateTime'>
 }
@@ -1463,6 +1630,25 @@ export type PlatformClinicalPresetSelection$selectedByArgs<ExtArgs extends runti
    */
   include?: Prisma.UserInclude<ExtArgs> | null
   where?: Prisma.UserWhereInput
+}
+
+/**
+ * PlatformClinicalPresetSelection.selectedByTechnicalPrincipal
+ */
+export type PlatformClinicalPresetSelection$selectedByTechnicalPrincipalArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TechnicalPrincipal
+   */
+  select?: Prisma.TechnicalPrincipalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TechnicalPrincipal
+   */
+  omit?: Prisma.TechnicalPrincipalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TechnicalPrincipalInclude<ExtArgs> | null
+  where?: Prisma.TechnicalPrincipalWhereInput
 }
 
 /**

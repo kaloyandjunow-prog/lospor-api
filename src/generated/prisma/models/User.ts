@@ -20,63 +20,94 @@ export type UserModel = runtime.Types.Result.DefaultSelection<Prisma.$UserPayloa
 
 export type AggregateUser = {
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
+}
+
+export type UserAvgAggregateOutputType = {
+  mfaLastTotpStep: number | null
+}
+
+export type UserSumAggregateOutputType = {
+  mfaLastTotpStep: number | null
 }
 
 export type UserMinAggregateOutputType = {
   id: string | null
   email: string | null
+  username: string | null
+  usernameCanonical: string | null
   name: string | null
   firstName: string | null
   lastName: string | null
   title: string | null
   passwordHash: string | null
   role: $Enums.UserRole | null
+  accountKind: $Enums.AccountKind | null
   institutionId: string | null
-  approvedAt: Date | null
+  activatedAt: Date | null
   emailVerifiedAt: Date | null
   acceptedTermsAt: Date | null
   acceptedPrivacyAt: Date | null
   termsVersion: string | null
   lastLoginAt: Date | null
   passwordChangedAt: Date | null
+  mfaTotpSecretCiphertext: string | null
+  mfaEnabledAt: Date | null
+  mfaLastTotpStep: number | null
+  suspendedAt: Date | null
+  recoveryRequiredAt: Date | null
   deletedAt: Date | null
+  anonymizedAt: Date | null
   createdAt: Date | null
 }
 
 export type UserMaxAggregateOutputType = {
   id: string | null
   email: string | null
+  username: string | null
+  usernameCanonical: string | null
   name: string | null
   firstName: string | null
   lastName: string | null
   title: string | null
   passwordHash: string | null
   role: $Enums.UserRole | null
+  accountKind: $Enums.AccountKind | null
   institutionId: string | null
-  approvedAt: Date | null
+  activatedAt: Date | null
   emailVerifiedAt: Date | null
   acceptedTermsAt: Date | null
   acceptedPrivacyAt: Date | null
   termsVersion: string | null
   lastLoginAt: Date | null
   passwordChangedAt: Date | null
+  mfaTotpSecretCiphertext: string | null
+  mfaEnabledAt: Date | null
+  mfaLastTotpStep: number | null
+  suspendedAt: Date | null
+  recoveryRequiredAt: Date | null
   deletedAt: Date | null
+  anonymizedAt: Date | null
   createdAt: Date | null
 }
 
 export type UserCountAggregateOutputType = {
   id: number
   email: number
+  username: number
+  usernameCanonical: number
   name: number
   firstName: number
   lastName: number
   title: number
   passwordHash: number
   role: number
+  accountKind: number
   institutionId: number
-  approvedAt: number
+  activatedAt: number
   emailVerifiedAt: number
   acceptedTermsAt: number
   acceptedPrivacyAt: number
@@ -84,65 +115,100 @@ export type UserCountAggregateOutputType = {
   preferences: number
   lastLoginAt: number
   passwordChangedAt: number
+  mfaTotpSecretCiphertext: number
+  mfaEnabledAt: number
+  mfaLastTotpStep: number
+  suspendedAt: number
+  recoveryRequiredAt: number
   deletedAt: number
+  anonymizedAt: number
   createdAt: number
   _all: number
 }
 
 
+export type UserAvgAggregateInputType = {
+  mfaLastTotpStep?: true
+}
+
+export type UserSumAggregateInputType = {
+  mfaLastTotpStep?: true
+}
+
 export type UserMinAggregateInputType = {
   id?: true
   email?: true
+  username?: true
+  usernameCanonical?: true
   name?: true
   firstName?: true
   lastName?: true
   title?: true
   passwordHash?: true
   role?: true
+  accountKind?: true
   institutionId?: true
-  approvedAt?: true
+  activatedAt?: true
   emailVerifiedAt?: true
   acceptedTermsAt?: true
   acceptedPrivacyAt?: true
   termsVersion?: true
   lastLoginAt?: true
   passwordChangedAt?: true
+  mfaTotpSecretCiphertext?: true
+  mfaEnabledAt?: true
+  mfaLastTotpStep?: true
+  suspendedAt?: true
+  recoveryRequiredAt?: true
   deletedAt?: true
+  anonymizedAt?: true
   createdAt?: true
 }
 
 export type UserMaxAggregateInputType = {
   id?: true
   email?: true
+  username?: true
+  usernameCanonical?: true
   name?: true
   firstName?: true
   lastName?: true
   title?: true
   passwordHash?: true
   role?: true
+  accountKind?: true
   institutionId?: true
-  approvedAt?: true
+  activatedAt?: true
   emailVerifiedAt?: true
   acceptedTermsAt?: true
   acceptedPrivacyAt?: true
   termsVersion?: true
   lastLoginAt?: true
   passwordChangedAt?: true
+  mfaTotpSecretCiphertext?: true
+  mfaEnabledAt?: true
+  mfaLastTotpStep?: true
+  suspendedAt?: true
+  recoveryRequiredAt?: true
   deletedAt?: true
+  anonymizedAt?: true
   createdAt?: true
 }
 
 export type UserCountAggregateInputType = {
   id?: true
   email?: true
+  username?: true
+  usernameCanonical?: true
   name?: true
   firstName?: true
   lastName?: true
   title?: true
   passwordHash?: true
   role?: true
+  accountKind?: true
   institutionId?: true
-  approvedAt?: true
+  activatedAt?: true
   emailVerifiedAt?: true
   acceptedTermsAt?: true
   acceptedPrivacyAt?: true
@@ -150,7 +216,13 @@ export type UserCountAggregateInputType = {
   preferences?: true
   lastLoginAt?: true
   passwordChangedAt?: true
+  mfaTotpSecretCiphertext?: true
+  mfaEnabledAt?: true
+  mfaLastTotpStep?: true
+  suspendedAt?: true
+  recoveryRequiredAt?: true
   deletedAt?: true
+  anonymizedAt?: true
   createdAt?: true
   _all?: true
 }
@@ -162,13 +234,13 @@ export type UserAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   where?: Prisma.UserWhereInput
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-   * 
+   *
    * Determine the order of Users to fetch.
    */
   orderBy?: Prisma.UserOrderByWithRelationInput | Prisma.UserOrderByWithRelationInput[]
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-   * 
+   *
    * Sets the start position
    */
   cursor?: Prisma.UserWhereUniqueInput
@@ -193,6 +265,18 @@ export type UserAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: UserAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   *
+   * Select which fields to sum
+  **/
+  _sum?: UserSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   *
    * Select which fields to find the minimum value
   **/
   _min?: UserMinAggregateInputType
@@ -223,21 +307,26 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   _count?: UserCountAggregateInputType | true
+  _avg?: UserAvgAggregateInputType
+  _sum?: UserSumAggregateInputType
   _min?: UserMinAggregateInputType
   _max?: UserMaxAggregateInputType
 }
 
 export type UserGroupByOutputType = {
   id: string
-  email: string
+  email: string | null
+  username: string | null
+  usernameCanonical: string | null
   name: string
   firstName: string
   lastName: string
   title: string
   passwordHash: string
   role: $Enums.UserRole
+  accountKind: $Enums.AccountKind
   institutionId: string | null
-  approvedAt: Date | null
+  activatedAt: Date | null
   emailVerifiedAt: Date | null
   acceptedTermsAt: Date | null
   acceptedPrivacyAt: Date | null
@@ -245,9 +334,17 @@ export type UserGroupByOutputType = {
   preferences: runtime.JsonValue
   lastLoginAt: Date | null
   passwordChangedAt: Date | null
+  mfaTotpSecretCiphertext: string | null
+  mfaEnabledAt: Date | null
+  mfaLastTotpStep: number | null
+  suspendedAt: Date | null
+  recoveryRequiredAt: Date | null
   deletedAt: Date | null
+  anonymizedAt: Date | null
   createdAt: Date
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
 }
@@ -272,15 +369,18 @@ export type UserWhereInput = {
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   id?: Prisma.StringFilter<"User"> | string
-  email?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringNullableFilter<"User"> | string | null
+  username?: Prisma.StringNullableFilter<"User"> | string | null
+  usernameCanonical?: Prisma.StringNullableFilter<"User"> | string | null
   name?: Prisma.StringFilter<"User"> | string
   firstName?: Prisma.StringFilter<"User"> | string
   lastName?: Prisma.StringFilter<"User"> | string
   title?: Prisma.StringFilter<"User"> | string
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFilter<"User"> | $Enums.AccountKind
   institutionId?: Prisma.StringNullableFilter<"User"> | string | null
-  approvedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  activatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   emailVerifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   acceptedTermsAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   acceptedPrivacyAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -288,10 +388,17 @@ export type UserWhereInput = {
   preferences?: Prisma.JsonFilter<"User">
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.StringNullableFilter<"User"> | string | null
+  mfaEnabledAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  mfaLastTotpStep?: Prisma.IntNullableFilter<"User"> | number | null
+  suspendedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  recoveryRequiredAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  anonymizedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   institution?: Prisma.XOR<Prisma.InstitutionNullableScalarRelationFilter, Prisma.InstitutionWhereInput> | null
   cases?: Prisma.CaseListRelationFilter
+  casesCreated?: Prisma.CaseListRelationFilter
   roleRequests?: Prisma.RoleRequestListRelationFilter
   institutionChangeRequests?: Prisma.InstitutionChangeRequestListRelationFilter
   transfersSent?: Prisma.CaseTransferListRelationFilter
@@ -301,9 +408,11 @@ export type UserWhereInput = {
   researchExports?: Prisma.ResearchExportListRelationFilter
   researchAccessGrants?: Prisma.ResearchAccessGrantListRelationFilter
   researchGrantsIssued?: Prisma.ResearchAccessGrantListRelationFilter
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationListRelationFilter
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewListRelationFilter
   clinicalPresetsCreated?: Prisma.ClinicalPresetListRelationFilter
   clinicalPresetsPublished?: Prisma.ClinicalPresetListRelationFilter
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceListRelationFilter
   clinicalPresetsOwned?: Prisma.ClinicalPresetListRelationFilter
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionListRelationFilter
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionListRelationFilter
@@ -312,19 +421,26 @@ export type UserWhereInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideListRelationFilter
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideListRelationFilter
   passwordResetTokens?: Prisma.PasswordResetTokenListRelationFilter
+  authSessions?: Prisma.AuthSessionListRelationFilter
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeListRelationFilter
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeListRelationFilter
+  legalAcceptances?: Prisma.LegalAcceptanceListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  email?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
+  username?: Prisma.SortOrderInput | Prisma.SortOrder
+  usernameCanonical?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   title?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  accountKind?: Prisma.SortOrder
   institutionId?: Prisma.SortOrderInput | Prisma.SortOrder
-  approvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  activatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   emailVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   acceptedTermsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   acceptedPrivacyAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -332,10 +448,17 @@ export type UserOrderByWithRelationInput = {
   preferences?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaTotpSecretCiphertext?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaEnabledAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaLastTotpStep?: Prisma.SortOrderInput | Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  recoveryRequiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  anonymizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   institution?: Prisma.InstitutionOrderByWithRelationInput
   cases?: Prisma.CaseOrderByRelationAggregateInput
+  casesCreated?: Prisma.CaseOrderByRelationAggregateInput
   roleRequests?: Prisma.RoleRequestOrderByRelationAggregateInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestOrderByRelationAggregateInput
   transfersSent?: Prisma.CaseTransferOrderByRelationAggregateInput
@@ -345,9 +468,11 @@ export type UserOrderByWithRelationInput = {
   researchExports?: Prisma.ResearchExportOrderByRelationAggregateInput
   researchAccessGrants?: Prisma.ResearchAccessGrantOrderByRelationAggregateInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantOrderByRelationAggregateInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationOrderByRelationAggregateInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewOrderByRelationAggregateInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetOrderByRelationAggregateInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetOrderByRelationAggregateInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceOrderByRelationAggregateInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetOrderByRelationAggregateInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionOrderByRelationAggregateInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionOrderByRelationAggregateInput
@@ -356,22 +481,29 @@ export type UserOrderByWithRelationInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideOrderByRelationAggregateInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideOrderByRelationAggregateInput
   passwordResetTokens?: Prisma.PasswordResetTokenOrderByRelationAggregateInput
+  authSessions?: Prisma.AuthSessionOrderByRelationAggregateInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeOrderByRelationAggregateInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeOrderByRelationAggregateInput
+  legalAcceptances?: Prisma.LegalAcceptanceOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   email?: string
+  usernameCanonical?: string
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
+  username?: Prisma.StringNullableFilter<"User"> | string | null
   name?: Prisma.StringFilter<"User"> | string
   firstName?: Prisma.StringFilter<"User"> | string
   lastName?: Prisma.StringFilter<"User"> | string
   title?: Prisma.StringFilter<"User"> | string
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFilter<"User"> | $Enums.AccountKind
   institutionId?: Prisma.StringNullableFilter<"User"> | string | null
-  approvedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  activatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   emailVerifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   acceptedTermsAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   acceptedPrivacyAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -379,10 +511,17 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   preferences?: Prisma.JsonFilter<"User">
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.StringNullableFilter<"User"> | string | null
+  mfaEnabledAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  mfaLastTotpStep?: Prisma.IntNullableFilter<"User"> | number | null
+  suspendedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  recoveryRequiredAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  anonymizedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   institution?: Prisma.XOR<Prisma.InstitutionNullableScalarRelationFilter, Prisma.InstitutionWhereInput> | null
   cases?: Prisma.CaseListRelationFilter
+  casesCreated?: Prisma.CaseListRelationFilter
   roleRequests?: Prisma.RoleRequestListRelationFilter
   institutionChangeRequests?: Prisma.InstitutionChangeRequestListRelationFilter
   transfersSent?: Prisma.CaseTransferListRelationFilter
@@ -392,9 +531,11 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   researchExports?: Prisma.ResearchExportListRelationFilter
   researchAccessGrants?: Prisma.ResearchAccessGrantListRelationFilter
   researchGrantsIssued?: Prisma.ResearchAccessGrantListRelationFilter
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationListRelationFilter
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewListRelationFilter
   clinicalPresetsCreated?: Prisma.ClinicalPresetListRelationFilter
   clinicalPresetsPublished?: Prisma.ClinicalPresetListRelationFilter
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceListRelationFilter
   clinicalPresetsOwned?: Prisma.ClinicalPresetListRelationFilter
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionListRelationFilter
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionListRelationFilter
@@ -403,19 +544,26 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideListRelationFilter
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideListRelationFilter
   passwordResetTokens?: Prisma.PasswordResetTokenListRelationFilter
-}, "id" | "email">
+  authSessions?: Prisma.AuthSessionListRelationFilter
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeListRelationFilter
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeListRelationFilter
+  legalAcceptances?: Prisma.LegalAcceptanceListRelationFilter
+}, "id" | "email" | "usernameCanonical">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  email?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
+  username?: Prisma.SortOrderInput | Prisma.SortOrder
+  usernameCanonical?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   title?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  accountKind?: Prisma.SortOrder
   institutionId?: Prisma.SortOrderInput | Prisma.SortOrder
-  approvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  activatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   emailVerifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   acceptedTermsAt?: Prisma.SortOrderInput | Prisma.SortOrder
   acceptedPrivacyAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -423,11 +571,19 @@ export type UserOrderByWithAggregationInput = {
   preferences?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaTotpSecretCiphertext?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaEnabledAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaLastTotpStep?: Prisma.SortOrderInput | Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  recoveryRequiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  anonymizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
+  _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
+  _sum?: Prisma.UserSumOrderByAggregateInput
 }
 
 export type UserScalarWhereWithAggregatesInput = {
@@ -435,15 +591,18 @@ export type UserScalarWhereWithAggregatesInput = {
   OR?: Prisma.UserScalarWhereWithAggregatesInput[]
   NOT?: Prisma.UserScalarWhereWithAggregatesInput | Prisma.UserScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"User"> | string
-  email?: Prisma.StringWithAggregatesFilter<"User"> | string
+  email?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  username?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  usernameCanonical?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   name?: Prisma.StringWithAggregatesFilter<"User"> | string
   firstName?: Prisma.StringWithAggregatesFilter<"User"> | string
   lastName?: Prisma.StringWithAggregatesFilter<"User"> | string
   title?: Prisma.StringWithAggregatesFilter<"User"> | string
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindWithAggregatesFilter<"User"> | $Enums.AccountKind
   institutionId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
-  approvedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  activatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   emailVerifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   acceptedTermsAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   acceptedPrivacyAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
@@ -451,20 +610,29 @@ export type UserScalarWhereWithAggregatesInput = {
   preferences?: Prisma.JsonWithAggregatesFilter<"User">
   lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  mfaEnabledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  mfaLastTotpStep?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  suspendedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  recoveryRequiredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  anonymizedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
 
 export type UserCreateInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -472,10 +640,17 @@ export type UserCreateInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -485,9 +660,11 @@ export type UserCreateInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -496,19 +673,26 @@ export type UserCreateInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -516,9 +700,16 @@ export type UserUncheckedCreateInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -528,9 +719,11 @@ export type UserUncheckedCreateInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -539,18 +732,25 @@ export type UserUncheckedCreateInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -558,10 +758,17 @@ export type UserUpdateInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -571,9 +778,11 @@ export type UserUpdateInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -582,19 +791,26 @@ export type UserUpdateInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -602,9 +818,16 @@ export type UserUncheckedUpdateInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -614,9 +837,11 @@ export type UserUncheckedUpdateInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -625,19 +850,26 @@ export type UserUncheckedUpdateInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -645,20 +877,29 @@ export type UserCreateManyInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type UserUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -666,21 +907,30 @@ export type UserUpdateManyMutationInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type UserUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -688,21 +938,30 @@ export type UserUncheckedUpdateManyInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type UserCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  username?: Prisma.SortOrder
+  usernameCanonical?: Prisma.SortOrder
   name?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   title?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  accountKind?: Prisma.SortOrder
   institutionId?: Prisma.SortOrder
-  approvedAt?: Prisma.SortOrder
+  activatedAt?: Prisma.SortOrder
   emailVerifiedAt?: Prisma.SortOrder
   acceptedTermsAt?: Prisma.SortOrder
   acceptedPrivacyAt?: Prisma.SortOrder
@@ -710,50 +969,82 @@ export type UserCountOrderByAggregateInput = {
   preferences?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrder
+  mfaTotpSecretCiphertext?: Prisma.SortOrder
+  mfaEnabledAt?: Prisma.SortOrder
+  mfaLastTotpStep?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrder
+  recoveryRequiredAt?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
+  anonymizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type UserAvgOrderByAggregateInput = {
+  mfaLastTotpStep?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  username?: Prisma.SortOrder
+  usernameCanonical?: Prisma.SortOrder
   name?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   title?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  accountKind?: Prisma.SortOrder
   institutionId?: Prisma.SortOrder
-  approvedAt?: Prisma.SortOrder
+  activatedAt?: Prisma.SortOrder
   emailVerifiedAt?: Prisma.SortOrder
   acceptedTermsAt?: Prisma.SortOrder
   acceptedPrivacyAt?: Prisma.SortOrder
   termsVersion?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrder
+  mfaTotpSecretCiphertext?: Prisma.SortOrder
+  mfaEnabledAt?: Prisma.SortOrder
+  mfaLastTotpStep?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrder
+  recoveryRequiredAt?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
+  anonymizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
+  username?: Prisma.SortOrder
+  usernameCanonical?: Prisma.SortOrder
   name?: Prisma.SortOrder
   firstName?: Prisma.SortOrder
   lastName?: Prisma.SortOrder
   title?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  accountKind?: Prisma.SortOrder
   institutionId?: Prisma.SortOrder
-  approvedAt?: Prisma.SortOrder
+  activatedAt?: Prisma.SortOrder
   emailVerifiedAt?: Prisma.SortOrder
   acceptedTermsAt?: Prisma.SortOrder
   acceptedPrivacyAt?: Prisma.SortOrder
   termsVersion?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrder
+  mfaTotpSecretCiphertext?: Prisma.SortOrder
+  mfaEnabledAt?: Prisma.SortOrder
+  mfaLastTotpStep?: Prisma.SortOrder
+  suspendedAt?: Prisma.SortOrder
+  recoveryRequiredAt?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
+  anonymizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+}
+
+export type UserSumOrderByAggregateInput = {
+  mfaLastTotpStep?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -780,16 +1071,28 @@ export type StringFieldUpdateOperationsInput = {
   set?: string
 }
 
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
 export type EnumUserRoleFieldUpdateOperationsInput = {
   set?: $Enums.UserRole
+}
+
+export type EnumAccountKindFieldUpdateOperationsInput = {
+  set?: $Enums.AccountKind
 }
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -822,6 +1125,62 @@ export type UserUpdateOneRequiredWithoutPasswordResetTokensNestedInput = {
   upsert?: Prisma.UserUpsertWithoutPasswordResetTokensInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPasswordResetTokensInput, Prisma.UserUpdateWithoutPasswordResetTokensInput>, Prisma.UserUncheckedUpdateWithoutPasswordResetTokensInput>
+}
+
+export type UserCreateNestedOneWithoutAuthSessionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuthSessionsInput, Prisma.UserUncheckedCreateWithoutAuthSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuthSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAuthSessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuthSessionsInput, Prisma.UserUncheckedCreateWithoutAuthSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuthSessionsInput
+  upsert?: Prisma.UserUpsertWithoutAuthSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAuthSessionsInput, Prisma.UserUpdateWithoutAuthSessionsInput>, Prisma.UserUncheckedUpdateWithoutAuthSessionsInput>
+}
+
+export type UserCreateNestedOneWithoutMfaLoginChallengesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMfaLoginChallengesInput, Prisma.UserUncheckedCreateWithoutMfaLoginChallengesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMfaLoginChallengesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMfaLoginChallengesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMfaLoginChallengesInput, Prisma.UserUncheckedCreateWithoutMfaLoginChallengesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMfaLoginChallengesInput
+  upsert?: Prisma.UserUpsertWithoutMfaLoginChallengesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMfaLoginChallengesInput, Prisma.UserUpdateWithoutMfaLoginChallengesInput>, Prisma.UserUncheckedUpdateWithoutMfaLoginChallengesInput>
+}
+
+export type UserCreateNestedOneWithoutMfaRecoveryCodesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMfaRecoveryCodesInput, Prisma.UserUncheckedCreateWithoutMfaRecoveryCodesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMfaRecoveryCodesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMfaRecoveryCodesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMfaRecoveryCodesInput, Prisma.UserUncheckedCreateWithoutMfaRecoveryCodesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMfaRecoveryCodesInput
+  upsert?: Prisma.UserUpsertWithoutMfaRecoveryCodesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMfaRecoveryCodesInput, Prisma.UserUpdateWithoutMfaRecoveryCodesInput>, Prisma.UserUncheckedUpdateWithoutMfaRecoveryCodesInput>
+}
+
+export type UserCreateNestedOneWithoutLegalAcceptancesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLegalAcceptancesInput, Prisma.UserUncheckedCreateWithoutLegalAcceptancesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLegalAcceptancesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutLegalAcceptancesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLegalAcceptancesInput, Prisma.UserUncheckedCreateWithoutLegalAcceptancesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLegalAcceptancesInput
+  upsert?: Prisma.UserUpsertWithoutLegalAcceptancesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLegalAcceptancesInput, Prisma.UserUpdateWithoutLegalAcceptancesInput>, Prisma.UserUncheckedUpdateWithoutLegalAcceptancesInput>
 }
 
 export type UserCreateNestedManyWithoutInstitutionInput = {
@@ -872,12 +1231,26 @@ export type UserCreateNestedOneWithoutCasesInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
+export type UserCreateNestedOneWithoutCasesCreatedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCasesCreatedInput, Prisma.UserUncheckedCreateWithoutCasesCreatedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCasesCreatedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
 export type UserUpdateOneRequiredWithoutCasesNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCasesInput, Prisma.UserUncheckedCreateWithoutCasesInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCasesInput
   upsert?: Prisma.UserUpsertWithoutCasesInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCasesInput, Prisma.UserUpdateWithoutCasesInput>, Prisma.UserUncheckedUpdateWithoutCasesInput>
+}
+
+export type UserUpdateOneRequiredWithoutCasesCreatedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCasesCreatedInput, Prisma.UserUncheckedCreateWithoutCasesCreatedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCasesCreatedInput
+  upsert?: Prisma.UserUpsertWithoutCasesCreatedInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCasesCreatedInput, Prisma.UserUpdateWithoutCasesCreatedInput>, Prisma.UserUncheckedUpdateWithoutCasesCreatedInput>
 }
 
 export type UserCreateNestedOneWithoutTransfersSentInput = {
@@ -998,6 +1371,22 @@ export type UserUpdateOneWithoutClinicalPresetsPublishedNestedInput = {
   delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutClinicalPresetsPublishedInput, Prisma.UserUpdateWithoutClinicalPresetsPublishedInput>, Prisma.UserUncheckedUpdateWithoutClinicalPresetsPublishedInput>
+}
+
+export type UserCreateNestedOneWithoutClinicalPublicationsConfirmedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutClinicalPublicationsConfirmedInput, Prisma.UserUncheckedCreateWithoutClinicalPublicationsConfirmedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutClinicalPublicationsConfirmedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutClinicalPublicationsConfirmedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutClinicalPublicationsConfirmedInput, Prisma.UserUncheckedCreateWithoutClinicalPublicationsConfirmedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutClinicalPublicationsConfirmedInput
+  upsert?: Prisma.UserUpsertWithoutClinicalPublicationsConfirmedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutClinicalPublicationsConfirmedInput, Prisma.UserUpdateWithoutClinicalPublicationsConfirmedInput>, Prisma.UserUncheckedUpdateWithoutClinicalPublicationsConfirmedInput>
 }
 
 export type UserCreateNestedOneWithoutPlatformPresetSelectionsInput = {
@@ -1122,6 +1511,20 @@ export type UserUpdateOneRequiredWithoutResearchGrantsIssuedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutResearchGrantsIssuedInput, Prisma.UserUpdateWithoutResearchGrantsIssuedInput>, Prisma.UserUncheckedUpdateWithoutResearchGrantsIssuedInput>
 }
 
+export type UserCreateNestedOneWithoutResearchSelfAuthorizationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutResearchSelfAuthorizationsInput, Prisma.UserUncheckedCreateWithoutResearchSelfAuthorizationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutResearchSelfAuthorizationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutResearchSelfAuthorizationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutResearchSelfAuthorizationsInput, Prisma.UserUncheckedCreateWithoutResearchSelfAuthorizationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutResearchSelfAuthorizationsInput
+  upsert?: Prisma.UserUpsertWithoutResearchSelfAuthorizationsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutResearchSelfAuthorizationsInput, Prisma.UserUpdateWithoutResearchSelfAuthorizationsInput>, Prisma.UserUncheckedUpdateWithoutResearchSelfAuthorizationsInput>
+}
+
 export type UserCreateNestedOneWithoutResearchCohortsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutResearchCohortsInput, Prisma.UserUncheckedCreateWithoutResearchCohortsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutResearchCohortsInput
@@ -1152,14 +1555,17 @@ export type UserUpdateOneRequiredWithoutResearchExportsNestedInput = {
 
 export type UserCreateWithoutEmailVerificationTokensInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1167,10 +1573,17 @@ export type UserCreateWithoutEmailVerificationTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -1179,9 +1592,11 @@ export type UserCreateWithoutEmailVerificationTokensInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -1190,19 +1605,26 @@ export type UserCreateWithoutEmailVerificationTokensInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutEmailVerificationTokensInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1210,9 +1632,16 @@ export type UserUncheckedCreateWithoutEmailVerificationTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -1221,9 +1650,11 @@ export type UserUncheckedCreateWithoutEmailVerificationTokensInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -1232,6 +1663,10 @@ export type UserUncheckedCreateWithoutEmailVerificationTokensInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutEmailVerificationTokensInput = {
@@ -1252,14 +1687,17 @@ export type UserUpdateToOneWithWhereWithoutEmailVerificationTokensInput = {
 
 export type UserUpdateWithoutEmailVerificationTokensInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1267,10 +1705,17 @@ export type UserUpdateWithoutEmailVerificationTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -1279,9 +1724,11 @@ export type UserUpdateWithoutEmailVerificationTokensInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -1290,19 +1737,26 @@ export type UserUpdateWithoutEmailVerificationTokensInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEmailVerificationTokensInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1310,9 +1764,16 @@ export type UserUncheckedUpdateWithoutEmailVerificationTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -1321,9 +1782,11 @@ export type UserUncheckedUpdateWithoutEmailVerificationTokensInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -1332,18 +1795,25 @@ export type UserUncheckedUpdateWithoutEmailVerificationTokensInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPasswordResetTokensInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1351,10 +1821,17 @@ export type UserCreateWithoutPasswordResetTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -1364,9 +1841,11 @@ export type UserCreateWithoutPasswordResetTokensInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -1374,19 +1853,26 @@ export type UserCreateWithoutPasswordResetTokensInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1394,9 +1880,16 @@ export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -1406,9 +1899,11 @@ export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -1416,6 +1911,10 @@ export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPasswordResetTokensInput = {
@@ -1436,14 +1935,17 @@ export type UserUpdateToOneWithWhereWithoutPasswordResetTokensInput = {
 
 export type UserUpdateWithoutPasswordResetTokensInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1451,10 +1953,17 @@ export type UserUpdateWithoutPasswordResetTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -1464,9 +1973,11 @@ export type UserUpdateWithoutPasswordResetTokensInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -1474,19 +1985,26 @@ export type UserUpdateWithoutPasswordResetTokensInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1494,9 +2012,16 @@ export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -1506,9 +2031,11 @@ export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -1516,18 +2043,25 @@ export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
-export type UserCreateWithoutInstitutionInput = {
+export type UserCreateWithoutAuthSessionsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1535,9 +2069,17 @@ export type UserCreateWithoutInstitutionInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -1547,9 +2089,11 @@ export type UserCreateWithoutInstitutionInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -1558,18 +2102,25 @@ export type UserCreateWithoutInstitutionInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
-export type UserUncheckedCreateWithoutInstitutionInput = {
+export type UserUncheckedCreateWithoutAuthSessionsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1577,9 +2128,16 @@ export type UserUncheckedCreateWithoutInstitutionInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -1589,9 +2147,11 @@ export type UserUncheckedCreateWithoutInstitutionInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -1600,6 +2160,1001 @@ export type UserUncheckedCreateWithoutInstitutionInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAuthSessionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuthSessionsInput, Prisma.UserUncheckedCreateWithoutAuthSessionsInput>
+}
+
+export type UserUpsertWithoutAuthSessionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAuthSessionsInput, Prisma.UserUncheckedUpdateWithoutAuthSessionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuthSessionsInput, Prisma.UserUncheckedCreateWithoutAuthSessionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAuthSessionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAuthSessionsInput, Prisma.UserUncheckedUpdateWithoutAuthSessionsInput>
+}
+
+export type UserUpdateWithoutAuthSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAuthSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutMfaLoginChallengesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMfaLoginChallengesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMfaLoginChallengesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMfaLoginChallengesInput, Prisma.UserUncheckedCreateWithoutMfaLoginChallengesInput>
+}
+
+export type UserUpsertWithoutMfaLoginChallengesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMfaLoginChallengesInput, Prisma.UserUncheckedUpdateWithoutMfaLoginChallengesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMfaLoginChallengesInput, Prisma.UserUncheckedCreateWithoutMfaLoginChallengesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMfaLoginChallengesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMfaLoginChallengesInput, Prisma.UserUncheckedUpdateWithoutMfaLoginChallengesInput>
+}
+
+export type UserUpdateWithoutMfaLoginChallengesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMfaLoginChallengesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutMfaRecoveryCodesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMfaRecoveryCodesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMfaRecoveryCodesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMfaRecoveryCodesInput, Prisma.UserUncheckedCreateWithoutMfaRecoveryCodesInput>
+}
+
+export type UserUpsertWithoutMfaRecoveryCodesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMfaRecoveryCodesInput, Prisma.UserUncheckedUpdateWithoutMfaRecoveryCodesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMfaRecoveryCodesInput, Prisma.UserUncheckedCreateWithoutMfaRecoveryCodesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMfaRecoveryCodesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMfaRecoveryCodesInput, Prisma.UserUncheckedUpdateWithoutMfaRecoveryCodesInput>
+}
+
+export type UserUpdateWithoutMfaRecoveryCodesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMfaRecoveryCodesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutLegalAcceptancesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutLegalAcceptancesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutLegalAcceptancesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutLegalAcceptancesInput, Prisma.UserUncheckedCreateWithoutLegalAcceptancesInput>
+}
+
+export type UserUpsertWithoutLegalAcceptancesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutLegalAcceptancesInput, Prisma.UserUncheckedUpdateWithoutLegalAcceptancesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutLegalAcceptancesInput, Prisma.UserUncheckedCreateWithoutLegalAcceptancesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutLegalAcceptancesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutLegalAcceptancesInput, Prisma.UserUncheckedUpdateWithoutLegalAcceptancesInput>
+}
+
+export type UserUpdateWithoutLegalAcceptancesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutLegalAcceptancesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutInstitutionInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutInstitutionInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInstitutionInput = {
@@ -1633,15 +3188,18 @@ export type UserScalarWhereInput = {
   OR?: Prisma.UserScalarWhereInput[]
   NOT?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
   id?: Prisma.StringFilter<"User"> | string
-  email?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringNullableFilter<"User"> | string | null
+  username?: Prisma.StringNullableFilter<"User"> | string | null
+  usernameCanonical?: Prisma.StringNullableFilter<"User"> | string | null
   name?: Prisma.StringFilter<"User"> | string
   firstName?: Prisma.StringFilter<"User"> | string
   lastName?: Prisma.StringFilter<"User"> | string
   title?: Prisma.StringFilter<"User"> | string
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFilter<"User"> | $Enums.AccountKind
   institutionId?: Prisma.StringNullableFilter<"User"> | string | null
-  approvedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  activatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   emailVerifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   acceptedTermsAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   acceptedPrivacyAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -1649,20 +3207,29 @@ export type UserScalarWhereInput = {
   preferences?: Prisma.JsonFilter<"User">
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.StringNullableFilter<"User"> | string | null
+  mfaEnabledAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  mfaLastTotpStep?: Prisma.IntNullableFilter<"User"> | number | null
+  suspendedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  recoveryRequiredAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  anonymizedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
 }
 
 export type UserCreateWithoutCasesInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1670,9 +3237,16 @@ export type UserCreateWithoutCasesInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -1682,9 +3256,11 @@ export type UserCreateWithoutCasesInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -1693,19 +3269,26 @@ export type UserCreateWithoutCasesInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCasesInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1713,8 +3296,15 @@ export type UserUncheckedCreateWithoutCasesInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -1724,9 +3314,11 @@ export type UserUncheckedCreateWithoutCasesInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -1735,11 +3327,136 @@ export type UserUncheckedCreateWithoutCasesInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCasesInput = {
   where: Prisma.UserWhereUniqueInput
   create: Prisma.XOR<Prisma.UserCreateWithoutCasesInput, Prisma.UserUncheckedCreateWithoutCasesInput>
+}
+
+export type UserCreateWithoutCasesCreatedInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCasesCreatedInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCasesCreatedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCasesCreatedInput, Prisma.UserUncheckedCreateWithoutCasesCreatedInput>
 }
 
 export type UserUpsertWithoutCasesInput = {
@@ -1755,14 +3472,17 @@ export type UserUpdateToOneWithWhereWithoutCasesInput = {
 
 export type UserUpdateWithoutCasesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1770,9 +3490,16 @@ export type UserUpdateWithoutCasesInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -1782,9 +3509,11 @@ export type UserUpdateWithoutCasesInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -1793,19 +3522,26 @@ export type UserUpdateWithoutCasesInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCasesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1813,8 +3549,15 @@ export type UserUncheckedUpdateWithoutCasesInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -1824,9 +3567,11 @@ export type UserUncheckedUpdateWithoutCasesInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -1835,18 +3580,152 @@ export type UserUncheckedUpdateWithoutCasesInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserUpsertWithoutCasesCreatedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCasesCreatedInput, Prisma.UserUncheckedUpdateWithoutCasesCreatedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCasesCreatedInput, Prisma.UserUncheckedCreateWithoutCasesCreatedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCasesCreatedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCasesCreatedInput, Prisma.UserUncheckedUpdateWithoutCasesCreatedInput>
+}
+
+export type UserUpdateWithoutCasesCreatedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCasesCreatedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTransfersSentInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1854,10 +3733,17 @@ export type UserCreateWithoutTransfersSentInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
@@ -1866,9 +3752,11 @@ export type UserCreateWithoutTransfersSentInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -1877,19 +3765,26 @@ export type UserCreateWithoutTransfersSentInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTransfersSentInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1897,9 +3792,16 @@ export type UserUncheckedCreateWithoutTransfersSentInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
@@ -1908,9 +3810,11 @@ export type UserUncheckedCreateWithoutTransfersSentInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -1919,6 +3823,10 @@ export type UserUncheckedCreateWithoutTransfersSentInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTransfersSentInput = {
@@ -1928,14 +3836,17 @@ export type UserCreateOrConnectWithoutTransfersSentInput = {
 
 export type UserCreateWithoutTransfersReceivedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1943,10 +3854,17 @@ export type UserCreateWithoutTransfersReceivedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -1955,9 +3873,11 @@ export type UserCreateWithoutTransfersReceivedInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -1966,19 +3886,26 @@ export type UserCreateWithoutTransfersReceivedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTransfersReceivedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -1986,9 +3913,16 @@ export type UserUncheckedCreateWithoutTransfersReceivedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -1997,9 +3931,11 @@ export type UserUncheckedCreateWithoutTransfersReceivedInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -2008,6 +3944,10 @@ export type UserUncheckedCreateWithoutTransfersReceivedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTransfersReceivedInput = {
@@ -2028,14 +3968,17 @@ export type UserUpdateToOneWithWhereWithoutTransfersSentInput = {
 
 export type UserUpdateWithoutTransfersSentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2043,10 +3986,17 @@ export type UserUpdateWithoutTransfersSentInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
@@ -2055,9 +4005,11 @@ export type UserUpdateWithoutTransfersSentInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -2066,19 +4018,26 @@ export type UserUpdateWithoutTransfersSentInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransfersSentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2086,9 +4045,16 @@ export type UserUncheckedUpdateWithoutTransfersSentInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
@@ -2097,9 +4063,11 @@ export type UserUncheckedUpdateWithoutTransfersSentInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -2108,6 +4076,10 @@ export type UserUncheckedUpdateWithoutTransfersSentInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutTransfersReceivedInput = {
@@ -2123,14 +4095,17 @@ export type UserUpdateToOneWithWhereWithoutTransfersReceivedInput = {
 
 export type UserUpdateWithoutTransfersReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2138,10 +4113,17 @@ export type UserUpdateWithoutTransfersReceivedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -2150,9 +4132,11 @@ export type UserUpdateWithoutTransfersReceivedInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -2161,19 +4145,26 @@ export type UserUpdateWithoutTransfersReceivedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2181,9 +4172,16 @@ export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -2192,9 +4190,11 @@ export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -2203,18 +4203,25 @@ export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRoleRequestsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2222,10 +4229,17 @@ export type UserCreateWithoutRoleRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
   transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
@@ -2234,9 +4248,11 @@ export type UserCreateWithoutRoleRequestsInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -2245,19 +4261,26 @@ export type UserCreateWithoutRoleRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRoleRequestsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2265,9 +4288,16 @@ export type UserUncheckedCreateWithoutRoleRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
   transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
@@ -2276,9 +4306,11 @@ export type UserUncheckedCreateWithoutRoleRequestsInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -2287,6 +4319,10 @@ export type UserUncheckedCreateWithoutRoleRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRoleRequestsInput = {
@@ -2307,14 +4343,17 @@ export type UserUpdateToOneWithWhereWithoutRoleRequestsInput = {
 
 export type UserUpdateWithoutRoleRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2322,10 +4361,17 @@ export type UserUpdateWithoutRoleRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
   transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
@@ -2334,9 +4380,11 @@ export type UserUpdateWithoutRoleRequestsInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -2345,19 +4393,26 @@ export type UserUpdateWithoutRoleRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRoleRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2365,9 +4420,16 @@ export type UserUncheckedUpdateWithoutRoleRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
   transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
@@ -2376,9 +4438,11 @@ export type UserUncheckedUpdateWithoutRoleRequestsInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -2387,18 +4451,25 @@ export type UserUncheckedUpdateWithoutRoleRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutInstitutionChangeRequestsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2406,10 +4477,17 @@ export type UserCreateWithoutInstitutionChangeRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
   transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
@@ -2418,9 +4496,11 @@ export type UserCreateWithoutInstitutionChangeRequestsInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -2429,19 +4509,26 @@ export type UserCreateWithoutInstitutionChangeRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInstitutionChangeRequestsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2449,9 +4536,16 @@ export type UserUncheckedCreateWithoutInstitutionChangeRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
   transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
@@ -2460,9 +4554,11 @@ export type UserUncheckedCreateWithoutInstitutionChangeRequestsInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -2471,6 +4567,10 @@ export type UserUncheckedCreateWithoutInstitutionChangeRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInstitutionChangeRequestsInput = {
@@ -2491,14 +4591,17 @@ export type UserUpdateToOneWithWhereWithoutInstitutionChangeRequestsInput = {
 
 export type UserUpdateWithoutInstitutionChangeRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2506,10 +4609,17 @@ export type UserUpdateWithoutInstitutionChangeRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
   transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
@@ -2518,9 +4628,11 @@ export type UserUpdateWithoutInstitutionChangeRequestsInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -2529,19 +4641,26 @@ export type UserUpdateWithoutInstitutionChangeRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInstitutionChangeRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2549,9 +4668,16 @@ export type UserUncheckedUpdateWithoutInstitutionChangeRequestsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
   transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
@@ -2560,9 +4686,11 @@ export type UserUncheckedUpdateWithoutInstitutionChangeRequestsInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -2571,18 +4699,25 @@ export type UserUncheckedUpdateWithoutInstitutionChangeRequestsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutClinicalRuleReviewsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2590,10 +4725,17 @@ export type UserCreateWithoutClinicalRuleReviewsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -2603,8 +4745,10 @@ export type UserCreateWithoutClinicalRuleReviewsInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -2613,19 +4757,26 @@ export type UserCreateWithoutClinicalRuleReviewsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalRuleReviewsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2633,9 +4784,16 @@ export type UserUncheckedCreateWithoutClinicalRuleReviewsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -2645,8 +4803,10 @@ export type UserUncheckedCreateWithoutClinicalRuleReviewsInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -2655,6 +4815,10 @@ export type UserUncheckedCreateWithoutClinicalRuleReviewsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalRuleReviewsInput = {
@@ -2675,14 +4839,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalRuleReviewsInput = {
 
 export type UserUpdateWithoutClinicalRuleReviewsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2690,10 +4857,17 @@ export type UserUpdateWithoutClinicalRuleReviewsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -2703,8 +4877,10 @@ export type UserUpdateWithoutClinicalRuleReviewsInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -2713,19 +4889,26 @@ export type UserUpdateWithoutClinicalRuleReviewsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalRuleReviewsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2733,9 +4916,16 @@ export type UserUncheckedUpdateWithoutClinicalRuleReviewsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -2745,8 +4935,10 @@ export type UserUncheckedUpdateWithoutClinicalRuleReviewsInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -2755,18 +4947,25 @@ export type UserUncheckedUpdateWithoutClinicalRuleReviewsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutClinicalPresetsOwnedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2774,10 +4973,17 @@ export type UserCreateWithoutClinicalPresetsOwnedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -2787,9 +4993,11 @@ export type UserCreateWithoutClinicalPresetsOwnedInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -2797,19 +5005,26 @@ export type UserCreateWithoutClinicalPresetsOwnedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalPresetsOwnedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2817,9 +5032,16 @@ export type UserUncheckedCreateWithoutClinicalPresetsOwnedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -2829,9 +5051,11 @@ export type UserUncheckedCreateWithoutClinicalPresetsOwnedInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -2839,6 +5063,10 @@ export type UserUncheckedCreateWithoutClinicalPresetsOwnedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalPresetsOwnedInput = {
@@ -2848,14 +5076,17 @@ export type UserCreateOrConnectWithoutClinicalPresetsOwnedInput = {
 
 export type UserCreateWithoutClinicalPresetsCreatedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2863,10 +5094,17 @@ export type UserCreateWithoutClinicalPresetsCreatedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -2876,8 +5114,10 @@ export type UserCreateWithoutClinicalPresetsCreatedInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -2886,19 +5126,26 @@ export type UserCreateWithoutClinicalPresetsCreatedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalPresetsCreatedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2906,9 +5153,16 @@ export type UserUncheckedCreateWithoutClinicalPresetsCreatedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -2918,8 +5172,10 @@ export type UserUncheckedCreateWithoutClinicalPresetsCreatedInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -2928,6 +5184,10 @@ export type UserUncheckedCreateWithoutClinicalPresetsCreatedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalPresetsCreatedInput = {
@@ -2937,14 +5197,17 @@ export type UserCreateOrConnectWithoutClinicalPresetsCreatedInput = {
 
 export type UserCreateWithoutClinicalPresetsPublishedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2952,10 +5215,17 @@ export type UserCreateWithoutClinicalPresetsPublishedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -2965,8 +5235,10 @@ export type UserCreateWithoutClinicalPresetsPublishedInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -2975,19 +5247,26 @@ export type UserCreateWithoutClinicalPresetsPublishedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalPresetsPublishedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -2995,9 +5274,16 @@ export type UserUncheckedCreateWithoutClinicalPresetsPublishedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -3007,8 +5293,10 @@ export type UserUncheckedCreateWithoutClinicalPresetsPublishedInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -3017,6 +5305,10 @@ export type UserUncheckedCreateWithoutClinicalPresetsPublishedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalPresetsPublishedInput = {
@@ -3037,14 +5329,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalPresetsOwnedInput = {
 
 export type UserUpdateWithoutClinicalPresetsOwnedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3052,10 +5347,17 @@ export type UserUpdateWithoutClinicalPresetsOwnedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -3065,9 +5367,11 @@ export type UserUpdateWithoutClinicalPresetsOwnedInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -3075,19 +5379,26 @@ export type UserUpdateWithoutClinicalPresetsOwnedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalPresetsOwnedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3095,9 +5406,16 @@ export type UserUncheckedUpdateWithoutClinicalPresetsOwnedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -3107,9 +5425,11 @@ export type UserUncheckedUpdateWithoutClinicalPresetsOwnedInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -3117,6 +5437,10 @@ export type UserUncheckedUpdateWithoutClinicalPresetsOwnedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutClinicalPresetsCreatedInput = {
@@ -3132,14 +5456,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalPresetsCreatedInput = {
 
 export type UserUpdateWithoutClinicalPresetsCreatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3147,10 +5474,17 @@ export type UserUpdateWithoutClinicalPresetsCreatedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -3160,8 +5494,10 @@ export type UserUpdateWithoutClinicalPresetsCreatedInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -3170,19 +5506,26 @@ export type UserUpdateWithoutClinicalPresetsCreatedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalPresetsCreatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3190,9 +5533,16 @@ export type UserUncheckedUpdateWithoutClinicalPresetsCreatedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -3202,8 +5552,10 @@ export type UserUncheckedUpdateWithoutClinicalPresetsCreatedInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -3212,6 +5564,10 @@ export type UserUncheckedUpdateWithoutClinicalPresetsCreatedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutClinicalPresetsPublishedInput = {
@@ -3227,14 +5583,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalPresetsPublishedInput = {
 
 export type UserUpdateWithoutClinicalPresetsPublishedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3242,10 +5601,17 @@ export type UserUpdateWithoutClinicalPresetsPublishedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -3255,8 +5621,10 @@ export type UserUpdateWithoutClinicalPresetsPublishedInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -3265,19 +5633,26 @@ export type UserUpdateWithoutClinicalPresetsPublishedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalPresetsPublishedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3285,9 +5660,16 @@ export type UserUncheckedUpdateWithoutClinicalPresetsPublishedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -3297,8 +5679,10 @@ export type UserUncheckedUpdateWithoutClinicalPresetsPublishedInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -3307,18 +5691,25 @@ export type UserUncheckedUpdateWithoutClinicalPresetsPublishedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
-export type UserCreateWithoutPlatformPresetSelectionsInput = {
+export type UserCreateWithoutClinicalPublicationsConfirmedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3326,10 +5717,17 @@ export type UserCreateWithoutPlatformPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -3339,29 +5737,38 @@ export type UserCreateWithoutPlatformPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
-export type UserUncheckedCreateWithoutPlatformPresetSelectionsInput = {
+export type UserUncheckedCreateWithoutClinicalPublicationsConfirmedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3369,9 +5776,16 @@ export type UserUncheckedCreateWithoutPlatformPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -3381,9 +5795,259 @@ export type UserUncheckedCreateWithoutPlatformPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutClinicalPublicationsConfirmedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutClinicalPublicationsConfirmedInput, Prisma.UserUncheckedCreateWithoutClinicalPublicationsConfirmedInput>
+}
+
+export type UserUpsertWithoutClinicalPublicationsConfirmedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutClinicalPublicationsConfirmedInput, Prisma.UserUncheckedUpdateWithoutClinicalPublicationsConfirmedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutClinicalPublicationsConfirmedInput, Prisma.UserUncheckedCreateWithoutClinicalPublicationsConfirmedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutClinicalPublicationsConfirmedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutClinicalPublicationsConfirmedInput, Prisma.UserUncheckedUpdateWithoutClinicalPublicationsConfirmedInput>
+}
+
+export type UserUpdateWithoutClinicalPublicationsConfirmedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutClinicalPublicationsConfirmedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutPlatformPresetSelectionsInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPlatformPresetSelectionsInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -3391,6 +6055,10 @@ export type UserUncheckedCreateWithoutPlatformPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlatformPresetSelectionsInput = {
@@ -3411,14 +6079,17 @@ export type UserUpdateToOneWithWhereWithoutPlatformPresetSelectionsInput = {
 
 export type UserUpdateWithoutPlatformPresetSelectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3426,10 +6097,17 @@ export type UserUpdateWithoutPlatformPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -3439,9 +6117,11 @@ export type UserUpdateWithoutPlatformPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -3449,19 +6129,26 @@ export type UserUpdateWithoutPlatformPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlatformPresetSelectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3469,9 +6156,16 @@ export type UserUncheckedUpdateWithoutPlatformPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -3481,9 +6175,11 @@ export type UserUncheckedUpdateWithoutPlatformPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -3491,18 +6187,25 @@ export type UserUncheckedUpdateWithoutPlatformPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutInstitutionPresetSelectionsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3510,10 +6213,17 @@ export type UserCreateWithoutInstitutionPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -3523,9 +6233,11 @@ export type UserCreateWithoutInstitutionPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -3533,19 +6245,26 @@ export type UserCreateWithoutInstitutionPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInstitutionPresetSelectionsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3553,9 +6272,16 @@ export type UserUncheckedCreateWithoutInstitutionPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -3565,9 +6291,11 @@ export type UserUncheckedCreateWithoutInstitutionPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -3575,6 +6303,10 @@ export type UserUncheckedCreateWithoutInstitutionPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInstitutionPresetSelectionsInput = {
@@ -3595,14 +6327,17 @@ export type UserUpdateToOneWithWhereWithoutInstitutionPresetSelectionsInput = {
 
 export type UserUpdateWithoutInstitutionPresetSelectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3610,10 +6345,17 @@ export type UserUpdateWithoutInstitutionPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -3623,9 +6365,11 @@ export type UserUpdateWithoutInstitutionPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -3633,19 +6377,26 @@ export type UserUpdateWithoutInstitutionPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInstitutionPresetSelectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3653,9 +6404,16 @@ export type UserUncheckedUpdateWithoutInstitutionPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -3665,9 +6423,11 @@ export type UserUncheckedUpdateWithoutInstitutionPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -3675,18 +6435,25 @@ export type UserUncheckedUpdateWithoutInstitutionPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutClinicalPresetSelectionsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3694,10 +6461,17 @@ export type UserCreateWithoutClinicalPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -3707,9 +6481,11 @@ export type UserCreateWithoutClinicalPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -3717,19 +6493,26 @@ export type UserCreateWithoutClinicalPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalPresetSelectionsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3737,9 +6520,16 @@ export type UserUncheckedCreateWithoutClinicalPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -3749,9 +6539,11 @@ export type UserUncheckedCreateWithoutClinicalPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -3759,6 +6551,10 @@ export type UserUncheckedCreateWithoutClinicalPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalPresetSelectionsInput = {
@@ -3779,14 +6575,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalPresetSelectionsInput = {
 
 export type UserUpdateWithoutClinicalPresetSelectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3794,10 +6593,17 @@ export type UserUpdateWithoutClinicalPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -3807,9 +6613,11 @@ export type UserUpdateWithoutClinicalPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -3817,19 +6625,26 @@ export type UserUpdateWithoutClinicalPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalPresetSelectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3837,9 +6652,16 @@ export type UserUncheckedUpdateWithoutClinicalPresetSelectionsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -3849,9 +6671,11 @@ export type UserUncheckedUpdateWithoutClinicalPresetSelectionsInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
   institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -3859,18 +6683,25 @@ export type UserUncheckedUpdateWithoutClinicalPresetSelectionsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutClinicalOverridesProposedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3878,10 +6709,17 @@ export type UserCreateWithoutClinicalOverridesProposedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -3891,9 +6729,11 @@ export type UserCreateWithoutClinicalOverridesProposedInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -3901,19 +6741,26 @@ export type UserCreateWithoutClinicalOverridesProposedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalOverridesProposedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3921,9 +6768,16 @@ export type UserUncheckedCreateWithoutClinicalOverridesProposedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -3933,9 +6787,11 @@ export type UserUncheckedCreateWithoutClinicalOverridesProposedInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -3943,6 +6799,10 @@ export type UserUncheckedCreateWithoutClinicalOverridesProposedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalOverridesProposedInput = {
@@ -3952,14 +6812,17 @@ export type UserCreateOrConnectWithoutClinicalOverridesProposedInput = {
 
 export type UserCreateWithoutClinicalOverridesToReviewInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -3967,10 +6830,17 @@ export type UserCreateWithoutClinicalOverridesToReviewInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -3980,9 +6850,11 @@ export type UserCreateWithoutClinicalOverridesToReviewInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -3990,19 +6862,26 @@ export type UserCreateWithoutClinicalOverridesToReviewInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalOverridesToReviewInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4010,9 +6889,16 @@ export type UserUncheckedCreateWithoutClinicalOverridesToReviewInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -4022,9 +6908,11 @@ export type UserUncheckedCreateWithoutClinicalOverridesToReviewInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -4032,6 +6920,10 @@ export type UserUncheckedCreateWithoutClinicalOverridesToReviewInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalOverridesToReviewInput = {
@@ -4041,14 +6933,17 @@ export type UserCreateOrConnectWithoutClinicalOverridesToReviewInput = {
 
 export type UserCreateWithoutClinicalOverridesApprovedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4056,10 +6951,17 @@ export type UserCreateWithoutClinicalOverridesApprovedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -4069,9 +6971,11 @@ export type UserCreateWithoutClinicalOverridesApprovedInput = {
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -4079,19 +6983,26 @@ export type UserCreateWithoutClinicalOverridesApprovedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutClinicalOverridesApprovedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4099,9 +7010,16 @@ export type UserUncheckedCreateWithoutClinicalOverridesApprovedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -4111,9 +7029,11 @@ export type UserUncheckedCreateWithoutClinicalOverridesApprovedInput = {
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -4121,6 +7041,10 @@ export type UserUncheckedCreateWithoutClinicalOverridesApprovedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutClinicalOverridesApprovedInput = {
@@ -4141,14 +7065,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalOverridesProposedInput = {
 
 export type UserUpdateWithoutClinicalOverridesProposedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4156,10 +7083,17 @@ export type UserUpdateWithoutClinicalOverridesProposedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -4169,9 +7103,11 @@ export type UserUpdateWithoutClinicalOverridesProposedInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -4179,19 +7115,26 @@ export type UserUpdateWithoutClinicalOverridesProposedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalOverridesProposedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4199,9 +7142,16 @@ export type UserUncheckedUpdateWithoutClinicalOverridesProposedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -4211,9 +7161,11 @@ export type UserUncheckedUpdateWithoutClinicalOverridesProposedInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -4221,6 +7173,10 @@ export type UserUncheckedUpdateWithoutClinicalOverridesProposedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutClinicalOverridesToReviewInput = {
@@ -4236,14 +7192,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalOverridesToReviewInput = {
 
 export type UserUpdateWithoutClinicalOverridesToReviewInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4251,10 +7210,17 @@ export type UserUpdateWithoutClinicalOverridesToReviewInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -4264,9 +7230,11 @@ export type UserUpdateWithoutClinicalOverridesToReviewInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -4274,19 +7242,26 @@ export type UserUpdateWithoutClinicalOverridesToReviewInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalOverridesToReviewInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4294,9 +7269,16 @@ export type UserUncheckedUpdateWithoutClinicalOverridesToReviewInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -4306,9 +7288,11 @@ export type UserUncheckedUpdateWithoutClinicalOverridesToReviewInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -4316,6 +7300,10 @@ export type UserUncheckedUpdateWithoutClinicalOverridesToReviewInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutClinicalOverridesApprovedInput = {
@@ -4331,14 +7319,17 @@ export type UserUpdateToOneWithWhereWithoutClinicalOverridesApprovedInput = {
 
 export type UserUpdateWithoutClinicalOverridesApprovedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4346,10 +7337,17 @@ export type UserUpdateWithoutClinicalOverridesApprovedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -4359,9 +7357,11 @@ export type UserUpdateWithoutClinicalOverridesApprovedInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -4369,19 +7369,26 @@ export type UserUpdateWithoutClinicalOverridesApprovedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClinicalOverridesApprovedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4389,9 +7396,16 @@ export type UserUncheckedUpdateWithoutClinicalOverridesApprovedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -4401,9 +7415,11 @@ export type UserUncheckedUpdateWithoutClinicalOverridesApprovedInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -4411,18 +7427,25 @@ export type UserUncheckedUpdateWithoutClinicalOverridesApprovedInput = {
   clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutResearchAccessGrantsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4430,10 +7453,17 @@ export type UserCreateWithoutResearchAccessGrantsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -4442,9 +7472,11 @@ export type UserCreateWithoutResearchAccessGrantsInput = {
   researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -4453,19 +7485,26 @@ export type UserCreateWithoutResearchAccessGrantsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutResearchAccessGrantsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4473,9 +7512,16 @@ export type UserUncheckedCreateWithoutResearchAccessGrantsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -4484,9 +7530,11 @@ export type UserUncheckedCreateWithoutResearchAccessGrantsInput = {
   researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -4495,6 +7543,10 @@ export type UserUncheckedCreateWithoutResearchAccessGrantsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutResearchAccessGrantsInput = {
@@ -4504,14 +7556,17 @@ export type UserCreateOrConnectWithoutResearchAccessGrantsInput = {
 
 export type UserCreateWithoutResearchGrantsIssuedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4519,10 +7574,17 @@ export type UserCreateWithoutResearchGrantsIssuedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -4531,9 +7593,11 @@ export type UserCreateWithoutResearchGrantsIssuedInput = {
   researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -4542,19 +7606,26 @@ export type UserCreateWithoutResearchGrantsIssuedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutResearchGrantsIssuedInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4562,9 +7633,16 @@ export type UserUncheckedCreateWithoutResearchGrantsIssuedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -4573,9 +7651,11 @@ export type UserUncheckedCreateWithoutResearchGrantsIssuedInput = {
   researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -4584,6 +7664,10 @@ export type UserUncheckedCreateWithoutResearchGrantsIssuedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutResearchGrantsIssuedInput = {
@@ -4604,14 +7688,17 @@ export type UserUpdateToOneWithWhereWithoutResearchAccessGrantsInput = {
 
 export type UserUpdateWithoutResearchAccessGrantsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4619,10 +7706,17 @@ export type UserUpdateWithoutResearchAccessGrantsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -4631,9 +7725,11 @@ export type UserUpdateWithoutResearchAccessGrantsInput = {
   researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -4642,19 +7738,26 @@ export type UserUpdateWithoutResearchAccessGrantsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResearchAccessGrantsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4662,9 +7765,16 @@ export type UserUncheckedUpdateWithoutResearchAccessGrantsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -4673,9 +7783,11 @@ export type UserUncheckedUpdateWithoutResearchAccessGrantsInput = {
   researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -4684,6 +7796,10 @@ export type UserUncheckedUpdateWithoutResearchAccessGrantsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutResearchGrantsIssuedInput = {
@@ -4699,14 +7815,17 @@ export type UserUpdateToOneWithWhereWithoutResearchGrantsIssuedInput = {
 
 export type UserUpdateWithoutResearchGrantsIssuedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4714,10 +7833,17 @@ export type UserUpdateWithoutResearchGrantsIssuedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -4726,9 +7852,11 @@ export type UserUpdateWithoutResearchGrantsIssuedInput = {
   researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -4737,19 +7865,26 @@ export type UserUpdateWithoutResearchGrantsIssuedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResearchGrantsIssuedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4757,9 +7892,16 @@ export type UserUncheckedUpdateWithoutResearchGrantsIssuedInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -4768,9 +7910,11 @@ export type UserUncheckedUpdateWithoutResearchGrantsIssuedInput = {
   researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -4779,18 +7923,25 @@ export type UserUncheckedUpdateWithoutResearchGrantsIssuedInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
-export type UserCreateWithoutResearchCohortsInput = {
+export type UserCreateWithoutResearchSelfAuthorizationsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4798,21 +7949,30 @@ export type UserCreateWithoutResearchCohortsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
   transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
   emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
   researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -4821,19 +7981,26 @@ export type UserCreateWithoutResearchCohortsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
-export type UserUncheckedCreateWithoutResearchCohortsInput = {
+export type UserUncheckedCreateWithoutResearchSelfAuthorizationsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4841,20 +8008,29 @@ export type UserUncheckedCreateWithoutResearchCohortsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
   transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
   emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
   researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -4863,6 +8039,258 @@ export type UserUncheckedCreateWithoutResearchCohortsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutResearchSelfAuthorizationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutResearchSelfAuthorizationsInput, Prisma.UserUncheckedCreateWithoutResearchSelfAuthorizationsInput>
+}
+
+export type UserUpsertWithoutResearchSelfAuthorizationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutResearchSelfAuthorizationsInput, Prisma.UserUncheckedUpdateWithoutResearchSelfAuthorizationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutResearchSelfAuthorizationsInput, Prisma.UserUncheckedCreateWithoutResearchSelfAuthorizationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutResearchSelfAuthorizationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutResearchSelfAuthorizationsInput, Prisma.UserUncheckedUpdateWithoutResearchSelfAuthorizationsInput>
+}
+
+export type UserUpdateWithoutResearchSelfAuthorizationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutResearchSelfAuthorizationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutResearchCohortsInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutResearchCohortsInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutResearchCohortsInput = {
@@ -4883,14 +8311,17 @@ export type UserUpdateToOneWithWhereWithoutResearchCohortsInput = {
 
 export type UserUpdateWithoutResearchCohortsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4898,10 +8329,17 @@ export type UserUpdateWithoutResearchCohortsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -4910,9 +8348,11 @@ export type UserUpdateWithoutResearchCohortsInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -4921,19 +8361,26 @@ export type UserUpdateWithoutResearchCohortsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResearchCohortsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4941,9 +8388,16 @@ export type UserUncheckedUpdateWithoutResearchCohortsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -4952,9 +8406,11 @@ export type UserUncheckedUpdateWithoutResearchCohortsInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -4963,18 +8419,25 @@ export type UserUncheckedUpdateWithoutResearchCohortsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutResearchExportsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -4982,10 +8445,17 @@ export type UserCreateWithoutResearchExportsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
@@ -4994,9 +8464,11 @@ export type UserCreateWithoutResearchExportsInput = {
   researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
@@ -5005,19 +8477,26 @@ export type UserCreateWithoutResearchExportsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutResearchExportsInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
   institutionId?: string | null
-  approvedAt?: Date | string | null
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -5025,9 +8504,16 @@ export type UserUncheckedCreateWithoutResearchExportsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
   roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
@@ -5036,9 +8522,11 @@ export type UserUncheckedCreateWithoutResearchExportsInput = {
   researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
@@ -5047,6 +8535,10 @@ export type UserUncheckedCreateWithoutResearchExportsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutResearchExportsInput = {
@@ -5067,14 +8559,17 @@ export type UserUpdateToOneWithWhereWithoutResearchExportsInput = {
 
 export type UserUpdateWithoutResearchExportsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5082,10 +8577,17 @@ export type UserUpdateWithoutResearchExportsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -5094,9 +8596,11 @@ export type UserUpdateWithoutResearchExportsInput = {
   researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -5105,19 +8609,26 @@ export type UserUpdateWithoutResearchExportsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResearchExportsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
   institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5125,9 +8636,16 @@ export type UserUncheckedUpdateWithoutResearchExportsInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -5136,9 +8654,11 @@ export type UserUncheckedUpdateWithoutResearchExportsInput = {
   researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -5147,18 +8667,25 @@ export type UserUncheckedUpdateWithoutResearchExportsInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInstitutionInput = {
   id?: string
-  email: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
   name: string
   firstName?: string
   lastName?: string
   title?: string
   passwordHash: string
   role?: $Enums.UserRole
-  approvedAt?: Date | string | null
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
   emailVerifiedAt?: Date | string | null
   acceptedTermsAt?: Date | string | null
   acceptedPrivacyAt?: Date | string | null
@@ -5166,20 +8693,29 @@ export type UserCreateManyInstitutionInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
   deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type UserUpdateWithoutInstitutionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5187,9 +8723,16 @@ export type UserUpdateWithoutInstitutionInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
@@ -5199,9 +8742,11 @@ export type UserUpdateWithoutInstitutionInput = {
   researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
@@ -5210,18 +8755,25 @@ export type UserUpdateWithoutInstitutionInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInstitutionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5229,9 +8781,16 @@ export type UserUncheckedUpdateWithoutInstitutionInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -5241,9 +8800,11 @@ export type UserUncheckedUpdateWithoutInstitutionInput = {
   researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
   researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
   researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
   clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
   clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
   clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
   clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
   clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
   platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
@@ -5252,18 +8813,25 @@ export type UserUncheckedUpdateWithoutInstitutionInput = {
   clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
   clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
   passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutInstitutionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   firstName?: Prisma.StringFieldUpdateOperationsInput | string
   lastName?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  approvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5271,7 +8839,13 @@ export type UserUncheckedUpdateManyWithoutInstitutionInput = {
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -5282,6 +8856,7 @@ export type UserUncheckedUpdateManyWithoutInstitutionInput = {
 
 export type UserCountOutputType = {
   cases: number
+  casesCreated: number
   roleRequests: number
   institutionChangeRequests: number
   transfersSent: number
@@ -5291,9 +8866,11 @@ export type UserCountOutputType = {
   researchExports: number
   researchAccessGrants: number
   researchGrantsIssued: number
+  researchSelfAuthorizations: number
   clinicalRuleReviews: number
   clinicalPresetsCreated: number
   clinicalPresetsPublished: number
+  clinicalPublicationsConfirmed: number
   clinicalPresetsOwned: number
   clinicalPresetSelections: number
   platformPresetSelections: number
@@ -5302,10 +8879,15 @@ export type UserCountOutputType = {
   clinicalOverridesApproved: number
   clinicalOverridesProposed: number
   passwordResetTokens: number
+  authSessions: number
+  mfaLoginChallenges: number
+  mfaRecoveryCodes: number
+  legalAcceptances: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   cases?: boolean | UserCountOutputTypeCountCasesArgs
+  casesCreated?: boolean | UserCountOutputTypeCountCasesCreatedArgs
   roleRequests?: boolean | UserCountOutputTypeCountRoleRequestsArgs
   institutionChangeRequests?: boolean | UserCountOutputTypeCountInstitutionChangeRequestsArgs
   transfersSent?: boolean | UserCountOutputTypeCountTransfersSentArgs
@@ -5315,9 +8897,11 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   researchExports?: boolean | UserCountOutputTypeCountResearchExportsArgs
   researchAccessGrants?: boolean | UserCountOutputTypeCountResearchAccessGrantsArgs
   researchGrantsIssued?: boolean | UserCountOutputTypeCountResearchGrantsIssuedArgs
+  researchSelfAuthorizations?: boolean | UserCountOutputTypeCountResearchSelfAuthorizationsArgs
   clinicalRuleReviews?: boolean | UserCountOutputTypeCountClinicalRuleReviewsArgs
   clinicalPresetsCreated?: boolean | UserCountOutputTypeCountClinicalPresetsCreatedArgs
   clinicalPresetsPublished?: boolean | UserCountOutputTypeCountClinicalPresetsPublishedArgs
+  clinicalPublicationsConfirmed?: boolean | UserCountOutputTypeCountClinicalPublicationsConfirmedArgs
   clinicalPresetsOwned?: boolean | UserCountOutputTypeCountClinicalPresetsOwnedArgs
   clinicalPresetSelections?: boolean | UserCountOutputTypeCountClinicalPresetSelectionsArgs
   platformPresetSelections?: boolean | UserCountOutputTypeCountPlatformPresetSelectionsArgs
@@ -5326,6 +8910,10 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   clinicalOverridesApproved?: boolean | UserCountOutputTypeCountClinicalOverridesApprovedArgs
   clinicalOverridesProposed?: boolean | UserCountOutputTypeCountClinicalOverridesProposedArgs
   passwordResetTokens?: boolean | UserCountOutputTypeCountPasswordResetTokensArgs
+  authSessions?: boolean | UserCountOutputTypeCountAuthSessionsArgs
+  mfaLoginChallenges?: boolean | UserCountOutputTypeCountMfaLoginChallengesArgs
+  mfaRecoveryCodes?: boolean | UserCountOutputTypeCountMfaRecoveryCodesArgs
+  legalAcceptances?: boolean | UserCountOutputTypeCountLegalAcceptancesArgs
 }
 
 /**
@@ -5342,6 +8930,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  * UserCountOutputType without action
  */
 export type UserCountOutputTypeCountCasesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CaseWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCasesCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.CaseWhereInput
 }
 
@@ -5411,6 +9006,13 @@ export type UserCountOutputTypeCountResearchGrantsIssuedArgs<ExtArgs extends run
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountResearchSelfAuthorizationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ResearchSelfAuthorizationWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountClinicalRuleReviewsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ClinicalRuleReviewWhereInput
 }
@@ -5427,6 +9029,13 @@ export type UserCountOutputTypeCountClinicalPresetsCreatedArgs<ExtArgs extends r
  */
 export type UserCountOutputTypeCountClinicalPresetsPublishedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ClinicalPresetWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountClinicalPublicationsConfirmedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ClinicalRulesetPublicationEvidenceWhereInput
 }
 
 /**
@@ -5485,18 +9094,49 @@ export type UserCountOutputTypeCountPasswordResetTokensArgs<ExtArgs extends runt
   where?: Prisma.PasswordResetTokenWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAuthSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AuthSessionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMfaLoginChallengesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MfaLoginChallengeWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMfaRecoveryCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MfaRecoveryCodeWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountLegalAcceptancesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LegalAcceptanceWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   email?: boolean
+  username?: boolean
+  usernameCanonical?: boolean
   name?: boolean
   firstName?: boolean
   lastName?: boolean
   title?: boolean
   passwordHash?: boolean
   role?: boolean
+  accountKind?: boolean
   institutionId?: boolean
-  approvedAt?: boolean
+  activatedAt?: boolean
   emailVerifiedAt?: boolean
   acceptedTermsAt?: boolean
   acceptedPrivacyAt?: boolean
@@ -5504,10 +9144,17 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   preferences?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
+  mfaTotpSecretCiphertext?: boolean
+  mfaEnabledAt?: boolean
+  mfaLastTotpStep?: boolean
+  suspendedAt?: boolean
+  recoveryRequiredAt?: boolean
   deletedAt?: boolean
+  anonymizedAt?: boolean
   createdAt?: boolean
   institution?: boolean | Prisma.User$institutionArgs<ExtArgs>
   cases?: boolean | Prisma.User$casesArgs<ExtArgs>
+  casesCreated?: boolean | Prisma.User$casesCreatedArgs<ExtArgs>
   roleRequests?: boolean | Prisma.User$roleRequestsArgs<ExtArgs>
   institutionChangeRequests?: boolean | Prisma.User$institutionChangeRequestsArgs<ExtArgs>
   transfersSent?: boolean | Prisma.User$transfersSentArgs<ExtArgs>
@@ -5517,9 +9164,11 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   researchExports?: boolean | Prisma.User$researchExportsArgs<ExtArgs>
   researchAccessGrants?: boolean | Prisma.User$researchAccessGrantsArgs<ExtArgs>
   researchGrantsIssued?: boolean | Prisma.User$researchGrantsIssuedArgs<ExtArgs>
+  researchSelfAuthorizations?: boolean | Prisma.User$researchSelfAuthorizationsArgs<ExtArgs>
   clinicalRuleReviews?: boolean | Prisma.User$clinicalRuleReviewsArgs<ExtArgs>
   clinicalPresetsCreated?: boolean | Prisma.User$clinicalPresetsCreatedArgs<ExtArgs>
   clinicalPresetsPublished?: boolean | Prisma.User$clinicalPresetsPublishedArgs<ExtArgs>
+  clinicalPublicationsConfirmed?: boolean | Prisma.User$clinicalPublicationsConfirmedArgs<ExtArgs>
   clinicalPresetsOwned?: boolean | Prisma.User$clinicalPresetsOwnedArgs<ExtArgs>
   clinicalPresetSelections?: boolean | Prisma.User$clinicalPresetSelectionsArgs<ExtArgs>
   platformPresetSelections?: boolean | Prisma.User$platformPresetSelectionsArgs<ExtArgs>
@@ -5528,20 +9177,27 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   clinicalOverridesApproved?: boolean | Prisma.User$clinicalOverridesApprovedArgs<ExtArgs>
   clinicalOverridesProposed?: boolean | Prisma.User$clinicalOverridesProposedArgs<ExtArgs>
   passwordResetTokens?: boolean | Prisma.User$passwordResetTokensArgs<ExtArgs>
+  authSessions?: boolean | Prisma.User$authSessionsArgs<ExtArgs>
+  mfaLoginChallenges?: boolean | Prisma.User$mfaLoginChallengesArgs<ExtArgs>
+  mfaRecoveryCodes?: boolean | Prisma.User$mfaRecoveryCodesArgs<ExtArgs>
+  legalAcceptances?: boolean | Prisma.User$legalAcceptancesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   email?: boolean
+  username?: boolean
+  usernameCanonical?: boolean
   name?: boolean
   firstName?: boolean
   lastName?: boolean
   title?: boolean
   passwordHash?: boolean
   role?: boolean
+  accountKind?: boolean
   institutionId?: boolean
-  approvedAt?: boolean
+  activatedAt?: boolean
   emailVerifiedAt?: boolean
   acceptedTermsAt?: boolean
   acceptedPrivacyAt?: boolean
@@ -5549,7 +9205,13 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   preferences?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
+  mfaTotpSecretCiphertext?: boolean
+  mfaEnabledAt?: boolean
+  mfaLastTotpStep?: boolean
+  suspendedAt?: boolean
+  recoveryRequiredAt?: boolean
   deletedAt?: boolean
+  anonymizedAt?: boolean
   createdAt?: boolean
   institution?: boolean | Prisma.User$institutionArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
@@ -5557,14 +9219,17 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   email?: boolean
+  username?: boolean
+  usernameCanonical?: boolean
   name?: boolean
   firstName?: boolean
   lastName?: boolean
   title?: boolean
   passwordHash?: boolean
   role?: boolean
+  accountKind?: boolean
   institutionId?: boolean
-  approvedAt?: boolean
+  activatedAt?: boolean
   emailVerifiedAt?: boolean
   acceptedTermsAt?: boolean
   acceptedPrivacyAt?: boolean
@@ -5572,7 +9237,13 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   preferences?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
+  mfaTotpSecretCiphertext?: boolean
+  mfaEnabledAt?: boolean
+  mfaLastTotpStep?: boolean
+  suspendedAt?: boolean
+  recoveryRequiredAt?: boolean
   deletedAt?: boolean
+  anonymizedAt?: boolean
   createdAt?: boolean
   institution?: boolean | Prisma.User$institutionArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
@@ -5580,14 +9251,17 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
 export type UserSelectScalar = {
   id?: boolean
   email?: boolean
+  username?: boolean
+  usernameCanonical?: boolean
   name?: boolean
   firstName?: boolean
   lastName?: boolean
   title?: boolean
   passwordHash?: boolean
   role?: boolean
+  accountKind?: boolean
   institutionId?: boolean
-  approvedAt?: boolean
+  activatedAt?: boolean
   emailVerifiedAt?: boolean
   acceptedTermsAt?: boolean
   acceptedPrivacyAt?: boolean
@@ -5595,14 +9269,21 @@ export type UserSelectScalar = {
   preferences?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
+  mfaTotpSecretCiphertext?: boolean
+  mfaEnabledAt?: boolean
+  mfaLastTotpStep?: boolean
+  suspendedAt?: boolean
+  recoveryRequiredAt?: boolean
   deletedAt?: boolean
+  anonymizedAt?: boolean
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "firstName" | "lastName" | "title" | "passwordHash" | "role" | "institutionId" | "approvedAt" | "emailVerifiedAt" | "acceptedTermsAt" | "acceptedPrivacyAt" | "termsVersion" | "preferences" | "lastLoginAt" | "passwordChangedAt" | "deletedAt" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "usernameCanonical" | "name" | "firstName" | "lastName" | "title" | "passwordHash" | "role" | "accountKind" | "institutionId" | "activatedAt" | "emailVerifiedAt" | "acceptedTermsAt" | "acceptedPrivacyAt" | "termsVersion" | "preferences" | "lastLoginAt" | "passwordChangedAt" | "mfaTotpSecretCiphertext" | "mfaEnabledAt" | "mfaLastTotpStep" | "suspendedAt" | "recoveryRequiredAt" | "deletedAt" | "anonymizedAt" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   institution?: boolean | Prisma.User$institutionArgs<ExtArgs>
   cases?: boolean | Prisma.User$casesArgs<ExtArgs>
+  casesCreated?: boolean | Prisma.User$casesCreatedArgs<ExtArgs>
   roleRequests?: boolean | Prisma.User$roleRequestsArgs<ExtArgs>
   institutionChangeRequests?: boolean | Prisma.User$institutionChangeRequestsArgs<ExtArgs>
   transfersSent?: boolean | Prisma.User$transfersSentArgs<ExtArgs>
@@ -5612,9 +9293,11 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   researchExports?: boolean | Prisma.User$researchExportsArgs<ExtArgs>
   researchAccessGrants?: boolean | Prisma.User$researchAccessGrantsArgs<ExtArgs>
   researchGrantsIssued?: boolean | Prisma.User$researchGrantsIssuedArgs<ExtArgs>
+  researchSelfAuthorizations?: boolean | Prisma.User$researchSelfAuthorizationsArgs<ExtArgs>
   clinicalRuleReviews?: boolean | Prisma.User$clinicalRuleReviewsArgs<ExtArgs>
   clinicalPresetsCreated?: boolean | Prisma.User$clinicalPresetsCreatedArgs<ExtArgs>
   clinicalPresetsPublished?: boolean | Prisma.User$clinicalPresetsPublishedArgs<ExtArgs>
+  clinicalPublicationsConfirmed?: boolean | Prisma.User$clinicalPublicationsConfirmedArgs<ExtArgs>
   clinicalPresetsOwned?: boolean | Prisma.User$clinicalPresetsOwnedArgs<ExtArgs>
   clinicalPresetSelections?: boolean | Prisma.User$clinicalPresetSelectionsArgs<ExtArgs>
   platformPresetSelections?: boolean | Prisma.User$platformPresetSelectionsArgs<ExtArgs>
@@ -5623,6 +9306,10 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   clinicalOverridesApproved?: boolean | Prisma.User$clinicalOverridesApprovedArgs<ExtArgs>
   clinicalOverridesProposed?: boolean | Prisma.User$clinicalOverridesProposedArgs<ExtArgs>
   passwordResetTokens?: boolean | Prisma.User$passwordResetTokensArgs<ExtArgs>
+  authSessions?: boolean | Prisma.User$authSessionsArgs<ExtArgs>
+  mfaLoginChallenges?: boolean | Prisma.User$mfaLoginChallengesArgs<ExtArgs>
+  mfaRecoveryCodes?: boolean | Prisma.User$mfaRecoveryCodesArgs<ExtArgs>
+  legalAcceptances?: boolean | Prisma.User$legalAcceptancesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -5637,6 +9324,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     institution: Prisma.$InstitutionPayload<ExtArgs> | null
     cases: Prisma.$CasePayload<ExtArgs>[]
+    casesCreated: Prisma.$CasePayload<ExtArgs>[]
     roleRequests: Prisma.$RoleRequestPayload<ExtArgs>[]
     institutionChangeRequests: Prisma.$InstitutionChangeRequestPayload<ExtArgs>[]
     transfersSent: Prisma.$CaseTransferPayload<ExtArgs>[]
@@ -5646,9 +9334,11 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     researchExports: Prisma.$ResearchExportPayload<ExtArgs>[]
     researchAccessGrants: Prisma.$ResearchAccessGrantPayload<ExtArgs>[]
     researchGrantsIssued: Prisma.$ResearchAccessGrantPayload<ExtArgs>[]
+    researchSelfAuthorizations: Prisma.$ResearchSelfAuthorizationPayload<ExtArgs>[]
     clinicalRuleReviews: Prisma.$ClinicalRuleReviewPayload<ExtArgs>[]
     clinicalPresetsCreated: Prisma.$ClinicalPresetPayload<ExtArgs>[]
     clinicalPresetsPublished: Prisma.$ClinicalPresetPayload<ExtArgs>[]
+    clinicalPublicationsConfirmed: Prisma.$ClinicalRulesetPublicationEvidencePayload<ExtArgs>[]
     clinicalPresetsOwned: Prisma.$ClinicalPresetPayload<ExtArgs>[]
     clinicalPresetSelections: Prisma.$UserClinicalPresetSelectionPayload<ExtArgs>[]
     platformPresetSelections: Prisma.$PlatformClinicalPresetSelectionPayload<ExtArgs>[]
@@ -5657,18 +9347,39 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     clinicalOverridesApproved: Prisma.$InstitutionClinicalRuleOverridePayload<ExtArgs>[]
     clinicalOverridesProposed: Prisma.$InstitutionClinicalRuleOverridePayload<ExtArgs>[]
     passwordResetTokens: Prisma.$PasswordResetTokenPayload<ExtArgs>[]
+    authSessions: Prisma.$AuthSessionPayload<ExtArgs>[]
+    mfaLoginChallenges: Prisma.$MfaLoginChallengePayload<ExtArgs>[]
+    mfaRecoveryCodes: Prisma.$MfaRecoveryCodePayload<ExtArgs>[]
+    legalAcceptances: Prisma.$LegalAcceptancePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    email: string
+    /**
+     * Public deployments use email as the login identity. Hospital appliances
+     * may keep only an optional contact address; it is never a login fallback.
+     */
+    email: string | null
+    /**
+     * Case-preserving ASCII Hospital login spelling.
+     */
+    username: string | null
+    /**
+     * Lowercase appliance-global lookup key for Hospital usernames.
+     */
+    usernameCanonical: string | null
     name: string
     firstName: string
     lastName: string
     title: string
     passwordHash: string
     role: $Enums.UserRole
+    accountKind: $Enums.AccountKind
     institutionId: string | null
-    approvedAt: Date | null
+    /**
+     * Deployment-neutral account activation. Public email verification sets
+     * this together with emailVerifiedAt; Hospital administration sets only it.
+     */
+    activatedAt: Date | null
     emailVerifiedAt: Date | null
     acceptedTermsAt: Date | null
     acceptedPrivacyAt: Date | null
@@ -5676,7 +9387,33 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     preferences: runtime.JsonValue
     lastLoginAt: Date | null
     passwordChangedAt: Date | null
+    /**
+     * AES-256-GCM protected TOTP seed. The data-encryption key is deployment
+     * configuration and is never stored in this database.
+     */
+    mfaTotpSecretCiphertext: string | null
+    mfaEnabledAt: Date | null
+    /**
+     * Prevents accepting the same RFC 6238 time-step through two concurrent
+     * login challenges.
+     */
+    mfaLastTotpStep: number | null
+    /**
+     * Temporary access stop. Unlike deletion, suspension has no erasure clock
+     * and can be reversed without changing the account's identity.
+     */
+    suspendedAt: Date | null
+    /**
+     * Set after restoration so an old password can never revive the account.
+     * A successful one-time password recovery clears it.
+     */
+    recoveryRequiredAt: Date | null
     deletedAt: Date | null
+    /**
+     * Terminal marker set when the retention job strips direct identifiers.
+     * Accounts with this marker cannot be restored.
+     */
+    anonymizedAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["user"]>
   composites: {}
@@ -6074,6 +9811,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   institution<T extends Prisma.User$institutionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$institutionArgs<ExtArgs>>): Prisma.Prisma__InstitutionClient<runtime.Types.Result.GetResult<Prisma.$InstitutionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   cases<T extends Prisma.User$casesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$casesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  casesCreated<T extends Prisma.User$casesCreatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$casesCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   roleRequests<T extends Prisma.User$roleRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$roleRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RoleRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   institutionChangeRequests<T extends Prisma.User$institutionChangeRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$institutionChangeRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InstitutionChangeRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transfersSent<T extends Prisma.User$transfersSentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$transfersSentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -6083,9 +9821,11 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   researchExports<T extends Prisma.User$researchExportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$researchExportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ResearchExportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   researchAccessGrants<T extends Prisma.User$researchAccessGrantsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$researchAccessGrantsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ResearchAccessGrantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   researchGrantsIssued<T extends Prisma.User$researchGrantsIssuedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$researchGrantsIssuedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ResearchAccessGrantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  researchSelfAuthorizations<T extends Prisma.User$researchSelfAuthorizationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$researchSelfAuthorizationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ResearchSelfAuthorizationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinicalRuleReviews<T extends Prisma.User$clinicalRuleReviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalRuleReviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicalRuleReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinicalPresetsCreated<T extends Prisma.User$clinicalPresetsCreatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalPresetsCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicalPresetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinicalPresetsPublished<T extends Prisma.User$clinicalPresetsPublishedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalPresetsPublishedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicalPresetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  clinicalPublicationsConfirmed<T extends Prisma.User$clinicalPublicationsConfirmedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalPublicationsConfirmedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicalRulesetPublicationEvidencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinicalPresetsOwned<T extends Prisma.User$clinicalPresetsOwnedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalPresetsOwnedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicalPresetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinicalPresetSelections<T extends Prisma.User$clinicalPresetSelectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalPresetSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserClinicalPresetSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   platformPresetSelections<T extends Prisma.User$platformPresetSelectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$platformPresetSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlatformClinicalPresetSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -6094,6 +9834,10 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   clinicalOverridesApproved<T extends Prisma.User$clinicalOverridesApprovedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalOverridesApprovedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InstitutionClinicalRuleOverridePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinicalOverridesProposed<T extends Prisma.User$clinicalOverridesProposedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$clinicalOverridesProposedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InstitutionClinicalRuleOverridePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   passwordResetTokens<T extends Prisma.User$passwordResetTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$passwordResetTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PasswordResetTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  authSessions<T extends Prisma.User$authSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$authSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuthSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  mfaLoginChallenges<T extends Prisma.User$mfaLoginChallengesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mfaLoginChallengesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MfaLoginChallengePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  mfaRecoveryCodes<T extends Prisma.User$mfaRecoveryCodesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mfaRecoveryCodesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MfaRecoveryCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  legalAcceptances<T extends Prisma.User$legalAcceptancesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$legalAcceptancesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LegalAcceptancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6125,14 +9869,17 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
 export interface UserFieldRefs {
   readonly id: Prisma.FieldRef<"User", 'String'>
   readonly email: Prisma.FieldRef<"User", 'String'>
+  readonly username: Prisma.FieldRef<"User", 'String'>
+  readonly usernameCanonical: Prisma.FieldRef<"User", 'String'>
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly firstName: Prisma.FieldRef<"User", 'String'>
   readonly lastName: Prisma.FieldRef<"User", 'String'>
   readonly title: Prisma.FieldRef<"User", 'String'>
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>
+  readonly accountKind: Prisma.FieldRef<"User", 'AccountKind'>
   readonly institutionId: Prisma.FieldRef<"User", 'String'>
-  readonly approvedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly activatedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly emailVerifiedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly acceptedTermsAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly acceptedPrivacyAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -6140,7 +9887,13 @@ export interface UserFieldRefs {
   readonly preferences: Prisma.FieldRef<"User", 'Json'>
   readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly passwordChangedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly mfaTotpSecretCiphertext: Prisma.FieldRef<"User", 'String'>
+  readonly mfaEnabledAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly mfaLastTotpStep: Prisma.FieldRef<"User", 'Int'>
+  readonly suspendedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly recoveryRequiredAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly deletedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly anonymizedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }
     
@@ -6586,6 +10339,30 @@ export type User$casesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
 }
 
 /**
+ * User.casesCreated
+ */
+export type User$casesCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Case
+   */
+  select?: Prisma.CaseSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Case
+   */
+  omit?: Prisma.CaseOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CaseInclude<ExtArgs> | null
+  where?: Prisma.CaseWhereInput
+  orderBy?: Prisma.CaseOrderByWithRelationInput | Prisma.CaseOrderByWithRelationInput[]
+  cursor?: Prisma.CaseWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CaseScalarFieldEnum | Prisma.CaseScalarFieldEnum[]
+}
+
+/**
  * User.roleRequests
  */
 export type User$roleRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -6802,6 +10579,30 @@ export type User$researchGrantsIssuedArgs<ExtArgs extends runtime.Types.Extensio
 }
 
 /**
+ * User.researchSelfAuthorizations
+ */
+export type User$researchSelfAuthorizationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ResearchSelfAuthorization
+   */
+  select?: Prisma.ResearchSelfAuthorizationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ResearchSelfAuthorization
+   */
+  omit?: Prisma.ResearchSelfAuthorizationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ResearchSelfAuthorizationInclude<ExtArgs> | null
+  where?: Prisma.ResearchSelfAuthorizationWhereInput
+  orderBy?: Prisma.ResearchSelfAuthorizationOrderByWithRelationInput | Prisma.ResearchSelfAuthorizationOrderByWithRelationInput[]
+  cursor?: Prisma.ResearchSelfAuthorizationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ResearchSelfAuthorizationScalarFieldEnum | Prisma.ResearchSelfAuthorizationScalarFieldEnum[]
+}
+
+/**
  * User.clinicalRuleReviews
  */
 export type User$clinicalRuleReviewsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -6871,6 +10672,30 @@ export type User$clinicalPresetsPublishedArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.ClinicalPresetScalarFieldEnum | Prisma.ClinicalPresetScalarFieldEnum[]
+}
+
+/**
+ * User.clinicalPublicationsConfirmed
+ */
+export type User$clinicalPublicationsConfirmedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ClinicalRulesetPublicationEvidence
+   */
+  select?: Prisma.ClinicalRulesetPublicationEvidenceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ClinicalRulesetPublicationEvidence
+   */
+  omit?: Prisma.ClinicalRulesetPublicationEvidenceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ClinicalRulesetPublicationEvidenceInclude<ExtArgs> | null
+  where?: Prisma.ClinicalRulesetPublicationEvidenceWhereInput
+  orderBy?: Prisma.ClinicalRulesetPublicationEvidenceOrderByWithRelationInput | Prisma.ClinicalRulesetPublicationEvidenceOrderByWithRelationInput[]
+  cursor?: Prisma.ClinicalRulesetPublicationEvidenceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ClinicalRulesetPublicationEvidenceScalarFieldEnum | Prisma.ClinicalRulesetPublicationEvidenceScalarFieldEnum[]
 }
 
 /**
@@ -7063,6 +10888,102 @@ export type User$passwordResetTokensArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.PasswordResetTokenScalarFieldEnum | Prisma.PasswordResetTokenScalarFieldEnum[]
+}
+
+/**
+ * User.authSessions
+ */
+export type User$authSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AuthSession
+   */
+  select?: Prisma.AuthSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AuthSession
+   */
+  omit?: Prisma.AuthSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AuthSessionInclude<ExtArgs> | null
+  where?: Prisma.AuthSessionWhereInput
+  orderBy?: Prisma.AuthSessionOrderByWithRelationInput | Prisma.AuthSessionOrderByWithRelationInput[]
+  cursor?: Prisma.AuthSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AuthSessionScalarFieldEnum | Prisma.AuthSessionScalarFieldEnum[]
+}
+
+/**
+ * User.mfaLoginChallenges
+ */
+export type User$mfaLoginChallengesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MfaLoginChallenge
+   */
+  select?: Prisma.MfaLoginChallengeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MfaLoginChallenge
+   */
+  omit?: Prisma.MfaLoginChallengeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MfaLoginChallengeInclude<ExtArgs> | null
+  where?: Prisma.MfaLoginChallengeWhereInput
+  orderBy?: Prisma.MfaLoginChallengeOrderByWithRelationInput | Prisma.MfaLoginChallengeOrderByWithRelationInput[]
+  cursor?: Prisma.MfaLoginChallengeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MfaLoginChallengeScalarFieldEnum | Prisma.MfaLoginChallengeScalarFieldEnum[]
+}
+
+/**
+ * User.mfaRecoveryCodes
+ */
+export type User$mfaRecoveryCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MfaRecoveryCode
+   */
+  select?: Prisma.MfaRecoveryCodeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MfaRecoveryCode
+   */
+  omit?: Prisma.MfaRecoveryCodeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MfaRecoveryCodeInclude<ExtArgs> | null
+  where?: Prisma.MfaRecoveryCodeWhereInput
+  orderBy?: Prisma.MfaRecoveryCodeOrderByWithRelationInput | Prisma.MfaRecoveryCodeOrderByWithRelationInput[]
+  cursor?: Prisma.MfaRecoveryCodeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MfaRecoveryCodeScalarFieldEnum | Prisma.MfaRecoveryCodeScalarFieldEnum[]
+}
+
+/**
+ * User.legalAcceptances
+ */
+export type User$legalAcceptancesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LegalAcceptance
+   */
+  select?: Prisma.LegalAcceptanceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LegalAcceptance
+   */
+  omit?: Prisma.LegalAcceptanceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LegalAcceptanceInclude<ExtArgs> | null
+  where?: Prisma.LegalAcceptanceWhereInput
+  orderBy?: Prisma.LegalAcceptanceOrderByWithRelationInput | Prisma.LegalAcceptanceOrderByWithRelationInput[]
+  cursor?: Prisma.LegalAcceptanceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LegalAcceptanceScalarFieldEnum | Prisma.LegalAcceptanceScalarFieldEnum[]
 }
 
 /**
