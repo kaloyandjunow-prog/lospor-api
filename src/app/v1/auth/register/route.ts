@@ -6,8 +6,21 @@ import { rateLimit } from "@/lib/rate-limit"
 import { corsHeaders } from "@/lib/cors"
 import { createAuthToken, EMAIL_VERIFICATION_TTL_MS, emailSchema, hashAuthToken, normalizeEmail, tokenExpiry } from "@/lib/auth-email-tokens"
 import { appUrl, sendVerificationEmail } from "@/lib/transactional-email"
-import { CURRENT_TERMS_VERSION } from "@lospor/core/account"
+import { preferencesWithPreferredLocale } from "@lospor/core/account"
 import { passwordSchema } from "@/lib/password-policy"
+import type { Prisma } from "@/generated/prisma/client"
+import { legalAcceptancesSchema } from "@/lib/legal-request"
+import {
+  LegalAcceptanceError,
+  LegalConfigurationError,
+  legalAcceptanceAuditDetail,
+  legalAcceptanceCreateMany,
+} from "@/lib/legal-documents"
+import { logAuditInTransaction } from "@/lib/audit"
+import {
+  authenticationCapabilities,
+  publicEmailAuthenticationRefusal,
+} from "@/lib/deployment-capabilities"
 
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req, "POST, OPTIONS", "Content-Type, Authorization") })
@@ -24,11 +37,22 @@ const schema = z.object({
   // (NO_INSTITUTION_ID), which is a real institution that cannot have a head.
   // Not .cuid(): NO_INSTITUTION_ID is a fixed readable id, not a generated one.
   institutionId:  z.string().min(1),
-  acceptedTerms:  z.boolean().refine(v => v === true, "You must accept the terms"),
+  locale:          z.enum(["bg", "en"]).optional(),
+  legalAcceptances: legalAcceptancesSchema,
   password: passwordSchema,
 })
 
 export async function POST(req: NextRequest) {
+  const deploymentRefusal = publicEmailAuthenticationRefusal()
+  if (deploymentRefusal) {
+    return NextResponse.json(deploymentRefusal.body, { status: deploymentRefusal.status })
+  }
+  if (!authenticationCapabilities().selfRegistration) {
+    return NextResponse.json({
+      error: "Self-registration is disabled for this deployment",
+      code: "SELF_REGISTRATION_DISABLED_BY_DEPLOYMENT",
+    }, { status: 404 })
+  }
   const ip = req.headers.get("x-forwarded-for") ?? "unknown"
   const rl = await rateLimit(`register:${ip}`, 5, 60 * 60 * 1000)
   if (!rl.allowed) {
@@ -47,44 +71,74 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 })
     }
 
-    if (data.institutionId) {
-      const institution = await prisma.institution.findUnique({ where: { id: data.institutionId } })
-      if (!institution) {
-        return NextResponse.json({ error: "Institution not found" }, { status: 404 })
-      }
+    const institution = await prisma.institution.findUnique({ where: { id: data.institutionId } })
+    if (!institution) {
+      return NextResponse.json({ error: "Institution not found" }, { status: 404 })
     }
+
+    const acceptanceLocale = data.legalAcceptances[0]?.locale
+    if (data.locale && data.locale !== acceptanceLocale) {
+      return NextResponse.json(
+        { error: "Account locale must match the accepted documents", code: "LEGAL_LOCALE_MISMATCH" },
+        { status: 422 },
+      )
+    }
+    const preferredLocale = data.locale ?? acceptanceLocale ?? "bg"
 
     const passwordHash = await bcrypt.hash(data.password, 12)
     const name = [data.title, data.firstName, data.lastName].filter(Boolean).join(" ")
 
     const token = createAuthToken()
-    const user = await prisma.user.create({
-      data: {
-        name,
-        firstName:       data.firstName,
-        lastName:        data.lastName,
-        title:           data.title ?? "",
-        email,
-        passwordHash,
-        institutionId:   data.institutionId || null,
-        role:            "MEMBER",
-        approvedAt:      null,
-        emailVerifiedAt: null,
-        acceptedTermsAt: new Date(),
-        termsVersion:    CURRENT_TERMS_VERSION,
-        emailVerificationTokens: {
-          create: {
-            tokenHash: hashAuthToken(token),
-            expiresAt: tokenExpiry(EMAIL_VERIFICATION_TTL_MS),
+    const acceptedAt = new Date()
+    const user = await prisma.$transaction(async transaction => {
+      const created = await transaction.user.create({
+        data: {
+          name,
+          firstName:       data.firstName,
+          lastName:        data.lastName,
+          title:           data.title ?? "",
+          email,
+          passwordHash,
+          institutionId:   data.institutionId,
+          role:            "MEMBER",
+          accountKind:     "CLINICAL",
+          activatedAt:     null,
+          emailVerifiedAt: null,
+          preferences:     preferencesWithPreferredLocale({}, preferredLocale) as Prisma.InputJsonValue,
+          acceptedTermsAt: acceptedAt,
+          acceptedPrivacyAt: acceptedAt,
+          termsVersion: data.legalAcceptances.find(item => item.kind === "TERMS")?.version,
+          emailVerificationTokens: {
+            create: {
+              tokenHash: hashAuthToken(token),
+              expiresAt: tokenExpiry(EMAIL_VERIFICATION_TTL_MS),
+            },
           },
         },
-      },
+      })
+      const legalRows = legalAcceptanceCreateMany(created.id, data.legalAcceptances)
+        .map(row => ({ ...row, acceptedAt }))
+      await transaction.legalAcceptance.createMany({ data: legalRows })
+      await logAuditInTransaction(transaction, created.id, "ACCOUNT_PROVISION", created.id, {
+        provisioningChannel: "SELF_REGISTRATION",
+        institutionId: data.institutionId,
+        role: "MEMBER",
+        accountKind: "CLINICAL",
+      })
+      await logAuditInTransaction(
+        transaction,
+        created.id,
+        "LEGAL_ACCEPTANCE_RECORD",
+        created.id,
+        legalAcceptanceAuditDetail(legalRows),
+      )
+      return created
     })
 
     const verifyUrl = appUrl(`/verify-email?token=${encodeURIComponent(token)}`)
     let emailSent = false
     try {
-      const result = await sendVerificationEmail({ email: user.email, name: user.name }, verifyUrl)
+      const result = await sendVerificationEmail({ email, name: user.name }, verifyUrl)
       emailSent = result.sent
     } catch (err) {
       console.error("[register.verify-email]", err)
@@ -93,8 +147,7 @@ export async function POST(req: NextRequest) {
     const exposeTestLink = process.env.NODE_ENV !== "production" && (process.env.AUTH_EMAIL_TEST_LINKS === "true" || !process.env.BREVO_API_KEY)
     return NextResponse.json({
       id: user.id,
-      email: user.email,
-      pending: false,
+      email,
       verificationRequired: true,
       emailSent,
       ...(exposeTestLink ? { devVerifyUrl: verifyUrl } : {}),
@@ -102,6 +155,12 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues[0]?.message ?? "Validation error" }, { status: 400 })
+    }
+    if (err instanceof LegalAcceptanceError || err instanceof LegalConfigurationError) {
+      return NextResponse.json(
+        { error: err.message, code: err.code, ...(err instanceof LegalAcceptanceError ? { details: err.details } : {}) },
+        { status: err.status },
+      )
     }
     console.error("[register]", err)
     const msg = "Internal server error"

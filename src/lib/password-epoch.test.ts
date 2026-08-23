@@ -52,27 +52,74 @@ describe("isIssuedBeforePasswordChange (cache)", () => {
     const changedAt = new Date("2026-07-13T10:00:00.000Z")
     notePasswordChanged(userId, changedAt)
     mocks.userFindUnique.mockResolvedValue({
+      activatedAt: new Date("2026-01-01T00:00:00.000Z"),
       passwordChangedAt: changedAt,
       deletedAt: null,
       role: "HEAD_OF_DEPT",
+      accountKind: "CLINICAL",
+      preferences: { ui: { locale: "en" } },
       institutionId: "inst-1",
       institution: { name: "Live Hospital" },
     })
 
     await expect(resolveAccount(userId, changedAt.getTime() / 1000 + 100)).resolves.toEqual({
       role: "HEAD_OF_DEPT",
+      accountKind: "CLINICAL",
+      preferredLocale: "en",
       institutionId: "inst-1",
       institutionName: "Live Hospital",
+      firstName: null,
+      lastName: null,
+      title: null,
     })
     expect(mocks.userFindUnique).toHaveBeenCalledWith({
       where: { id: userId },
       select: {
+        activatedAt: true,
         passwordChangedAt: true,
         deletedAt: true,
+        suspendedAt: true,
+        recoveryRequiredAt: true,
+        anonymizedAt: true,
         role: true,
+        accountKind: true,
+        preferences: true,
         institutionId: true,
         institution: { select: { name: true } },
+        firstName: true,
+        lastName: true,
+        title: true,
       },
     })
+  })
+
+  it("refuses inactive, suspended, recovery-required, deleted, and anonymized accounts", async () => {
+    for (const [index, state] of [
+      { activatedAt: null },
+      { suspendedAt: new Date() },
+      { recoveryRequiredAt: new Date() },
+      { deletedAt: new Date() },
+      { anonymizedAt: new Date() },
+    ].entries()) {
+      const userId = `closed-account-${index}`
+      mocks.userFindUnique.mockResolvedValueOnce({
+        activatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        passwordChangedAt: null,
+        deletedAt: null,
+        suspendedAt: null,
+        recoveryRequiredAt: null,
+        anonymizedAt: null,
+        role: "MEMBER",
+        accountKind: "CLINICAL",
+        preferences: {},
+        institutionId: null,
+        institution: null,
+        firstName: "Test",
+        lastName: "User",
+        title: "Dr",
+        ...state,
+      })
+      await expect(resolveAccount(userId, 1_700_000_000)).resolves.toBeNull()
+    }
   })
 })

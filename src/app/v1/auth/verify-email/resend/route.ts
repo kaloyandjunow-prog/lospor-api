@@ -4,10 +4,16 @@ import { prisma } from "@/lib/prisma"
 import { rateLimit } from "@/lib/rate-limit"
 import { createAuthToken, EMAIL_VERIFICATION_TTL_MS, emailSchema, hashAuthToken, normalizeEmail, tokenExpiry } from "@/lib/auth-email-tokens"
 import { appUrl, sendVerificationEmail } from "@/lib/transactional-email"
+import { logAuditInTransaction } from "@/lib/audit"
+import { publicEmailAuthenticationRefusal } from "@/lib/deployment-capabilities"
 
 const schema = z.object({ email: emailSchema })
 
 export async function POST(req: NextRequest) {
+  const deploymentRefusal = publicEmailAuthenticationRefusal()
+  if (deploymentRefusal) {
+    return NextResponse.json(deploymentRefusal.body, { status: deploymentRefusal.status })
+  }
   const ip = req.headers.get("x-forwarded-for") ?? "unknown"
   let email: string
   try {
@@ -26,15 +32,29 @@ export async function POST(req: NextRequest) {
     where: { email },
     select: { id: true, email: true, name: true, emailVerifiedAt: true, deletedAt: true },
   })
-  if (!user || user.deletedAt || user.emailVerifiedAt) return NextResponse.json({ ok: true })
+  if (!user || !user.email || user.deletedAt || user.emailVerifiedAt) return NextResponse.json({ ok: true })
 
   const token = createAuthToken()
-  await prisma.emailVerificationToken.create({
-    data: {
-      userId: user.id,
-      tokenHash: hashAuthToken(token),
-      expiresAt: tokenExpiry(EMAIL_VERIFICATION_TTL_MS),
-    },
+  const now = new Date()
+  await prisma.$transaction(async transaction => {
+    const replaced = await transaction.emailVerificationToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: now },
+    })
+    await transaction.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashAuthToken(token),
+        expiresAt: tokenExpiry(EMAIL_VERIFICATION_TTL_MS),
+      },
+    })
+    await logAuditInTransaction(
+      transaction,
+      user.id,
+      "ACCOUNT_ACTIVATION_TOKEN_REISSUE",
+      user.id,
+      { replacedActiveTokenCount: replaced.count },
+    )
   })
 
   const verifyUrl = appUrl(`/verify-email?token=${encodeURIComponent(token)}`)
