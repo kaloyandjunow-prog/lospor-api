@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { caseWhereForUser } from "@/lib/access-control"
+import { caseWriteWhereForUser } from "@/lib/access-control"
 import { logAuditInTransaction } from "@/lib/audit"
 import { transferCaseOwnershipInTransaction } from "@/lib/case-transfer"
 import { isPrismaUniqueError } from "@/lib/case-code"
@@ -54,10 +54,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   for (let attempt = 0; ; attempt++) {
     try {
       const result = await withLockedCaseTransaction(caseId, async tx => {
-        const caseRecord = await tx.case.findFirst({ where: caseWhereForUser(user, caseId) })
+        const caseRecord = await tx.case.findFirst({ where: caseWriteWhereForUser(user, caseId) })
         if (!caseRecord) return NextResponse.json({ error: "Case not found" }, { status: 404 })
 
-        const recipient = await tx.user.findUnique({ where: { id: toUserId, deletedAt: null } })
+        const recipient = await tx.user.findUnique({
+          where: {
+            id: toUserId,
+            activatedAt: { not: null },
+            suspendedAt: null,
+            recoveryRequiredAt: null,
+            deletedAt: null,
+            anonymizedAt: null,
+          },
+        })
         if (!recipient) return NextResponse.json({ error: "Recipient not found" }, { status: 400 })
 
         // A case stays at the hospital that recorded it. No exception for
@@ -123,7 +132,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           await logAuditInTransaction(tx, user.id, "CASE_TRANSFER_REQUEST", caseId, {
             fromUserId: caseRecord.userId,
             toUserId,
-            caseCode: caseRecord.caseCode,
           })
           return { instant: false as const, transfer }
         }
@@ -153,8 +161,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           fromUserId: caseRecord.userId,
           toUserId,
           instant: true,
-          previousCaseCode: outcome.previousCaseCode,
-          caseCode: outcome.caseCode,
         })
         return { instant: true as const, outcome, transfer }
       })
@@ -229,8 +235,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           await logAuditInTransaction(tx, user.id, "CASE_TRANSFER_ACCEPT", caseId, {
             fromUserId: transfer.fromUserId,
             toUserId: user.id,
-            previousCaseCode: outcome.previousCaseCode,
-            caseCode: outcome.caseCode,
           })
           return { action: "accept" as const, outcome }
         }

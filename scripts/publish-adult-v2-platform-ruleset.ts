@@ -15,14 +15,21 @@
  *   - publishes only; it never selects the ruleset, so nothing becomes active
  *     for clinicians until someone explicitly chooses to use it
  *
+ * The publication and its audit row commit together. Against a protected
+ * database the run must name the accountable administrator in
+ * PUBLISHING_ADMIN_EMAIL; otherwise it is attributed to the LOSPOR release
+ * principal, exactly as the bundled baselines are.
+ *
  * Dry-run (all checks, no write):
  *   $env:PUBLISH_ADULT_V2_RULESET="YES"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:publish-adult-v2
  *
  * Apply after the dry-run succeeds:
  *   npm run clinical-rules:publish-adult-v2 -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollection,
@@ -31,11 +38,21 @@ import { createLosporAdultV2Draft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
+import { buildClinicalRulesetExactDiff } from "../src/lib/clinical-rules/publication-evidence"
+import type { ClinicalRulePayload } from "@lospor/core/clinical-rules"
 
 if (process.env.PUBLISH_ADULT_V2_RULESET !== "YES") {
   throw new Error('Refusing to run. Set PUBLISH_ADULT_V2_RULESET="YES" explicitly.')
 }
-assertDatabaseWritable("publish rulesets")
+const database = assertDatabaseWritable("publish rulesets")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const apply = process.argv.includes("--apply")
@@ -89,14 +106,17 @@ async function main() {
   }
 
   await prisma.$transaction(async tx => {
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
+    const baseline = await tx.platformClinicalPresetSelection.findUnique({
+      where: { clinicalMode: "ADULT" },
+      include: { preset: { include: { rules: { orderBy: { ruleKey: "asc" } } } } },
+    })
     await tx.clinicalPresetRule.deleteMany({ where: { presetId: target.id } })
     await tx.clinicalPreset.update({
       where: { id: target.id },
       data: {
         name: draft.name,
         description: draft.description,
-        status: "PUBLISHED",
-        publishedAt: new Date(),
         rules: {
           create: draft.rules.map(rule => ({
             ruleKey: clinicalRuleKey(rule.payload),
@@ -105,6 +125,58 @@ async function main() {
             sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
           })),
         },
+      },
+    })
+    const publishedAt = new Date()
+    const evidence = buildClinicalRulesetExactDiff({
+      baselinePresetId: baseline?.preset.id ?? null,
+      baselinePresetVersion: baseline?.preset.version ?? null,
+      baselineRules: (baseline?.preset.rules ?? []).map(rule => ({
+        ruleKey: rule.ruleKey,
+        ruleVersion: rule.ruleVersion,
+        payload: rule.payload as unknown as ClinicalRulePayload,
+        sourceRefs: Array.isArray(rule.sourceRefs)
+          ? rule.sourceRefs.filter((item): item is string => typeof item === "string")
+          : [],
+      })),
+      nextRules: draft.rules.map(rule => ({
+        ruleKey: clinicalRuleKey(rule.payload),
+        ruleVersion: `${draft.key}.v${draft.version}.published1`,
+        payload: rule.payload,
+        sourceRefs: [...rule.sourceRefs],
+      })),
+    })
+    await tx.clinicalRulesetPublicationEvidence.create({
+      data: {
+        presetId: target.id,
+        baselinePresetId: baseline?.preset.id ?? null,
+        baselinePresetVersion: baseline?.preset.version ?? null,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
+        exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
+        confirmedById: actorUserId(actor),
+        confirmedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
+        confirmedAt: publishedAt,
+      },
+    })
+    await tx.clinicalPreset.update({
+      where: { id: target.id },
+      data: {
+        status: "PUBLISHED",
+        publishedById: actorUserId(actor),
+        publishedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
+        publishedAt,
+      },
+    })
+    await writeMaintenanceAuditRow(tx, actor, {
+      action: "CLINICAL_RULESET_PUBLISH" satisfies AuditActionCode,
+      entityId: target.id,
+      source: "scripts/publish-adult-v2-platform-ruleset.ts",
+      detail: {
+        scope: "PLATFORM",
+        clinicalMode: "ADULT",
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
       },
     })
   })

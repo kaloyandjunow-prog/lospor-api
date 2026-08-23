@@ -14,99 +14,17 @@ import {
 // Every account belongs to an institution; a researcher with no department
 // belongs to "Без институция" rather than to NULL.
 import { NO_INSTITUTION_ID } from "../src/lib/institutions"
-// Type-only, so the generated client is still loaded lazily inside main().
-import type { Prisma } from "../src/generated/prisma/client"
 
 const PROD_PROJECT_REF = "yzqszvlvccyufrkbuhtv" // never seed E2E data here
 
-// The client is created inside main() so the production guard runs first; this
-// gives the helpers below its type without hoisting the connection.
+// The client is created inside main() so the production guard runs before any
+// database connection is opened.
 async function openPrisma(connectionString: string) {
   const { PrismaClient } = await import("../src/generated/prisma/client")
   const { PrismaPg } = await import("@prisma/adapter-pg")
   return new PrismaClient({
     adapter: new PrismaPg({ connectionString }),
   } as ConstructorParameters<typeof PrismaClient>[0])
-}
-
-/**
- * Makes sure a published platform ruleset exists for each clinical mode.
- *
- * A freshly migrated database has none. The only preset the migrations ever
- * created was a placeholder, and 20260804000000 deliberately deletes it —
- * correctly, because an empty published ruleset silently resolved to "no doses"
- * while every health check reported success. The real ones are promoted by an
- * administrator after install.
- *
- * That leaves the release gate, which builds a database from migrations alone,
- * with no rules at all: the paediatric drug profiles come back empty and there
- * is nothing for a department to copy, so the specs that cover dosing and the
- * authoring scope guard fail for want of provisioning rather than for a defect.
- *
- * Built from the same bundled drafts the promotion scripts use, so CI exercises
- * the real clinical content.
- *
- * The condition is deliberately "no PUBLISHED platform ruleset exists for this
- * mode at all" — not "no selection exists". Keying on the selection was wrong
- * and did real damage on the development database: an adult ruleset was
- * published and curated there but never selected, so this ran, overwrote its
- * publication timestamp and publisher, and pointed the platform selection at
- * it. A published-but-unselected ruleset is somebody's decision, not a gap to
- * be filled by a seed script.
- *
- * It also never touches an existing preset. If there is nothing published, it
- * creates and selects one; otherwise it does nothing at all.
- */
-async function ensurePlatformRulesets(
-  prisma: Awaited<ReturnType<typeof openPrisma>>,
-  publisherId: string,
-): Promise<void> {
-  const {
-    createLosporAdultV2Draft,
-    createLosporPediatricPlatformDraft,
-  } = await import("@lospor/core/platform-clinical-drafts")
-  const { clinicalRuleKey } = await import("@lospor/core/clinical-rules")
-
-  for (const draft of [createLosporAdultV2Draft(), createLosporPediatricPlatformDraft()]) {
-    const published = await prisma.clinicalPreset.count({
-      where: { scope: "PLATFORM", clinicalMode: draft.clinicalMode, status: "PUBLISHED" },
-    })
-    if (published > 0) continue
-
-    // A distinct id, so this can never be mistaken for — or collide with — a
-    // curated ruleset promoted through the real path.
-    const id = `e2e-platform-${draft.clinicalMode.toLowerCase()}`
-    const now = new Date()
-    await prisma.clinicalPreset.create({
-      data: {
-        id,
-        key: `E2E_${draft.key}`,
-        name: `${draft.name} (end-to-end provisioning)`,
-        description: draft.description,
-        clinicalMode: draft.clinicalMode,
-        scope: "PLATFORM",
-        version: draft.version,
-        status: "PUBLISHED",
-        publishedAt: now,
-        publishedById: publisherId,
-        createdById: publisherId,
-        rules: {
-          create: draft.rules.map(rule => ({
-            ruleKey: clinicalRuleKey(rule.payload),
-            ruleVersion: `${draft.key}.v${draft.version}.e2e`,
-            payload: rule.payload as Prisma.InputJsonValue,
-            sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
-          })),
-        },
-      },
-    })
-    await prisma.platformClinicalPresetSelection.upsert({
-      where: { clinicalMode: draft.clinicalMode },
-      update: { presetId: id, selectedById: publisherId },
-      create: { clinicalMode: draft.clinicalMode, presetId: id, selectedById: publisherId },
-    })
-    console.log(`E2E platform ruleset provisioned: ${draft.clinicalMode} -> ${id} (${draft.rules.length} rules)`)
-  }
 }
 
 async function main() {
@@ -116,6 +34,14 @@ async function main() {
   }
   const prisma = await openPrisma(url)
   try {
+    // E2E uses the exact release-owned adult-v2 and pediatric-v2 baselines.
+    // This is intentionally separate from the test account and never attributes
+    // release content to that login-capable administrator.
+    const { provisionBundledClinicalBaselines } = await import(
+      "../src/lib/clinical-rules/bundled-baseline-provisioner"
+    )
+    await provisionBundledClinicalBaselines(prisma)
+
     const passwordHash = await bcrypt.hash(E2E_PASSWORD, 10)
     const now = new Date()
     const email = E2E_EMAIL.trim().toLowerCase()
@@ -127,33 +53,31 @@ async function main() {
     })
     const user = await prisma.user.upsert({
       where: { email },
-      update: { passwordHash, approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now, acceptedPrivacyAt: now, role: "ADMIN", institutionId: inst.id },
+      update: { passwordHash, activatedAt: now, emailVerifiedAt: now, acceptedTermsAt: now, acceptedPrivacyAt: now, role: "ADMIN", accountKind: "CLINICAL", institutionId: inst.id, preferences: { ui: { locale: "en" } } },
       create: {
         email, name: "E2E Tester", firstName: "E2E", lastName: "Tester", title: "Dr",
-        passwordHash, role: "ADMIN", approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now, acceptedPrivacyAt: now, termsVersion: "e2e",
-        institutionId: inst.id,
+        passwordHash, role: "ADMIN", accountKind: "CLINICAL", activatedAt: now, emailVerifiedAt: now, acceptedTermsAt: now, acceptedPrivacyAt: now, termsVersion: "e2e",
+        institutionId: inst.id, preferences: { ui: { locale: "en" } },
       },
     })
     console.log(`E2E user ready: ${user.email} (id ${user.id}, institution ${inst.id})`)
 
-    // Needs an administrator to attribute the publication to, so it runs here
-    // rather than at the top. A no-op wherever the rulesets already exist.
-    await ensurePlatformRulesets(prisma, user.id)
     const researchEmail = E2E_RESEARCH_EMAIL.trim().toLowerCase()
     const researcher = await prisma.user.upsert({
       where: { email: researchEmail },
       update: {
-        passwordHash, approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
-        acceptedPrivacyAt: now, role: "RESEARCHER", institutionId: NO_INSTITUTION_ID,
+        passwordHash, activatedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
+        acceptedPrivacyAt: now, role: "RESEARCHER", accountKind: "RESEARCH_ONLY", institutionId: NO_INSTITUTION_ID,
+        preferences: { ui: { locale: "en" } },
       },
       create: {
         email: researchEmail, name: "E2E Aggregate Researcher", firstName: "Aggregate",
-        lastName: "Researcher", title: "Dr", passwordHash, role: "RESEARCHER",
-        approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
+        lastName: "Researcher", title: "Dr", passwordHash, role: "RESEARCHER", accountKind: "RESEARCH_ONLY",
+        activatedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
         acceptedPrivacyAt: now, termsVersion: "e2e",
         // Omitting this left the column NULL, which the invariant no longer
         // allows: every account belongs to an institution.
-        institutionId: NO_INSTITUTION_ID,
+        institutionId: NO_INSTITUTION_ID, preferences: { ui: { locale: "en" } },
       },
     })
     await prisma.researchAccessGrant.deleteMany({ where: { userId: researcher.id } })
@@ -164,6 +88,7 @@ async function main() {
       canInspectCases: false,
       canExport: false,
       canExportOmop: false,
+      expiresAt: new Date(now.getTime() + 90 * 86_400_000),
     } })
     console.log(`E2E aggregate researcher ready: ${researcher.email} (id ${researcher.id})`)
 
@@ -193,15 +118,17 @@ async function main() {
         // Reset role and institution on every run: a spec that moves somebody
         // between institutions must not leave the next run starting elsewhere.
         update: {
-          passwordHash, role: person.role, institutionId: person.institutionId,
-          approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now, acceptedPrivacyAt: now,
+          passwordHash, role: person.role, accountKind: "CLINICAL", institutionId: person.institutionId,
+          activatedAt: now, emailVerifiedAt: now, acceptedTermsAt: now, acceptedPrivacyAt: now,
+          preferences: { ui: { locale: "en" } },
         },
         create: {
           email, name: `${person.first} ${person.last}`,
           firstName: person.first, lastName: person.last, title: "Dr",
-          passwordHash, role: person.role, institutionId: person.institutionId,
-          approvedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
+          passwordHash, role: person.role, accountKind: "CLINICAL", institutionId: person.institutionId,
+          activatedAt: now, emailVerifiedAt: now, acceptedTermsAt: now,
           acceptedPrivacyAt: now, termsVersion: "e2e",
+          preferences: { ui: { locale: "en" } },
         },
       })
       // Likewise for anything a previous run left half-decided.
@@ -225,7 +152,7 @@ async function main() {
     // scope-guard spec creates a departmental copy per run under an "e2e_" key
     // and leaves it. Anything with that prefix is a test artefact.
     const rulesets = await prisma.clinicalPreset.deleteMany({
-      where: { key: { startsWith: "e2e_" } },
+      where: { key: { startsWith: "e2e_" }, status: "DRAFT" },
     })
     if (rulesets.count) console.log(`E2E rulesets cleared: ${rulesets.count}`)
 

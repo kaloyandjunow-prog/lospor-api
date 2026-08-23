@@ -1,5 +1,74 @@
 # Rolling back
 
+## Unreleased identity/legal/case-creator migration
+
+This release is **not** an Instant Rollback. Before applying
+`20260822120000_identity_legal_case_creator`, capture and verify a database
+snapshot. The migration drops `User.approvedAt`, changes case-create
+idempotency from assignee to creator, and makes `Case.createdById` required;
+an older API binary is therefore not schema-compatible.
+
+If the release must be abandoned after migration, stop writes and restore the
+pre-migration database snapshot together with the previous API deployment.
+Do not delete `LegalAcceptance` rows or rewrite `createdById` in place: those
+are legal evidence and clinical authorship. If records were created after the
+snapshot, preserve/export them and decide their reconciliation before restore;
+the old API cannot represent them safely.
+
+If only a client release fails, leave the new API and database in place and
+roll back that client. Compatibility shadows for the old legal timestamps and
+the deprecated pending/approval HTTP responses remain, but this is not a basis
+for rolling the old API binary forward again.
+
+Before rolling forward, verify `/health/ready` reports the intended
+`legalDeployment`; a missing or malformed bilingual legal manifest returns
+`503` by design.
+
+### Bundled baseline cutover
+
+`20260823110000_bundled_clinical_baseline_principal` is additive, but the
+release baselines and their publication evidence become intentionally
+immutable once seeded. An older API does not understand technical attribution,
+and deleting or rewriting those rows would destroy release-governance evidence.
+Do not attempt a code-only rollback after provisioning. Stop writes and restore
+the verified pre-cutover database snapshot with the previous API, or roll
+forward. Exposure policy may be disabled independently without deleting either
+installed baseline.
+
+### Account-lifecycle/session cutover
+
+`20260822150000_account_lifecycle_sessions` is structurally additive, but an
+older API does not enforce `suspendedAt`, `recoveryRequiredAt`, `anonymizedAt`,
+or `AuthSession.revokedAt`. Therefore an old binary can incorrectly admit an
+account suspended/restored by 1.2.0 and can accept a JWT whose selective
+revocation exists only in the session ledger. Do not use code-only rollback
+after any lifecycle or selective-session operation has occurred.
+
+Prefer rolling forward. If the whole unreleased cutover must be abandoned,
+follow the snapshot restore above. If an emergency previous-binary rollback is
+unavoidable, first close traffic, revoke all account sessions by advancing
+every active user's password epoch, and reconcile suspended/recovery/deleted
+states into controls the previous version actually understands. That is an
+operator-led security event, not an Instant Rollback.
+
+### Deployment identity cutover
+
+`20260823120000_deployment_username_identity` is additive, but a code-only
+rollback becomes unsafe as soon as a Hospital username-only account exists.
+The previous API assumes every user has a non-null email address and cannot
+authenticate `usernameCanonical`; it can therefore misread the new rows and
+cannot provide a recovery path for them.
+
+After Hospital account provisioning begins, prefer rolling forward. To abandon
+the cutover, stop writes and restore the verified pre-migration database
+snapshot with the previous API. Do not synthesize email addresses, change the
+case-preserving username spelling, rewrite canonical keys, or promote an
+optional contact email into a login identifier. Preserve each username through
+the reversible deletion window; it becomes reusable only after the terminal
+anonymization transaction replaces that identity.
+
+---
+
 ## v8.2.0 — 2026-08-05
 
 **Rollback is Vercel Instant Rollback. There is no database step at all.**

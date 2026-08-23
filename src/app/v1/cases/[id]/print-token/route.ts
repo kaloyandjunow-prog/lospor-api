@@ -1,4 +1,4 @@
-import { caseWhereForUser } from "@/lib/access-control"
+import { caseReadWhereForUser } from "@/lib/access-control"
 import { NextRequest, NextResponse } from "next/server"
 import { SignJWT } from "jose"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -25,12 +25,12 @@ export async function POST(
   const { id } = await params
 
   // Verify the user actually has access to this case. The role branching that
-  // used to live here now lives in caseWhereForUser, so every route scopes the
+  // used to live here now lives in caseReadWhereForUser, so every route scopes the
   // same way rather than each keeping its own copy.
   const record  = await prisma.case.findFirst({
     // Shared predicate: a case belongs to the institution it was performed at,
     // not to wherever its author currently works.
-    where: caseWhereForUser(user, id),
+    where: caseReadWhereForUser(user, id),
     select: { id: true },
   })
   if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 })

@@ -5,11 +5,18 @@
  * updates, replaces or deletes a ruleset. Any identity collision aborts the
  * whole transaction.
  *
+ * Each draft and its audit row commit together. Against a protected database
+ * the run must name the accountable administrator in PUBLISHING_ADMIN_EMAIL;
+ * otherwise it is attributed to the LOSPOR release principal, exactly as the
+ * bundled baselines are.
+ *
  * Usage:
  *   $env:CREATE_PLATFORM_CLINICAL_DRAFTS="YES"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:create-platform-drafts
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollection,
@@ -21,13 +28,21 @@ import {
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 
 if (process.env.CREATE_PLATFORM_CLINICAL_DRAFTS !== "YES") {
   throw new Error(
     'Refusing to create platform drafts. Set CREATE_PLATFORM_CLINICAL_DRAFTS="YES" explicitly.',
   )
 }
-assertDatabaseWritable("create rulesets")
+const database = assertDatabaseWritable("create rulesets")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const prisma = new PrismaClient({
@@ -85,6 +100,7 @@ async function main() {
   }
 
   await prisma.$transaction(async tx => {
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
     for (const draft of drafts) {
       await tx.clinicalPreset.create({
         data: {
@@ -99,6 +115,8 @@ async function main() {
           version: draft.version,
           status: "DRAFT",
           publishedAt: null,
+          createdById: actorUserId(actor),
+          createdByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
           rules: {
             create: draft.rules.map(rule => ({
               ruleKey: clinicalRuleKey(rule.payload),
@@ -107,6 +125,18 @@ async function main() {
               sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
             })),
           },
+        },
+      })
+      await writeMaintenanceAuditRow(tx, actor, {
+        action: "CLINICAL_RULESET_CREATE" satisfies AuditActionCode,
+        entityId: draft.id,
+        source: "scripts/create-platform-clinical-drafts.ts",
+        detail: {
+          scope: "PLATFORM",
+          clinicalMode: draft.clinicalMode,
+          presetKey: draft.key,
+          version: draft.version,
+          ruleCount: draft.rules.length,
         },
       })
     }

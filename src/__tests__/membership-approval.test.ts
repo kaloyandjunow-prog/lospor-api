@@ -2,16 +2,9 @@ import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
 /**
- * Institutional membership decides who can see whose patients: a head of
- * department sees the cases of their institution. Three things undermined that.
- *
- *  - Verifying an email address also set `approvedAt`, so clicking the link in
- *    your own inbox approved your own account and the admin approval queue
- *    could never gate anything.
- *  - Nothing checked `approvedAt` when signing in, so "approval" only governed
- *    whether someone appeared in colleague lists.
- *  - Any authenticated user could PATCH their own `institutionId`, moving
- *    themselves into another hospital's department at will.
+ * Public accounts activate through verified email. Role elevation, research
+ * grants and institution changes keep their own explicit governance; the old
+ * generic approval bit did not govern any of them and is gone.
  *
  * These read the source rather than exercising handlers, in the same style as
  * the migration tests: the point is that the dangerous line is *absent*, and a
@@ -19,17 +12,16 @@ import { describe, expect, it } from "vitest"
  */
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8")
 
-describe("email verification does not approve the account", () => {
+describe("public email verification activates an ordinary member", () => {
   const route = read("../app/v1/auth/verify-email/route.ts")
 
   it("still marks the address verified", () => {
     expect(route).toContain("emailVerifiedAt")
+    expect(route).toContain("activatedAt")
   })
 
-  it("no longer sets approvedAt", () => {
-    // Approval is granted by an administrator, not by the person registering.
-    expect(route).not.toMatch(/approvedAt:\s*verificationToken/)
-    expect(route).not.toMatch(/approvedAt:\s*now/)
+  it("does not reference a separate approval state", () => {
+    expect(route).not.toContain("approvedAt")
   })
 })
 
@@ -41,15 +33,12 @@ describe("email verification does not approve the account", () => {
  * own cases. Approval now gates what an account may become and where it may
  * belong, which is where the department boundary actually lives.
  */
-describe("sign-in requires a verified address, not approval", () => {
+describe("sign-in requires deployment-neutral activation", () => {
   const credentials = read("../lib/credentials.ts")
 
-  it("does not reject an unapproved account", () => {
-    expect(credentials).not.toMatch(/if \(!user\.approvedAt\) return null/)
-  })
-
-  it("still requires a verified email and an undeleted account", () => {
-    expect(credentials).toContain("user.emailVerifiedAt")
+  it("requires activation and an undeleted account without making contact email identity", () => {
+    expect(credentials).toContain("user.activatedAt")
+    expect(credentials).not.toContain("!user.emailVerifiedAt")
     expect(credentials).toContain("user.deletedAt")
   })
 })
@@ -57,12 +46,12 @@ describe("sign-in requires a verified address, not approval", () => {
 describe("a fresh installation can be bootstrapped", () => {
   const bootstrap = read("../../scripts/bootstrap-admin.ts")
 
-  it("sets role, approval and verification together", () => {
+  it("sets role and activation together", () => {
     // Setting `role` alone was the documented procedure, and it left an account
     // that still could not sign in.
     expect(bootstrap).toMatch(/role:\s*"ADMIN"/)
-    expect(bootstrap).toMatch(/approvedAt:\s*now/)
-    expect(bootstrap).toMatch(/emailVerifiedAt:\s*now/)
+    expect(bootstrap).not.toContain("approvedAt")
+    expect(bootstrap).toMatch(/activatedAt:\s*now/)
   })
 
   it("refuses to run once an administrator exists", () => {
@@ -87,8 +76,11 @@ describe("institution is not self-editable", () => {
   })
 })
 
-describe("registration leaves the account pending", () => {
-  it("sets approvedAt to null so an administrator must act", () => {
-    expect(read("../app/v1/auth/register/route.ts")).toMatch(/approvedAt:\s*null/)
+describe("registration has no approval queue", () => {
+  it("creates a MEMBER and never returns pending state", () => {
+    const registration = read("../app/v1/auth/register/route.ts")
+    expect(registration).toMatch(/role:\s*"MEMBER"/)
+    expect(registration).not.toContain("approvedAt")
+    expect(registration).not.toMatch(/pending:\s*(true|false)/)
   })
 })

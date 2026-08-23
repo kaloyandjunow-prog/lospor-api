@@ -24,7 +24,7 @@ export * as $Enums from './enums'
 export * from "./enums"
 /**
  * ## Prisma Client
- * 
+ *
  * Type-safe database client for TypeScript
  * @example
  * ```
@@ -34,7 +34,7 @@ export * from "./enums"
  * // Fetch zero or more Users
  * const users = await prisma.user.findMany()
  * ```
- * 
+ *
  * Read more in our [docs](https://pris.ly/d/client).
  */
 export const PrismaClient = $Class.getPrismaClientClass()
@@ -43,7 +43,7 @@ export { Prisma }
 
 /**
  * Model User
- * 
+ *
  */
 export type User = Prisma.UserModel
 /**
@@ -56,6 +56,40 @@ export type EmailVerificationToken = Prisma.EmailVerificationTokenModel
  * 
  */
 export type PasswordResetToken = Prisma.PasswordResetTokenModel
+/**
+ * Model AuthSession
+ * Server-side inventory for every session issued by 1.2.0 or later.
+ *
+ * JWTs remain the transport credential, while this row makes selective and
+ * all-device revocation immediate and gives users a truthful device list.
+ */
+export type AuthSession = Prisma.AuthSessionModel
+/**
+ * Model MfaLoginChallenge
+ * Short-lived, one-use second-factor continuation created only after a
+ * correct password. Only its SHA-256 digest is persisted.
+ */
+export type MfaLoginChallenge = Prisma.MfaLoginChallengeModel
+/**
+ * Model MfaRecoveryCode
+ * Ten high-entropy recovery codes are shown once at MFA enrollment. Only
+ * user-bound SHA-256 digests remain; each row can be consumed once.
+ */
+export type MfaRecoveryCode = Prisma.MfaRecoveryCodeModel
+/**
+ * Model TechnicalPrincipal
+ *
+ */
+export type TechnicalPrincipal = Prisma.TechnicalPrincipalModel
+/**
+ * Model LegalAcceptance
+ * Exact evidence of the legal text accepted by an account.
+ *
+ * The legacy timestamp/version columns on User remain temporary compatibility
+ * shadows. They are not sufficient evidence because they cannot identify the
+ * deployment, privacy document, language, effective date, or exact content.
+ */
+export type LegalAcceptance = Prisma.LegalAcceptanceModel
 /**
  * Model Institution
  * 
@@ -254,6 +288,14 @@ export type ClinicalRuleReview = Prisma.ClinicalRuleReviewModel
  */
 export type ClinicalPreset = Prisma.ClinicalPresetModel
 /**
+ * Model ClinicalRulesetPublicationEvidence
+ * Immutable evidence for the exact rules an author published. Institution
+ * publication keeps the complete canonical before/after diff; platform and
+ * personal publication keep the exact resulting content and an empty or
+ * applicable baseline diff through the same contract.
+ */
+export type ClinicalRulesetPublicationEvidence = Prisma.ClinicalRulesetPublicationEvidenceModel
+/**
  * Model PlatformClinicalPresetSelection
  * 
  */
@@ -328,6 +370,12 @@ export type CaseSelection = Prisma.CaseSelectionModel
  * 
  */
 export type ResearchAccessGrant = Prisma.ResearchAccessGrantModel
+/**
+ * Model ResearchSelfAuthorization
+ * Short aggregate-only access a clinician may issue to themselves. The
+ * immutable issuance row also enforces the rolling 24-hour cooldown.
+ */
+export type ResearchSelfAuthorization = Prisma.ResearchSelfAuthorizationModel
 /**
  * Model ResearchCohort
  * 

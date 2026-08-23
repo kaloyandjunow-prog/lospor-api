@@ -47,7 +47,7 @@ describe("mapCasesToOmop", () => {
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
-      visit_source_value: "2026-0001",
+      visit_source_value: "RC-10000000-0000-4000-8000-000000000001",
       care_site_source_value: "inst-1",
     }))
     expect(bundle.condition_occurrence).toEqual(expect.arrayContaining([

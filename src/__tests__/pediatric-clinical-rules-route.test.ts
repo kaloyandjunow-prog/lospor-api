@@ -140,6 +140,45 @@ describe("clinical rules workbench route", () => {
     expect(cleared.status).toBe(200)
   })
 
+  it("passes HOD password re-entry and reason only to the rules service", async () => {
+    publishRulesetMock.mockResolvedValue({ id: "institution-1" })
+    const confirmation = {
+      password: "Current password",
+      reason: "Department policy approved for this institution.",
+    }
+    const { POST } = await import("@/app/v1/clinical/rules/workbench/route")
+    const response = await POST(request({
+      action: "publish-ruleset",
+      presetId: "institution-1",
+      confirmation,
+    }) as Parameters<typeof POST>[0])
+    expect(response.status).toBe(200)
+    expect(publishRulesetMock).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "hod-1" }),
+      "institution-1",
+      confirmation,
+    )
+    expect(logAuditMock).not.toHaveBeenCalledWith(
+      "hod-1",
+      "CLINICAL_RULESET_PUBLISH",
+      expect.anything(),
+      expect.anything(),
+    )
+  })
+
+  it("rejects a too-short ruleset reason before database access", async () => {
+    const { POST } = await import("@/app/v1/clinical/rules/workbench/route")
+    const response = await POST(request({
+      action: "select-ruleset",
+      scope: "INSTITUTION",
+      clinicalMode: "ADULT",
+      presetId: "institution-1",
+      confirmation: { password: "Current password", reason: "short" },
+    }) as Parameters<typeof POST>[0])
+    expect(response.status).toBe(400)
+    expect(selectRulesetMock).not.toHaveBeenCalled()
+  })
+
   it("returns specific service errors", async () => {
     publishRulesetMock.mockRejectedValue(new MockServiceError(
       409,

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import type {
   ResearchCaseDetail,
   ResearchCaseSummary,
@@ -16,7 +17,7 @@ import type { Prisma } from "@/generated/prisma/client"
 
 export const RESEARCH_SUMMARY_SELECT = {
   id: true,
-  caseCode: true,
+  researchId: true,
   status: true,
   clinicalMode: true,
   clinicalRulesVersion: true,
@@ -253,16 +254,25 @@ export function completeness(
   return Math.round((complete / statuses.length) * 1000) / 10
 }
 
-function researchId(row: { id: string; caseCode: string | null }): string {
-  return row.caseCode ?? `R-${row.id.slice(-8).toUpperCase()}`
+function researchEventId(caseResearchId: string, eventId: string): string {
+  return `EV-${createHash("sha256")
+    .update("research-event\0")
+    .update(caseResearchId)
+    .update("\0")
+    .update(eventId)
+    .digest("hex")
+    .slice(0, 32)}`
 }
 
 export function mapResearchSummary(row: ResearchSummaryRow): ResearchCaseSummary {
   const diagnosis = row.preop?.diagnoses[0]
   const procedure = row.preop?.procedureRows[0]
   return {
-    id: row.id,
-    researchId: researchId(row),
+    // `id` remains as a compatibility alias for clients on research API v1,
+    // but its value is now the dedicated opaque research identifier. The
+    // operational Case.id and printed caseCode never leave this mapper.
+    id: row.researchId,
+    researchId: `RC-${row.researchId}`,
     status: row.status,
     period: row.intraop?.monthYear ?? row.finalizedAt?.toISOString().slice(0, 7) ?? null,
     ageYears: row.preop?.ageYears ?? null,
@@ -474,7 +484,7 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       handover: selections("handoverItem"),
     },
     timeline: row.events.map(event => ({
-      id: event.id,
+      id: researchEventId(row.researchId, event.id),
       minute: startedAt === undefined
         ? null
         : Math.round((event.timestamp.getTime() - startedAt) / 60_000),

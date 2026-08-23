@@ -53,11 +53,11 @@ export async function readResearchCases(
 }
 
 export async function readResearchCase(
-  id: string,
+  researchId: string,
   where: Prisma.CaseWhereInput,
 ) {
   const row = await prisma.case.findFirst({
-    where: { AND: [where, { id }] },
+    where: { AND: [where, { researchId }] },
     select: RESEARCH_DETAIL_SELECT,
   })
   return row ? mapResearchDetail(row) : null

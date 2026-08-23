@@ -8,13 +8,14 @@ import type {
  *
  * Only platform administrators may touch the *schema*: which drugs, fluids and
  * infusions exist, their canonical units and routes, and their EN/BG display
- * names. Institution (HOD) and personal (member) layers may only tune how the
- * dosing widget *presents* — slider bounds, quick-dose pills, autofill, default
- * concentration, ordering and visibility.
+ * names. Institution (HOD) and personal (member) layers may only tune an
+ * existing catalog item. HOD publication is a separately re-authenticated,
+ * reasoned and audited act, so the institution layer may broaden or narrow its
+ * clinical envelope. A personal layer may narrow that envelope but never
+ * broaden the platform-reviewed calculation.
  *
- * The rule of thumb enforced here: lower layers may NARROW, never INVENT.
- * Anything else would let a personal preference introduce a value that is not
- * canonical, which would break research-grade data downstream.
+ * Neither lower layer may invent an item, route, identity, name or canonical
+ * unit. That boundary keeps recorded observations comparable downstream.
  */
 
 export type ScopeGuardIssue = { field: string; message: string }
@@ -323,6 +324,45 @@ export function scopeGuardIssues(input: {
     })
   }
 
+  const baseRoutes = new Set(routesOf(baseline))
+  const invented = routesOf(next).filter(route => !baseRoutes.has(route))
+  if (invented.length) {
+    issues.push({
+      field: "routes",
+      message: `Routes ${invented.join(", ")} are not in the platform ruleset. `
+        + "Existing routes may be removed or reordered, but new ones are added by platform administrators.",
+    })
+  }
+
+  // A platform-withheld or manual-only entry cannot acquire a prospective
+  // automatic calculation at a lower scope. An institution may still expose
+  // it for manual recording, and may hide a canonical drug from routine
+  // pickers without damaging search, history, or manual-entry support.
+  if (suggestsADose(next) && !suggestsADose(baseline)) {
+    issues.push({
+      field: "availability",
+      message: "A drug the platform ruleset withheld or left to the clinician cannot be given an automatic dose "
+        + "here. It may still be shown for manual entry, withdrawn, or recorded as given.",
+    })
+  }
+
+  // HODs may broaden or narrow clinical parameters. Exact before/after
+  // evidence, password re-entry, a reason and transactional audit are enforced
+  // when the institution ruleset is published and activated.
+  if (input.scope === "INSTITUTION") {
+    // Broadening an existing calculation is distinct from inventing one where
+    // the platform intentionally supplied none.
+    for (const route of routesOf(next)) {
+      if (!baseRoutes.has(route)) continue
+      const nextCalc = doseCalcOf(next, route)
+      const baseCalc = doseCalcOf(baseline, route)
+      if (!baseCalc && nextCalc) {
+        issues.push(...doseCalcIssues({ route, next: nextCalc, baseline: baseCalc }))
+      }
+    }
+    return issues
+  }
+
   // An age band is the statement "this dose was reviewed for children of this
   // age". Narrowing it is a local judgement; widening it applies a dose to
   // children nobody reviewed it for — a neonate inheriting a toddler's profile.
@@ -349,25 +389,7 @@ export function scopeGuardIssues(input: {
     })
   }
 
-  if (suggestsADose(next) && !suggestsADose(baseline)) {
-    issues.push({
-      field: "availability",
-      message: "A drug the platform ruleset withheld or left to the clinician cannot be given an automatic dose "
-        + "here. It may still be shown for manual entry, withdrawn, or recorded as given.",
-    })
-  }
-
-  const baseRoutes = new Set(routesOf(baseline))
-  const invented = routesOf(next).filter(route => !baseRoutes.has(route))
-  if (invented.length) {
-    issues.push({
-      field: "routes",
-      message: `Routes ${invented.join(", ")} are not in the platform ruleset. `
-        + "Existing routes may be removed or reordered, but new ones are added by platform administrators.",
-    })
-  }
-
-  // Narrow, never widen: a lower layer may tighten a slider but not extend it
+  // Personal scope is narrow-only: it may tighten a slider but not extend it
   // beyond the clinically reviewed platform envelope.
   for (const route of routesOf(next)) {
     if (!baseRoutes.has(route)) continue

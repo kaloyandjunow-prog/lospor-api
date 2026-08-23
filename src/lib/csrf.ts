@@ -59,9 +59,12 @@ export function isStateChangingMethod(method: string): boolean {
   return STATE_CHANGING_METHODS.has(method.toUpperCase())
 }
 
-export function validateCookieWriteOrigin(req: HeaderSource): "pass" | "skip" | "fail" {
+export function validateCookieWriteOrigin(
+  req: HeaderSource,
+  options: { allowBearerBypass?: boolean } = {},
+): "pass" | "skip" | "fail" {
   if (!isStateChangingMethod(req.method)) return "pass"
-  if (usesBearerAuth(req)) return "pass"
+  if (options.allowBearerBypass !== false && usesBearerAuth(req)) return "pass"
 
   const expected = trustedAppOrigins()
   if (!expected.length) {

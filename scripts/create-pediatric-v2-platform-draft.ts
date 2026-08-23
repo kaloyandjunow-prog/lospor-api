@@ -2,12 +2,19 @@
  * Append-only import of the source-controlled pediatric v2 platform draft.
  * The script never updates, publishes, selects or deletes a ruleset.
  *
+ * The draft and its audit row commit together. Against a protected database the
+ * run must name the accountable administrator in PUBLISHING_ADMIN_EMAIL;
+ * otherwise it is attributed to the LOSPOR release principal, exactly as the
+ * bundled baselines are.
+ *
  * Usage:
  *   $env:CREATE_PEDIATRIC_V2_DRAFT="YES"
  *   $env:TARGET_CLINICAL_PRESET_ID="lospor-pediatrics-v2"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:create-pediatric-v2
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollectionForPublication,
@@ -16,6 +23,13 @@ import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-dra
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 
 const TARGET_PRESET_ID = "lospor-pediatrics-v2"
 
@@ -25,7 +39,8 @@ if (process.env.CREATE_PEDIATRIC_V2_DRAFT !== "YES") {
 if (process.env.TARGET_CLINICAL_PRESET_ID !== TARGET_PRESET_ID) {
   throw new Error(`TARGET_CLINICAL_PRESET_ID must be exactly "${TARGET_PRESET_ID}".`)
 }
-assertDatabaseWritable("create the pediatric v2 draft")
+const database = assertDatabaseWritable("create the pediatric v2 draft")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const canonical = createLosporPediatricV2Draft()
@@ -76,27 +91,44 @@ async function main() {
     )
   }
 
-  await prisma.clinicalPreset.create({
-    data: {
-      id: canonical.id,
-      key: canonical.key,
-      name: canonical.name,
-      description: canonical.description,
-      clinicalMode: canonical.clinicalMode,
-      scope: "PLATFORM",
-      version: canonical.version,
-      status: "DRAFT",
-      publishedAt: null,
-      rules: {
-        create: canonical.rules.map(rule => ({
-          ruleKey: clinicalRuleKey(rule.payload),
-          ruleVersion: `${canonical.key}.v${canonical.version}.draft1`,
-          payload: rule.payload as Prisma.InputJsonValue,
-          sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
-        })),
+  await prisma.$transaction(async tx => {
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
+    await tx.clinicalPreset.create({
+      data: {
+        id: canonical.id,
+        key: canonical.key,
+        name: canonical.name,
+        description: canonical.description,
+        clinicalMode: canonical.clinicalMode,
+        scope: "PLATFORM",
+        version: canonical.version,
+        status: "DRAFT",
+        publishedAt: null,
+        createdById: actorUserId(actor),
+        createdByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
+        rules: {
+          create: canonical.rules.map(rule => ({
+            ruleKey: clinicalRuleKey(rule.payload),
+            ruleVersion: `${canonical.key}.v${canonical.version}.draft1`,
+            payload: rule.payload as Prisma.InputJsonValue,
+            sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
+          })),
+        },
       },
-    },
-  })
+    })
+    await writeMaintenanceAuditRow(tx, actor, {
+      action: "CLINICAL_RULESET_CREATE" satisfies AuditActionCode,
+      entityId: TARGET_PRESET_ID,
+      source: "scripts/create-pediatric-v2-platform-draft.ts",
+      detail: {
+        scope: "PLATFORM",
+        clinicalMode: canonical.clinicalMode,
+        presetKey: canonical.key,
+        version: canonical.version,
+        ruleCount: canonical.rules.length,
+      },
+    })
+  }, { timeout: 120_000 })
   console.log(
     `Created inactive ${TARGET_PRESET_ID} with ${canonical.rules.length} rules. It was not published or selected.`,
   )

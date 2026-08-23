@@ -31,17 +31,21 @@ describe.skipIf(!runPostgres)("research governance PostgreSQL integration", () =
   const caseA = `research-case-a-${suffix}`
   const caseB = `research-case-b-${suffix}`
   let grantA = ""
+  let researchIdA = ""
   let artifactRoot = ""
 
   const user = {
     id: researcherId,
     role: "RESEARCHER",
+    accountKind: "RESEARCH_ONLY",
+    preferredLocale: "bg",
     institutionId: null,
     institutionName: null,
     firstName: "Research",
     lastName: "Tester",
     title: null,
     jti: null,
+    clientType: "WEB",
   } as const
   const cohort = { version: 1 as const, filters: { statuses: ["COMPLETE" as const] } }
 
@@ -95,17 +99,23 @@ describe.skipIf(!runPostgres)("research governance PostgreSQL integration", () =
       prisma.researchAccessGrant.create({ data: {
         userId: researcherId, institutionId: institutionA, grantedById: adminId,
         canInspectCases: true, canExport: true, canExportOmop: false,
+        expiresAt: new Date(Date.now() + 90 * 86_400_000),
       } }),
       prisma.researchAccessGrant.create({ data: {
         userId: researcherId, institutionId: institutionB, grantedById: adminId,
         canInspectCases: false, canExport: false, canExportOmop: false,
+        expiresAt: new Date(Date.now() + 90 * 86_400_000),
       } }),
     ])
     grantA = grants[0].id
     await prisma.case.createMany({ data: [
-      { id: caseA, userId: researcherId, institutionId: institutionA, caseCode: "RG-A1", status: "IN_PROGRESS" },
-      { id: caseB, userId: researcherId, institutionId: institutionB, caseCode: "RG-B1", status: "COMPLETE", finalizedAt: new Date("2026-07-01T11:00:00.000Z") },
+      { id: caseA, userId: researcherId, createdById: researcherId, institutionId: institutionA, caseCode: "RG-A1", status: "IN_PROGRESS" },
+      { id: caseB, userId: researcherId, createdById: researcherId, institutionId: institutionB, caseCode: "RG-B1", status: "COMPLETE", finalizedAt: new Date("2026-07-01T11:00:00.000Z") },
     ] })
+    researchIdA = (await prisma.case.findUniqueOrThrow({
+      where: { id: caseA },
+      select: { researchId: true },
+    })).researchId
     await prisma.preoperativeAssessment.create({ data: {
       caseId: caseA,
       sex: "MALE",
@@ -161,7 +171,10 @@ describe.skipIf(!runPostgres)("research governance PostgreSQL integration", () =
       researchContextForAction(context!, "inspectCases"),
     )
     expect(inspected.matchingCases).toBe(1)
-    expect(inspected.cases.map(item => item.researchId)).toEqual(["RG-A1"])
+    expect(inspected.cases.map(item => item.researchId)).toEqual([`RC-${researchIdA}`])
+    expect(inspected.cases.map(item => item.id)).toEqual([researchIdA])
+    expect(JSON.stringify(inspected)).not.toContain(caseA)
+    expect(JSON.stringify(inspected)).not.toContain("RG-A1")
   })
 
   it("rejects research exports unless the cohort is finalized-only", async () => {
@@ -309,7 +322,9 @@ describe.skipIf(!runPostgres)("research governance PostgreSQL integration", () =
 
     const first = await openResearchExport(context!, queued.id)
     const firstText = await streamText(first.stream)
-    expect(firstText).toContain("RG-A1")
+    expect(firstText).toContain(`RC-${researchIdA}`)
+    expect(firstText).not.toContain("RG-A1")
+    expect(firstText).not.toContain(caseA)
     expect(firstText).not.toContain("RG-B1")
 
     await prisma.case.update({ where: { id: caseA }, data: { caseCode: "RG-A2" } })

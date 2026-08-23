@@ -50,7 +50,9 @@ export type ClinicalPresetMinAggregateOutputType = {
   version: number | null
   status: $Enums.ClinicalPresetStatus | null
   createdById: string | null
+  createdByTechnicalPrincipalId: string | null
   publishedById: string | null
+  publishedByTechnicalPrincipalId: string | null
   publishedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -70,7 +72,9 @@ export type ClinicalPresetMaxAggregateOutputType = {
   version: number | null
   status: $Enums.ClinicalPresetStatus | null
   createdById: string | null
+  createdByTechnicalPrincipalId: string | null
   publishedById: string | null
+  publishedByTechnicalPrincipalId: string | null
   publishedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -90,7 +94,9 @@ export type ClinicalPresetCountAggregateOutputType = {
   version: number
   status: number
   createdById: number
+  createdByTechnicalPrincipalId: number
   publishedById: number
+  publishedByTechnicalPrincipalId: number
   publishedAt: number
   createdAt: number
   updatedAt: number
@@ -122,7 +128,9 @@ export type ClinicalPresetMinAggregateInputType = {
   version?: true
   status?: true
   createdById?: true
+  createdByTechnicalPrincipalId?: true
   publishedById?: true
+  publishedByTechnicalPrincipalId?: true
   publishedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -142,7 +150,9 @@ export type ClinicalPresetMaxAggregateInputType = {
   version?: true
   status?: true
   createdById?: true
+  createdByTechnicalPrincipalId?: true
   publishedById?: true
+  publishedByTechnicalPrincipalId?: true
   publishedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -162,7 +172,9 @@ export type ClinicalPresetCountAggregateInputType = {
   version?: true
   status?: true
   createdById?: true
+  createdByTechnicalPrincipalId?: true
   publishedById?: true
+  publishedByTechnicalPrincipalId?: true
   publishedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -269,7 +281,9 @@ export type ClinicalPresetGroupByOutputType = {
   version: number
   status: $Enums.ClinicalPresetStatus
   createdById: string | null
+  createdByTechnicalPrincipalId: string | null
   publishedById: string | null
+  publishedByTechnicalPrincipalId: string | null
   publishedAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -312,7 +326,9 @@ export type ClinicalPresetWhereInput = {
   version?: Prisma.IntFilter<"ClinicalPreset"> | number
   status?: Prisma.EnumClinicalPresetStatusFilter<"ClinicalPreset"> | $Enums.ClinicalPresetStatus
   createdById?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
+  createdByTechnicalPrincipalId?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
   publishedById?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
+  publishedByTechnicalPrincipalId?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
   publishedAt?: Prisma.DateTimeNullableFilter<"ClinicalPreset"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ClinicalPreset"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ClinicalPreset"> | Date | string
@@ -321,12 +337,15 @@ export type ClinicalPresetWhereInput = {
   copiedFromPreset?: Prisma.XOR<Prisma.ClinicalPresetNullableScalarRelationFilter, Prisma.ClinicalPresetWhereInput> | null
   copies?: Prisma.ClinicalPresetListRelationFilter
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  createdByTechnicalPrincipal?: Prisma.XOR<Prisma.TechnicalPrincipalNullableScalarRelationFilter, Prisma.TechnicalPrincipalWhereInput> | null
   publishedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  publishedByTechnicalPrincipal?: Prisma.XOR<Prisma.TechnicalPrincipalNullableScalarRelationFilter, Prisma.TechnicalPrincipalWhereInput> | null
   rules?: Prisma.ClinicalPresetRuleListRelationFilter
   platformSelections?: Prisma.PlatformClinicalPresetSelectionListRelationFilter
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionListRelationFilter
   userSelections?: Prisma.UserClinicalPresetSelectionListRelationFilter
   overrides?: Prisma.InstitutionClinicalRuleOverrideListRelationFilter
+  publicationEvidence?: Prisma.XOR<Prisma.ClinicalRulesetPublicationEvidenceNullableScalarRelationFilter, Prisma.ClinicalRulesetPublicationEvidenceWhereInput> | null
 }
 
 export type ClinicalPresetOrderByWithRelationInput = {
@@ -343,7 +362,9 @@ export type ClinicalPresetOrderByWithRelationInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdByTechnicalPrincipalId?: Prisma.SortOrderInput | Prisma.SortOrder
   publishedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  publishedByTechnicalPrincipalId?: Prisma.SortOrderInput | Prisma.SortOrder
   publishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -352,12 +373,15 @@ export type ClinicalPresetOrderByWithRelationInput = {
   copiedFromPreset?: Prisma.ClinicalPresetOrderByWithRelationInput
   copies?: Prisma.ClinicalPresetOrderByRelationAggregateInput
   createdBy?: Prisma.UserOrderByWithRelationInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalOrderByWithRelationInput
   publishedBy?: Prisma.UserOrderByWithRelationInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalOrderByWithRelationInput
   rules?: Prisma.ClinicalPresetRuleOrderByRelationAggregateInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionOrderByRelationAggregateInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionOrderByRelationAggregateInput
   userSelections?: Prisma.UserClinicalPresetSelectionOrderByRelationAggregateInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideOrderByRelationAggregateInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceOrderByWithRelationInput
 }
 
 export type ClinicalPresetWhereUniqueInput = Prisma.AtLeast<{
@@ -377,7 +401,9 @@ export type ClinicalPresetWhereUniqueInput = Prisma.AtLeast<{
   version?: Prisma.IntFilter<"ClinicalPreset"> | number
   status?: Prisma.EnumClinicalPresetStatusFilter<"ClinicalPreset"> | $Enums.ClinicalPresetStatus
   createdById?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
+  createdByTechnicalPrincipalId?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
   publishedById?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
+  publishedByTechnicalPrincipalId?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
   publishedAt?: Prisma.DateTimeNullableFilter<"ClinicalPreset"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ClinicalPreset"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ClinicalPreset"> | Date | string
@@ -386,12 +412,15 @@ export type ClinicalPresetWhereUniqueInput = Prisma.AtLeast<{
   copiedFromPreset?: Prisma.XOR<Prisma.ClinicalPresetNullableScalarRelationFilter, Prisma.ClinicalPresetWhereInput> | null
   copies?: Prisma.ClinicalPresetListRelationFilter
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  createdByTechnicalPrincipal?: Prisma.XOR<Prisma.TechnicalPrincipalNullableScalarRelationFilter, Prisma.TechnicalPrincipalWhereInput> | null
   publishedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  publishedByTechnicalPrincipal?: Prisma.XOR<Prisma.TechnicalPrincipalNullableScalarRelationFilter, Prisma.TechnicalPrincipalWhereInput> | null
   rules?: Prisma.ClinicalPresetRuleListRelationFilter
   platformSelections?: Prisma.PlatformClinicalPresetSelectionListRelationFilter
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionListRelationFilter
   userSelections?: Prisma.UserClinicalPresetSelectionListRelationFilter
   overrides?: Prisma.InstitutionClinicalRuleOverrideListRelationFilter
+  publicationEvidence?: Prisma.XOR<Prisma.ClinicalRulesetPublicationEvidenceNullableScalarRelationFilter, Prisma.ClinicalRulesetPublicationEvidenceWhereInput> | null
 }, "id">
 
 export type ClinicalPresetOrderByWithAggregationInput = {
@@ -408,7 +437,9 @@ export type ClinicalPresetOrderByWithAggregationInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
+  createdByTechnicalPrincipalId?: Prisma.SortOrderInput | Prisma.SortOrder
   publishedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  publishedByTechnicalPrincipalId?: Prisma.SortOrderInput | Prisma.SortOrder
   publishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -436,7 +467,9 @@ export type ClinicalPresetScalarWhereWithAggregatesInput = {
   version?: Prisma.IntWithAggregatesFilter<"ClinicalPreset"> | number
   status?: Prisma.EnumClinicalPresetStatusWithAggregatesFilter<"ClinicalPreset"> | $Enums.ClinicalPresetStatus
   createdById?: Prisma.StringNullableWithAggregatesFilter<"ClinicalPreset"> | string | null
+  createdByTechnicalPrincipalId?: Prisma.StringNullableWithAggregatesFilter<"ClinicalPreset"> | string | null
   publishedById?: Prisma.StringNullableWithAggregatesFilter<"ClinicalPreset"> | string | null
+  publishedByTechnicalPrincipalId?: Prisma.StringNullableWithAggregatesFilter<"ClinicalPreset"> | string | null
   publishedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ClinicalPreset"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ClinicalPreset"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"ClinicalPreset"> | Date | string
@@ -460,12 +493,15 @@ export type ClinicalPresetCreateInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateInput = {
@@ -482,7 +518,9 @@ export type ClinicalPresetUncheckedCreateInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -492,6 +530,7 @@ export type ClinicalPresetUncheckedCreateInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUpdateInput = {
@@ -512,12 +551,15 @@ export type ClinicalPresetUpdateInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateInput = {
@@ -534,7 +576,9 @@ export type ClinicalPresetUncheckedUpdateInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -544,6 +588,7 @@ export type ClinicalPresetUncheckedUpdateInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetCreateManyInput = {
@@ -560,7 +605,9 @@ export type ClinicalPresetCreateManyInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -595,7 +642,9 @@ export type ClinicalPresetUncheckedUpdateManyInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -630,7 +679,9 @@ export type ClinicalPresetCountOrderByAggregateInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
+  createdByTechnicalPrincipalId?: Prisma.SortOrder
   publishedById?: Prisma.SortOrder
+  publishedByTechnicalPrincipalId?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -655,7 +706,9 @@ export type ClinicalPresetMaxOrderByAggregateInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
+  createdByTechnicalPrincipalId?: Prisma.SortOrder
   publishedById?: Prisma.SortOrder
+  publishedByTechnicalPrincipalId?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -675,7 +728,9 @@ export type ClinicalPresetMinOrderByAggregateInput = {
   version?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
+  createdByTechnicalPrincipalId?: Prisma.SortOrder
   publishedById?: Prisma.SortOrder
+  publishedByTechnicalPrincipalId?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -817,6 +872,90 @@ export type ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput = {
   deleteMany?: Prisma.ClinicalPresetScalarWhereInput | Prisma.ClinicalPresetScalarWhereInput[]
 }
 
+export type ClinicalPresetCreateNestedManyWithoutCreatedByTechnicalPrincipalInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyCreatedByTechnicalPrincipalInputEnvelope
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+}
+
+export type ClinicalPresetCreateNestedManyWithoutPublishedByTechnicalPrincipalInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyPublishedByTechnicalPrincipalInputEnvelope
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+}
+
+export type ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByTechnicalPrincipalInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyCreatedByTechnicalPrincipalInputEnvelope
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+}
+
+export type ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByTechnicalPrincipalInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyPublishedByTechnicalPrincipalInputEnvelope
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+}
+
+export type ClinicalPresetUpdateManyWithoutCreatedByTechnicalPrincipalNestedInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput[]
+  upsert?: Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyCreatedByTechnicalPrincipalInputEnvelope
+  set?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  disconnect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  delete?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  update?: Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput[]
+  updateMany?: Prisma.ClinicalPresetUpdateManyWithWhereWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateManyWithWhereWithoutCreatedByTechnicalPrincipalInput[]
+  deleteMany?: Prisma.ClinicalPresetScalarWhereInput | Prisma.ClinicalPresetScalarWhereInput[]
+}
+
+export type ClinicalPresetUpdateManyWithoutPublishedByTechnicalPrincipalNestedInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput[]
+  upsert?: Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyPublishedByTechnicalPrincipalInputEnvelope
+  set?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  disconnect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  delete?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  update?: Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput[]
+  updateMany?: Prisma.ClinicalPresetUpdateManyWithWhereWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateManyWithWhereWithoutPublishedByTechnicalPrincipalInput[]
+  deleteMany?: Prisma.ClinicalPresetScalarWhereInput | Prisma.ClinicalPresetScalarWhereInput[]
+}
+
+export type ClinicalPresetUncheckedUpdateManyWithoutCreatedByTechnicalPrincipalNestedInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput[]
+  upsert?: Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyCreatedByTechnicalPrincipalInputEnvelope
+  set?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  disconnect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  delete?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  update?: Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput[]
+  updateMany?: Prisma.ClinicalPresetUpdateManyWithWhereWithoutCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateManyWithWhereWithoutCreatedByTechnicalPrincipalInput[]
+  deleteMany?: Prisma.ClinicalPresetScalarWhereInput | Prisma.ClinicalPresetScalarWhereInput[]
+}
+
+export type ClinicalPresetUncheckedUpdateManyWithoutPublishedByTechnicalPrincipalNestedInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput> | Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput[]
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput[]
+  upsert?: Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpsertWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput[]
+  createMany?: Prisma.ClinicalPresetCreateManyPublishedByTechnicalPrincipalInputEnvelope
+  set?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  disconnect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  delete?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  connect?: Prisma.ClinicalPresetWhereUniqueInput | Prisma.ClinicalPresetWhereUniqueInput[]
+  update?: Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput[]
+  updateMany?: Prisma.ClinicalPresetUpdateManyWithWhereWithoutPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetUpdateManyWithWhereWithoutPublishedByTechnicalPrincipalInput[]
+  deleteMany?: Prisma.ClinicalPresetScalarWhereInput | Prisma.ClinicalPresetScalarWhereInput[]
+}
+
 export type ClinicalPresetCreateNestedManyWithoutOwnerInstitutionInput = {
   create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutOwnerInstitutionInput, Prisma.ClinicalPresetUncheckedCreateWithoutOwnerInstitutionInput> | Prisma.ClinicalPresetCreateWithoutOwnerInstitutionInput[] | Prisma.ClinicalPresetUncheckedCreateWithoutOwnerInstitutionInput[]
   connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutOwnerInstitutionInput | Prisma.ClinicalPresetCreateOrConnectWithoutOwnerInstitutionInput[]
@@ -925,6 +1064,20 @@ export type ClinicalPresetUncheckedUpdateManyWithoutCopiedFromPresetNestedInput 
   deleteMany?: Prisma.ClinicalPresetScalarWhereInput | Prisma.ClinicalPresetScalarWhereInput[]
 }
 
+export type ClinicalPresetCreateNestedOneWithoutPublicationEvidenceInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublicationEvidenceInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublicationEvidenceInput>
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutPublicationEvidenceInput
+  connect?: Prisma.ClinicalPresetWhereUniqueInput
+}
+
+export type ClinicalPresetUpdateOneRequiredWithoutPublicationEvidenceNestedInput = {
+  create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublicationEvidenceInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublicationEvidenceInput>
+  connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutPublicationEvidenceInput
+  upsert?: Prisma.ClinicalPresetUpsertWithoutPublicationEvidenceInput
+  connect?: Prisma.ClinicalPresetWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ClinicalPresetUpdateToOneWithWhereWithoutPublicationEvidenceInput, Prisma.ClinicalPresetUpdateWithoutPublicationEvidenceInput>, Prisma.ClinicalPresetUncheckedUpdateWithoutPublicationEvidenceInput>
+}
+
 export type ClinicalPresetCreateNestedOneWithoutPlatformSelectionsInput = {
   create?: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPlatformSelectionsInput, Prisma.ClinicalPresetUncheckedCreateWithoutPlatformSelectionsInput>
   connectOrCreate?: Prisma.ClinicalPresetCreateOrConnectWithoutPlatformSelectionsInput
@@ -1012,12 +1165,15 @@ export type ClinicalPresetCreateWithoutCreatedByInput = {
   ownerUser?: Prisma.UserCreateNestedOneWithoutClinicalPresetsOwnedInput
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutCreatedByInput = {
@@ -1033,7 +1189,9 @@ export type ClinicalPresetUncheckedCreateWithoutCreatedByInput = {
   copiedFromVersion?: number | null
   version: number
   status?: $Enums.ClinicalPresetStatus
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1043,6 +1201,7 @@ export type ClinicalPresetUncheckedCreateWithoutCreatedByInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutCreatedByInput = {
@@ -1073,11 +1232,14 @@ export type ClinicalPresetCreateWithoutPublishedByInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutPublishedByInput = {
@@ -1094,6 +1256,8 @@ export type ClinicalPresetUncheckedCreateWithoutPublishedByInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1103,6 +1267,7 @@ export type ClinicalPresetUncheckedCreateWithoutPublishedByInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutPublishedByInput = {
@@ -1132,12 +1297,15 @@ export type ClinicalPresetCreateWithoutOwnerUserInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutOwnerUserInput = {
@@ -1153,7 +1321,9 @@ export type ClinicalPresetUncheckedCreateWithoutOwnerUserInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1163,6 +1333,7 @@ export type ClinicalPresetUncheckedCreateWithoutOwnerUserInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutOwnerUserInput = {
@@ -1208,7 +1379,9 @@ export type ClinicalPresetScalarWhereInput = {
   version?: Prisma.IntFilter<"ClinicalPreset"> | number
   status?: Prisma.EnumClinicalPresetStatusFilter<"ClinicalPreset"> | $Enums.ClinicalPresetStatus
   createdById?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
+  createdByTechnicalPrincipalId?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
   publishedById?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
+  publishedByTechnicalPrincipalId?: Prisma.StringNullableFilter<"ClinicalPreset"> | string | null
   publishedAt?: Prisma.DateTimeNullableFilter<"ClinicalPreset"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ClinicalPreset"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ClinicalPreset"> | Date | string
@@ -1246,6 +1419,170 @@ export type ClinicalPresetUpdateManyWithWhereWithoutOwnerUserInput = {
   data: Prisma.XOR<Prisma.ClinicalPresetUpdateManyMutationInput, Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserInput>
 }
 
+export type ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ownerInstitution?: Prisma.InstitutionCreateNestedOneWithoutClinicalPresetsInput
+  ownerUser?: Prisma.UserCreateNestedOneWithoutClinicalPresetsOwnedInput
+  copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
+  rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
+}
+
+export type ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  ownerInstitutionId?: string | null
+  ownerUserId?: string | null
+  copiedFromPresetId?: string | null
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  createdById?: string | null
+  publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  copies?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCopiedFromPresetInput
+  rules?: Prisma.ClinicalPresetRuleUncheckedCreateNestedManyWithoutPresetInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
+}
+
+export type ClinicalPresetCreateOrConnectWithoutCreatedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetWhereUniqueInput
+  create: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput>
+}
+
+export type ClinicalPresetCreateManyCreatedByTechnicalPrincipalInputEnvelope = {
+  data: Prisma.ClinicalPresetCreateManyCreatedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateManyCreatedByTechnicalPrincipalInput[]
+  skipDuplicates?: boolean
+}
+
+export type ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ownerInstitution?: Prisma.InstitutionCreateNestedOneWithoutClinicalPresetsInput
+  ownerUser?: Prisma.UserCreateNestedOneWithoutClinicalPresetsOwnedInput
+  copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
+  publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
+}
+
+export type ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  ownerInstitutionId?: string | null
+  ownerUserId?: string | null
+  copiedFromPresetId?: string | null
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
+  publishedById?: string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  copies?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCopiedFromPresetInput
+  rules?: Prisma.ClinicalPresetRuleUncheckedCreateNestedManyWithoutPresetInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
+}
+
+export type ClinicalPresetCreateOrConnectWithoutPublishedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetWhereUniqueInput
+  create: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput>
+}
+
+export type ClinicalPresetCreateManyPublishedByTechnicalPrincipalInputEnvelope = {
+  data: Prisma.ClinicalPresetCreateManyPublishedByTechnicalPrincipalInput | Prisma.ClinicalPresetCreateManyPublishedByTechnicalPrincipalInput[]
+  skipDuplicates?: boolean
+}
+
+export type ClinicalPresetUpsertWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetWhereUniqueInput
+  update: Prisma.XOR<Prisma.ClinicalPresetUpdateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedUpdateWithoutCreatedByTechnicalPrincipalInput>
+  create: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutCreatedByTechnicalPrincipalInput>
+}
+
+export type ClinicalPresetUpdateWithWhereUniqueWithoutCreatedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetWhereUniqueInput
+  data: Prisma.XOR<Prisma.ClinicalPresetUpdateWithoutCreatedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedUpdateWithoutCreatedByTechnicalPrincipalInput>
+}
+
+export type ClinicalPresetUpdateManyWithWhereWithoutCreatedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetScalarWhereInput
+  data: Prisma.XOR<Prisma.ClinicalPresetUpdateManyMutationInput, Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByTechnicalPrincipalInput>
+}
+
+export type ClinicalPresetUpsertWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetWhereUniqueInput
+  update: Prisma.XOR<Prisma.ClinicalPresetUpdateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedUpdateWithoutPublishedByTechnicalPrincipalInput>
+  create: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublishedByTechnicalPrincipalInput>
+}
+
+export type ClinicalPresetUpdateWithWhereUniqueWithoutPublishedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetWhereUniqueInput
+  data: Prisma.XOR<Prisma.ClinicalPresetUpdateWithoutPublishedByTechnicalPrincipalInput, Prisma.ClinicalPresetUncheckedUpdateWithoutPublishedByTechnicalPrincipalInput>
+}
+
+export type ClinicalPresetUpdateManyWithWhereWithoutPublishedByTechnicalPrincipalInput = {
+  where: Prisma.ClinicalPresetScalarWhereInput
+  data: Prisma.XOR<Prisma.ClinicalPresetUpdateManyMutationInput, Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByTechnicalPrincipalInput>
+}
+
 export type ClinicalPresetCreateWithoutOwnerInstitutionInput = {
   id?: string
   key: string
@@ -1263,12 +1600,15 @@ export type ClinicalPresetCreateWithoutOwnerInstitutionInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutOwnerInstitutionInput = {
@@ -1284,7 +1624,9 @@ export type ClinicalPresetUncheckedCreateWithoutOwnerInstitutionInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1294,6 +1636,7 @@ export type ClinicalPresetUncheckedCreateWithoutOwnerInstitutionInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutOwnerInstitutionInput = {
@@ -1339,12 +1682,15 @@ export type ClinicalPresetCreateWithoutCopiesInput = {
   ownerUser?: Prisma.UserCreateNestedOneWithoutClinicalPresetsOwnedInput
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutCopiesInput = {
@@ -1361,7 +1707,9 @@ export type ClinicalPresetUncheckedCreateWithoutCopiesInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1370,6 +1718,7 @@ export type ClinicalPresetUncheckedCreateWithoutCopiesInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutCopiesInput = {
@@ -1394,12 +1743,15 @@ export type ClinicalPresetCreateWithoutCopiedFromPresetInput = {
   ownerUser?: Prisma.UserCreateNestedOneWithoutClinicalPresetsOwnedInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutCopiedFromPresetInput = {
@@ -1415,7 +1767,9 @@ export type ClinicalPresetUncheckedCreateWithoutCopiedFromPresetInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1425,6 +1779,7 @@ export type ClinicalPresetUncheckedCreateWithoutCopiedFromPresetInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutCopiedFromPresetInput = {
@@ -1465,12 +1820,15 @@ export type ClinicalPresetUpdateWithoutCopiesInput = {
   ownerUser?: Prisma.UserUpdateOneWithoutClinicalPresetsOwnedNestedInput
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutCopiesInput = {
@@ -1487,7 +1845,9 @@ export type ClinicalPresetUncheckedUpdateWithoutCopiesInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1496,6 +1856,7 @@ export type ClinicalPresetUncheckedUpdateWithoutCopiesInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUpsertWithWhereUniqueWithoutCopiedFromPresetInput = {
@@ -1512,6 +1873,134 @@ export type ClinicalPresetUpdateWithWhereUniqueWithoutCopiedFromPresetInput = {
 export type ClinicalPresetUpdateManyWithWhereWithoutCopiedFromPresetInput = {
   where: Prisma.ClinicalPresetScalarWhereInput
   data: Prisma.XOR<Prisma.ClinicalPresetUpdateManyMutationInput, Prisma.ClinicalPresetUncheckedUpdateManyWithoutCopiedFromPresetInput>
+}
+
+export type ClinicalPresetCreateWithoutPublicationEvidenceInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  ownerInstitution?: Prisma.InstitutionCreateNestedOneWithoutClinicalPresetsInput
+  ownerUser?: Prisma.UserCreateNestedOneWithoutClinicalPresetsOwnedInput
+  copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
+  copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
+  publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
+  rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+}
+
+export type ClinicalPresetUncheckedCreateWithoutPublicationEvidenceInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  ownerInstitutionId?: string | null
+  ownerUserId?: string | null
+  copiedFromPresetId?: string | null
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
+  publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  copies?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCopiedFromPresetInput
+  rules?: Prisma.ClinicalPresetRuleUncheckedCreateNestedManyWithoutPresetInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+}
+
+export type ClinicalPresetCreateOrConnectWithoutPublicationEvidenceInput = {
+  where: Prisma.ClinicalPresetWhereUniqueInput
+  create: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublicationEvidenceInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublicationEvidenceInput>
+}
+
+export type ClinicalPresetUpsertWithoutPublicationEvidenceInput = {
+  update: Prisma.XOR<Prisma.ClinicalPresetUpdateWithoutPublicationEvidenceInput, Prisma.ClinicalPresetUncheckedUpdateWithoutPublicationEvidenceInput>
+  create: Prisma.XOR<Prisma.ClinicalPresetCreateWithoutPublicationEvidenceInput, Prisma.ClinicalPresetUncheckedCreateWithoutPublicationEvidenceInput>
+  where?: Prisma.ClinicalPresetWhereInput
+}
+
+export type ClinicalPresetUpdateToOneWithWhereWithoutPublicationEvidenceInput = {
+  where?: Prisma.ClinicalPresetWhereInput
+  data: Prisma.XOR<Prisma.ClinicalPresetUpdateWithoutPublicationEvidenceInput, Prisma.ClinicalPresetUncheckedUpdateWithoutPublicationEvidenceInput>
+}
+
+export type ClinicalPresetUpdateWithoutPublicationEvidenceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ownerInstitution?: Prisma.InstitutionUpdateOneWithoutClinicalPresetsNestedInput
+  ownerUser?: Prisma.UserUpdateOneWithoutClinicalPresetsOwnedNestedInput
+  copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+}
+
+export type ClinicalPresetUncheckedUpdateWithoutPublicationEvidenceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  ownerInstitutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ownerUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromPresetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  copies?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCopiedFromPresetNestedInput
+  rules?: Prisma.ClinicalPresetRuleUncheckedUpdateManyWithoutPresetNestedInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
 }
 
 export type ClinicalPresetCreateWithoutPlatformSelectionsInput = {
@@ -1532,11 +2021,14 @@ export type ClinicalPresetCreateWithoutPlatformSelectionsInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutPlatformSelectionsInput = {
@@ -1553,7 +2045,9 @@ export type ClinicalPresetUncheckedCreateWithoutPlatformSelectionsInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1562,6 +2056,7 @@ export type ClinicalPresetUncheckedCreateWithoutPlatformSelectionsInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutPlatformSelectionsInput = {
@@ -1598,11 +2093,14 @@ export type ClinicalPresetUpdateWithoutPlatformSelectionsInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutPlatformSelectionsInput = {
@@ -1619,7 +2117,9 @@ export type ClinicalPresetUncheckedUpdateWithoutPlatformSelectionsInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1628,6 +2128,7 @@ export type ClinicalPresetUncheckedUpdateWithoutPlatformSelectionsInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetCreateWithoutInstitutionSelectionsInput = {
@@ -1648,11 +2149,14 @@ export type ClinicalPresetCreateWithoutInstitutionSelectionsInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutInstitutionSelectionsInput = {
@@ -1669,7 +2173,9 @@ export type ClinicalPresetUncheckedCreateWithoutInstitutionSelectionsInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1678,6 +2184,7 @@ export type ClinicalPresetUncheckedCreateWithoutInstitutionSelectionsInput = {
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutInstitutionSelectionsInput = {
@@ -1714,11 +2221,14 @@ export type ClinicalPresetUpdateWithoutInstitutionSelectionsInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutInstitutionSelectionsInput = {
@@ -1735,7 +2245,9 @@ export type ClinicalPresetUncheckedUpdateWithoutInstitutionSelectionsInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1744,6 +2256,7 @@ export type ClinicalPresetUncheckedUpdateWithoutInstitutionSelectionsInput = {
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetCreateWithoutUserSelectionsInput = {
@@ -1764,11 +2277,14 @@ export type ClinicalPresetCreateWithoutUserSelectionsInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutUserSelectionsInput = {
@@ -1785,7 +2301,9 @@ export type ClinicalPresetUncheckedCreateWithoutUserSelectionsInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1794,6 +2312,7 @@ export type ClinicalPresetUncheckedCreateWithoutUserSelectionsInput = {
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutUserSelectionsInput = {
@@ -1830,11 +2349,14 @@ export type ClinicalPresetUpdateWithoutUserSelectionsInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutUserSelectionsInput = {
@@ -1851,7 +2373,9 @@ export type ClinicalPresetUncheckedUpdateWithoutUserSelectionsInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1860,6 +2384,7 @@ export type ClinicalPresetUncheckedUpdateWithoutUserSelectionsInput = {
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetCreateWithoutRulesInput = {
@@ -1880,11 +2405,14 @@ export type ClinicalPresetCreateWithoutRulesInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutRulesInput = {
@@ -1901,7 +2429,9 @@ export type ClinicalPresetUncheckedCreateWithoutRulesInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1910,6 +2440,7 @@ export type ClinicalPresetUncheckedCreateWithoutRulesInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutRulesInput = {
@@ -1946,11 +2477,14 @@ export type ClinicalPresetUpdateWithoutRulesInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutRulesInput = {
@@ -1967,7 +2501,9 @@ export type ClinicalPresetUncheckedUpdateWithoutRulesInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1976,6 +2512,7 @@ export type ClinicalPresetUncheckedUpdateWithoutRulesInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetCreateWithoutOverridesInput = {
@@ -1996,11 +2533,14 @@ export type ClinicalPresetCreateWithoutOverridesInput = {
   copiedFromPreset?: Prisma.ClinicalPresetCreateNestedOneWithoutCopiesInput
   copies?: Prisma.ClinicalPresetCreateNestedManyWithoutCopiedFromPresetInput
   createdBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsCreatedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsCreatedInput
   publishedBy?: Prisma.UserCreateNestedOneWithoutClinicalPresetsPublishedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalCreateNestedOneWithoutClinicalPresetsPublishedInput
   rules?: Prisma.ClinicalPresetRuleCreateNestedManyWithoutPresetInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetUncheckedCreateWithoutOverridesInput = {
@@ -2017,7 +2557,9 @@ export type ClinicalPresetUncheckedCreateWithoutOverridesInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -2026,6 +2568,7 @@ export type ClinicalPresetUncheckedCreateWithoutOverridesInput = {
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutPresetInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedOneWithoutPresetInput
 }
 
 export type ClinicalPresetCreateOrConnectWithoutOverridesInput = {
@@ -2062,11 +2605,14 @@ export type ClinicalPresetUpdateWithoutOverridesInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutOverridesInput = {
@@ -2083,7 +2629,9 @@ export type ClinicalPresetUncheckedUpdateWithoutOverridesInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2092,6 +2640,7 @@ export type ClinicalPresetUncheckedUpdateWithoutOverridesInput = {
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetCreateManyCreatedByInput = {
@@ -2107,7 +2656,9 @@ export type ClinicalPresetCreateManyCreatedByInput = {
   copiedFromVersion?: number | null
   version: number
   status?: $Enums.ClinicalPresetStatus
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -2127,6 +2678,8 @@ export type ClinicalPresetCreateManyPublishedByInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -2145,7 +2698,9 @@ export type ClinicalPresetCreateManyOwnerUserInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -2168,12 +2723,15 @@ export type ClinicalPresetUpdateWithoutCreatedByInput = {
   ownerUser?: Prisma.UserUpdateOneWithoutClinicalPresetsOwnedNestedInput
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutCreatedByInput = {
@@ -2189,7 +2747,9 @@ export type ClinicalPresetUncheckedUpdateWithoutCreatedByInput = {
   copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2199,6 +2759,7 @@ export type ClinicalPresetUncheckedUpdateWithoutCreatedByInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateManyWithoutCreatedByInput = {
@@ -2214,7 +2775,9 @@ export type ClinicalPresetUncheckedUpdateManyWithoutCreatedByInput = {
   copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2238,11 +2801,14 @@ export type ClinicalPresetUpdateWithoutPublishedByInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutPublishedByInput = {
@@ -2259,6 +2825,8 @@ export type ClinicalPresetUncheckedUpdateWithoutPublishedByInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2268,6 +2836,7 @@ export type ClinicalPresetUncheckedUpdateWithoutPublishedByInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateManyWithoutPublishedByInput = {
@@ -2284,6 +2853,8 @@ export type ClinicalPresetUncheckedUpdateManyWithoutPublishedByInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2306,12 +2877,15 @@ export type ClinicalPresetUpdateWithoutOwnerUserInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutOwnerUserInput = {
@@ -2327,7 +2901,9 @@ export type ClinicalPresetUncheckedUpdateWithoutOwnerUserInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2337,6 +2913,7 @@ export type ClinicalPresetUncheckedUpdateWithoutOwnerUserInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateManyWithoutOwnerUserInput = {
@@ -2352,6 +2929,204 @@ export type ClinicalPresetUncheckedUpdateManyWithoutOwnerUserInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type ClinicalPresetCreateManyCreatedByTechnicalPrincipalInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  ownerInstitutionId?: string | null
+  ownerUserId?: string | null
+  copiedFromPresetId?: string | null
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  createdById?: string | null
+  publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type ClinicalPresetCreateManyPublishedByTechnicalPrincipalInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  clinicalMode?: $Enums.ClinicalMode
+  scope?: $Enums.ClinicalPresetScope
+  ownerInstitutionId?: string | null
+  ownerUserId?: string | null
+  copiedFromPresetId?: string | null
+  copiedFromVersion?: number | null
+  version: number
+  status?: $Enums.ClinicalPresetStatus
+  createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
+  publishedById?: string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type ClinicalPresetUpdateWithoutCreatedByTechnicalPrincipalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ownerInstitution?: Prisma.InstitutionUpdateOneWithoutClinicalPresetsNestedInput
+  ownerUser?: Prisma.UserUpdateOneWithoutClinicalPresetsOwnedNestedInput
+  copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
+}
+
+export type ClinicalPresetUncheckedUpdateWithoutCreatedByTechnicalPrincipalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  ownerInstitutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ownerUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromPresetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  copies?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCopiedFromPresetNestedInput
+  rules?: Prisma.ClinicalPresetRuleUncheckedUpdateManyWithoutPresetNestedInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
+}
+
+export type ClinicalPresetUncheckedUpdateManyWithoutCreatedByTechnicalPrincipalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  ownerInstitutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ownerUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromPresetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type ClinicalPresetUpdateWithoutPublishedByTechnicalPrincipalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ownerInstitution?: Prisma.InstitutionUpdateOneWithoutClinicalPresetsNestedInput
+  ownerUser?: Prisma.UserUpdateOneWithoutClinicalPresetsOwnedNestedInput
+  copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
+  copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
+}
+
+export type ClinicalPresetUncheckedUpdateWithoutPublishedByTechnicalPrincipalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  ownerInstitutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ownerUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromPresetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  copies?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCopiedFromPresetNestedInput
+  rules?: Prisma.ClinicalPresetRuleUncheckedUpdateManyWithoutPresetNestedInput
+  platformSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
+  overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
+}
+
+export type ClinicalPresetUncheckedUpdateManyWithoutPublishedByTechnicalPrincipalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  scope?: Prisma.EnumClinicalPresetScopeFieldUpdateOperationsInput | $Enums.ClinicalPresetScope
+  ownerInstitutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ownerUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromPresetId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  copiedFromVersion?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2371,7 +3146,9 @@ export type ClinicalPresetCreateManyOwnerInstitutionInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -2394,12 +3171,15 @@ export type ClinicalPresetUpdateWithoutOwnerInstitutionInput = {
   copiedFromPreset?: Prisma.ClinicalPresetUpdateOneWithoutCopiesNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutOwnerInstitutionInput = {
@@ -2415,7 +3195,9 @@ export type ClinicalPresetUncheckedUpdateWithoutOwnerInstitutionInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2425,6 +3207,7 @@ export type ClinicalPresetUncheckedUpdateWithoutOwnerInstitutionInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateManyWithoutOwnerInstitutionInput = {
@@ -2440,7 +3223,9 @@ export type ClinicalPresetUncheckedUpdateManyWithoutOwnerInstitutionInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2459,7 +3244,9 @@ export type ClinicalPresetCreateManyCopiedFromPresetInput = {
   version: number
   status?: $Enums.ClinicalPresetStatus
   createdById?: string | null
+  createdByTechnicalPrincipalId?: string | null
   publishedById?: string | null
+  publishedByTechnicalPrincipalId?: string | null
   publishedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -2482,12 +3269,15 @@ export type ClinicalPresetUpdateWithoutCopiedFromPresetInput = {
   ownerUser?: Prisma.UserUpdateOneWithoutClinicalPresetsOwnedNestedInput
   copies?: Prisma.ClinicalPresetUpdateManyWithoutCopiedFromPresetNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutClinicalPresetsCreatedNestedInput
+  createdByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsCreatedNestedInput
   publishedBy?: Prisma.UserUpdateOneWithoutClinicalPresetsPublishedNestedInput
+  publishedByTechnicalPrincipal?: Prisma.TechnicalPrincipalUpdateOneWithoutClinicalPresetsPublishedNestedInput
   rules?: Prisma.ClinicalPresetRuleUpdateManyWithoutPresetNestedInput
   platformSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateWithoutCopiedFromPresetInput = {
@@ -2503,7 +3293,9 @@ export type ClinicalPresetUncheckedUpdateWithoutCopiedFromPresetInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2513,6 +3305,7 @@ export type ClinicalPresetUncheckedUpdateWithoutCopiedFromPresetInput = {
   institutionSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   userSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutPresetNestedInput
   overrides?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutPresetNestedInput
+  publicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateOneWithoutPresetNestedInput
 }
 
 export type ClinicalPresetUncheckedUpdateManyWithoutCopiedFromPresetInput = {
@@ -2528,7 +3321,9 @@ export type ClinicalPresetUncheckedUpdateManyWithoutCopiedFromPresetInput = {
   version?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumClinicalPresetStatusFieldUpdateOperationsInput | $Enums.ClinicalPresetStatus
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publishedByTechnicalPrincipalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2624,7 +3419,9 @@ export type ClinicalPresetSelect<ExtArgs extends runtime.Types.Extensions.Intern
   version?: boolean
   status?: boolean
   createdById?: boolean
+  createdByTechnicalPrincipalId?: boolean
   publishedById?: boolean
+  publishedByTechnicalPrincipalId?: boolean
   publishedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2633,12 +3430,15 @@ export type ClinicalPresetSelect<ExtArgs extends runtime.Types.Extensions.Intern
   copiedFromPreset?: boolean | Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs>
   copies?: boolean | Prisma.ClinicalPreset$copiesArgs<ExtArgs>
   createdBy?: boolean | Prisma.ClinicalPreset$createdByArgs<ExtArgs>
+  createdByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs>
   publishedBy?: boolean | Prisma.ClinicalPreset$publishedByArgs<ExtArgs>
+  publishedByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs>
   rules?: boolean | Prisma.ClinicalPreset$rulesArgs<ExtArgs>
   platformSelections?: boolean | Prisma.ClinicalPreset$platformSelectionsArgs<ExtArgs>
   institutionSelections?: boolean | Prisma.ClinicalPreset$institutionSelectionsArgs<ExtArgs>
   userSelections?: boolean | Prisma.ClinicalPreset$userSelectionsArgs<ExtArgs>
   overrides?: boolean | Prisma.ClinicalPreset$overridesArgs<ExtArgs>
+  publicationEvidence?: boolean | Prisma.ClinicalPreset$publicationEvidenceArgs<ExtArgs>
   _count?: boolean | Prisma.ClinicalPresetCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["clinicalPreset"]>
 
@@ -2656,7 +3456,9 @@ export type ClinicalPresetSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   version?: boolean
   status?: boolean
   createdById?: boolean
+  createdByTechnicalPrincipalId?: boolean
   publishedById?: boolean
+  publishedByTechnicalPrincipalId?: boolean
   publishedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2664,7 +3466,9 @@ export type ClinicalPresetSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   ownerUser?: boolean | Prisma.ClinicalPreset$ownerUserArgs<ExtArgs>
   copiedFromPreset?: boolean | Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs>
   createdBy?: boolean | Prisma.ClinicalPreset$createdByArgs<ExtArgs>
+  createdByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs>
   publishedBy?: boolean | Prisma.ClinicalPreset$publishedByArgs<ExtArgs>
+  publishedByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs>
 }, ExtArgs["result"]["clinicalPreset"]>
 
 export type ClinicalPresetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2681,7 +3485,9 @@ export type ClinicalPresetSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   version?: boolean
   status?: boolean
   createdById?: boolean
+  createdByTechnicalPrincipalId?: boolean
   publishedById?: boolean
+  publishedByTechnicalPrincipalId?: boolean
   publishedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2689,7 +3495,9 @@ export type ClinicalPresetSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   ownerUser?: boolean | Prisma.ClinicalPreset$ownerUserArgs<ExtArgs>
   copiedFromPreset?: boolean | Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs>
   createdBy?: boolean | Prisma.ClinicalPreset$createdByArgs<ExtArgs>
+  createdByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs>
   publishedBy?: boolean | Prisma.ClinicalPreset$publishedByArgs<ExtArgs>
+  publishedByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs>
 }, ExtArgs["result"]["clinicalPreset"]>
 
 export type ClinicalPresetSelectScalar = {
@@ -2706,25 +3514,30 @@ export type ClinicalPresetSelectScalar = {
   version?: boolean
   status?: boolean
   createdById?: boolean
+  createdByTechnicalPrincipalId?: boolean
   publishedById?: boolean
+  publishedByTechnicalPrincipalId?: boolean
   publishedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ClinicalPresetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "name" | "description" | "clinicalMode" | "scope" | "ownerInstitutionId" | "ownerUserId" | "copiedFromPresetId" | "copiedFromVersion" | "version" | "status" | "createdById" | "publishedById" | "publishedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["clinicalPreset"]>
+export type ClinicalPresetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "name" | "description" | "clinicalMode" | "scope" | "ownerInstitutionId" | "ownerUserId" | "copiedFromPresetId" | "copiedFromVersion" | "version" | "status" | "createdById" | "createdByTechnicalPrincipalId" | "publishedById" | "publishedByTechnicalPrincipalId" | "publishedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["clinicalPreset"]>
 export type ClinicalPresetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ownerInstitution?: boolean | Prisma.ClinicalPreset$ownerInstitutionArgs<ExtArgs>
   ownerUser?: boolean | Prisma.ClinicalPreset$ownerUserArgs<ExtArgs>
   copiedFromPreset?: boolean | Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs>
   copies?: boolean | Prisma.ClinicalPreset$copiesArgs<ExtArgs>
   createdBy?: boolean | Prisma.ClinicalPreset$createdByArgs<ExtArgs>
+  createdByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs>
   publishedBy?: boolean | Prisma.ClinicalPreset$publishedByArgs<ExtArgs>
+  publishedByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs>
   rules?: boolean | Prisma.ClinicalPreset$rulesArgs<ExtArgs>
   platformSelections?: boolean | Prisma.ClinicalPreset$platformSelectionsArgs<ExtArgs>
   institutionSelections?: boolean | Prisma.ClinicalPreset$institutionSelectionsArgs<ExtArgs>
   userSelections?: boolean | Prisma.ClinicalPreset$userSelectionsArgs<ExtArgs>
   overrides?: boolean | Prisma.ClinicalPreset$overridesArgs<ExtArgs>
+  publicationEvidence?: boolean | Prisma.ClinicalPreset$publicationEvidenceArgs<ExtArgs>
   _count?: boolean | Prisma.ClinicalPresetCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ClinicalPresetIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2732,14 +3545,18 @@ export type ClinicalPresetIncludeCreateManyAndReturn<ExtArgs extends runtime.Typ
   ownerUser?: boolean | Prisma.ClinicalPreset$ownerUserArgs<ExtArgs>
   copiedFromPreset?: boolean | Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs>
   createdBy?: boolean | Prisma.ClinicalPreset$createdByArgs<ExtArgs>
+  createdByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs>
   publishedBy?: boolean | Prisma.ClinicalPreset$publishedByArgs<ExtArgs>
+  publishedByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs>
 }
 export type ClinicalPresetIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ownerInstitution?: boolean | Prisma.ClinicalPreset$ownerInstitutionArgs<ExtArgs>
   ownerUser?: boolean | Prisma.ClinicalPreset$ownerUserArgs<ExtArgs>
   copiedFromPreset?: boolean | Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs>
   createdBy?: boolean | Prisma.ClinicalPreset$createdByArgs<ExtArgs>
+  createdByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs>
   publishedBy?: boolean | Prisma.ClinicalPreset$publishedByArgs<ExtArgs>
+  publishedByTechnicalPrincipal?: boolean | Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs>
 }
 
 export type $ClinicalPresetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2750,12 +3567,15 @@ export type $ClinicalPresetPayload<ExtArgs extends runtime.Types.Extensions.Inte
     copiedFromPreset: Prisma.$ClinicalPresetPayload<ExtArgs> | null
     copies: Prisma.$ClinicalPresetPayload<ExtArgs>[]
     createdBy: Prisma.$UserPayload<ExtArgs> | null
+    createdByTechnicalPrincipal: Prisma.$TechnicalPrincipalPayload<ExtArgs> | null
     publishedBy: Prisma.$UserPayload<ExtArgs> | null
+    publishedByTechnicalPrincipal: Prisma.$TechnicalPrincipalPayload<ExtArgs> | null
     rules: Prisma.$ClinicalPresetRulePayload<ExtArgs>[]
     platformSelections: Prisma.$PlatformClinicalPresetSelectionPayload<ExtArgs>[]
     institutionSelections: Prisma.$InstitutionClinicalPresetSelectionPayload<ExtArgs>[]
     userSelections: Prisma.$UserClinicalPresetSelectionPayload<ExtArgs>[]
     overrides: Prisma.$InstitutionClinicalRuleOverridePayload<ExtArgs>[]
+    publicationEvidence: Prisma.$ClinicalRulesetPublicationEvidencePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2771,7 +3591,9 @@ export type $ClinicalPresetPayload<ExtArgs extends runtime.Types.Extensions.Inte
     version: number
     status: $Enums.ClinicalPresetStatus
     createdById: string | null
+    createdByTechnicalPrincipalId: string | null
     publishedById: string | null
+    publishedByTechnicalPrincipalId: string | null
     publishedAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -3174,12 +3996,15 @@ export interface Prisma__ClinicalPresetClient<T, Null = never, ExtArgs extends r
   copiedFromPreset<T extends Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$copiedFromPresetArgs<ExtArgs>>): Prisma.Prisma__ClinicalPresetClient<runtime.Types.Result.GetResult<Prisma.$ClinicalPresetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   copies<T extends Prisma.ClinicalPreset$copiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$copiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicalPresetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   createdBy<T extends Prisma.ClinicalPreset$createdByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$createdByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  createdByTechnicalPrincipal<T extends Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs>>): Prisma.Prisma__TechnicalPrincipalClient<runtime.Types.Result.GetResult<Prisma.$TechnicalPrincipalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   publishedBy<T extends Prisma.ClinicalPreset$publishedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$publishedByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  publishedByTechnicalPrincipal<T extends Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs>>): Prisma.Prisma__TechnicalPrincipalClient<runtime.Types.Result.GetResult<Prisma.$TechnicalPrincipalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   rules<T extends Prisma.ClinicalPreset$rulesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$rulesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicalPresetRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   platformSelections<T extends Prisma.ClinicalPreset$platformSelectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$platformSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlatformClinicalPresetSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   institutionSelections<T extends Prisma.ClinicalPreset$institutionSelectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$institutionSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InstitutionClinicalPresetSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   userSelections<T extends Prisma.ClinicalPreset$userSelectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$userSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserClinicalPresetSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   overrides<T extends Prisma.ClinicalPreset$overridesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$overridesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InstitutionClinicalRuleOverridePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  publicationEvidence<T extends Prisma.ClinicalPreset$publicationEvidenceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ClinicalPreset$publicationEvidenceArgs<ExtArgs>>): Prisma.Prisma__ClinicalRulesetPublicationEvidenceClient<runtime.Types.Result.GetResult<Prisma.$ClinicalRulesetPublicationEvidencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3222,7 +4047,9 @@ export interface ClinicalPresetFieldRefs {
   readonly version: Prisma.FieldRef<"ClinicalPreset", 'Int'>
   readonly status: Prisma.FieldRef<"ClinicalPreset", 'ClinicalPresetStatus'>
   readonly createdById: Prisma.FieldRef<"ClinicalPreset", 'String'>
+  readonly createdByTechnicalPrincipalId: Prisma.FieldRef<"ClinicalPreset", 'String'>
   readonly publishedById: Prisma.FieldRef<"ClinicalPreset", 'String'>
+  readonly publishedByTechnicalPrincipalId: Prisma.FieldRef<"ClinicalPreset", 'String'>
   readonly publishedAt: Prisma.FieldRef<"ClinicalPreset", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"ClinicalPreset", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"ClinicalPreset", 'DateTime'>
@@ -3727,6 +4554,25 @@ export type ClinicalPreset$createdByArgs<ExtArgs extends runtime.Types.Extension
 }
 
 /**
+ * ClinicalPreset.createdByTechnicalPrincipal
+ */
+export type ClinicalPreset$createdByTechnicalPrincipalArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TechnicalPrincipal
+   */
+  select?: Prisma.TechnicalPrincipalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TechnicalPrincipal
+   */
+  omit?: Prisma.TechnicalPrincipalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TechnicalPrincipalInclude<ExtArgs> | null
+  where?: Prisma.TechnicalPrincipalWhereInput
+}
+
+/**
  * ClinicalPreset.publishedBy
  */
 export type ClinicalPreset$publishedByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3743,6 +4589,25 @@ export type ClinicalPreset$publishedByArgs<ExtArgs extends runtime.Types.Extensi
    */
   include?: Prisma.UserInclude<ExtArgs> | null
   where?: Prisma.UserWhereInput
+}
+
+/**
+ * ClinicalPreset.publishedByTechnicalPrincipal
+ */
+export type ClinicalPreset$publishedByTechnicalPrincipalArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TechnicalPrincipal
+   */
+  select?: Prisma.TechnicalPrincipalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TechnicalPrincipal
+   */
+  omit?: Prisma.TechnicalPrincipalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TechnicalPrincipalInclude<ExtArgs> | null
+  where?: Prisma.TechnicalPrincipalWhereInput
 }
 
 /**
@@ -3863,6 +4728,25 @@ export type ClinicalPreset$overridesArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.InstitutionClinicalRuleOverrideScalarFieldEnum | Prisma.InstitutionClinicalRuleOverrideScalarFieldEnum[]
+}
+
+/**
+ * ClinicalPreset.publicationEvidence
+ */
+export type ClinicalPreset$publicationEvidenceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ClinicalRulesetPublicationEvidence
+   */
+  select?: Prisma.ClinicalRulesetPublicationEvidenceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ClinicalRulesetPublicationEvidence
+   */
+  omit?: Prisma.ClinicalRulesetPublicationEvidenceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ClinicalRulesetPublicationEvidenceInclude<ExtArgs> | null
+  where?: Prisma.ClinicalRulesetPublicationEvidenceWhereInput
 }
 
 /**

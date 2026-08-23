@@ -17,6 +17,19 @@ describe("API release metadata", () => {
     await expect(getCapabilities().json()).resolves.toMatchObject({
       apiVersion: "1",
       serviceVersion: API_RELEASE_VERSION,
+      authentication: {
+        loginIdentifier: expect.stringMatching(/^(EMAIL|USERNAME)$/),
+        selfRegistration: expect.any(Boolean),
+        passwordRecovery: expect.stringMatching(/^(EMAIL|ADMINISTRATOR|UNAVAILABLE)$/),
+        passwordChange: true,
+        sessionInventory: true,
+      },
+      features: {
+        accountAdministration: {
+          enabled: expect.any(Boolean),
+          reason: expect.stringMatching(/^(ENABLED|DISABLED_BY_DEPLOYMENT)$/),
+        },
+      },
     })
   })
 })

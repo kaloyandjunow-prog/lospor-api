@@ -8,13 +8,23 @@
 // than with traffic. It now reads a single row on demand and caches it briefly,
 // so cost scales with active users instead.
 import { prisma } from "@/lib/prisma"
+import { preferredLocaleFromPreferences, type AccountKind, type PreferredLocale } from "@lospor/core/account"
 
 type AccountState = {
+  activatedAt: number | null
   passwordChangedAt: number | null
   deletedAt: number | null
+  suspendedAt: number | null
+  recoveryRequiredAt: number | null
+  anonymizedAt: number | null
   role: string | null
+  accountKind: AccountKind
+  preferredLocale: PreferredLocale
   institutionId: string | null
   institutionName: string | null
+  firstName: string | null
+  lastName: string | null
+  title: string | null
   complete: boolean
   fetchedAt: number
 }
@@ -42,20 +52,38 @@ async function fetchState(userId: string): Promise<AccountState | null> {
       const u = await prisma.user.findUnique({
         where: { id: userId },
         select: {
+          activatedAt: true,
           passwordChangedAt: true,
           deletedAt: true,
+          suspendedAt: true,
+          recoveryRequiredAt: true,
+          anonymizedAt: true,
           role: true,
+          accountKind: true,
+          preferences: true,
           institutionId: true,
           institution: { select: { name: true } },
+          firstName: true,
+          lastName: true,
+          title: true,
         },
       })
       if (!u) return null
       const state: AccountState = {
+        activatedAt:       u.activatedAt?.getTime() ?? null,
         passwordChangedAt: u.passwordChangedAt?.getTime() ?? null,
         deletedAt:         u.deletedAt?.getTime() ?? null,
+        suspendedAt:       u.suspendedAt?.getTime() ?? null,
+        recoveryRequiredAt: u.recoveryRequiredAt?.getTime() ?? null,
+        anonymizedAt:      u.anonymizedAt?.getTime() ?? null,
         role:              u.role ?? null,
+        accountKind:       u.accountKind,
+        preferredLocale:   preferredLocaleFromPreferences(u.preferences),
         institutionId:     u.institutionId ?? null,
         institutionName:   u.institution?.name ?? null,
+        firstName:         u.firstName || null,
+        lastName:          u.lastName || null,
+        title:             u.title || null,
         complete:          true,
         fetchedAt:         Date.now(),
       }
@@ -78,11 +106,23 @@ async function fetchState(userId: string): Promise<AccountState | null> {
 export function notePasswordChanged(userId: string, changedAt: Date): void {
   const prev = cache.get(userId)
   cache.set(userId, {
+    // notePasswordChanged is called only after an authenticated or governed
+    // account mutation. A missing cache entry therefore represents an active
+    // account whose full state will be fetched before request authorization.
+    activatedAt:       prev?.activatedAt ?? changedAt.getTime(),
     passwordChangedAt: changedAt.getTime(),
     deletedAt:         prev?.deletedAt ?? null,
+    suspendedAt:       prev?.suspendedAt ?? null,
+    recoveryRequiredAt: prev?.recoveryRequiredAt ?? null,
+    anonymizedAt:      prev?.anonymizedAt ?? null,
     role:              prev?.role ?? null,
+    accountKind:       prev?.accountKind ?? "CLINICAL",
+    preferredLocale:   prev?.preferredLocale ?? "bg",
     institutionId:     prev?.institutionId ?? null,
     institutionName:   prev?.institutionName ?? null,
+    firstName:         prev?.firstName ?? null,
+    lastName:          prev?.lastName ?? null,
+    title:             prev?.title ?? null,
     complete:          prev?.complete ?? false,
     fetchedAt:         Date.now(),
   })
@@ -106,8 +146,13 @@ export function issuedBeforeEpoch(iatSeconds: number | undefined, epochMs: numbe
 export type ResolvedAccount = {
   /** Current role from the database, not the (possibly hours-old) token claim. */
   role: string | null
+  accountKind: AccountKind
+  preferredLocale: PreferredLocale
   institutionId: string | null
   institutionName: string | null
+  firstName: string | null
+  lastName: string | null
+  title: string | null
 }
 
 /**
@@ -121,9 +166,22 @@ export async function resolveAccount(userId: string, iatSeconds: number | undefi
   const cached = cache.get(userId)
   const state = freshComplete(cached) ? cached : await fetchState(userId)
   if (!state) return null
+  if (state.activatedAt === null) return null
   if (state.deletedAt !== null) return null
+  if (state.suspendedAt !== null) return null
+  if (state.recoveryRequiredAt !== null) return null
+  if (state.anonymizedAt !== null) return null
   if (issuedBeforeEpoch(iatSeconds, state.passwordChangedAt)) return null
-  return { role: state.role, institutionId: state.institutionId, institutionName: state.institutionName }
+  return {
+    role: state.role,
+    accountKind: state.accountKind,
+    preferredLocale: state.preferredLocale,
+    institutionId: state.institutionId,
+    institutionName: state.institutionName,
+    firstName: state.firstName,
+    lastName: state.lastName,
+    title: state.title,
+  }
 }
 
 /** Async variant kept for callers that only need the staleness answer. */
@@ -139,6 +197,8 @@ export async function isIssuedBeforePasswordChangeAsync(userId: string, iatSecon
 export function isIssuedBeforePasswordChange(userId: string, iatSeconds: number | undefined): boolean {
   const e = cache.get(userId)
   if (!e) return false
+  if (e.activatedAt === null) return true
   if (e.deletedAt !== null) return true
+  if (e.suspendedAt !== null || e.recoveryRequiredAt !== null || e.anonymizedAt !== null) return true
   return issuedBeforeEpoch(iatSeconds, e.passwordChangedAt)
 }

@@ -13,20 +13,36 @@
  *
  * Preset rules cascade with the preset (ClinicalPresetRule.onDelete: Cascade).
  *
+ * The audit row is written before the delete in the same transaction:
+ * afterwards there is nothing left to describe, because the rules cascade away
+ * with the preset. Against a protected database the run must name the
+ * accountable administrator in PUBLISHING_ADMIN_EMAIL; otherwise it is
+ * attributed to the LOSPOR release principal, exactly as the bundled baselines
+ * are.
+ *
  * Dry-run:
- *   $env:PRUNE_CLINICAL_RULESETS="YES"; npm run clinical-rules:prune
+ *   $env:PRUNE_CLINICAL_RULESETS="YES"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
+ *   npm run clinical-rules:prune
  * Apply:
  *   npm run clinical-rules:prune -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 
 if (process.env.PRUNE_CLINICAL_RULESETS !== "YES") {
   throw new Error('Refusing to run. Set PRUNE_CLINICAL_RULESETS="YES" explicitly.')
 }
-assertDatabaseWritable("delete rulesets")
+const database = assertDatabaseWritable("delete rulesets")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 /** The only presets that survive. */
@@ -92,7 +108,23 @@ async function main() {
   if (!doomed.length) return
 
   await prisma.$transaction(async tx => {
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
     for (const preset of doomed) {
+      // Audit first. After the delete the preset and its cascaded rules are
+      // gone, so this row is the only remaining description of what was removed.
+      await writeMaintenanceAuditRow(tx, actor, {
+        action: "CLINICAL_RULESET_PRUNE" satisfies AuditActionCode,
+        entityId: preset.id,
+        source: "scripts/prune-clinical-rulesets.ts",
+        detail: {
+          scope: "PLATFORM",
+          presetKey: preset.key,
+          clinicalMode: preset.clinicalMode,
+          version: preset.version,
+          status: preset.status,
+          ruleCount: preset._count.rules,
+        },
+      })
       await tx.clinicalPreset.delete({ where: { id: preset.id } })
     }
   })

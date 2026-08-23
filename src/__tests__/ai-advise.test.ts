@@ -20,6 +20,8 @@ vi.mock("@/lib/mistral", () => ({
 const CASE_WITH_OPTIN = {
   id: "case-1",
   userId: "user-1",
+  createdById: "user-1",
+  institutionId: "inst-1",
   preop: { aiOptIn: true, ageYears: 40, sex: "MALE" },
 }
 
@@ -33,6 +35,7 @@ describe("POST /api/cases/:id/ai/advise", () => {
   beforeEach(async () => {
     // Reset modules so the route's in-memory burst-throttle Map is cleared between tests
     vi.resetModules()
+    vi.clearAllMocks()
     process.env.MISTRAL_API_KEY = "test-key"
 
     // Re-resolve mocks after module reset
@@ -42,7 +45,7 @@ describe("POST /api/cases/:id/ai/advise", () => {
     const auditM   = await import("@/lib/audit")
     const advisorM = await import("@/lib/ai-advisor")
 
-    vi.mocked(auth.getAuthUser).mockResolvedValue({ id: "user-1", role: "MEMBER" } as never)
+    vi.mocked(auth.getAuthUser).mockResolvedValue({ id: "user-1", role: "MEMBER", institutionId: "inst-1" } as never)
     vi.mocked(prismaM.prisma.case.findUnique).mockResolvedValue(CASE_WITH_OPTIN as never)
     vi.mocked(rlM.rateLimit).mockResolvedValue({ allowed: true } as never)
     vi.mocked(auditM.logAudit).mockResolvedValue(undefined)
@@ -70,9 +73,23 @@ describe("POST /api/cases/:id/ai/advise", () => {
 
   it("returns 403 when user does not own the case", async () => {
     const prismaM = await import("@/lib/prisma")
-    vi.mocked(prismaM.prisma.case.findUnique).mockResolvedValue({ ...CASE_WITH_OPTIN, userId: "other-user" } as never)
+    vi.mocked(prismaM.prisma.case.findUnique).mockResolvedValue({
+      ...CASE_WITH_OPTIN,
+      userId: "other-user",
+      createdById: "other-user",
+    } as never)
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(403)
+  })
+
+  it("allows the immutable creator to read advice after same-institution handover", async () => {
+    const prismaM = await import("@/lib/prisma")
+    vi.mocked(prismaM.prisma.case.findUnique).mockResolvedValue({
+      ...CASE_WITH_OPTIN,
+      userId: "assignee-2",
+    } as never)
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(200)
   })
 
   it("builds prompt only from server-loaded DB fields, not client body", async () => {

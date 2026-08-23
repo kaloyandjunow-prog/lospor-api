@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { z } from "zod"
 
-import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
+import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { logAudit } from "@/lib/audit"
 import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
@@ -12,6 +12,7 @@ import {
   withLockedCaseTransaction,
 } from "@/lib/clinical-transaction"
 import { getAuthUser } from "@/lib/mobile-auth"
+import { clinicalEventSource } from "@/lib/event-provenance"
 
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
@@ -44,12 +45,6 @@ function conflict(intraop: { updatedAt: Date; syncRevision: number } | null) {
   }, { status: 409 })
 }
 
-function sourceFrom(req: NextRequest): string {
-  const source = req.headers.get("x-lospor-source")
-  if (source === "web" || source === "mobile" || source === "ai" || source === "import") return source
-  return req.headers.get("authorization")?.startsWith("Bearer ") ? "mobile" : "web"
-}
-
 function eventItemError(error: unknown, operation: "PUT" | "DELETE", caseId: string) {
   if (error instanceof CaseWriteError) {
     return NextResponse.json({ error: error.message }, { status: error.status })
@@ -68,6 +63,7 @@ export async function PUT(
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id, eventId } = await params
+  const source = clinicalEventSource(user)
   const revision = revisionFrom(req)
   if (revision === "invalid") return NextResponse.json({ error: "Invalid intraop revision" }, { status: 400 })
 
@@ -88,7 +84,7 @@ export async function PUT(
         select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status === "COMPLETE") {
@@ -113,7 +109,7 @@ export async function PUT(
         })
         return conflict(fresh)
       }
-      await addEvent(tx, id, user.id, event as LogEvent, sourceFrom(req))
+      await addEvent(tx, id, user.id, event as LogEvent, source)
       await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
       const fresh = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
@@ -123,7 +119,7 @@ export async function PUT(
     })
 
     if (result instanceof Response) return result
-    after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { eventId }))
+    after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { eventId, source }))
     return NextResponse.json({
       ok: true,
       intraopUpdatedAt: result.fresh?.updatedAt,
@@ -141,6 +137,7 @@ export async function DELETE(
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id, eventId } = await params
+  const source = clinicalEventSource(user)
   const revision = revisionFrom(req)
   if (revision === "invalid") return NextResponse.json({ error: "Invalid intraop revision" }, { status: 400 })
 
@@ -151,7 +148,7 @@ export async function DELETE(
         select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status === "COMPLETE") {
@@ -186,7 +183,7 @@ export async function DELETE(
     })
 
     if (result instanceof Response) return result
-    after(() => logAudit(user.id, "CASE_EVENT_DELETE", id, { eventId, removed: result.removed }))
+    after(() => logAudit(user.id, "CASE_EVENT_DELETE", id, { eventId, removed: result.removed, source }))
     return NextResponse.json({
       ok: true,
       intraopUpdatedAt: result.fresh?.updatedAt,

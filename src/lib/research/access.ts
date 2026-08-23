@@ -38,17 +38,6 @@ const DENIED: ResearchPermissionSet = {
   manageAccess: false,
 }
 
-function allowed(overrides: Partial<ResearchPermissionSet>): ResearchPermissionSet {
-  return {
-    ...DENIED,
-    query: true,
-    compare: true,
-    benchmark: true,
-    savePrivateCohorts: true,
-    ...overrides,
-  }
-}
-
 const ACTIONS: ResearchDataAction[] = ["query", "inspectCases", "export", "exportOmop"]
 
 function emptyScope(kind: ResearchScopeKind = "GRANT"): ResearchActionScope {
@@ -102,66 +91,42 @@ export function researchContextForAction(
   }, action)
 }
 
-function sameScopeForAllActions(scope: ResearchActionScope) {
-  return Object.fromEntries(ACTIONS.map(action => [action, scope])) as Record<
-    ResearchDataAction,
-    ResearchActionScope
-  >
-}
-
 export async function resolveResearchContext(user: AuthUser): Promise<ResearchContext | null> {
-  if (user.role === "ADMIN") {
-    const institutions = await prisma.institution.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    })
-    const scope = fixedScope("ALL", institutions, true)
-    return activateResearchScope({
-      user,
-      actionScopes: sameScopeForAllActions(scope),
-      permissions: allowed({
-        inspectCases: true,
-        shareInstitutionCohorts: true,
-        export: true,
-        exportOmop: true,
-        manageAccess: true,
-      }),
-    }, "query")
-  }
-
-  if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
-    const institution = { id: user.institutionId, name: user.institutionName ?? "Institution" }
-    const scope = fixedScope("INSTITUTION", [institution])
-    return activateResearchScope({
-      user,
-      actionScopes: {
-        query: scope,
-        inspectCases: scope,
-        export: scope,
-        exportOmop: emptyScope("INSTITUTION"),
-      },
-      permissions: allowed({
-        inspectCases: true,
-        shareInstitutionCohorts: true,
-        export: true,
-      }),
-    }, "query")
-  }
-
-  if (user.role !== "RESEARCHER") return null
+  // Account audience is orthogonal to research authorization. Clinical
+  // Members, HODs, and Admins may all receive explicit grants; RESEARCH_ONLY
+  // accounts still require a grant and remain blocked from clinical routes.
+  // The legacy roles stay readable only for migration compatibility.
+  const clinicalRole = ["MEMBER", "HEAD_OF_DEPT", "ADMIN", "CLINICIAN"].includes(user.role)
+  const eligible = user.accountKind === "RESEARCH_ONLY"
+    || user.role === "RESEARCHER"
+    || (user.accountKind === "CLINICAL" && clinicalRole)
+  if (!eligible) return null
 
   const now = new Date()
-  const grants = await prisma.researchAccessGrant.findMany({
-    where: {
-      userId: user.id,
-      revokedAt: null,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-    },
-    include: { institution: { select: { id: true, name: true } } },
-  })
-  if (!grants.length) return null
+  const [grants, selfAuthorization] = await Promise.all([
+    prisma.researchAccessGrant.findMany({
+      where: {
+        userId: user.id,
+        revokedAt: null,
+        expiresAt: { gt: now },
+      },
+      include: { institution: { select: { id: true, name: true } } },
+    }),
+    user.accountKind === "CLINICAL" && user.role !== "ADMIN"
+      ? prisma.researchSelfAuthorization.findFirst({
+          where: { userId: user.id, expiresAt: { gt: now } },
+          include: { institution: { select: { id: true, name: true } } },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve(null),
+  ])
+  // Admins receive aggregate query across the appliance, and nothing else
+  // implicitly. Inspection, export, OMOP, and sharing still come only from a
+  // live explicit grant. HOD and Member roles confer no research entitlement.
+  const hasAdminAggregate = user.role === "ADMIN" && user.accountKind === "CLINICAL"
+  if (!hasAdminAggregate && !grants.length && !selfAuthorization) return null
 
-  const needsAllInstitutions = grants.some(grant => grant.allInstitutions)
+  const needsAllInstitutions = hasAdminAggregate || grants.some(grant => grant.allInstitutions)
   const allInstitutions = needsAllInstitutions
     ? await prisma.institution.findMany({
         select: { id: true, name: true },
@@ -170,7 +135,7 @@ export async function resolveResearchContext(user: AuthUser): Promise<ResearchCo
     : []
 
   const actionGrants = (action: ResearchDataAction) => grants.filter(grant => {
-    if (action === "query") return true
+    if (action === "query") return grant.canQuery
     if (action === "inspectCases") return grant.canInspectCases
     if (action === "export") return grant.canExport
     return grant.canExport && grant.canExportOmop
@@ -189,20 +154,47 @@ export async function resolveResearchContext(user: AuthUser): Promise<ResearchCo
   }
 
   const actionScopes = {
-    query: scopeFor("query"),
+    query: hasAdminAggregate
+      ? fixedScope("ALL", allInstitutions, true)
+      : (() => {
+          const granted = scopeFor("query")
+          if (!selfAuthorization || granted.allInstitutions) return granted
+          const institutions = [
+            ...grants
+              .filter(grant => grant.canQuery && grant.institution)
+              .map(grant => grant.institution!),
+            selfAuthorization.institution,
+          ].filter((institution, index, values) =>
+            values.findIndex(value => value.id === institution.id) === index)
+          return fixedScope("GRANT", institutions)
+        })(),
     inspectCases: scopeFor("inspectCases"),
     export: scopeFor("export"),
     exportOmop: scopeFor("exportOmop"),
   }
 
+  const canQuery = hasAdminAggregate || actionGrants("query").length > 0 || !!selfAuthorization
+  const canShare = grants.some(grant => grant.canQuery && grant.canShareCohorts)
+
   return activateResearchScope({
     user,
     actionScopes,
-    permissions: allowed({
+    permissions: {
+      ...DENIED,
+      query: canQuery,
+      compare: canQuery,
+      benchmark: canQuery,
+      savePrivateCohorts: canQuery,
       inspectCases: actionGrants("inspectCases").length > 0,
+      shareInstitutionCohorts: canShare,
       export: actionGrants("export").length > 0,
       exportOmop: actionGrants("exportOmop").length > 0,
-    }),
+      // This generic upstream endpoint remains available to the public demo's
+      // Admin. The Hospital overlay denies it; appliance grants are operated
+      // through Status so clinical Admin credentials never become operator
+      // credentials.
+      manageAccess: user.role === "ADMIN" && user.accountKind === "CLINICAL",
+    },
   }, "query")
 }
 
@@ -223,11 +215,11 @@ export function metadataScopes(context: ResearchContext): ResearchMetadata["scop
 }
 
 export function canInspectEntireQueryScope(context: ResearchContext): boolean {
-  const query = context.actionScopes.query
-  const inspect = context.actionScopes.inspectCases
-  if (query.allInstitutions) return inspect.allInstitutions
-  if (inspect.allInstitutions) return true
-  return query.institutionIds.every(id => inspect.institutionIds.includes(id))
+  void context
+  // Aggregate disclosure policy does not weaken when row inspection is also
+  // granted. Counts 1-4 and complementary cells remain protected in aggregate,
+  // comparison, benchmark, and quality responses for every role.
+  return false
 }
 
 export function canUseInstitution(

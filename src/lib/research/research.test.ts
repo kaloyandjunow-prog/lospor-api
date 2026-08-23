@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { findInstitutions, findGrants, queryRaw } = vi.hoisted(() => ({
+const { findInstitutions, findGrants, findSelfAuthorization, queryRaw } = vi.hoisted(() => ({
   findInstitutions: vi.fn(),
   findGrants: vi.fn(),
+  findSelfAuthorization: vi.fn(),
   queryRaw: vi.fn(),
 }))
 
@@ -10,6 +11,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     institution: { findMany: findInstitutions },
     researchAccessGrant: { findMany: findGrants },
+    researchSelfAuthorization: { findFirst: findSelfAuthorization },
     $queryRaw: queryRaw,
   },
 }))
@@ -28,6 +30,9 @@ const baseUser = {
   lastName: "User",
   title: null,
   jti: null,
+  clientType: "WEB" as const,
+  accountKind: "CLINICAL" as const,
+  preferredLocale: "bg" as const,
 }
 
 describe("research access and query contracts", () => {
@@ -38,28 +43,31 @@ describe("research access and query contracts", () => {
       { id: "inst-2", name: "Hospital B" },
     ])
     findGrants.mockResolvedValue([])
+    findSelfAuthorization.mockResolvedValue(null)
   })
 
   it("rejects ordinary clinical accounts", async () => {
     await expect(resolveResearchContext(baseUser)).resolves.toBeNull()
   })
 
-  it("scopes department heads to their institution", async () => {
-    const context = await resolveResearchContext({ ...baseUser, role: "HEAD_OF_DEPT" })
-    expect(context).toMatchObject({
-      scopeKind: "INSTITUTION",
-      institutionIds: ["inst-1"],
-      caseScope: { institutionId: { in: ["inst-1"] } },
-      permissions: { query: true, inspectCases: true, export: true, exportOmop: false },
-    })
+  it("does not give department heads implicit research access", async () => {
+    await expect(resolveResearchContext({ ...baseUser, role: "HEAD_OF_DEPT" }))
+      .resolves.toBeNull()
   })
 
-  it("gives administrators global governed access", async () => {
+  it("gives administrators aggregate-only global access", async () => {
     const context = await resolveResearchContext({ ...baseUser, role: "ADMIN" })
     expect(context).toMatchObject({
       scopeKind: "ALL",
       institutionIds: ["inst-1", "inst-2"],
-      permissions: { manageAccess: true, exportOmop: true },
+      permissions: {
+        query: true,
+        inspectCases: false,
+        export: false,
+        exportOmop: false,
+        shareInstitutionCohorts: false,
+        manageAccess: true,
+      },
     })
   })
 
@@ -67,9 +75,11 @@ describe("research access and query contracts", () => {
     findGrants.mockResolvedValue([{
       institution: { id: "inst-2", name: "Hospital B" },
       allInstitutions: false,
+      canQuery: true,
       canInspectCases: true,
       canExport: true,
       canExportOmop: false,
+      canShareCohorts: false,
     }])
     const context = await resolveResearchContext({ ...baseUser, role: "RESEARCHER" })
     expect(context).toMatchObject({
@@ -77,6 +87,28 @@ describe("research access and query contracts", () => {
       institutionIds: ["inst-2"],
       caseScope: { institutionId: { in: ["inst-2"] } },
       permissions: { inspectCases: true, export: true, exportOmop: false },
+    })
+  })
+
+  it("builds the same grant scope for an ordinary-role research-only account", async () => {
+    findGrants.mockResolvedValue([{
+      institution: { id: "inst-2", name: "Hospital B" },
+      allInstitutions: false,
+      canQuery: true,
+      canInspectCases: false,
+      canExport: false,
+      canExportOmop: false,
+      canShareCohorts: false,
+    }])
+    const context = await resolveResearchContext({
+      ...baseUser,
+      role: "MEMBER",
+      accountKind: "RESEARCH_ONLY",
+    })
+    expect(context).toMatchObject({
+      scopeKind: "GRANT",
+      institutionIds: ["inst-2"],
+      permissions: { query: true, inspectCases: false },
     })
   })
 
@@ -92,16 +124,20 @@ describe("research access and query contracts", () => {
       {
         institution: { id: "inst-1", name: "Hospital A" },
         allInstitutions: false,
+        canQuery: true,
         canInspectCases: true,
         canExport: true,
         canExportOmop: false,
+        canShareCohorts: false,
       },
       {
         institution: { id: "inst-2", name: "Hospital B" },
         allInstitutions: false,
+        canQuery: true,
         canInspectCases: false,
         canExport: false,
         canExportOmop: false,
+        canShareCohorts: false,
       },
     ])
     const context = await resolveResearchContext({ ...baseUser, role: "RESEARCHER" })
@@ -116,16 +152,20 @@ describe("research access and query contracts", () => {
       {
         institution: null,
         allInstitutions: true,
+        canQuery: true,
         canInspectCases: false,
         canExport: false,
         canExportOmop: false,
+        canShareCohorts: false,
       },
       {
         institution: { id: "inst-2", name: "Hospital B" },
         allInstitutions: false,
+        canQuery: true,
         canInspectCases: false,
         canExport: true,
         canExportOmop: true,
+        canShareCohorts: false,
       },
     ])
     const context = await resolveResearchContext({ ...baseUser, role: "RESEARCHER" })
@@ -135,6 +175,9 @@ describe("research access and query contracts", () => {
   })
 
   it("compiles clinical filters into fixed Prisma predicates", async () => {
+    findSelfAuthorization.mockResolvedValue({
+      institution: { id: "inst-1", name: "Hospital A" },
+    })
     const context = await resolveResearchContext({ ...baseUser, role: "HEAD_OF_DEPT" })
     expect(context).not.toBeNull()
     const where = await compileResearchWhere(researchCohortSchema.parse({

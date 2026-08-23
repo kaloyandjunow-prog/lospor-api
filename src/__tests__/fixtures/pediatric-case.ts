@@ -14,7 +14,7 @@ type AnyCase = Parameters<typeof mapCasesToOmop>[0][number]
 export function pediatricCaseFixture(): AnyCase {
   return {
     id: "case-pediatric-omop",
-    caseCode: "2026-P001",
+    researchId: "20000000-0000-4000-8000-000000000001",
     createdAt: new Date("2026-07-29T08:00:00Z"),
     status: "COMPLETE",
     finalizations: [{ id: "pediatric-finalization-1" }],

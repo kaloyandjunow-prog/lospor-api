@@ -6,7 +6,7 @@ const findTransfers = vi.fn()
 
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser }))
 vi.mock("@/lib/access-control", () => ({
-  caseWhereForUser: (_u: unknown, id: string) => ({ id }),
+  caseReadWhereForUser: (_u: unknown, id: string) => ({ id }),
 }))
 vi.mock("@/lib/prisma", () => ({
   prisma: {

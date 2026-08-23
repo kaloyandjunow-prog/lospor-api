@@ -1,4 +1,5 @@
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import { INTRAOP_COLUMN_MS } from "@lospor/core/intraop-engine"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { dirname, resolve } from "node:path"
@@ -216,7 +217,7 @@ async function applyManifest(path: string): Promise<void> {
         await tx.auditLog.create({
           data: {
             userId: "system",
-            action: "INTRAOP_TIME_ANOMALY_REPAIRED",
+            action: "INTRAOP_TIME_ANOMALY_REPAIRED" satisfies AuditActionCode,
             entityId: caseId,
             detail: {
               rowId: candidate.rowId,

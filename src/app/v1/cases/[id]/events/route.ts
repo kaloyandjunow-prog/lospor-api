@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
+import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
 import { logAudit } from "@/lib/audit"
 import { addEvent, reconcileFullLog, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
-import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
+import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { resolveDrugConcept } from "@/lib/relational-sync"
 import { corsHeaders } from "@/lib/cors"
 import {
@@ -32,16 +33,6 @@ const eventSchema = caseEventWriteSchema
 // the clinical write paths. Vitals/numbers are not user prose, so they're skipped.
 function piiForEvent(ev: { name?: unknown; label?: unknown }): ClinicalPiiIssue | null {
   return checkEventPII(ev)
-}
-
-const ALLOWED_SOURCES = new Set(["web", "mobile", "ai", "import"])
-function sourceFrom(req: NextRequest): string {
-  const s = req.headers.get("x-lospor-source") ?? ""
-  if (ALLOWED_SOURCES.has(s)) return s
-  // Infer from auth style when the client doesn't tag itself: the mobile app uses
-  // a Bearer token, the web app uses a cookie session.
-  const authz = req.headers.get("authorization") ?? ""
-  return authz.startsWith("Bearer ") ? "mobile" : "web"
 }
 
 function revisionFrom(req: NextRequest): number | null | "invalid" {
@@ -132,7 +123,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
   }
 
-  const source = sourceFrom(req)
+  const source = clinicalEventSource(user)
   try {
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
@@ -140,7 +131,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status === "COMPLETE") {
@@ -199,7 +190,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id } = await params
-  const source = sourceFrom(req)
+  const source = clinicalEventSource(user)
 
   const body = await req.json().catch(() => null)
   const rawLog = body?.log
@@ -243,7 +234,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status === "COMPLETE") {

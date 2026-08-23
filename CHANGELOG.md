@@ -1,5 +1,202 @@
 # Changelog - LOSPOR API
 
+## [Unreleased]
+
+### Changed
+
+- Durable governance evidence now commits in the same database transaction as
+  account provisioning/activation, activation and recovery-link issuance,
+  legal acceptance, role and institution decisions, account lifecycle and
+  authority changes, research grants, and every API-owned clinical-ruleset
+  lifecycle mutation. Audit failure therefore rolls the governed mutation
+  back instead of leaving an unrecorded privilege or policy change.
+- Audit detail is privacy-minimized and rejected when it contains credential,
+  token, direct account-PII, patient-number, case-code, or raw clinical-payload
+  fields. Retention anonymization is retryable per account when its durable
+  evidence cannot be written.
+- Bound intraoperative event provenance to the authenticated session instead of
+  a caller-controlled header. Tracked sessions now distinguish `WEB`, `PWA`,
+  and `NATIVE`; PWA and native writes are recorded as `mobile`, Web writes as
+  `web`, and legacy sessions retain their transport-based classification only
+  for their remaining eight-hour lifetime. Event add/edit/delete audit entries
+  carry the same server-derived source, and the public OpenAPI contract no
+  longer advertises `X-LOSPOR-Source` as writable input.
+- Isolated the monitor-OCR case-authorization regression from its independent
+  deployment-capability preflight. The full suite now proves both boundaries
+  without relying on ambient provider configuration or leaking environment
+  state between tests.
+- Saved-cohort PATCH now supports optimistic concurrency through
+  `expectedUpdatedAt` and returns `COHORT_CHANGED` on a stale revision. The
+  patch schema no longer inherits the create schema's `PRIVATE` default, which
+  previously risked changing shared visibility during an unrelated metadata
+  edit.
+- Kept the new administrator suspend/reactivate/restore/authority control plane
+  off on the online serverless demo. Its API routes and capability now require
+  both an explicit Hospital deployment and an explicit account-administration
+  enable switch; clients fail closed unless the API returns `ENABLED`.
+- Made the shared `AccountKind` migration safe when the Hospital 1.2
+  provisioning overlay has already created the identical enum and user column.
+  The shared API remains the schema owner; this only permits the documented
+  deliberate upstream-to-appliance migration ordering without a duplicate-type
+  failure.
+
+### Added
+
+- Deployment-selected login identity primitives for Hospital appliances:
+  additive case-preserving `username`, lowercase appliance-global
+  `usernameCanonical`, and deployment-neutral `activatedAt` fields; strict
+  username-only Hospital login; unchanged public email registration,
+  verification, and recovery; optional contact email with no login fallback;
+  and first-administrator bootstrap support. Static and opt-in PostgreSQL tests
+  cover the migration and case-insensitive uniqueness race. Hospital account
+  provisioning, activation/recovery distribution, and administrator-only
+  rename remain owned by the Hospital Status/API overlay and are unavailable
+  on the public serverless demo.
+- Clean-database provisioning for the exact canonical adult-v2 and
+  pediatric-v2 baselines. LOSPOR 1.2.0 is their immutable non-login technical
+  author/publisher/confirmer/selector; one serializable transaction writes and
+  re-verifies publication evidence, governed selections, and bounded typed
+  audit evidence. Exact retries are no-ops, while partial state, collisions,
+  drift, and a different governed selection fail closed. Normal and E2E seeds
+  use the same provisioner, with an explicit guarded CLI and opt-in real-
+  PostgreSQL trigger/rollback coverage.
+- An executable HAUD-01 governance inventory and source-discovery release gate
+  now enumerate every owner privilege/lifecycle transition and bind it to its
+  registered transactional action and rollback evidence. Audit-failure
+  injection covers all unit-testable owner paths; the retained opt-in
+  PostgreSQL suite remains the authoritative physical rollback proof. Hospital
+  ownership, narrow authentication/fixture exclusions, source-only script
+  limits, and the six unresolved actor-principal scripts are documented
+  explicitly in `AUDIT_GOVERNANCE.md`.
+- An append-only typed audit action registry with exact Bulgarian and English
+  labels. `GET /v1/admin/audit-logs` returns the registry beside the page and
+  accepts only an exact registered action filter, so owner clients cannot drift
+  into incomplete hard-coded action menus.
+- A fail-closed, non-secret support destination in `GET /v1/capabilities`.
+  Deployments may advertise HTTPS help/ticketing or one bare `mailto:` mailbox;
+  embedded credentials, fragments, malformed mailboxes, unsafe schemes, and
+  oversized values are rejected, while preconfigured mail query content is
+  stripped so clients control the reviewed diagnostic body.
+- Deployment-gated clinical-administrator TOTP with a five-minute one-use
+  password continuation, mandatory first-login enrollment, encrypted seeds,
+  replay-safe time steps, and exactly ten hashed one-use recovery codes. The
+  public demo remains unchanged unless it explicitly enables the complete MFA
+  contract; readiness fails closed when a required encryption key is absent.
+- Explicit account lifecycle states with separate suspension, reversible
+  30-day deletion, terminal anonymization, and restoration into mandatory
+  password recovery. Administrator lists expose typed state filters and the
+  timestamps needed to distinguish invited, active, suspended, deletion-pending,
+  and recovery-required accounts.
+- Authenticated password change with current-password verification, reuse
+  rejection, atomic audit, reset-token consumption, all-session revocation,
+  and mandatory reauthentication.
+- Server-side `AuthSession` inventory for Web and Native JWTs, including device
+  label, issue/last-seen/expiry, selective revocation, and sign-out of every
+  other session.
+- Safe administrator succession through a distinct password-and-reason
+  authority operation. Serializable last-admin checks prevent concurrent
+  demotions, suspensions, deletions, or self-deletion from leaving no active
+  clinical administrator. Clinical/research account-kind transitions use the
+  same step-up operation, while every direct or approved Member/HOD and
+  institution authority change revokes the target's prior sessions.
+- Self-service first name, last name, and title correction with normalized
+  display-name reconstruction and atomic changed-field audit.
+- Non-sensitive authentication capabilities for self-registration, recovery
+  mode, password change, and session inventory.
+
+- Orthogonal `AccountKind` (`CLINICAL` or `RESEARCH_ONLY`) is resolved live for
+  every authenticated request. Research-only accounts receive stable
+  `CLINICAL_APP_FORBIDDEN` responses outside auth, account/language, legal, and
+  research surfaces.
+- Bulgarian-default account locale at `User.preferences.ui.locale`, exposed in
+  sessions and account DTOs. Browser and native login can atomically persist an
+  explicit pre-auth selector choice; ordinary preference updates remain
+  available through `PATCH /v1/user`.
+- Public `GET /v1/locale` exposes validated `LOSPOR_DEFAULT_LOCALE` without
+  changing an account, for native clients before authentication.
+- Deployment-aware, append-only Terms and Privacy evidence plus public
+  `GET /v1/legal/documents?locale=bg|en`. Exact active descriptors and content
+  are server-owned; incomplete bilingual configuration fails readiness.
+- Immutable `Case.createdById`, separate from mutable assignee `userId`, with
+  explicit read/write predicates and per-case capabilities. A same-institution
+  creator retains read-only access after handover.
+- Stable random `Case.researchId` pseudonyms, granular live research grants,
+  and aggregate-only self-authorization lasting eight hours at most once per
+  rolling 24 hours. Research APIs and OMOP mapping no longer expose operational
+  case IDs or case codes.
+- Immutable clinical-ruleset publication evidence with canonical before/after
+  payloads, exact field-level diffs, hashes, confirmer, reason, and timestamp.
+  Database triggers prevent published rules from being edited or selected
+  without evidence.
+- Machine-readable `clinicalAdvice`, `labImageExtraction`, and `monitorOcr`
+  capabilities, each with an enabled state and stable reason. All three fail
+  closed before payload processing or provider egress when the provider is not
+  configured or deployment policy disables external AI; an accidentally
+  supplied provider key cannot override the deployment switch.
+
+### Changed
+
+- Password-reset requests now always return the same HTTP 202 body for known,
+  unknown, suspended, deleted, delivery-success, and delivery-failure paths.
+  Reset and verification links are conditionally claimed; one concurrent
+  request succeeds and all competing unused links are consumed.
+- Browser session creation/deletion now requires a trusted Origin or Referer.
+  A Bearer header cannot bypass this check on the cookie-setting route; native
+  bearer login remains origin-independent at `/v1/auth/token`.
+- Logout always expires the HttpOnly cookie but returns non-2xx when neither
+  the tracked session nor legacy JTI blocklist can confirm durable revocation.
+- Suspended, recovery-required, deleted, and anonymized accounts are excluded
+  from colleague, handover, grant, and pending membership selection surfaces.
+
+- Public registration requires an institution and exact Terms plus Privacy
+  acceptance. Email verification activates an ordinary `MEMBER`; the generic
+  administrator approval queue and endpoint are removed (old endpoints return
+  explicit compatibility responses).
+- Institution changes and HOD promotions now serialize on the user row. Moving
+  a HOD to another institution demotes them to `MEMBER` in the same transaction
+  so department-wide authority cannot move between hospitals.
+- An institution HOD may widen or narrow an existing platform clinical rule,
+  but cannot redefine canonical identity, units, or routes. Publication and
+  selection require password re-entry plus a reason and commit their audit
+  evidence atomically; no second reviewer is required. Personal rules remain
+  owner-only and narrow-only.
+- HOD demotion leaves every assigned case with the clinician and releases only
+  locks on other clinicians' cases that depended on former department-wide
+  authority. The last active clinical administrator cannot be demoted or
+  converted to a research-only account.
+
+### Migration and compatibility
+
+- `20260823100000_pwa_session_provenance` adds `PWA` to the tracked-session
+  client enum. Existing `WEB` and `NATIVE` rows are unchanged; newly created PWA
+  cookie sessions carry the signed `PWA` claim used by clinical-event audit.
+- `20260822150000_account_lifecycle_sessions` adds lifecycle timestamps and
+  the `AuthSession` ledger. Legacy JWTs lack the new tracked-session claim and
+  age out under their original eight-hour TTL; every newly issued JWT is
+  selectively revocable. Legacy anonymized sentinel accounts are backfilled
+  with terminal `anonymizedAt` and cannot be restored.
+
+- Existing `RESEARCHER` roles backfill to `accountKind=RESEARCH_ONLY`; all
+  others backfill to `CLINICAL`.
+- Existing preferences preserve unrelated keys; missing/invalid
+  `preferences.ui.locale` becomes `bg` and only case-insensitive `en` becomes
+  `en`.
+- No exact legal acceptance is invented from legacy timestamps. Existing users
+  have no authoritative rows until they accept both active documents.
+- `Case.createdById` backfills to the sender of the earliest accepted transfer,
+  or the current assignee when no accepted-transfer evidence exists. If
+  historical transfers allowed one creator to reuse a client draft id, both
+  clinical records are retained: the earliest keeps the technical idempotency
+  key and later collisions have only that key cleared before creator-scoped
+  uniqueness is installed.
+- Existing cases receive random, unique research pseudonyms. Existing published
+  clinical presets receive deterministic legacy publication evidence before
+  the database begins requiring evidence for every new publication.
+- This is a coordinated, non-rolling database/API cutover: the migration drops
+  the old `approvedAt` column and old API binaries must not run against the new
+  schema. Take a restorable database snapshot and deploy Core/API before the
+  clients that consume the new required contracts.
+
 ## [9.3.0] - 2026-08-20
 
 ### Fixed

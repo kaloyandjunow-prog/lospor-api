@@ -10,7 +10,11 @@ import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
 import { rebuildProjection, reconcileFullLog, snapshotLogForReconcile } from "@/lib/case-events"
-import { canAccessCaseWithOwnerFallback, caseWhereForUser } from "@/lib/access-control"
+import {
+  canWriteCaseWithOwnerFallback,
+  caseCapabilitiesForUser,
+  caseReadWhereForUser,
+} from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import type { CaseDetail, Serialized } from "@/types/case-detail"
 import type { LegacyKeyEvents, LogEvent, ClinicalEvent } from "@/types/timetable"
@@ -71,7 +75,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
-  const where = caseWhereForUser(user, id)
+  const where = caseReadWhereForUser(user, id)
 
   const record = await prisma.case.findFirst({
     where,
@@ -113,7 +117,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     : { ...record, pediatricModeDecisionRequired }
   // Prisma JSON columns are intentionally broad at the persistence boundary.
   // The response contract is the shared serialised CaseDetail shape.
-  const responseRecord = normalizedRecord as unknown as Serialized<CaseDetail>
+  const responseRecord = {
+    ...normalizedRecord,
+    capabilities: caseCapabilitiesForUser(user, record),
+  } as unknown as Serialized<CaseDetail>
 
   // Extending open infusion/fluid/agent bars to "now" on read used to happen here,
   // server-side. It was removed: the server has no way to know the client's local
@@ -193,7 +200,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status === "COMPLETE") {
@@ -690,7 +697,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!existing) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, existing)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, existing)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       const pediatricBlock = pediatricMutationResponse(req, existing.clinicalMode)

@@ -56,6 +56,15 @@ export async function PATCH(
         { status: 400 },
       )
     }
+    const expectedUpdatedAt = parsed.data.expectedUpdatedAt
+      ? new Date(parsed.data.expectedUpdatedAt)
+      : null
+    if (expectedUpdatedAt && current.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
+      return NextResponse.json(
+        { error: "Saved cohort changed after it was opened", code: "COHORT_CHANGED" },
+        { status: 409 },
+      )
+    }
     const visibility = parsed.data.visibility ?? current.visibility
     const institutionId = visibility === "INSTITUTION"
       ? parsed.data.institutionId
@@ -76,18 +85,31 @@ export async function PATCH(
         )
       }
     }
-    const row = await prisma.researchCohort.update({
-      where: { id },
-      data: {
-        ...(parsed.data.name !== undefined ? { name: parsed.data.name } : {}),
-        ...(parsed.data.description !== undefined ? { description: parsed.data.description } : {}),
-        ...(parsed.data.visibility !== undefined ? { visibility } : {}),
-        ...(parsed.data.visibility !== undefined || parsed.data.institutionId !== undefined ? { institutionId } : {}),
-        ...(parsed.data.definition !== undefined
-          ? { definition: parsed.data.definition as unknown as Prisma.InputJsonValue }
-          : {}),
-      },
-    })
+    const data = {
+      ...(parsed.data.name !== undefined ? { name: parsed.data.name } : {}),
+      ...(parsed.data.description !== undefined ? { description: parsed.data.description } : {}),
+      ...(parsed.data.visibility !== undefined ? { visibility } : {}),
+      ...(parsed.data.visibility !== undefined || parsed.data.institutionId !== undefined ? { institutionId } : {}),
+      ...(parsed.data.definition !== undefined
+        ? { definition: parsed.data.definition as unknown as Prisma.InputJsonValue }
+        : {}),
+    }
+    let row
+    if (expectedUpdatedAt) {
+      const updated = await prisma.researchCohort.updateMany({
+        where: { id, ownerId: auth.context.user.id, updatedAt: expectedUpdatedAt },
+        data,
+      })
+      if (updated.count !== 1) {
+        return NextResponse.json(
+          { error: "Saved cohort changed after it was opened", code: "COHORT_CHANGED" },
+          { status: 409 },
+        )
+      }
+      row = await prisma.researchCohort.findUniqueOrThrow({ where: { id } })
+    } else {
+      row = await prisma.researchCohort.update({ where: { id }, data })
+    }
     after(() => logAudit(auth.context.user.id, "RESEARCH_COHORT_UPDATE", id))
     return NextResponse.json(row)
   } catch (error) {

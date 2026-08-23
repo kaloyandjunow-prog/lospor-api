@@ -10,6 +10,7 @@ import type {
   ResearchExportRecord,
 } from "@lospor/core/research"
 import { normalizeResearchCohort } from "@lospor/core/research"
+import { preferredLocaleFromPreferences } from "@lospor/core/account"
 import { deriveQualityStatus } from "@lospor/core/omop"
 import { Prisma } from "@/generated/prisma/client"
 import { API_RELEASE_VERSION } from "@/lib/api-version"
@@ -385,12 +386,15 @@ function workerUser(record: ClaimedExport): AuthUser {
   return {
     id: record.owner.id,
     role: record.owner.role,
+    accountKind: record.owner.accountKind,
+    preferredLocale: preferredLocaleFromPreferences(record.owner.preferences),
     institutionId: record.owner.institutionId,
     institutionName: record.owner.institution?.name ?? null,
     firstName: record.owner.firstName || null,
     lastName: record.owner.lastName || null,
     title: record.owner.title || null,
     jti: null,
+    clientType: "WEB",
   }
 }
 

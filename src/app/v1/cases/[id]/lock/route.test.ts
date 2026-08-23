@@ -10,7 +10,7 @@ const readLock = vi.fn()
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser }))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    case: { findUnique: findCase },
+    case: { findFirst: findCase },
     user: { findUnique: findUser },
     caseLock: { deleteMany: deleteLocks },
   },
@@ -35,9 +35,7 @@ describe("case lock route", () => {
     vi.clearAllMocks()
     getAuthUser.mockResolvedValue({ id: "user-1", role: "MEMBER", institutionId: "inst-1" })
     findCase.mockResolvedValue({
-      userId: "user-1",
       status: "IN_PROGRESS",
-      user: { institutionId: "inst-1" },
     })
     acquireAtomic.mockResolvedValue({
       caseId: "case-1",

@@ -30,7 +30,7 @@ describe.skipIf(!runPostgres)("clinical write PostgreSQL serialization", () => {
   async function createCase() {
     const caseId = `clinical-serialization-case-${randomUUID()}`
     caseIds.push(caseId)
-    await prisma.case.create({ data: { id: caseId, userId, status: "IN_PROGRESS" } })
+    await prisma.case.create({ data: { id: caseId, userId, createdById: userId, status: "IN_PROGRESS" } })
     return caseId
   }
 

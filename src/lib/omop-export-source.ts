@@ -51,7 +51,7 @@ export function redactExportRow(c: ExportRow) {
 }
 
 export const CASE_SELECT = {
-  id: true, caseCode: true, createdAt: true, status: true, clinicalMode: true, clinicalRulesVersion: true,
+  id: true, researchId: true, createdAt: true, status: true, clinicalMode: true, clinicalRulesVersion: true,
   institutionId: true,
   user: { select: { institution: { select: { name: true } } } },
   fieldStatuses: {

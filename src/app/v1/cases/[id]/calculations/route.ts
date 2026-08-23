@@ -6,7 +6,7 @@ import {
   calculateRcukPediatricResuscitation,
 } from "@lospor/core/pediatric-calculators"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
+import { canReadCase, canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import {
   CaseWriteError,
@@ -47,10 +47,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const records = await withLockedCaseTransaction(id, async tx => {
     const record = await tx.case.findUnique({
       where: { id },
-      select: { id: true, userId: true, institutionId: true, status: true },
+      select: { id: true, userId: true, createdById: true, institutionId: true, status: true },
     })
     if (!record) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-    if (!await canAccessCaseWithOwnerFallback(tx, user, record)) {
+    if (!canReadCase(user, record)) {
       throw new CaseWriteError("CASE_FORBIDDEN", 403, "Forbidden")
     }
     return tx.caseClinicalCalculation.findMany({
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         },
       })
       if (!found) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, found)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, found)) {
         throw new CaseWriteError("CASE_FORBIDDEN", 403, "Forbidden")
       }
       if (found.status === "COMPLETE") {

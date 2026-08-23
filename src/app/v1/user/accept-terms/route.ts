@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/mobile-auth"
-import { prisma } from "@/lib/prisma"
 import { corsHeaders } from "@/lib/cors"
-import { CURRENT_TERMS_VERSION } from "@lospor/core/account"
+import { POST as recordLegalAcceptances } from "@/app/v1/user/legal-acceptances/route"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -11,13 +9,9 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const user = await getAuthUser(req)
-  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data:  { acceptedTermsAt: new Date(), termsVersion: CURRENT_TERMS_VERSION },
-  })
-
-  return NextResponse.json({ ok: true })
+  // Compatibility verb for first-party clients released before the canonical
+  // /v1/user/legal-acceptances endpoint. It intentionally requires the same
+  // exact TERMS + PRIVACY descriptors; the old empty-body timestamp shortcut
+  // is not retained because it could not prove what was accepted.
+  return recordLegalAcceptances(req)
 }

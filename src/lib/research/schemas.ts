@@ -104,7 +104,14 @@ export const savedCohortCreateSchema = z.object({
   definition: researchCohortSchema,
 }).strict()
 
-export const savedCohortPatchSchema = savedCohortCreateSchema.partial().strict()
+export const savedCohortPatchSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  description: z.string().trim().max(500).nullable().optional(),
+  visibility: z.enum(["PRIVATE", "INSTITUTION"]).optional(),
+  institutionId: z.string().trim().min(1).nullable().optional(),
+  definition: researchCohortSchema.optional(),
+  expectedUpdatedAt: z.string().datetime().optional(),
+}).strict()
 
 export const researchExportCreateSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -116,19 +123,30 @@ export const researchGrantCreateSchema = z.object({
   userId: z.string().trim().min(1),
   institutionId: z.string().trim().min(1).nullable().optional(),
   allInstitutions: z.boolean().default(false),
-  canInspectCases: z.boolean().default(true),
+  canQuery: z.boolean().default(true),
+  canInspectCases: z.boolean().default(false),
   canExport: z.boolean().default(false),
   canExportOmop: z.boolean().default(false),
-  expiresAt: z.string().datetime().nullable().optional(),
-}).strict().refine(
-  value => value.allInstitutions || !!value.institutionId,
-  { message: "institutionId is required unless allInstitutions is true" },
-)
+  canShareCohorts: z.boolean().default(false),
+  expiresAt: z.string().datetime().optional(),
+}).strict().superRefine((value, context) => {
+  if (!value.allInstitutions && !value.institutionId) {
+    context.addIssue({ code: "custom", message: "institutionId is required unless allInstitutions is true" })
+  }
+  if (!value.canQuery) {
+    context.addIssue({ code: "custom", path: ["canQuery"], message: "query permission is required for a research grant" })
+  }
+  if (value.canExportOmop && !value.canExport) {
+    context.addIssue({ code: "custom", path: ["canExportOmop"], message: "OMOP export also requires export permission" })
+  }
+})
 
 export const researchGrantPatchSchema = z.object({
+  canQuery: z.boolean().optional(),
   canInspectCases: z.boolean().optional(),
   canExport: z.boolean().optional(),
   canExportOmop: z.boolean().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
-  revoked: z.boolean().optional(),
+  canShareCohorts: z.boolean().optional(),
+  expiresAt: z.string().datetime().optional(),
+  revoked: z.literal(true).optional(),
 }).strict()

@@ -16,7 +16,7 @@ vi.mock("@/lib/case-transfer", () => ({
   transferCaseOwnershipInTransaction: transferOwnership,
 }))
 vi.mock("@/lib/case-code", () => ({ isPrismaUniqueError: () => false }))
-vi.mock("@/lib/access-control", () => ({ caseWhereForUser: (_u: unknown, id: string) => ({ id }) }))
+vi.mock("@/lib/access-control", () => ({ caseWriteWhereForUser: (_u: unknown, id: string) => ({ id }) }))
 vi.mock("@/lib/clinical-transaction", async () => {
   const actual = await vi.importActual<typeof import("@/lib/clinical-transaction")>(
     "@/lib/clinical-transaction",

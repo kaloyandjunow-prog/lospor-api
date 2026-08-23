@@ -24,10 +24,20 @@ export async function GET(req: NextRequest) {
   if (!scope) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: CORS(req) })
 
   const requests = await prisma.institutionChangeRequest.findMany({
-    where: { status: "PENDING", ...scope },
+    where: {
+      status: "PENDING",
+      ...scope,
+      user: {
+        activatedAt: { not: null },
+        suspendedAt: null,
+        recoveryRequiredAt: null,
+        deletedAt: null,
+        anonymizedAt: null,
+      },
+    },
     orderBy: { requestedAt: "asc" },
     include: {
-      user: { select: { id: true, name: true, email: true, role: true } },
+      user: { select: { id: true, name: true, email: true, username: true, role: true } },
       requestedInstitution: { select: { id: true, name: true, city: true } },
     },
   })

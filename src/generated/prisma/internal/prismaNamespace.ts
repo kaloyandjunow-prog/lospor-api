@@ -400,6 +400,11 @@ export const ModelName = {
   User: 'User',
   EmailVerificationToken: 'EmailVerificationToken',
   PasswordResetToken: 'PasswordResetToken',
+  AuthSession: 'AuthSession',
+  MfaLoginChallenge: 'MfaLoginChallenge',
+  MfaRecoveryCode: 'MfaRecoveryCode',
+  TechnicalPrincipal: 'TechnicalPrincipal',
+  LegalAcceptance: 'LegalAcceptance',
   Institution: 'Institution',
   Case: 'Case',
   CaseLock: 'CaseLock',
@@ -435,6 +440,7 @@ export const ModelName = {
   CaseClinicalCalculation: 'CaseClinicalCalculation',
   ClinicalRuleReview: 'ClinicalRuleReview',
   ClinicalPreset: 'ClinicalPreset',
+  ClinicalRulesetPublicationEvidence: 'ClinicalRulesetPublicationEvidence',
   PlatformClinicalPresetSelection: 'PlatformClinicalPresetSelection',
   InstitutionClinicalPresetSelection: 'InstitutionClinicalPresetSelection',
   UserClinicalPresetSelection: 'UserClinicalPresetSelection',
@@ -450,6 +456,7 @@ export const ModelName = {
   CaseComplication: 'CaseComplication',
   CaseSelection: 'CaseSelection',
   ResearchAccessGrant: 'ResearchAccessGrant',
+  ResearchSelfAuthorization: 'ResearchSelfAuthorization',
   ResearchCohort: 'ResearchCohort',
   ResearchExport: 'ResearchExport'
 } as const
@@ -467,7 +474,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "institution" | "case" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -690,6 +697,376 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.PasswordResetTokenCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.PasswordResetTokenCountAggregateOutputType> | number
+        }
+      }
+    }
+    AuthSession: {
+      payload: Prisma.$AuthSessionPayload<ExtArgs>
+      fields: Prisma.AuthSessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AuthSessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AuthSessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>
+        }
+        findFirst: {
+          args: Prisma.AuthSessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AuthSessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>
+        }
+        findMany: {
+          args: Prisma.AuthSessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>[]
+        }
+        create: {
+          args: Prisma.AuthSessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>
+        }
+        createMany: {
+          args: Prisma.AuthSessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AuthSessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>[]
+        }
+        delete: {
+          args: Prisma.AuthSessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>
+        }
+        update: {
+          args: Prisma.AuthSessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.AuthSessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AuthSessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AuthSessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.AuthSessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthSessionPayload>
+        }
+        aggregate: {
+          args: Prisma.AuthSessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAuthSession>
+        }
+        groupBy: {
+          args: Prisma.AuthSessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuthSessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AuthSessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AuthSessionCountAggregateOutputType> | number
+        }
+      }
+    }
+    MfaLoginChallenge: {
+      payload: Prisma.$MfaLoginChallengePayload<ExtArgs>
+      fields: Prisma.MfaLoginChallengeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MfaLoginChallengeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MfaLoginChallengeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>
+        }
+        findFirst: {
+          args: Prisma.MfaLoginChallengeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MfaLoginChallengeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>
+        }
+        findMany: {
+          args: Prisma.MfaLoginChallengeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>[]
+        }
+        create: {
+          args: Prisma.MfaLoginChallengeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>
+        }
+        createMany: {
+          args: Prisma.MfaLoginChallengeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MfaLoginChallengeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>[]
+        }
+        delete: {
+          args: Prisma.MfaLoginChallengeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>
+        }
+        update: {
+          args: Prisma.MfaLoginChallengeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>
+        }
+        deleteMany: {
+          args: Prisma.MfaLoginChallengeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MfaLoginChallengeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MfaLoginChallengeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>[]
+        }
+        upsert: {
+          args: Prisma.MfaLoginChallengeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaLoginChallengePayload>
+        }
+        aggregate: {
+          args: Prisma.MfaLoginChallengeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMfaLoginChallenge>
+        }
+        groupBy: {
+          args: Prisma.MfaLoginChallengeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MfaLoginChallengeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MfaLoginChallengeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MfaLoginChallengeCountAggregateOutputType> | number
+        }
+      }
+    }
+    MfaRecoveryCode: {
+      payload: Prisma.$MfaRecoveryCodePayload<ExtArgs>
+      fields: Prisma.MfaRecoveryCodeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MfaRecoveryCodeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MfaRecoveryCodeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>
+        }
+        findFirst: {
+          args: Prisma.MfaRecoveryCodeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MfaRecoveryCodeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>
+        }
+        findMany: {
+          args: Prisma.MfaRecoveryCodeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>[]
+        }
+        create: {
+          args: Prisma.MfaRecoveryCodeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>
+        }
+        createMany: {
+          args: Prisma.MfaRecoveryCodeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MfaRecoveryCodeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>[]
+        }
+        delete: {
+          args: Prisma.MfaRecoveryCodeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>
+        }
+        update: {
+          args: Prisma.MfaRecoveryCodeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>
+        }
+        deleteMany: {
+          args: Prisma.MfaRecoveryCodeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MfaRecoveryCodeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MfaRecoveryCodeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>[]
+        }
+        upsert: {
+          args: Prisma.MfaRecoveryCodeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MfaRecoveryCodePayload>
+        }
+        aggregate: {
+          args: Prisma.MfaRecoveryCodeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMfaRecoveryCode>
+        }
+        groupBy: {
+          args: Prisma.MfaRecoveryCodeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MfaRecoveryCodeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MfaRecoveryCodeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MfaRecoveryCodeCountAggregateOutputType> | number
+        }
+      }
+    }
+    TechnicalPrincipal: {
+      payload: Prisma.$TechnicalPrincipalPayload<ExtArgs>
+      fields: Prisma.TechnicalPrincipalFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TechnicalPrincipalFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TechnicalPrincipalFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>
+        }
+        findFirst: {
+          args: Prisma.TechnicalPrincipalFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TechnicalPrincipalFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>
+        }
+        findMany: {
+          args: Prisma.TechnicalPrincipalFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>[]
+        }
+        create: {
+          args: Prisma.TechnicalPrincipalCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>
+        }
+        createMany: {
+          args: Prisma.TechnicalPrincipalCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TechnicalPrincipalCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>[]
+        }
+        delete: {
+          args: Prisma.TechnicalPrincipalDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>
+        }
+        update: {
+          args: Prisma.TechnicalPrincipalUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>
+        }
+        deleteMany: {
+          args: Prisma.TechnicalPrincipalDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TechnicalPrincipalUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TechnicalPrincipalUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>[]
+        }
+        upsert: {
+          args: Prisma.TechnicalPrincipalUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TechnicalPrincipalPayload>
+        }
+        aggregate: {
+          args: Prisma.TechnicalPrincipalAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTechnicalPrincipal>
+        }
+        groupBy: {
+          args: Prisma.TechnicalPrincipalGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TechnicalPrincipalGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TechnicalPrincipalCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TechnicalPrincipalCountAggregateOutputType> | number
+        }
+      }
+    }
+    LegalAcceptance: {
+      payload: Prisma.$LegalAcceptancePayload<ExtArgs>
+      fields: Prisma.LegalAcceptanceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LegalAcceptanceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LegalAcceptanceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>
+        }
+        findFirst: {
+          args: Prisma.LegalAcceptanceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LegalAcceptanceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>
+        }
+        findMany: {
+          args: Prisma.LegalAcceptanceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>[]
+        }
+        create: {
+          args: Prisma.LegalAcceptanceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>
+        }
+        createMany: {
+          args: Prisma.LegalAcceptanceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LegalAcceptanceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>[]
+        }
+        delete: {
+          args: Prisma.LegalAcceptanceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>
+        }
+        update: {
+          args: Prisma.LegalAcceptanceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>
+        }
+        deleteMany: {
+          args: Prisma.LegalAcceptanceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LegalAcceptanceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LegalAcceptanceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>[]
+        }
+        upsert: {
+          args: Prisma.LegalAcceptanceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LegalAcceptancePayload>
+        }
+        aggregate: {
+          args: Prisma.LegalAcceptanceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLegalAcceptance>
+        }
+        groupBy: {
+          args: Prisma.LegalAcceptanceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LegalAcceptanceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LegalAcceptanceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LegalAcceptanceCountAggregateOutputType> | number
         }
       }
     }
@@ -3283,6 +3660,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ClinicalRulesetPublicationEvidence: {
+      payload: Prisma.$ClinicalRulesetPublicationEvidencePayload<ExtArgs>
+      fields: Prisma.ClinicalRulesetPublicationEvidenceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>
+        }
+        findFirst: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>
+        }
+        findMany: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>[]
+        }
+        create: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>
+        }
+        createMany: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>[]
+        }
+        delete: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>
+        }
+        update: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>
+        }
+        deleteMany: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>[]
+        }
+        upsert: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicalRulesetPublicationEvidencePayload>
+        }
+        aggregate: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClinicalRulesetPublicationEvidence>
+        }
+        groupBy: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalRulesetPublicationEvidenceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ClinicalRulesetPublicationEvidenceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicalRulesetPublicationEvidenceCountAggregateOutputType> | number
+        }
+      }
+    }
     PlatformClinicalPresetSelection: {
       payload: Prisma.$PlatformClinicalPresetSelectionPayload<ExtArgs>
       fields: Prisma.PlatformClinicalPresetSelectionFieldRefs
@@ -4393,6 +4844,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ResearchSelfAuthorization: {
+      payload: Prisma.$ResearchSelfAuthorizationPayload<ExtArgs>
+      fields: Prisma.ResearchSelfAuthorizationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ResearchSelfAuthorizationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ResearchSelfAuthorizationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>
+        }
+        findFirst: {
+          args: Prisma.ResearchSelfAuthorizationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ResearchSelfAuthorizationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>
+        }
+        findMany: {
+          args: Prisma.ResearchSelfAuthorizationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>[]
+        }
+        create: {
+          args: Prisma.ResearchSelfAuthorizationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>
+        }
+        createMany: {
+          args: Prisma.ResearchSelfAuthorizationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ResearchSelfAuthorizationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>[]
+        }
+        delete: {
+          args: Prisma.ResearchSelfAuthorizationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>
+        }
+        update: {
+          args: Prisma.ResearchSelfAuthorizationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>
+        }
+        deleteMany: {
+          args: Prisma.ResearchSelfAuthorizationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ResearchSelfAuthorizationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ResearchSelfAuthorizationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>[]
+        }
+        upsert: {
+          args: Prisma.ResearchSelfAuthorizationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ResearchSelfAuthorizationPayload>
+        }
+        aggregate: {
+          args: Prisma.ResearchSelfAuthorizationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateResearchSelfAuthorization>
+        }
+        groupBy: {
+          args: Prisma.ResearchSelfAuthorizationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ResearchSelfAuthorizationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ResearchSelfAuthorizationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ResearchSelfAuthorizationCountAggregateOutputType> | number
+        }
+      }
+    }
     ResearchCohort: {
       payload: Prisma.$ResearchCohortPayload<ExtArgs>
       fields: Prisma.ResearchCohortFieldRefs
@@ -4583,14 +5108,17 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
+  username: 'username',
+  usernameCanonical: 'usernameCanonical',
   name: 'name',
   firstName: 'firstName',
   lastName: 'lastName',
   title: 'title',
   passwordHash: 'passwordHash',
   role: 'role',
+  accountKind: 'accountKind',
   institutionId: 'institutionId',
-  approvedAt: 'approvedAt',
+  activatedAt: 'activatedAt',
   emailVerifiedAt: 'emailVerifiedAt',
   acceptedTermsAt: 'acceptedTermsAt',
   acceptedPrivacyAt: 'acceptedPrivacyAt',
@@ -4598,7 +5126,13 @@ export const UserScalarFieldEnum = {
   preferences: 'preferences',
   lastLoginAt: 'lastLoginAt',
   passwordChangedAt: 'passwordChangedAt',
+  mfaTotpSecretCiphertext: 'mfaTotpSecretCiphertext',
+  mfaEnabledAt: 'mfaEnabledAt',
+  mfaLastTotpStep: 'mfaLastTotpStep',
+  suspendedAt: 'suspendedAt',
+  recoveryRequiredAt: 'recoveryRequiredAt',
   deletedAt: 'deletedAt',
+  anonymizedAt: 'anonymizedAt',
   createdAt: 'createdAt'
 } as const
 
@@ -4629,6 +5163,74 @@ export const PasswordResetTokenScalarFieldEnum = {
 export type PasswordResetTokenScalarFieldEnum = (typeof PasswordResetTokenScalarFieldEnum)[keyof typeof PasswordResetTokenScalarFieldEnum]
 
 
+export const AuthSessionScalarFieldEnum = {
+  jti: 'jti',
+  userId: 'userId',
+  clientType: 'clientType',
+  deviceLabel: 'deviceLabel',
+  issuedAt: 'issuedAt',
+  lastSeenAt: 'lastSeenAt',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  revokedReason: 'revokedReason'
+} as const
+
+export type AuthSessionScalarFieldEnum = (typeof AuthSessionScalarFieldEnum)[keyof typeof AuthSessionScalarFieldEnum]
+
+
+export const MfaLoginChallengeScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  userId: 'userId',
+  clientType: 'clientType',
+  preferredLocale: 'preferredLocale',
+  deviceLabel: 'deviceLabel',
+  enrollmentSecretCiphertext: 'enrollmentSecretCiphertext',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type MfaLoginChallengeScalarFieldEnum = (typeof MfaLoginChallengeScalarFieldEnum)[keyof typeof MfaLoginChallengeScalarFieldEnum]
+
+
+export const MfaRecoveryCodeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  codeHash: 'codeHash',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type MfaRecoveryCodeScalarFieldEnum = (typeof MfaRecoveryCodeScalarFieldEnum)[keyof typeof MfaRecoveryCodeScalarFieldEnum]
+
+
+export const TechnicalPrincipalScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  displayName: 'displayName',
+  releaseVersion: 'releaseVersion',
+  createdAt: 'createdAt'
+} as const
+
+export type TechnicalPrincipalScalarFieldEnum = (typeof TechnicalPrincipalScalarFieldEnum)[keyof typeof TechnicalPrincipalScalarFieldEnum]
+
+
+export const LegalAcceptanceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  deployment: 'deployment',
+  kind: 'kind',
+  documentVersion: 'documentVersion',
+  documentEffectiveAt: 'documentEffectiveAt',
+  locale: 'locale',
+  contentSha256: 'contentSha256',
+  acceptedAt: 'acceptedAt'
+} as const
+
+export type LegalAcceptanceScalarFieldEnum = (typeof LegalAcceptanceScalarFieldEnum)[keyof typeof LegalAcceptanceScalarFieldEnum]
+
+
 export const InstitutionScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -4641,9 +5243,11 @@ export type InstitutionScalarFieldEnum = (typeof InstitutionScalarFieldEnum)[key
 
 export const CaseScalarFieldEnum = {
   id: 'id',
+  researchId: 'researchId',
   caseCode: 'caseCode',
   notes: 'notes',
   userId: 'userId',
+  createdById: 'createdById',
   institutionId: 'institutionId',
   status: 'status',
   clinicalMode: 'clinicalMode',
@@ -5315,7 +5919,9 @@ export const ClinicalPresetScalarFieldEnum = {
   version: 'version',
   status: 'status',
   createdById: 'createdById',
+  createdByTechnicalPrincipalId: 'createdByTechnicalPrincipalId',
   publishedById: 'publishedById',
+  publishedByTechnicalPrincipalId: 'publishedByTechnicalPrincipalId',
   publishedAt: 'publishedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -5324,10 +5930,28 @@ export const ClinicalPresetScalarFieldEnum = {
 export type ClinicalPresetScalarFieldEnum = (typeof ClinicalPresetScalarFieldEnum)[keyof typeof ClinicalPresetScalarFieldEnum]
 
 
+export const ClinicalRulesetPublicationEvidenceScalarFieldEnum = {
+  id: 'id',
+  presetId: 'presetId',
+  baselinePresetId: 'baselinePresetId',
+  baselinePresetVersion: 'baselinePresetVersion',
+  reason: 'reason',
+  contentSha256: 'contentSha256',
+  diffSha256: 'diffSha256',
+  exactDiff: 'exactDiff',
+  confirmedById: 'confirmedById',
+  confirmedByTechnicalPrincipalId: 'confirmedByTechnicalPrincipalId',
+  confirmedAt: 'confirmedAt'
+} as const
+
+export type ClinicalRulesetPublicationEvidenceScalarFieldEnum = (typeof ClinicalRulesetPublicationEvidenceScalarFieldEnum)[keyof typeof ClinicalRulesetPublicationEvidenceScalarFieldEnum]
+
+
 export const PlatformClinicalPresetSelectionScalarFieldEnum = {
   clinicalMode: 'clinicalMode',
   presetId: 'presetId',
   selectedById: 'selectedById',
+  selectedByTechnicalPrincipalId: 'selectedByTechnicalPrincipalId',
   selectedAt: 'selectedAt',
   updatedAt: 'updatedAt'
 } as const
@@ -5608,9 +6232,11 @@ export const ResearchAccessGrantScalarFieldEnum = {
   userId: 'userId',
   institutionId: 'institutionId',
   allInstitutions: 'allInstitutions',
+  canQuery: 'canQuery',
   canInspectCases: 'canInspectCases',
   canExport: 'canExport',
   canExportOmop: 'canExportOmop',
+  canShareCohorts: 'canShareCohorts',
   grantedById: 'grantedById',
   expiresAt: 'expiresAt',
   revokedAt: 'revokedAt',
@@ -5619,6 +6245,17 @@ export const ResearchAccessGrantScalarFieldEnum = {
 } as const
 
 export type ResearchAccessGrantScalarFieldEnum = (typeof ResearchAccessGrantScalarFieldEnum)[keyof typeof ResearchAccessGrantScalarFieldEnum]
+
+
+export const ResearchSelfAuthorizationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  institutionId: 'institutionId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type ResearchSelfAuthorizationScalarFieldEnum = (typeof ResearchSelfAuthorizationScalarFieldEnum)[keyof typeof ResearchSelfAuthorizationScalarFieldEnum]
 
 
 export const ResearchCohortScalarFieldEnum = {
@@ -5760,6 +6397,20 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'AccountKind'
+ */
+export type EnumAccountKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountKind'>
+
+
+
+/**
+ * Reference to a field of type 'AccountKind[]'
+ */
+export type ListEnumAccountKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountKind[]'>
+
+
+
+/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -5788,34 +6439,6 @@ export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
 
 
 /**
- * Reference to a field of type 'CaseStatus'
- */
-export type EnumCaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStatus'>
-    
-
-
-/**
- * Reference to a field of type 'CaseStatus[]'
- */
-export type ListEnumCaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'ClinicalMode'
- */
-export type EnumClinicalModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalMode'>
-    
-
-
-/**
- * Reference to a field of type 'ClinicalMode[]'
- */
-export type ListEnumClinicalModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalMode[]'>
-    
-
-
-/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -5826,6 +6449,90 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AuthSessionClientType'
+ */
+export type EnumAuthSessionClientTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthSessionClientType'>
+    
+
+
+/**
+ * Reference to a field of type 'AuthSessionClientType[]'
+ */
+export type ListEnumAuthSessionClientTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthSessionClientType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TechnicalPrincipalKind'
+ */
+export type EnumTechnicalPrincipalKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TechnicalPrincipalKind'>
+    
+
+
+/**
+ * Reference to a field of type 'TechnicalPrincipalKind[]'
+ */
+export type ListEnumTechnicalPrincipalKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TechnicalPrincipalKind[]'>
+
+
+
+/**
+ * Reference to a field of type 'LegalDocumentKind'
+ */
+export type EnumLegalDocumentKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentKind'>
+
+
+
+/**
+ * Reference to a field of type 'LegalDocumentKind[]'
+ */
+export type ListEnumLegalDocumentKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentKind[]'>
+
+
+
+/**
+ * Reference to a field of type 'LegalDocumentLocale'
+ */
+export type EnumLegalDocumentLocaleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentLocale'>
+
+
+
+/**
+ * Reference to a field of type 'LegalDocumentLocale[]'
+ */
+export type ListEnumLegalDocumentLocaleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentLocale[]'>
+
+
+
+/**
+ * Reference to a field of type 'CaseStatus'
+ */
+export type EnumCaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStatus'>
+
+
+
+/**
+ * Reference to a field of type 'CaseStatus[]'
+ */
+export type ListEnumCaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStatus[]'>
+
+
+
+/**
+ * Reference to a field of type 'ClinicalMode'
+ */
+export type EnumClinicalModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalMode'>
+
+
+
+/**
+ * Reference to a field of type 'ClinicalMode[]'
+ */
+export type ListEnumClinicalModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalMode[]'>
     
 
 
@@ -6395,6 +7102,11 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   emailVerificationToken?: Prisma.EmailVerificationTokenOmit
   passwordResetToken?: Prisma.PasswordResetTokenOmit
+  authSession?: Prisma.AuthSessionOmit
+  mfaLoginChallenge?: Prisma.MfaLoginChallengeOmit
+  mfaRecoveryCode?: Prisma.MfaRecoveryCodeOmit
+  technicalPrincipal?: Prisma.TechnicalPrincipalOmit
+  legalAcceptance?: Prisma.LegalAcceptanceOmit
   institution?: Prisma.InstitutionOmit
   case?: Prisma.CaseOmit
   caseLock?: Prisma.CaseLockOmit
@@ -6430,6 +7142,7 @@ export type GlobalOmitConfig = {
   caseClinicalCalculation?: Prisma.CaseClinicalCalculationOmit
   clinicalRuleReview?: Prisma.ClinicalRuleReviewOmit
   clinicalPreset?: Prisma.ClinicalPresetOmit
+  clinicalRulesetPublicationEvidence?: Prisma.ClinicalRulesetPublicationEvidenceOmit
   platformClinicalPresetSelection?: Prisma.PlatformClinicalPresetSelectionOmit
   institutionClinicalPresetSelection?: Prisma.InstitutionClinicalPresetSelectionOmit
   userClinicalPresetSelection?: Prisma.UserClinicalPresetSelectionOmit
@@ -6445,6 +7158,7 @@ export type GlobalOmitConfig = {
   caseComplication?: Prisma.CaseComplicationOmit
   caseSelection?: Prisma.CaseSelectionOmit
   researchAccessGrant?: Prisma.ResearchAccessGrantOmit
+  researchSelfAuthorization?: Prisma.ResearchSelfAuthorizationOmit
   researchCohort?: Prisma.ResearchCohortOmit
   researchExport?: Prisma.ResearchExportOmit
 }
@@ -6509,4 +7223,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

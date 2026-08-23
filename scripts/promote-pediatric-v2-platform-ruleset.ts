@@ -3,16 +3,22 @@
  * PEDIATRIC platform selection to v2. Pediatric v1 remains immutable and
  * available for rollback.
  *
+ * The promotion and its audit row commit together. Against a protected database
+ * the run must name the accountable administrator in PUBLISHING_ADMIN_EMAIL;
+ * otherwise it is attributed to the LOSPOR release principal, exactly as the
+ * bundled baselines are.
+ *
  * Dry-run:
  *   $env:PROMOTE_PEDIATRIC_V2_RULESET="YES"
  *   $env:TARGET_CLINICAL_PRESET_ID="lospor-pediatrics-v2"
- *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:promote-pediatric-v2
  *
  * Apply:
  *   npm run clinical-rules:promote-pediatric-v2 -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import { isDeepStrictEqual } from "node:util"
 import {
   clinicalRuleKey,
@@ -22,6 +28,15 @@ import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-dra
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
+import { buildClinicalRulesetExactDiff } from "../src/lib/clinical-rules/publication-evidence"
+import type { ClinicalRulePayload } from "@lospor/core/clinical-rules"
 
 const TARGET_PRESET_ID = "lospor-pediatrics-v2"
 const APPLY_ARGUMENT = "--apply"
@@ -35,8 +50,8 @@ if (process.env.PROMOTE_PEDIATRIC_V2_RULESET !== "YES") {
 if (process.env.TARGET_CLINICAL_PRESET_ID !== TARGET_PRESET_ID) {
   throw new Error(`TARGET_CLINICAL_PRESET_ID must be exactly "${TARGET_PRESET_ID}".`)
 }
-if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
-assertDatabaseWritable("promote a ruleset")
+const database = assertDatabaseWritable("promote a ruleset")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
 
 const canonical = createLosporPediatricV2Draft()
@@ -84,13 +99,10 @@ async function main() {
       throw new Error("Target is not the exact unpublished pediatric v2 platform draft.")
     }
 
-    const admin = await tx.user.findUnique({
-      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
-      select: { id: true, role: true, deletedAt: true },
+    const actor = await resolveMaintenanceActor(tx, {
+      protectedDatabase: database.protected,
+      dryRun: !apply,
     })
-    if (!admin || admin.role !== "ADMIN" || admin.deletedAt !== null) {
-      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator.")
-    }
 
     const [institutionSelections, userSelections, overrides] = await Promise.all([
       tx.institutionClinicalPresetSelection.count({ where: { presetId: TARGET_PRESET_ID } }),
@@ -120,7 +132,7 @@ async function main() {
 
     const currentSelection = await tx.platformClinicalPresetSelection.findUnique({
       where: { clinicalMode: "PEDIATRIC" },
-      include: { preset: { select: { id: true, status: true, clinicalMode: true, scope: true } } },
+      include: { preset: { include: { rules: { orderBy: { ruleKey: "asc" } } } } },
     })
     if (currentSelection && (
       currentSelection.preset.clinicalMode !== "PEDIATRIC"
@@ -148,13 +160,45 @@ async function main() {
       })
     }
     const publishedAt = new Date()
+    const evidence = buildClinicalRulesetExactDiff({
+      baselinePresetId: currentSelection?.preset.id ?? null,
+      baselinePresetVersion: currentSelection?.preset.version ?? null,
+      baselineRules: (currentSelection?.preset.rules ?? []).map(rule => ({
+        ruleKey: rule.ruleKey,
+        ruleVersion: rule.ruleVersion,
+        payload: rule.payload as unknown as ClinicalRulePayload,
+        sourceRefs: Array.isArray(rule.sourceRefs)
+          ? rule.sourceRefs.filter((item): item is string => typeof item === "string")
+          : [],
+      })),
+      nextRules: canonical.rules.map(rule => ({
+        ruleKey: clinicalRuleKey(rule.payload),
+        ruleVersion: `${canonical.key}.v${canonical.version}`,
+        payload: rule.payload,
+        sourceRefs: [...rule.sourceRefs],
+      })),
+    })
+    await tx.clinicalRulesetPublicationEvidence.create({
+      data: {
+        presetId: TARGET_PRESET_ID,
+        baselinePresetId: currentSelection?.preset.id ?? null,
+        baselinePresetVersion: currentSelection?.preset.version ?? null,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
+        exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
+        confirmedById: actorUserId(actor),
+        confirmedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
+        confirmedAt: publishedAt,
+      },
+    })
     await tx.clinicalPreset.update({
       where: { id: TARGET_PRESET_ID },
       data: {
         name: canonical.name,
         description: canonical.description,
         status: "PUBLISHED",
-        publishedById: admin.id,
+        publishedById: actorUserId(actor),
+        publishedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         publishedAt,
       },
     })
@@ -163,13 +207,27 @@ async function main() {
       create: {
         clinicalMode: "PEDIATRIC",
         presetId: TARGET_PRESET_ID,
-        selectedById: admin.id,
+        selectedById: actorUserId(actor),
+        selectedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         selectedAt: publishedAt,
       },
       update: {
         presetId: TARGET_PRESET_ID,
-        selectedById: admin.id,
+        selectedById: actorUserId(actor),
+        selectedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         selectedAt: publishedAt,
+      },
+    })
+    await writeMaintenanceAuditRow(tx, actor, {
+      action: "CLINICAL_RULESET_PUBLISH_AND_SELECT" satisfies AuditActionCode,
+      entityId: TARGET_PRESET_ID,
+      source: "scripts/promote-pediatric-v2-platform-ruleset.ts",
+      detail: {
+        scope: "PLATFORM",
+        clinicalMode: "PEDIATRIC",
+        previousPresetId: currentSelection?.presetId ?? null,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
       },
     })
   }, {

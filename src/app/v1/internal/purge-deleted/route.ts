@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { purgeDeletedAccounts, RETENTION_DAYS } from "@/lib/purge-deleted"
-import { logAudit } from "@/lib/audit"
 import { bearerToken, matchesSecret } from "@/lib/constant-time-secret"
 
 // Retention job: anonymises accounts deleted more than RETENTION_DAYS ago and
@@ -38,11 +37,6 @@ export async function GET(req: NextRequest) {
   }
 
   const result = await purgeDeletedAccounts()
-
-  // Anonymising an account is itself an auditable act.
-  for (const userId of result.userIds) {
-    await logAudit(userId, "ACCOUNT_ANONYMISED", userId, { retentionDays: RETENTION_DAYS }).catch(() => {})
-  }
 
   return NextResponse.json({
     ok: true,

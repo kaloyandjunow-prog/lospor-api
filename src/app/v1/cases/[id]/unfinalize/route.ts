@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { logAuditInTransaction } from "@/lib/audit"
-import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
+import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import { FINALIZE_UNDO_WINDOW_MS } from "@/lib/constants"
 import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
 
-      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status !== "COMPLETE") {

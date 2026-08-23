@@ -17,16 +17,19 @@
  *   npm run clinical-rules:promote-pediatric-platform -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import { isDeepStrictEqual } from "node:util"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollectionForPublication,
   type PediatricDrugPolicyRulePayload,
+  type ClinicalRulePayload,
 } from "@lospor/core/clinical-rules"
 import { createLosporPediatricPlatformDraft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import { buildClinicalRulesetExactDiff } from "../src/lib/clinical-rules/publication-evidence"
 
 const AUTHORIZATION_VARIABLE = "PROMOTE_PEDIATRIC_PLATFORM_RULESET"
 const TARGET_PRESET_ID = "lospor-pediatrics-v1"
@@ -179,6 +182,27 @@ async function main() {
     }
 
     const publishedAt = new Date()
+    const evidence = buildClinicalRulesetExactDiff({
+      baselinePresetId: null,
+      baselinePresetVersion: null,
+      baselineRules: [],
+      nextRules: canonical.rules.map(rule => ({
+        ruleKey: clinicalRuleKey(rule.payload),
+        ruleVersion: `${canonical.key}.v${canonical.version}`,
+        payload: rule.payload as ClinicalRulePayload,
+        sourceRefs: [...rule.sourceRefs],
+      })),
+    })
+    await tx.clinicalRulesetPublicationEvidence.create({
+      data: {
+        presetId: TARGET_PRESET_ID,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
+        exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
+        confirmedById: admin.id,
+        confirmedAt: publishedAt,
+      },
+    })
     await tx.clinicalPreset.update({
       where: { id: TARGET_PRESET_ID },
       data: {
@@ -195,6 +219,20 @@ async function main() {
         presetId: TARGET_PRESET_ID,
         selectedById: admin.id,
         selectedAt: publishedAt,
+      },
+    })
+    await tx.auditLog.create({
+      data: {
+        userId: admin.id,
+        action: "CLINICAL_RULESET_PUBLISH_AND_SELECT" satisfies AuditActionCode,
+        entityId: TARGET_PRESET_ID,
+        detail: {
+          scope: "PLATFORM",
+          clinicalMode: "PEDIATRIC",
+          previousPresetId: null,
+          contentSha256: evidence.contentSha256,
+          diffSha256: evidence.diffSha256,
+        },
       },
     })
   }, {

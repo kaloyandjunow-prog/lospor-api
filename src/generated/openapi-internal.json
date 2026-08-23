@@ -61,7 +61,7 @@
     "/health/ready": {
       "get": {
         "operationId": "get_health_ready",
-        "summary": "Check API and database readiness",
+        "summary": "Check API, database and exact legal-document readiness",
         "tags": [
           "health"
         ],
@@ -74,7 +74,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Message"
+                  "$ref": "#/components/schemas/ReadinessResponse"
                 }
               }
             }
@@ -316,12 +316,12 @@
     "/v1/auth/check-pending": {
       "get": {
         "operationId": "get_v1_auth_check_pending",
-        "summary": "Check whether the signed-in account is pending",
+        "summary": "Compatibility response: account approval queues are removed",
         "tags": [
           "auth"
         ],
         "x-lospor-explicit-contract": true,
-        "x-lospor-stability": "stable",
+        "x-lospor-stability": "deprecated",
         "security": [],
         "responses": {
           "200": {
@@ -550,6 +550,16 @@
               }
             }
           },
+          "202": {
+            "description": "Administrator MFA continuation required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaChallengeResponse"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -570,46 +580,6 @@
               }
             }
           },
-          "403": {
-            "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "429": {
             "description": "Rate limit exceeded",
             "content": {
@@ -620,7 +590,7 @@
               }
             }
           },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -651,16 +621,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Authentication required",
             "content": {
@@ -671,57 +631,7 @@
               }
             }
           },
-          "403": {
-            "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -754,16 +664,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Authentication required",
             "content": {
@@ -774,57 +674,7 @@
               }
             }
           },
-          "403": {
-            "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -868,6 +718,16 @@
               }
             }
           },
+          "202": {
+            "description": "Administrator MFA continuation required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaChallengeResponse"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -888,8 +748,8 @@
               }
             }
           },
-          "403": {
-            "description": "Insufficient access",
+          "429": {
+            "description": "Rate limit exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -898,8 +758,62 @@
               }
             }
           },
-          "404": {
-            "description": "Resource not found",
+          "503": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/mfa/login": {
+      "post": {
+        "operationId": "post_v1_auth_mfa_login",
+        "summary": "Complete a one-use administrator TOTP or recovery-code login challenge",
+        "tags": [
+          "auth"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaLoginContinuationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaLoginContinuationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
@@ -918,16 +832,6 @@
               }
             }
           },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "429": {
             "description": "Rate limit exceeded",
             "content": {
@@ -938,7 +842,7 @@
               }
             }
           },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -954,7 +858,7 @@
     "/v1/auth/register": {
       "post": {
         "operationId": "post_v1_auth_register",
-        "summary": "Register an account",
+        "summary": "Public-only registration for an institution-bound member pending email verification",
         "tags": [
           "auth"
         ],
@@ -977,33 +881,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Message"
+                  "$ref": "#/components/schemas/RegisterResponse"
                 }
               }
             }
           },
           "400": {
             "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient access",
             "content": {
               "application/json": {
                 "schema": {
@@ -1042,17 +926,7 @@
               }
             }
           },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -1068,7 +942,7 @@
     "/v1/auth/verify-email": {
       "get": {
         "operationId": "get_v1_auth_verify_email",
-        "summary": "Verify an email address",
+        "summary": "Public-only email verification and account activation",
         "tags": [
           "auth"
         ],
@@ -1096,36 +970,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Resource not found",
             "content": {
@@ -1136,37 +980,7 @@
               }
             }
           },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -1182,7 +996,7 @@
     "/v1/auth/verify-email/resend": {
       "post": {
         "operationId": "post_v1_auth_verify_email_resend",
-        "summary": "Resend email verification",
+        "summary": "Public-only email verification resend",
         "tags": [
           "auth"
         ],
@@ -1210,36 +1024,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Resource not found",
             "content": {
@@ -1250,37 +1034,7 @@
               }
             }
           },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -1296,7 +1050,7 @@
     "/v1/auth/password-reset/request": {
       "post": {
         "operationId": "post_v1_auth_password_reset_request",
-        "summary": "Request a password reset",
+        "summary": "Public-only email password reset request without disclosing account or delivery state",
         "tags": [
           "auth"
         ],
@@ -1314,42 +1068,12 @@
           }
         },
         "responses": {
-          "200": {
+          "202": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Message"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
                 }
               }
             }
@@ -1364,37 +1088,7 @@
               }
             }
           },
-          "409": {
-            "description": "Revision, ownership, or uniqueness conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -1410,7 +1104,7 @@
     "/v1/auth/password-reset/confirm": {
       "post": {
         "operationId": "post_v1_auth_password_reset_confirm",
-        "summary": "Set a new password",
+        "summary": "Public-only claim of a one-time email reset token and password change",
         "tags": [
           "auth"
         ],
@@ -1448,26 +1142,6 @@
               }
             }
           },
-          "401": {
-            "description": "Authentication required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Insufficient access",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Resource not found",
             "content": {
@@ -1488,8 +1162,56 @@
               }
             }
           },
-          "422": {
-            "description": "Request is valid but cannot be completed",
+          "503": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/legal/documents": {
+      "get": {
+        "operationId": "get_v1_legal_documents",
+        "summary": "Read the exact active Terms and Privacy content for one locale",
+        "tags": [
+          "legal"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "security": [],
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bg",
+                "en"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalDocumentsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1498,17 +1220,7 @@
               }
             }
           },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
+          "503": {
             "description": "Server error",
             "content": {
               "application/json": {
@@ -3211,20 +2923,6 @@
             "schema": {
               "type": "integer"
             }
-          },
-          {
-            "name": "x-lospor-source",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "web",
-                "mobile",
-                "ai",
-                "import"
-              ]
-            }
           }
         ],
         "requestBody": {
@@ -4227,7 +3925,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/User"
+                    "$ref": "#/components/schemas/Colleague"
                   }
                 }
               }
@@ -5992,7 +5690,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/AccountResponse"
                 }
               }
             }
@@ -6103,7 +5801,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/AccountPatchResponse"
                 }
               }
             }
@@ -6191,10 +5889,10 @@
         }
       }
     },
-    "/v1/user/accept-terms": {
-      "patch": {
-        "operationId": "patch_v1_user_accept_terms",
-        "summary": "Accept the current terms",
+    "/v1/user/change-password": {
+      "post": {
+        "operationId": "post_v1_user_change_password",
+        "summary": "Change the current password and revoke every session",
         "tags": [
           "user"
         ],
@@ -6205,7 +5903,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonObject"
+                "$ref": "#/components/schemas/PasswordChangeRequest"
               }
             }
           }
@@ -6216,7 +5914,511 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/PasswordChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/sessions": {
+      "get": {
+        "operationId": "get_v1_user_sessions",
+        "summary": "List active sessions for the current account",
+        "tags": [
+          "user"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_v1_user_sessions",
+        "summary": "Revoke every other active session",
+        "tags": [
+          "user"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionRevocationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/sessions/{id}": {
+      "delete": {
+        "operationId": "delete_v1_user_sessions_id",
+        "summary": "Revoke one other active session",
+        "tags": [
+          "user"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/legal-acceptances": {
+      "get": {
+        "operationId": "get_v1_user_legal_acceptances",
+        "summary": "List exact legal acceptance evidence for the current account",
+        "tags": [
+          "legal"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalAcceptancesGetResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_v1_user_legal_acceptances",
+        "summary": "Accept the exact active Terms and Privacy documents",
+        "tags": [
+          "legal"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegalAcceptancesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalAcceptancesMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/accept-terms": {
+      "patch": {
+        "operationId": "patch_v1_user_accept_terms",
+        "summary": "Compatibility alias for exact Terms and Privacy acceptance",
+        "tags": [
+          "legal"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "deprecated",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegalAcceptancesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalAcceptancesMutationResponse"
                 }
               }
             }
@@ -6522,14 +6724,117 @@
       }
     },
     "/v1/locale": {
-      "post": {
-        "operationId": "post_v1_locale",
-        "summary": "Set the browser locale",
+      "get": {
+        "operationId": "get_v1_locale",
+        "summary": "Read the validated installation default locale without changing the account",
         "tags": [
           "locale"
         ],
         "x-lospor-explicit-contract": true,
         "x-lospor-stability": "stable",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocaleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_v1_locale",
+        "summary": "Set the pre-auth browser/device locale without changing the account",
+        "tags": [
+          "locale"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -6540,8 +6845,8 @@
                   "locale": {
                     "type": "string",
                     "enum": [
-                      "en",
-                      "bg"
+                      "bg",
+                      "en"
                     ]
                   }
                 },
@@ -6559,7 +6864,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Message"
+                  "$ref": "#/components/schemas/LocaleResponse"
                 }
               }
             }
@@ -9121,6 +9426,120 @@
         }
       }
     },
+    "/v1/research/self-authorization": {
+      "get": {
+        "operationId": "get_v1_research_self_authorization",
+        "summary": "Read aggregate-only research self-authorization availability",
+        "tags": [
+          "research"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchSelfAuthorizationStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_v1_research_self_authorization",
+        "summary": "Issue an eight-hour aggregate-only research self-authorization",
+        "tags": [
+          "research"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchSelfAuthorizationStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/clinical-rules": {
       "get": {
         "operationId": "get_v1_admin_clinical_rules",
@@ -9318,7 +9737,7 @@
     "/v1/admin/users": {
       "get": {
         "operationId": "get_v1_admin_users",
-        "summary": "List users for administration",
+        "summary": "List recoverable users and their lifecycle state",
         "tags": [
           "admin"
         ],
@@ -9326,12 +9745,38 @@
         "x-lospor-stability": "admin",
         "parameters": [
           {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INVITED",
+                "ACTIVE",
+                "SUSPENDED",
+                "DELETION_PENDING",
+                "RECOVERY_REQUIRED"
+              ]
+            }
+          },
+          {
             "name": "pending",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean"
-            }
+            },
+            "description": "Deprecated compatibility alias for status=INVITED"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": "Case-insensitive username, contact-email, or display-name filter"
           }
         ],
         "responses": {
@@ -9342,7 +9787,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/User"
+                    "$ref": "#/components/schemas/AdminUser"
                   }
                 }
               }
@@ -9434,7 +9879,7 @@
     "/v1/admin/users/{id}": {
       "patch": {
         "operationId": "patch_v1_admin_users_id",
-        "summary": "Update a user role or institution",
+        "summary": "Update an active user's Member or HOD role and revoke prior sessions",
         "tags": [
           "admin"
         ],
@@ -9455,7 +9900,20 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JsonObject"
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "MEMBER",
+                      "HEAD_OF_DEPT"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "additionalProperties": false
               }
             }
           }
@@ -9466,23 +9924,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/AdminAccountUpdateResponse"
                 }
               }
             }
           },
           "400": {
             "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
@@ -9523,26 +9971,6 @@
           },
           "422": {
             "description": "Request is valid but cannot be completed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -9665,10 +10093,10 @@
         }
       }
     },
-    "/v1/admin/users/{id}/approve": {
+    "/v1/admin/users/{id}/authority": {
       "post": {
-        "operationId": "post_v1_admin_users_id_approve",
-        "summary": "Approve a registered user",
+        "operationId": "post_v1_admin_users_id_authority",
+        "summary": "Change administrator authority or clinical/research account kind with password re-entry",
         "tags": [
           "admin"
         ],
@@ -9684,13 +10112,54 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "MEMBER",
+                      "HEAD_OF_DEPT",
+                      "ADMIN"
+                    ]
+                  },
+                  "accountKind": {
+                    "type": "string",
+                    "enum": [
+                      "CLINICAL",
+                      "RESEARCH_ONLY"
+                    ]
+                  },
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "currentPassword",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/AdminAccountUpdateResponse"
                 }
               }
             }
@@ -9744,9 +10213,63 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/{id}/suspend": {
+      "post": {
+        "operationId": "post_v1_admin_users_id_suspend",
+        "summary": "Suspend an account and revoke every session",
+        "tags": [
+          "admin"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
           },
-          "422": {
-            "description": "Request is valid but cannot be completed",
+          "400": {
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -9755,8 +10278,8 @@
               }
             }
           },
-          "429": {
-            "description": "Rate limit exceeded",
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
@@ -9765,8 +10288,290 @@
               }
             }
           },
-          "500": {
-            "description": "Server error",
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/{id}/reactivate": {
+      "post": {
+        "operationId": "post_v1_admin_users_id_reactivate",
+        "summary": "Reactivate a suspended account",
+        "tags": [
+          "admin"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/{id}/restore": {
+      "post": {
+        "operationId": "post_v1_admin_users_id_restore",
+        "summary": "Restore a deletion-pending account into recovery-required state",
+        "tags": [
+          "admin"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/{id}/approve": {
+      "post": {
+        "operationId": "post_v1_admin_users_id_approve",
+        "summary": "Removed account-approval compatibility endpoint",
+        "tags": [
+          "admin"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "deprecated",
+        "x-lospor-tombstone": true,
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Compatibility endpoint removed",
             "content": {
               "application/json": {
                 "schema": {
@@ -10265,7 +11070,7 @@
     "/v1/admin/audit-logs": {
       "get": {
         "operationId": "get_v1_admin_audit_logs",
-        "summary": "List paged audit history",
+        "summary": "List paged audit history and its bilingual action catalog",
         "tags": [
           "admin"
         ],
@@ -10296,10 +11101,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuditLog"
-                  }
+                  "$ref": "#/components/schemas/AuditLogPage"
                 }
               }
             }
@@ -11014,6 +11816,60 @@
         },
         "additionalProperties": false
       },
+      "ReadinessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "unavailable"
+            ]
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "enum": [
+              "configured",
+              "not-configured"
+            ]
+          },
+          "legalDocuments": {
+            "type": "string",
+            "enum": [
+              "configured",
+              "unavailable",
+              "unchecked"
+            ]
+          },
+          "legalDeployment": {
+            "type": "string"
+          },
+          "administratorMfa": {
+            "type": "string",
+            "enum": [
+              "configured",
+              "not-required",
+              "unavailable",
+              "unchecked"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "database",
+          "email",
+          "legalDocuments",
+          "administratorMfa"
+        ],
+        "additionalProperties": false
+      },
       "IdResponse": {
         "type": "object",
         "properties": {
@@ -11070,8 +11926,26 @@
             "type": "string"
           },
           "email": {
-            "type": "string",
-            "format": "email"
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9._-]{2,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
             "type": "string"
@@ -11087,6 +11961,21 @@
           },
           "role": {
             "type": "string"
+          },
+          "accountKind": {
+            "type": "string",
+            "enum": [
+              "CLINICAL",
+              "RESEARCH_ONLY"
+            ]
+          },
+          "preferredLocale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
           },
           "institutionId": {
             "anyOf": [
@@ -11106,8 +11995,652 @@
         "required": [
           "id",
           "email",
+          "username",
           "name",
+          "role",
+          "accountKind",
+          "preferredLocale"
+        ],
+        "additionalProperties": false
+      },
+      "SessionUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9._-]{2,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "firstName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "type": "string"
+          },
+          "accountKind": {
+            "type": "string",
+            "enum": [
+              "CLINICAL",
+              "RESEARCH_ONLY"
+            ]
+          },
+          "preferredLocale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
+          },
+          "institutionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "institutionName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "jti": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "acceptedTermsAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legalAcceptances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LegalAcceptanceRecord"
+            }
+          },
+          "lastLoginAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "name",
+          "firstName",
+          "lastName",
+          "title",
+          "role",
+          "accountKind",
+          "preferredLocale",
+          "institutionId",
+          "institutionName",
+          "acceptedTermsAt",
+          "legalAcceptances",
+          "lastLoginAt"
+        ],
+        "additionalProperties": false
+      },
+      "AccountResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9._-]{2,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "accountKind": {
+            "type": "string",
+            "enum": [
+              "CLINICAL",
+              "RESEARCH_ONLY"
+            ]
+          },
+          "preferredLocale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
+          },
+          "institutionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "institution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountInstitution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferences": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "clinicalPreferences": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "name",
+          "firstName",
+          "lastName",
+          "title",
+          "role",
+          "accountKind",
+          "preferredLocale",
+          "institutionId",
+          "institution",
+          "preferences",
+          "clinicalPreferences"
+        ],
+        "additionalProperties": false
+      },
+      "AccountPatchResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "institution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountInstitution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferences": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "preferredLocale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
+          }
+        },
+        "required": [
+          "ok",
+          "name",
+          "firstName",
+          "lastName",
+          "title",
+          "institution",
+          "preferences",
+          "preferredLocale"
+        ],
+        "additionalProperties": false
+      },
+      "Colleague": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "title",
           "role"
+        ],
+        "additionalProperties": false
+      },
+      "CaseAssigneeSummary": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "institution": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "institution"
+        ],
+        "additionalProperties": false
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9._-]{2,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "accountKind": {
+            "type": "string",
+            "enum": [
+              "CLINICAL",
+              "RESEARCH_ONLY"
+            ]
+          },
+          "preferredLocale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
+          },
+          "activatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emailVerifiedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suspendedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recoveryRequiredAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "anonymizedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "deletionDeadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "INVITED",
+              "ACTIVE",
+              "SUSPENDED",
+              "DELETION_PENDING",
+              "RECOVERY_REQUIRED"
+            ]
+          },
+          "lastLoginAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "passwordChangedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legalCurrent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legalAcceptances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LegalAcceptanceRecord"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "institution": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "city"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "name",
+          "firstName",
+          "lastName",
+          "title",
+          "role",
+          "accountKind",
+          "preferredLocale",
+          "activatedAt",
+          "emailVerifiedAt",
+          "suspendedAt",
+          "recoveryRequiredAt",
+          "deletedAt",
+          "status",
+          "createdAt",
+          "lastLoginAt",
+          "passwordChangedAt",
+          "legalCurrent",
+          "legalAcceptances",
+          "institution"
+        ],
+        "additionalProperties": false
+      },
+      "AdminAccountUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "accountKind": {
+            "type": "string",
+            "enum": [
+              "CLINICAL",
+              "RESEARCH_ONLY"
+            ]
+          },
+          "reauthenticationRequired": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "accountKind",
+          "reauthenticationRequired"
         ],
         "additionalProperties": false
       },
@@ -11135,7 +12668,43 @@
         ],
         "additionalProperties": false
       },
-      "LoginRequest": {
+      "AccountInstitution": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "CaseInstitutionSummary": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "PublicLoginRequest": {
         "type": "object",
         "properties": {
           "email": {
@@ -11145,11 +12714,434 @@
           "password": {
             "type": "string",
             "minLength": 1
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ]
+          },
+          "deviceLabel": {
+            "type": "string",
+            "maxLength": 120
           }
         },
         "required": [
           "email",
           "password"
+        ],
+        "additionalProperties": false
+      },
+      "HospitalLoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{2,63}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ]
+          },
+          "deviceLabel": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/PublicLoginRequest"
+          },
+          {
+            "$ref": "#/components/schemas/HospitalLoginRequest"
+          }
+        ],
+        "description": "Exactly one deployment-selected login identity. Email is public-only; username is trusted-Hospital-only."
+      },
+      "MfaChallenge": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "MFA_REQUIRED",
+              "MFA_ENROLLMENT_REQUIRED"
+            ]
+          },
+          "challengeToken": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 256
+          },
+          "expiresIn": {
+            "type": "integer",
+            "const": 300
+          },
+          "enrollmentRequired": {
+            "type": "boolean"
+          },
+          "manualKey": {
+            "type": "string",
+            "pattern": "^[A-Z2-7]{32}$"
+          },
+          "otpauthUri": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^otpauth://totp/"
+          }
+        },
+        "required": [
+          "code",
+          "challengeToken",
+          "expiresIn",
+          "enrollmentRequired"
+        ],
+        "additionalProperties": false
+      },
+      "MfaChallengeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "MFA_REQUIRED",
+              "MFA_ENROLLMENT_REQUIRED"
+            ]
+          },
+          "mfa": {
+            "$ref": "#/components/schemas/MfaChallenge"
+          }
+        },
+        "required": [
+          "code",
+          "mfa"
+        ],
+        "additionalProperties": false
+      },
+      "MfaLoginContinuationRequest": {
+        "type": "object",
+        "properties": {
+          "challengeToken": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 256
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "challengeToken",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "PasswordChangeRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "additionalProperties": false
+      },
+      "PasswordChangeResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "reauthenticationRequired": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "ok",
+          "reauthenticationRequired"
+        ],
+        "additionalProperties": false
+      },
+      "AuthSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "clientType": {
+            "type": "string",
+            "enum": [
+              "WEB",
+              "PWA",
+              "NATIVE"
+            ]
+          },
+          "deviceLabel": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "current": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "clientType",
+          "deviceLabel",
+          "issuedAt",
+          "lastSeenAt",
+          "expiresAt",
+          "current"
+        ],
+        "additionalProperties": false
+      },
+      "AuthSessionList": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthSession"
+            }
+          }
+        },
+        "required": [
+          "sessions"
+        ],
+        "additionalProperties": false
+      },
+      "SessionRevocationResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "revokedCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "ok",
+          "revokedCount"
+        ],
+        "additionalProperties": false
+      },
+      "LocaleResponse": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
+          }
+        },
+        "required": [
+          "locale"
+        ],
+        "additionalProperties": false
+      },
+      "LegalDocumentReference": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "TERMS",
+              "PRIVACY"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ]
+          },
+          "contentSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "deployment": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "effectiveDate",
+          "locale",
+          "contentSha256",
+          "deployment"
+        ],
+        "additionalProperties": false
+      },
+      "LegalDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LegalDocumentReference"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "content"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "LegalAcceptanceRecord": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LegalDocumentReference"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "acceptedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "acceptedAt"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "LegalAcceptancesRequest": {
+        "type": "object",
+        "properties": {
+          "acceptances": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/LegalDocumentReference"
+            }
+          }
+        },
+        "required": [
+          "acceptances"
+        ],
+        "additionalProperties": false
+      },
+      "LegalAcceptancesGetResponse": {
+        "type": "object",
+        "properties": {
+          "acceptances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LegalAcceptanceRecord"
+            }
+          }
+        },
+        "required": [
+          "acceptances"
+        ],
+        "additionalProperties": false
+      },
+      "LegalAcceptancesMutationResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "acceptances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LegalDocumentReference"
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "acceptances"
+        ],
+        "additionalProperties": false
+      },
+      "LegalDocumentsResponse": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ]
+          },
+          "documents": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/LegalDocument"
+            }
+          }
+        },
+        "required": [
+          "locale",
+          "documents"
         ],
         "additionalProperties": false
       },
@@ -11174,21 +13166,63 @@
           "institutionId": {
             "type": "string"
           },
-          "acceptedTerms": {
-            "type": "boolean",
-            "const": true
+          "locale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ]
+          },
+          "legalAcceptances": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/LegalDocumentReference"
+            }
           },
           "password": {
             "type": "string",
-            "minLength": 12
+            "minLength": 8
           }
         },
         "required": [
           "firstName",
           "lastName",
           "email",
-          "acceptedTerms",
+          "institutionId",
+          "legalAcceptances",
           "password"
+        ],
+        "additionalProperties": false
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "verificationRequired": {
+            "type": "boolean",
+            "const": true
+          },
+          "emailSent": {
+            "type": "boolean"
+          },
+          "devVerifyUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "verificationRequired",
+          "emailSent"
         ],
         "additionalProperties": false
       },
@@ -11214,7 +13248,7 @@
           },
           "password": {
             "type": "string",
-            "minLength": 12
+            "minLength": 8
           }
         },
         "required": [
@@ -11236,12 +13270,21 @@
           "expires_in": {
             "type": "integer",
             "minimum": 1
+          },
+          "preferredLocale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
           }
         },
         "required": [
           "access_token",
           "token_type",
-          "expires_in"
+          "expires_in",
+          "preferredLocale"
         ],
         "additionalProperties": false
       },
@@ -11249,14 +13292,84 @@
         "type": "object",
         "properties": {
           "user": {
-            "$ref": "#/components/schemas/User"
-          },
-          "expires": {
-            "type": "string",
-            "format": "date-time"
+            "$ref": "#/components/schemas/SessionUser"
           }
         },
+        "required": [
+          "user"
+        ],
         "additionalProperties": false
+      },
+      "MfaWebLoginContinuationResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/SessionUser"
+          },
+          "recoveryCodes": {
+            "type": "array",
+            "minItems": 10,
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z2-7]{4}(?:-[A-Z2-7]{4}){3}$"
+            }
+          }
+        },
+        "required": [
+          "user"
+        ],
+        "additionalProperties": false
+      },
+      "MfaNativeLoginContinuationResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "token_type": {
+            "type": "string",
+            "const": "Bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "preferredLocale": {
+            "type": "string",
+            "enum": [
+              "bg",
+              "en"
+            ],
+            "default": "bg"
+          },
+          "recoveryCodes": {
+            "type": "array",
+            "minItems": 10,
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z2-7]{4}(?:-[A-Z2-7]{4}){3}$"
+            }
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in",
+          "preferredLocale"
+        ],
+        "additionalProperties": false
+      },
+      "MfaLoginContinuationResponse": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/MfaWebLoginContinuationResponse"
+          },
+          {
+            "$ref": "#/components/schemas/MfaNativeLoginContinuationResponse"
+          }
+        ]
       },
       "CaseSection": {
         "type": "object",
@@ -11411,6 +13524,12 @@
               }
             ]
           },
+          "userId": {
+            "type": "string"
+          },
+          "createdById": {
+            "type": "string"
+          },
           "clinicalMode": {
             "type": "string",
             "enum": [
@@ -11474,13 +13593,40 @@
                 "type": "null"
               }
             ]
+          },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "canRead": {
+                "type": "boolean"
+              },
+              "canWrite": {
+                "type": "boolean"
+              },
+              "isCreator": {
+                "type": "boolean"
+              },
+              "isAssignee": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "canRead",
+              "canWrite",
+              "isCreator",
+              "isAssignee"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
           "id",
+          "userId",
+          "createdById",
           "status",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "capabilities"
         ],
         "additionalProperties": false
       },
@@ -11505,7 +13651,7 @@
               "institution": {
                 "anyOf": [
                   {
-                    "$ref": "#/components/schemas/Institution"
+                    "$ref": "#/components/schemas/CaseInstitutionSummary"
                   },
                   {
                     "type": "null"
@@ -11513,7 +13659,7 @@
                 ]
               },
               "user": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/CaseAssigneeSummary"
               }
             },
             "additionalProperties": true
@@ -12175,6 +14321,67 @@
               "type": "string"
             }
           },
+          "support": {
+            "type": "object",
+            "properties": {
+              "configured": {
+                "type": "boolean"
+              },
+              "contactUrl": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "configured",
+              "contactUrl"
+            ],
+            "additionalProperties": false
+          },
+          "authentication": {
+            "type": "object",
+            "properties": {
+              "loginIdentifier": {
+                "type": "string",
+                "enum": [
+                  "EMAIL",
+                  "USERNAME"
+                ]
+              },
+              "selfRegistration": {
+                "type": "boolean"
+              },
+              "passwordRecovery": {
+                "type": "string",
+                "enum": [
+                  "EMAIL",
+                  "ADMINISTRATOR",
+                  "UNAVAILABLE"
+                ]
+              },
+              "passwordChange": {
+                "type": "boolean"
+              },
+              "sessionInventory": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "loginIdentifier",
+              "selfRegistration",
+              "passwordRecovery",
+              "passwordChange",
+              "sessionInventory"
+            ],
+            "additionalProperties": false
+          },
           "features": {
             "type": "object",
             "additionalProperties": true
@@ -12399,6 +14606,9 @@
                 "type": "null"
               }
             ]
+          },
+          "targetReauthenticationRequired": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -12457,6 +14667,9 @@
                 "type": "null"
               }
             ]
+          },
+          "targetReauthenticationRequired": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -12473,32 +14686,107 @@
           "id": {
             "type": "string"
           },
-          "userId": {
-            "type": "string"
-          },
           "action": {
             "type": "string"
           },
           "entityId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "string"
           },
           "detail": {},
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "user": {
+            "$ref": "#/components/schemas/JsonObject"
           }
         },
         "required": [
           "id",
           "action",
-          "createdAt"
+          "entityId",
+          "createdAt",
+          "user"
+        ],
+        "additionalProperties": false
+      },
+      "AuditActionDefinition": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "ACCOUNT",
+              "AUTHENTICATION",
+              "CASE",
+              "CLINICAL_RULES",
+              "INSTITUTION",
+              "MAINTENANCE",
+              "RESEARCH",
+              "SECURITY"
+            ]
+          },
+          "labels": {
+            "type": "object",
+            "properties": {
+              "bg": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "bg",
+              "en"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "code",
+          "category",
+          "labels"
+        ],
+        "additionalProperties": false
+      },
+      "AuditLogPage": {
+        "type": "object",
+        "properties": {
+          "logs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditLog"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditActionDefinition"
+            }
+          }
+        },
+        "required": [
+          "logs",
+          "total",
+          "page",
+          "pageSize",
+          "actions"
         ],
         "additionalProperties": false
       },
@@ -14637,6 +16925,10 @@
           },
           "definition": {
             "$ref": "#/components/schemas/ResearchCohort"
+          },
+          "expectedUpdatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -14689,6 +16981,9 @@
           "allInstitutions": {
             "type": "boolean"
           },
+          "canQuery": {
+            "type": "boolean"
+          },
           "canInspectCases": {
             "type": "boolean"
           },
@@ -14698,16 +16993,12 @@
           "canExportOmop": {
             "type": "boolean"
           },
+          "canShareCohorts": {
+            "type": "boolean"
+          },
           "expiresAt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -14718,6 +17009,9 @@
       "ResearchGrantPatch": {
         "type": "object",
         "properties": {
+          "canQuery": {
+            "type": "boolean"
+          },
           "canInspectCases": {
             "type": "boolean"
           },
@@ -14727,16 +17021,12 @@
           "canExportOmop": {
             "type": "boolean"
           },
+          "canShareCohorts": {
+            "type": "boolean"
+          },
           "expiresAt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "string",
+            "format": "date-time"
           },
           "revoked": {
             "type": "boolean"
@@ -14766,6 +17056,9 @@
           "allInstitutions": {
             "type": "boolean"
           },
+          "canQuery": {
+            "type": "boolean"
+          },
           "canInspectCases": {
             "type": "boolean"
           },
@@ -14775,16 +17068,12 @@
           "canExportOmop": {
             "type": "boolean"
           },
+          "canShareCohorts": {
+            "type": "boolean"
+          },
           "expiresAt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "string",
+            "format": "date-time"
           },
           "revokedAt": {
             "anyOf": [
@@ -14830,15 +17119,74 @@
           "userId",
           "institutionId",
           "allInstitutions",
+          "canQuery",
           "canInspectCases",
           "canExport",
           "canExportOmop",
+          "canShareCohorts",
           "expiresAt",
           "revokedAt",
           "createdAt",
           "updatedAt"
         ],
         "additionalProperties": true
+      },
+      "ResearchSelfAuthorizationStatus": {
+        "type": "object",
+        "properties": {
+          "eligible": {
+            "type": "boolean"
+          },
+          "activeUntil": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nextEligibleAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "boolean"
+              },
+              "inspectCases": {
+                "type": "boolean"
+              },
+              "export": {
+                "type": "boolean"
+              },
+              "exportOmop": {
+                "type": "boolean"
+              },
+              "shareInstitutionCohorts": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "query",
+              "inspectCases",
+              "export",
+              "exportOmop",
+              "shareInstitutionCohorts"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "activeUntil",
+          "nextEligibleAt",
+          "permissions"
+        ],
+        "additionalProperties": false
       },
       "ResearchExportCleanup": {
         "type": "object",

@@ -13,7 +13,7 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
   const endTime = new Date("2026-06-01T09:00:00Z")
   return {
     id: "case-omop-1",
-    caseCode: "2026-0001",
+    researchId: "10000000-0000-4000-8000-000000000001",
     createdAt,
     status: "COMPLETE",
     institutionId: "inst-1",

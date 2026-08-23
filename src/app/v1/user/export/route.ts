@@ -5,6 +5,8 @@ import type { Prisma } from "@/generated/prisma/client"
 import { API_RELEASE_VERSION } from "@/lib/api-version"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
+import { caseReadWhereForUser } from "@/lib/access-control"
+import type { AuthUser } from "@/lib/mobile-auth"
 
 export const runtime = "nodejs"
 
@@ -55,11 +57,11 @@ function lines<T>(rows: T[]): string {
   return rows.map(row => `${JSON.stringify(row)}\n`).join("")
 }
 
-async function* caseLines(userId: string): AsyncGenerator<string> {
+async function* caseLines(user: AuthUser): AsyncGenerator<string> {
   let cursor: string | undefined
   for (;;) {
     const rows = await prisma.case.findMany({
-      where: { userId },
+      where: caseReadWhereForUser(user),
       include: CASE_EXPORT_INCLUDE,
       orderBy: { id: "asc" },
       take: PAGE_SIZE,
@@ -126,26 +128,30 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         email: true,
+        username: true,
+        usernameCanonical: true,
         name: true,
         firstName: true,
         lastName: true,
         title: true,
         role: true,
+        accountKind: true,
         institutionId: true,
         institution: { select: { id: true, name: true, city: true, country: true } },
         preferences: true,
         createdAt: true,
-        approvedAt: true,
+        activatedAt: true,
         emailVerifiedAt: true,
         acceptedTermsAt: true,
         acceptedPrivacyAt: true,
         termsVersion: true,
+        legalAcceptances: { orderBy: { acceptedAt: "asc" } },
         lastLoginAt: true,
         passwordChangedAt: true,
         deletedAt: true,
       },
     }),
-    prisma.case.count({ where: { userId: user.id } }),
+    prisma.case.count({ where: caseReadWhereForUser(user) }),
     prisma.auditLog.count({ where: { userId: user.id } }),
     prisma.roleRequest.count({ where: { userId: user.id } }),
     prisma.caseTransfer.count({
@@ -189,7 +195,7 @@ export async function GET(req: NextRequest) {
 
   archive.append(`${JSON.stringify(manifest, null, 2)}\n`, { name: "manifest.json" })
   archive.append(`${JSON.stringify(account, null, 2)}\n`, { name: "account.json" })
-  archive.append(Readable.from(caseLines(user.id)), { name: "cases.ndjson" })
+  archive.append(Readable.from(caseLines(user)), { name: "cases.ndjson" })
   archive.append(Readable.from(auditLines(user.id)), { name: "audit-log.ndjson" })
   archive.append(Readable.from(roleRequestLines(user.id)), { name: "role-requests.ndjson" })
   archive.append(Readable.from(transferLines(user.id)), { name: "case-transfers.ndjson" })

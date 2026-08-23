@@ -8,6 +8,13 @@ import {
   applyClinicalPreferencesPatch,
   normalizeClinicalPreferences,
 } from "@lospor/core/clinical-preferences"
+import {
+  preferredLocaleFromPreferences,
+  preferencesWithPreferredLocale,
+} from "@lospor/core/account"
+import { invalidateAccountState } from "@/lib/password-epoch"
+import { buildDisplayName, normalizeIdentityPart } from "@/lib/account-profile"
+import { logAuditInTransaction } from "@/lib/audit"
 
 const CORS = (req: NextRequest) => corsHeaders(req, "GET, PATCH, OPTIONS")
 
@@ -21,7 +28,8 @@ export async function GET(req: NextRequest) {
   const record = await prisma.user.findUnique({
     where: { id: user.id },
     select: {
-      id: true, firstName: true, lastName: true, title: true, role: true,
+      id: true, email: true, username: true, name: true, firstName: true, lastName: true, title: true,
+      role: true, accountKind: true,
       preferences: true,
       institutionId: true, institution: { select: { id: true, name: true, city: true } },
     },
@@ -29,6 +37,7 @@ export async function GET(req: NextRequest) {
   if (!record) return NextResponse.json({ error: "Not found" }, { status: 404, headers: CORS(req) })
   return NextResponse.json({
     ...record,
+    preferredLocale: preferredLocaleFromPreferences(record.preferences),
     clinicalPreferences: normalizeClinicalPreferences(record.preferences),
   }, { headers: CORS(req) })
 }
@@ -47,6 +56,7 @@ const autoFillPatchSchema = z.object({
 }).strict()
 
 const preferencesPatchSchema = z.object({
+  ui: z.object({ locale: z.enum(["bg", "en"]) }).partial().strict().optional(),
   clinicalPreferencesVersion: z.number().int().optional(),
   units: unitsPatchSchema.optional(),
   defaultMonitoring: z.enum(["standard", "advanced"]).optional(),
@@ -73,7 +83,15 @@ const preferencesPatchSchema = z.object({
  */
 const patchSchema = z.object({
   preferences: preferencesPatchSchema.optional(),
-})
+  firstName: z.string().trim().min(1).max(100).optional(),
+  lastName: z.string().trim().min(1).max(100).optional(),
+  title: z.string().trim().max(100).optional(),
+}).strict().refine(value => (
+  value.preferences !== undefined
+  || value.firstName !== undefined
+  || value.lastName !== undefined
+  || value.title !== undefined
+), { message: "At least one account field is required" })
 
 function asPreferenceObject(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}
@@ -86,30 +104,91 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = patchSchema.parse(await req.json())
-    const existing = body.preferences ? await prisma.user.findUnique({
+    const identityChanged = body.firstName !== undefined
+      || body.lastName !== undefined
+      || body.title !== undefined
+    const existing = (body.preferences || identityChanged) ? await prisma.user.findUnique({
       where: { id: userId },
-      select: { preferences: true },
+      select: { preferences: true, firstName: true, lastName: true, title: true },
     }) : null
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404, headers: CORS(req) })
     const currentPreferences = asPreferenceObject(existing?.preferences)
-    const nextPreferences = body.preferences
+    let nextPreferences: Record<string, unknown> | undefined = body.preferences
       ? {
           ...currentPreferences,
           ...applyClinicalPreferencesPatch(currentPreferences, body.preferences),
         }
       : undefined
+    if (nextPreferences && body.preferences?.ui?.locale) {
+      nextPreferences = preferencesWithPreferredLocale(
+        nextPreferences,
+        body.preferences.ui.locale,
+      )
+    }
 
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        // institutionId is intentionally absent: see patchSchema above.
-        ...(nextPreferences ? { preferences: nextPreferences as Prisma.InputJsonValue } : {}),
-      },
-      select: {
-        preferences: true,
-        institution: { select: { id: true, name: true, city: true } },
-      },
-    })
-    return NextResponse.json({ ok: true, institution: updated.institution, preferences: updated.preferences }, { headers: CORS(req) })
+    const identity = {
+      firstName: normalizeIdentityPart(body.firstName ?? existing.firstName),
+      lastName: normalizeIdentityPart(body.lastName ?? existing.lastName),
+      title: normalizeIdentityPart(body.title ?? existing.title),
+    }
+    const changedFields = (["firstName", "lastName", "title"] as const)
+      .filter(field => identity[field] !== existing[field])
+
+    const updated = identityChanged
+      ? await prisma.$transaction(async transaction => {
+          const record = await transaction.user.update({
+            where: { id: userId },
+            data: {
+              // institutionId, email, and username remain governed separately.
+              ...identity,
+              name: buildDisplayName(identity),
+              ...(nextPreferences ? { preferences: nextPreferences as Prisma.InputJsonValue } : {}),
+            },
+            select: {
+              firstName: true,
+              lastName: true,
+              title: true,
+              name: true,
+              preferences: true,
+              institution: { select: { id: true, name: true, city: true } },
+            },
+          })
+          if (changedFields.length) {
+            await logAuditInTransaction(
+              transaction,
+              userId,
+              "PROFILE_CORRECTION",
+              userId,
+              { changedFields },
+            )
+          }
+          return record
+        })
+      : await prisma.user.update({
+          where: { id: userId },
+          data: {
+            ...(nextPreferences ? { preferences: nextPreferences as Prisma.InputJsonValue } : {}),
+          },
+          select: {
+            firstName: true,
+            lastName: true,
+            title: true,
+            name: true,
+            preferences: true,
+            institution: { select: { id: true, name: true, city: true } },
+          },
+        })
+    if (body.preferences?.ui?.locale || changedFields.length) invalidateAccountState(userId)
+    return NextResponse.json({
+      ok: true,
+      name: updated.name,
+      firstName: updated.firstName,
+      lastName: updated.lastName,
+      title: updated.title,
+      institution: updated.institution,
+      preferences: updated.preferences,
+      preferredLocale: preferredLocaleFromPreferences(updated.preferences),
+    }, { headers: CORS(req) })
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: "Invalid request" }, { status: 400, headers: CORS(req) })
     console.error("[PATCH /api/user]", err)
