@@ -1,10 +1,17 @@
-import { NextRequest, NextResponse, after } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
-import { logAudit } from "@/lib/audit"
+import { logAuditInTransaction } from "@/lib/audit"
 import { corsHeaders } from "@/lib/cors"
 import { NO_INSTITUTION_ID } from "@/lib/institutions"
+import { invalidateAccountState } from "@/lib/password-epoch"
+import {
+  isHodDemotion,
+  lockMembership,
+  membershipChangeData,
+  releaseUnrelatedHodLocks,
+} from "@/lib/membership-change"
 
 /**
  * Asking to move to another institution.
@@ -98,6 +105,11 @@ export async function POST(req: NextRequest) {
   // from. Cases keep the institution they were recorded at and do not follow.
   if (institution.id === NO_INSTITUTION_ID) {
     const left = await prisma.$transaction(async tx => {
+      const current = await lockMembership(tx, user.id)
+      if (!current) return { state: "ACCOUNT_NOT_FOUND" as const }
+      if (current.institutionId !== me.institutionId) {
+        return { state: "INSTITUTION_CHANGED" as const }
+      }
       const record = await tx.institutionChangeRequest.create({
         data: {
           userId: user.id,
@@ -109,36 +121,51 @@ export async function POST(req: NextRequest) {
         },
         include: { requestedInstitution: { select: { id: true, name: true, city: true } } },
       })
+      const membershipData = membershipChangeData(current, institution.id)
+      if (isHodDemotion(current, membershipData.role)) {
+        await releaseUnrelatedHodLocks(tx, user.id)
+      }
       await tx.user.update({
         where: { id: user.id },
-        data:  { institutionId: institution.id },
+        data: membershipData,
       })
-      return record
+      await logAuditInTransaction(tx, user.id, "INSTITUTION_CHANGE_SELF_LEAVE", user.id, {
+        previousInstitutionId: me.institutionId,
+      })
+      return { state: "APPLIED" as const, record }
     })
+    if (left.state === "ACCOUNT_NOT_FOUND") {
+      return NextResponse.json({ error: "Not found" }, { status: 404, headers: CORS(req) })
+    }
+    if (left.state === "INSTITUTION_CHANGED") {
+      return NextResponse.json(
+        { error: "Institution changed during this request; reload and try again" },
+        { status: 409, headers: CORS(req) },
+      )
+    }
+    invalidateAccountState(user.id)
 
-    after(() => logAudit(user.id, "INSTITUTION_CHANGE_SELF_LEAVE", user.id, {
-      previousInstitutionId: me.institutionId,
-    }))
-
-    return NextResponse.json({ ...left, applied: true }, { status: 201, headers: CORS(req) })
+    return NextResponse.json({ ...left.record, applied: true }, { status: 201, headers: CORS(req) })
   }
 
-  const request = await prisma.institutionChangeRequest.create({
-    data: {
-      userId: user.id,
+  const request = await prisma.$transaction(async tx => {
+    const created = await tx.institutionChangeRequest.create({
+      data: {
+        userId: user.id,
+        requestedInstitutionId: institution.id,
+        // Recorded now rather than derived at approval time: by then the
+        // clinician's institution is the new one, and where they came from is
+        // exactly what the audit trail needs.
+        previousInstitutionId: me.institutionId,
+      },
+      include: { requestedInstitution: { select: { id: true, name: true, city: true } } },
+    })
+    await logAuditInTransaction(tx, user.id, "INSTITUTION_CHANGE_REQUEST_SUBMIT", user.id, {
       requestedInstitutionId: institution.id,
-      // Recorded now rather than derived at approval time: by then the
-      // clinician's institution is the new one, and where they came from is
-      // exactly what the audit trail needs.
       previousInstitutionId: me.institutionId,
-    },
-    include: { requestedInstitution: { select: { id: true, name: true, city: true } } },
+    })
+    return created
   })
-
-  after(() => logAudit(user.id, "INSTITUTION_CHANGE_REQUEST_SUBMIT", user.id, {
-    requestedInstitutionId: institution.id,
-    previousInstitutionId: me.institutionId,
-  }))
 
   return NextResponse.json(request, { status: 201, headers: CORS(req) })
 }

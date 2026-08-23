@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { logAuditInTransaction } from "@/lib/audit"
 
 /**
  * Retention: an account soft-deleted more than this long ago is anonymised.
@@ -17,8 +18,8 @@ export type PurgeResult = {
 /**
  * Drop spent rate-limit counters.
  *
- * The table gains a permanent row per key — one per login email ever seen,
- * including addresses that were only ever typo'd or probed. The counters are
+ * The table gains a permanent row per key — one per digested login identifier
+ * ever seen, including identifiers that were only typo'd or probed. The counters are
  * meaningless once their window has passed, so anything untouched for a day is
  * dead weight (and, for login keys, a slowly-accumulating list of attempted
  * email addresses we have no reason to keep).
@@ -48,8 +49,8 @@ export async function pruneRateLimits(now = new Date()): Promise<number> {
  *   why `AuditLog.userId` is deliberately not a foreign key — a purge must not
  *   cascade away the record of what was done.
  *
- * What is removed is everything that ties the account to a person: name, email,
- * title, credentials. The row survives as an opaque pseudonym so historical
+ * What is removed is everything that ties the account to a person: name,
+ * username, contact email, title, credentials. The row survives as an opaque pseudonym so historical
  * authorship stays coherent.
  */
 export async function purgeDeletedAccounts(now = new Date()): Promise<PurgeResult> {
@@ -58,37 +59,49 @@ export async function purgeDeletedAccounts(now = new Date()): Promise<PurgeResul
   const due = await prisma.user.findMany({
     where: {
       deletedAt: { not: null, lte: cutoff },
-      // Already-anonymised rows keep their sentinel email, so they are not
-      // rescanned on every run.
-      email: { not: { startsWith: "deleted-" } },
+      anonymizedAt: null,
     },
-    select: { id: true },
+    select: { id: true, email: true, username: true },
   })
 
   let anonymised = 0
-  for (const { id } of due) {
+  const anonymisedUserIds: string[] = []
+  for (const { id, email, username } of due) {
     try {
-      await prisma.user.update({
-        where: { id },
-        data: {
-          email:        `deleted-${id}@lospor.invalid`,
-          name:         "Deleted account",
-          firstName:    "",
-          lastName:     "",
-          title:        "",
-          // Unusable hash — the account can never be signed into again.
-          passwordHash: "",
-          // Any token minted before now is already dead via the epoch check.
-          passwordChangedAt: now,
-        },
+      await prisma.$transaction(async transaction => {
+        await transaction.user.update({
+          where: { id },
+          data: {
+            email:        email ? `deleted-${id}@lospor.invalid` : null,
+            username:     username ? `deleted-${id}` : null,
+            usernameCanonical: username ? `deleted-${id}`.toLowerCase() : null,
+            name:         "Deleted account",
+            firstName:    "",
+            lastName:     "",
+            title:        "",
+            // Unusable hash — the account can never be signed into again.
+            passwordHash: "",
+            // Any token minted before now is already dead via the epoch check.
+            passwordChangedAt: now,
+            activatedAt: null,
+            recoveryRequiredAt: null,
+            suspendedAt: null,
+            anonymizedAt: now,
+          },
+        })
+        await logAuditInTransaction(transaction, id, "ACCOUNT_ANONYMISED", id, {
+          retentionDays: RETENTION_DAYS,
+        })
       })
       anonymised++
+      anonymisedUserIds.push(id)
     } catch {
-      // One bad row must not abort the whole run; the next run retries it.
+      // One bad row (including a failed audit insert) rolls back as a unit and
+      // is retried on the next run without blocking unrelated due accounts.
     }
   }
 
   const rateLimitRowsRemoved = await pruneRateLimits(now)
 
-  return { scanned: due.length, anonymised, userIds: due.map(d => d.id), rateLimitRowsRemoved }
+  return { scanned: due.length, anonymised, userIds: anonymisedUserIds, rateLimitRowsRemoved }
 }

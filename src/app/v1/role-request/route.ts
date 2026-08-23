@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse, after } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
-import { logAudit } from "@/lib/audit"
+import { logAuditInTransaction } from "@/lib/audit"
 import { corsHeaders } from "@/lib/cors"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
@@ -35,10 +35,18 @@ export async function POST(req: NextRequest) {
   })
   if (existing) return NextResponse.json({ error: "Request already pending" }, { status: 409 })
 
-  const request = await prisma.roleRequest.create({
-    data: { userId: user.id },
+  const request = await prisma.$transaction(async transaction => {
+    const created = await transaction.roleRequest.create({
+      data: { userId: user.id },
+    })
+    await logAuditInTransaction(
+      transaction,
+      user.id,
+      "ROLE_REQUEST_SUBMIT",
+      user.id,
+      { requestId: created.id, requestedRole: "HEAD_OF_DEPT" },
+    )
+    return created
   })
-
-  after(() => logAudit(user.id, "ROLE_REQUEST_SUBMIT", user.id))
   return NextResponse.json(request, { status: 201 })
 }

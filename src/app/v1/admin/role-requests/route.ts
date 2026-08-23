@@ -10,11 +10,20 @@ export async function GET(req: NextRequest) {
   }
 
   const requests = await prisma.roleRequest.findMany({
-    where:   { status: "PENDING" },
+    where: {
+      status: "PENDING",
+      user: {
+        activatedAt: { not: null },
+        suspendedAt: null,
+        recoveryRequiredAt: null,
+        deletedAt: null,
+        anonymizedAt: null,
+      },
+    },
     include: {
       user: {
         select: {
-          id: true, email: true, name: true, firstName: true,
+          id: true, email: true, username: true, name: true, firstName: true,
           lastName: true, title: true,
           institution: { select: { name: true, city: true } },
         },
