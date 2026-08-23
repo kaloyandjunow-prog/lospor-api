@@ -54,36 +54,63 @@ mutation whose deliberately invalid audit insert rolls the user change back.
 It stays skipped in database-free runs.
 
 Executable `main()` operator scripts cannot safely be imported into unit tests.
-For the already actor-attributed bootstrap and publication/reset scripts, the
-source gate proves that a typed audit row is inside the same transaction; the
-PostgreSQL transaction contract supplies the database semantic. Disposable
+For the actor-attributed bootstrap, publication/reset, and clinical-rules
+maintenance scripts, the source gate proves that a typed audit row is inside
+the same transaction; the PostgreSQL transaction contract supplies the database
+semantic. Disposable
 E2E/smoke fixture setup and cleanup is outside the production evidence
 boundary. Ordinary login/session issuance, pre-auth MFA challenge bookkeeping,
 and routine high-volume case/view telemetry are also outside HAUD-01; governed
 revocation and MFA completion remain inventoried.
 
-## Unresolved actor-principal decision
+## Actor-principal decision
 
-These six scripts remain unchanged and explicitly fail the inventory's
-HAUD-complete classification:
+The actor for a clinical-rules maintenance script is a named active clinical
+administrator, not a system principal. The operator supplies
+`PUBLISHING_ADMIN_EMAIL`; the script resolves it inside its own transaction and
+refuses to run unless it identifies an `ADMIN` account that has not been
+deleted.
 
-- `scripts/create-platform-clinical-drafts.ts`
-- `scripts/create-pediatric-v2-platform-draft.ts`
-- `scripts/append-pediatric-fluid-profiles-to-draft.ts`
-- `scripts/append-pediatric-infusion-profiles-to-draft.ts`
-- `scripts/prune-clinical-rulesets.ts`
-- `scripts/seed-play-reviewer.ts`
+A non-human principal was rejected because it cannot vouch for a maintenance
+operation. Creating, appending to, or pruning a ruleset is something a person
+chose to do at a particular moment, on a database whose state they inspected;
+an automation identity would record only that the act happened, with nobody
+answerable for it. The immutable, non-login `LOSPOR 1.2.0` release principal
+attests to exactly one thing — the two exact source-controlled bundled adult v2
+and pediatric v2 baselines shipped with the release — and has no authority
+beyond them. Using it for a maintenance run would stretch that attestation to
+cover content and timing it knows nothing about.
 
-The decision is between requiring the operator to name an existing
-administrator (for example by explicit administrator email) or creating a
-dedicated non-human system principal with a narrowly defined operator identity.
-The first option attributes each run to a real accountable person but requires
-operator credentials/selection. The second cleanly identifies automation but
-adds a new principal lifecycle and policy. No script may invent actor identity
-or falsely attribute an update to the affected account. The release-only
-`LOSPOR 1.2.0` technical principal does not resolve this operator decision: it
-can attest only to the two exact source-controlled 1.2.0 bundles and has no
-authority to run maintenance or provision accounts.
+Five scripts are resolved on that basis, each writing a typed audit row inside
+the same transaction as the change it describes:
+
+- `scripts/create-platform-clinical-drafts.ts` — `CLINICAL_RULESET_CREATE`, one
+  row per created draft, with the administrator also recorded as the draft's
+  author.
+- `scripts/create-pediatric-v2-platform-draft.ts` —
+  `CLINICAL_RULESET_CREATE`. The preset was previously created outside any
+  transaction; the preset, its authorship and its audit row now commit
+  together.
+- `scripts/append-pediatric-fluid-profiles-to-draft.ts` and
+  `scripts/append-pediatric-infusion-profiles-to-draft.ts` —
+  `CLINICAL_RULESET_RULE_UPSERT`, one row for the append rather than one per
+  rule, carrying the appended count and rule keys. The append is the operation
+  a reader is looking for; a row per profile would bury it.
+- `scripts/prune-clinical-rulesets.ts` — `CLINICAL_RULESET_PRUNE`, a new
+  registry code. The row is written before the delete, in the same transaction,
+  because `ClinicalPresetRule` cascades away with the preset and afterwards
+  there is nothing left to describe. It records the preset key, clinical mode,
+  version, status and rule count.
+
+The append and prune scripts write nothing on a dry run, so a dry run produces
+no audit row.
+
+`scripts/seed-play-reviewer.ts` remains `DECISION_BLOCKED`. It provisions and
+resets a live production credential rather than clinical content, so a clinical
+administrator is not the right actor either, and self-attribution would falsely
+record the reviewer as having changed their own password. It awaits a named
+accountable operator identity or a maintenance principal kind with its own
+lifecycle. The gate fails if it is quietly dropped.
 
 ## Client boundary
 

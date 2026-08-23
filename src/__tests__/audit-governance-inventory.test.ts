@@ -29,12 +29,10 @@ const REQUIRED_HAUD_REQUIREMENTS = [
   "CENTRAL_CONTROL",
 ] as const satisfies readonly AuditGovernanceRequirement[]
 
+// The clinical-rules maintenance scripts left this list once they resolved
+// PUBLISHING_ADMIN_EMAIL to an active clinical administrator. Only the Play
+// reviewer script still has no truthful actor.
 const DECISION_BLOCKED_SCRIPTS = [
-  "scripts/create-platform-clinical-drafts.ts",
-  "scripts/create-pediatric-v2-platform-draft.ts",
-  "scripts/append-pediatric-fluid-profiles-to-draft.ts",
-  "scripts/append-pediatric-infusion-profiles-to-draft.ts",
-  "scripts/prune-clinical-rulesets.ts",
   "scripts/seed-play-reviewer.ts",
 ] as const
 
@@ -121,7 +119,7 @@ describe("HAUD-01 governance inventory gate", () => {
     expect(source).not.toMatch(/\.(?:create|update|upsert|delete)(?:Many)?\s*\(/)
   })
 
-  it("names Hospital ownership and exactly the six unresolved actor-principal scripts", () => {
+  it("names Hospital ownership and the one remaining unresolved actor-principal script", () => {
     const hospitalOwned = AUDIT_GOVERNANCE_INVENTORY.filter(
       item => item.disposition === "HOSPITAL_OWNED",
     )
@@ -136,6 +134,7 @@ describe("HAUD-01 governance inventory gate", () => {
       item.disposition === "DECISION_BLOCKED" ? [...item.blockedSources] : []
     )).sort()
     expect(blocked).toEqual([...DECISION_BLOCKED_SCRIPTS].sort())
+    expect(blocked).toEqual(["scripts/seed-play-reviewer.ts"])
     for (const path of blocked) expect(existsSync(join(root, path)), path).toBe(true)
   })
 
@@ -162,3 +161,4 @@ describe("HAUD-01 governance inventory gate", () => {
 
 // HAUD_SOURCE_ONLY:bootstrap-first-administrator
 // HAUD_SOURCE_ONLY:clinical-rules-operator-publication
+// HAUD_SOURCE_ONLY:clinical-rules-operator-maintenance

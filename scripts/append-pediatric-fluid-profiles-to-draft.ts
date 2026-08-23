@@ -6,15 +6,22 @@
  * deletes, publishes or selects a ruleset, and aborts if the target identity,
  * baseline rule keys or selection state differs from the reviewed DEV draft.
  *
+ * Appending rules to a platform ruleset is a governed clinical act, so the run
+ * is attributed to the active clinical administrator named by
+ * PUBLISHING_ADMIN_EMAIL. The appended rules and the single audit row that
+ * records the append commit together.
+ *
  * Dry-run (all checks, no write):
  *   $env:APPEND_PEDIATRIC_FLUID_PROFILES_TO_DRAFT="YES"
  *   $env:TARGET_CLINICAL_PRESET_ID="lospor-pediatrics-v1"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
  *   npm run clinical-rules:append-pediatric-fluid-profiles
  *
  * Apply after the dry-run succeeds:
  *   npm run clinical-rules:append-pediatric-fluid-profiles -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollection,
@@ -43,6 +50,7 @@ if (process.env.TARGET_CLINICAL_PRESET_ID !== TARGET_PRESET_ID) {
 }
 assertDatabaseWritable("append rules")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
+if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 const draft = createLosporPediatricPlatformDraft()
 const fluidRules = draft.rules.filter(rule => rule.payload.kind === "PEDIATRIC_FLUID_PROFILE")
@@ -105,6 +113,14 @@ async function main() {
       throw new Error("Target ruleset is not the exact inactive pediatric v1 platform draft.")
     }
 
+    const admin = await tx.user.findUnique({
+      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
+      select: { id: true, role: true, deletedAt: true },
+    })
+    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
+      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
+    }
+
     const [platformSelections, institutionSelections, userSelections] = await Promise.all([
       tx.platformClinicalPresetSelection.count({ where: { presetId: TARGET_PRESET_ID } }),
       tx.institutionClinicalPresetSelection.count({ where: { presetId: TARGET_PRESET_ID } }),
@@ -147,6 +163,24 @@ async function main() {
         },
       })
     }
+    // One row for the append, not one per rule: the append is the operation a
+    // reader is looking for, and 22 identical rows would bury it.
+    await tx.auditLog.create({
+      data: {
+        userId: admin.id,
+        action: "CLINICAL_RULESET_RULE_UPSERT" satisfies AuditActionCode,
+        entityId: TARGET_PRESET_ID,
+        detail: {
+          scope: "PLATFORM",
+          clinicalMode: "PEDIATRIC",
+          presetKey: draft.key,
+          version: draft.version,
+          appendedRuleCount: fluidRules.length,
+          appendedRuleKeys: fluidRuleKeys,
+          source: "scripts/append-pediatric-fluid-profiles-to-draft.ts",
+        },
+      },
+    })
   }, {
     isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     timeout: 120_000,

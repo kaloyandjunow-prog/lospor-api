@@ -13,12 +13,20 @@
  *
  * Preset rules cascade with the preset (ClinicalPresetRule.onDelete: Cascade).
  *
+ * Removing a ruleset is a governed clinical act, so the run is attributed to
+ * the active clinical administrator named by PUBLISHING_ADMIN_EMAIL. The audit
+ * row is written before the delete in the same transaction: afterwards there is
+ * nothing left to describe, because the rules cascade away with the preset.
+ *
  * Dry-run:
- *   $env:PRUNE_CLINICAL_RULESETS="YES"; npm run clinical-rules:prune
+ *   $env:PRUNE_CLINICAL_RULESETS="YES"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
+ *   npm run clinical-rules:prune
  * Apply:
  *   npm run clinical-rules:prune -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
@@ -28,6 +36,7 @@ if (process.env.PRUNE_CLINICAL_RULESETS !== "YES") {
 }
 assertDatabaseWritable("delete rulesets")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
+if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 /** The only presets that survive. */
 const KEEP = new Set(["lospor-adults-v2", "lospor-pediatrics-v2"])
@@ -92,7 +101,32 @@ async function main() {
   if (!doomed.length) return
 
   await prisma.$transaction(async tx => {
+    const admin = await tx.user.findUnique({
+      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
+      select: { id: true, role: true, deletedAt: true },
+    })
+    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
+      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
+    }
     for (const preset of doomed) {
+      // Audit first. After the delete the preset and its cascaded rules are
+      // gone, so this row is the only remaining description of what was removed.
+      await tx.auditLog.create({
+        data: {
+          userId: admin.id,
+          action: "CLINICAL_RULESET_PRUNE" satisfies AuditActionCode,
+          entityId: preset.id,
+          detail: {
+            scope: "PLATFORM",
+            presetKey: preset.key,
+            clinicalMode: preset.clinicalMode,
+            version: preset.version,
+            status: preset.status,
+            ruleCount: preset._count.rules,
+            source: "scripts/prune-clinical-rulesets.ts",
+          },
+        },
+      })
       await tx.clinicalPreset.delete({ where: { id: preset.id } })
     }
   })

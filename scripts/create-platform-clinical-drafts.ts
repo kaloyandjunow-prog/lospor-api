@@ -5,11 +5,17 @@
  * updates, replaces or deletes a ruleset. Any identity collision aborts the
  * whole transaction.
  *
+ * Creating a platform ruleset is a governed clinical act, so the run is
+ * attributed to the active clinical administrator named by
+ * PUBLISHING_ADMIN_EMAIL. Each draft and its audit row commit together.
+ *
  * Usage:
  *   $env:CREATE_PLATFORM_CLINICAL_DRAFTS="YES"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
  *   npm run clinical-rules:create-platform-drafts
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollection,
@@ -29,6 +35,7 @@ if (process.env.CREATE_PLATFORM_CLINICAL_DRAFTS !== "YES") {
 }
 assertDatabaseWritable("create rulesets")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
+if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -85,6 +92,13 @@ async function main() {
   }
 
   await prisma.$transaction(async tx => {
+    const admin = await tx.user.findUnique({
+      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
+      select: { id: true, role: true, deletedAt: true },
+    })
+    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
+      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
+    }
     for (const draft of drafts) {
       await tx.clinicalPreset.create({
         data: {
@@ -99,6 +113,7 @@ async function main() {
           version: draft.version,
           status: "DRAFT",
           publishedAt: null,
+          createdById: admin.id,
           rules: {
             create: draft.rules.map(rule => ({
               ruleKey: clinicalRuleKey(rule.payload),
@@ -106,6 +121,21 @@ async function main() {
               payload: rule.payload as Prisma.InputJsonValue,
               sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
             })),
+          },
+        },
+      })
+      await tx.auditLog.create({
+        data: {
+          userId: admin.id,
+          action: "CLINICAL_RULESET_CREATE" satisfies AuditActionCode,
+          entityId: draft.id,
+          detail: {
+            scope: "PLATFORM",
+            clinicalMode: draft.clinicalMode,
+            presetKey: draft.key,
+            version: draft.version,
+            ruleCount: draft.rules.length,
+            source: "scripts/create-platform-clinical-drafts.ts",
           },
         },
       })

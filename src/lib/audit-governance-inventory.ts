@@ -564,18 +564,43 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
     limit: "Guarded scripts execute main and require PostgreSQL; the source gate proves the audit row is inside their database transaction and the retained PostgreSQL suite proves rollback semantics.",
   },
   {
-    id: "clinical-rules-no-actor-scripts",
+    id: "clinical-rules-operator-maintenance",
     requirement: "CLINICAL_RULE_GOVERNANCE",
-    transition: "Create/append/prune rulesets from guarded scripts that cannot yet name a truthful actor",
-    disposition: "DECISION_BLOCKED",
-    blockedSources: [
-      "scripts/create-platform-clinical-drafts.ts",
-      "scripts/create-pediatric-v2-platform-draft.ts",
-      "scripts/append-pediatric-fluid-profiles-to-draft.ts",
-      "scripts/append-pediatric-infusion-profiles-to-draft.ts",
-      "scripts/prune-clinical-rulesets.ts",
+    transition: "Create, append to, or prune a platform ruleset from a guarded maintenance script",
+    disposition: "OWNER_TRANSACTIONAL",
+    sources: [
+      {
+        path: "scripts/create-platform-clinical-drafts.ts",
+        actionCodes: ["CLINICAL_RULESET_CREATE"],
+        auditPath: "DIRECT_TRANSACTION_ROW",
+      },
+      {
+        path: "scripts/create-pediatric-v2-platform-draft.ts",
+        actionCodes: ["CLINICAL_RULESET_CREATE"],
+        auditPath: "DIRECT_TRANSACTION_ROW",
+      },
+      {
+        path: "scripts/append-pediatric-fluid-profiles-to-draft.ts",
+        actionCodes: ["CLINICAL_RULESET_RULE_UPSERT"],
+        auditPath: "DIRECT_TRANSACTION_ROW",
+      },
+      {
+        path: "scripts/append-pediatric-infusion-profiles-to-draft.ts",
+        actionCodes: ["CLINICAL_RULESET_RULE_UPSERT"],
+        auditPath: "DIRECT_TRANSACTION_ROW",
+      },
+      {
+        path: "scripts/prune-clinical-rulesets.ts",
+        actionCodes: ["CLINICAL_RULESET_PRUNE"],
+        auditPath: "DIRECT_TRANSACTION_ROW",
+      },
     ],
-    limit: "Awaiting the explicit-admin-email versus dedicated-system-principal decision. These scripts remain unchanged and must not be treated as HAUD-complete.",
+    rollback: {
+      kind: "SOURCE_ONLY_SCRIPT",
+      evidencePath: "src/__tests__/audit-governance-inventory.test.ts",
+      marker: "HAUD_SOURCE_ONLY:clinical-rules-operator-maintenance",
+    },
+    limit: "Each script requires PUBLISHING_ADMIN_EMAIL to resolve to an active clinical administrator and refuses to run without one. They execute main() against PostgreSQL and cannot be imported into a unit test, so audit-failure injection is unavailable; the source gate proves the typed audit row is inside the same transaction as the change, and the retained PostgreSQL transaction contract supplies the rollback semantic. The append and prune scripts write nothing, and therefore no audit row, on a dry run.",
   },
   {
     id: "play-reviewer-no-actor-script",
@@ -583,7 +608,7 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
     transition: "Provision or reset the production Google Play reviewer account",
     disposition: "DECISION_BLOCKED",
     blockedSources: ["scripts/seed-play-reviewer.ts"],
-    limit: "CREATE could self-attribute, but UPDATE would falsely claim the reviewer acted. It awaits the same explicit-admin versus system-principal decision.",
+    limit: "CREATE could self-attribute, but UPDATE would falsely claim the reviewer acted. Unlike the clinical-rules maintenance scripts, this one provisions and resets a live production credential, so a named clinical administrator is not the right actor either. It awaits a named accountable operator identity or a maintenance principal kind with its own lifecycle.",
   },
   {
     id: "hospital-central-control",
