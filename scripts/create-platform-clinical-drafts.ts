@@ -5,13 +5,14 @@
  * updates, replaces or deletes a ruleset. Any identity collision aborts the
  * whole transaction.
  *
- * Creating a platform ruleset is a governed clinical act, so the run is
- * attributed to the active clinical administrator named by
- * PUBLISHING_ADMIN_EMAIL. Each draft and its audit row commit together.
+ * Each draft and its audit row commit together. Against a protected database
+ * the run must name the accountable administrator in PUBLISHING_ADMIN_EMAIL;
+ * otherwise it is attributed to the LOSPOR release principal, exactly as the
+ * bundled baselines are.
  *
  * Usage:
  *   $env:CREATE_PLATFORM_CLINICAL_DRAFTS="YES"
- *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:create-platform-drafts
  */
 import "dotenv/config"
@@ -27,15 +28,22 @@ import {
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 
 if (process.env.CREATE_PLATFORM_CLINICAL_DRAFTS !== "YES") {
   throw new Error(
     'Refusing to create platform drafts. Set CREATE_PLATFORM_CLINICAL_DRAFTS="YES" explicitly.',
   )
 }
-assertDatabaseWritable("create rulesets")
+const database = assertDatabaseWritable("create rulesets")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
-if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -92,13 +100,7 @@ async function main() {
   }
 
   await prisma.$transaction(async tx => {
-    const admin = await tx.user.findUnique({
-      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
-      select: { id: true, role: true, deletedAt: true },
-    })
-    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
-      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
-    }
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
     for (const draft of drafts) {
       await tx.clinicalPreset.create({
         data: {
@@ -113,7 +115,8 @@ async function main() {
           version: draft.version,
           status: "DRAFT",
           publishedAt: null,
-          createdById: admin.id,
+          createdById: actorUserId(actor),
+          createdByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
           rules: {
             create: draft.rules.map(rule => ({
               ruleKey: clinicalRuleKey(rule.payload),
@@ -124,19 +127,16 @@ async function main() {
           },
         },
       })
-      await tx.auditLog.create({
-        data: {
-          userId: admin.id,
-          action: "CLINICAL_RULESET_CREATE" satisfies AuditActionCode,
-          entityId: draft.id,
-          detail: {
-            scope: "PLATFORM",
-            clinicalMode: draft.clinicalMode,
-            presetKey: draft.key,
-            version: draft.version,
-            ruleCount: draft.rules.length,
-            source: "scripts/create-platform-clinical-drafts.ts",
-          },
+      await writeMaintenanceAuditRow(tx, actor, {
+        action: "CLINICAL_RULESET_CREATE" satisfies AuditActionCode,
+        entityId: draft.id,
+        source: "scripts/create-platform-clinical-drafts.ts",
+        detail: {
+          scope: "PLATFORM",
+          clinicalMode: draft.clinicalMode,
+          presetKey: draft.key,
+          version: draft.version,
+          ruleCount: draft.rules.length,
         },
       })
     }

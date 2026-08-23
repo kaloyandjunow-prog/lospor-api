@@ -15,8 +15,14 @@
  *   - publishes only; it never selects the ruleset, so nothing becomes active
  *     for clinicians until someone explicitly chooses to use it
  *
+ * The publication and its audit row commit together. Against a protected
+ * database the run must name the accountable administrator in
+ * PUBLISHING_ADMIN_EMAIL; otherwise it is attributed to the LOSPOR release
+ * principal, exactly as the bundled baselines are.
+ *
  * Dry-run (all checks, no write):
  *   $env:PUBLISH_ADULT_V2_RULESET="YES"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:publish-adult-v2
  *
  * Apply after the dry-run succeeds:
@@ -32,15 +38,22 @@ import { createLosporAdultV2Draft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 import { buildClinicalRulesetExactDiff } from "../src/lib/clinical-rules/publication-evidence"
 import type { ClinicalRulePayload } from "@lospor/core/clinical-rules"
 
 if (process.env.PUBLISH_ADULT_V2_RULESET !== "YES") {
   throw new Error('Refusing to run. Set PUBLISH_ADULT_V2_RULESET="YES" explicitly.')
 }
-assertDatabaseWritable("publish rulesets")
+const database = assertDatabaseWritable("publish rulesets")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
-if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 const apply = process.argv.includes("--apply")
 
@@ -93,13 +106,7 @@ async function main() {
   }
 
   await prisma.$transaction(async tx => {
-    const admin = await tx.user.findUnique({
-      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
-      select: { id: true, role: true, deletedAt: true },
-    })
-    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
-      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
-    }
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
     const baseline = await tx.platformClinicalPresetSelection.findUnique({
       where: { clinicalMode: "ADULT" },
       include: { preset: { include: { rules: { orderBy: { ruleKey: "asc" } } } } },
@@ -147,7 +154,8 @@ async function main() {
         contentSha256: evidence.contentSha256,
         diffSha256: evidence.diffSha256,
         exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
-        confirmedById: admin.id,
+        confirmedById: actorUserId(actor),
+        confirmedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         confirmedAt: publishedAt,
       },
     })
@@ -155,21 +163,20 @@ async function main() {
       where: { id: target.id },
       data: {
         status: "PUBLISHED",
-        publishedById: admin.id,
+        publishedById: actorUserId(actor),
+        publishedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         publishedAt,
       },
     })
-    await tx.auditLog.create({
-      data: {
-        userId: admin.id,
-        action: "CLINICAL_RULESET_PUBLISH" satisfies AuditActionCode,
-        entityId: target.id,
-        detail: {
-          scope: "PLATFORM",
-          clinicalMode: "ADULT",
-          contentSha256: evidence.contentSha256,
-          diffSha256: evidence.diffSha256,
-        },
+    await writeMaintenanceAuditRow(tx, actor, {
+      action: "CLINICAL_RULESET_PUBLISH" satisfies AuditActionCode,
+      entityId: target.id,
+      source: "scripts/publish-adult-v2-platform-ruleset.ts",
+      detail: {
+        scope: "PLATFORM",
+        clinicalMode: "ADULT",
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
       },
     })
   })

@@ -29,12 +29,26 @@ const REQUIRED_HAUD_REQUIREMENTS = [
   "CENTRAL_CONTROL",
 ] as const satisfies readonly AuditGovernanceRequirement[]
 
-// The clinical-rules maintenance scripts left this list once they resolved
-// PUBLISHING_ADMIN_EMAIL to an active clinical administrator. Only the Play
-// reviewer script still has no truthful actor.
+// The clinical-rules maintenance scripts left this list once every run became
+// attributable: a named administrator against a protected database, and the
+// release principal otherwise. Only the Play reviewer script still has no
+// truthful actor.
 const DECISION_BLOCKED_SCRIPTS = [
   "scripts/seed-play-reviewer.ts",
 ] as const
+
+// The shared writer that records a maintenance run. A script that calls it
+// still writes its row inside its own transaction; the helper below is held to
+// the same standard the script would be.
+const MAINTENANCE_AUDIT_WRITER = "writeMaintenanceAuditRow"
+
+// Helpers that mutate a governed model only through a transaction client handed
+// to them. They open no transaction and construct no client, so their atomicity
+// is their caller's, and every caller is inventoried above.
+const INVENTORIED_TRANSACTION_HELPERS: Readonly<Record<string, string>> = {
+  "src/lib/clinical-rules/maintenance-actor.ts":
+    "Actor resolution and audit-row writer shared by the inventoried clinical-rules maintenance and publication scripts",
+}
 
 // These mutate only short-lived authentication/session bookkeeping or
 // disposable test fixtures. They are deliberately outside HAUD-01's durable
@@ -83,7 +97,9 @@ describe("HAUD-01 governance inventory gate", () => {
             /after\s*\([\s\S]{0,160}\blogAudit(?:InTransaction)?\s*\(/,
           )
         } else {
-          expect(code, `${item.id} lacks an in-transaction audit row`).toContain("auditLog.create")
+          const writesRow = code.includes("auditLog.create")
+            || code.includes(MAINTENANCE_AUDIT_WRITER)
+          expect(writesRow, `${item.id} lacks an in-transaction audit row`).toBe(true)
           expect(code, `${item.id} lacks compile-time action typing`).toContain("AuditActionCode")
         }
         for (const action of source.actionCodes) {
@@ -138,6 +154,28 @@ describe("HAUD-01 governance inventory gate", () => {
     for (const path of blocked) expect(existsSync(join(root, path)), path).toBe(true)
   })
 
+  it("holds every shared in-transaction helper to its callers' guarantees", () => {
+    const inventoried = new Set<string>(AUDIT_GOVERNANCE_INVENTORY.flatMap(item => {
+      if (item.disposition === "OWNER_TRANSACTIONAL") return item.sources.map(source => source.path)
+      return []
+    }))
+    const sources = ["src/app/v1", "src/lib", "scripts"].flatMap(sourceFiles)
+    for (const [path, reason] of Object.entries(INVENTORIED_TRANSACTION_HELPERS)) {
+      expect(existsSync(join(root, path)), path).toBe(true)
+      expect(reason.trim()).not.toBe("")
+      const code = read(path)
+      expect(code, `${path} must not open a transaction of its own`).not.toContain("$transaction")
+      expect(code, `${path} must not construct its own client`).not.toContain("new PrismaClient")
+      expect(code, `${path} lacks compile-time action typing`).toContain("AuditActionCode")
+      const name = path.split("/").at(-1)?.replace(/\.ts$/, "")
+      const importers = sources.filter(source => (
+        source !== path && new RegExp(`from "[^"]*/${name}"`).test(read(source))
+      ))
+      expect(importers, `${path} has no inventoried caller`).not.toEqual([])
+      expect(importers.filter(source => !inventoried.has(source))).toEqual([])
+    }
+  })
+
   it("fails when a governed-model mutation source is neither inventoried nor explicitly excluded", () => {
     const inventoried = new Set<string>(AUDIT_GOVERNANCE_INVENTORY.flatMap(item => {
       if (item.disposition === "OWNER_TRANSACTIONAL") return item.sources.map(source => source.path)
@@ -148,7 +186,9 @@ describe("HAUD-01 governance inventory gate", () => {
       .flatMap(sourceFiles)
       .filter(path => governedMutation.test(read(path)))
     const unknown = discovered.filter(path => (
-      !inventoried.has(path) && !(path in EXPLICIT_OUT_OF_SCOPE_MUTATION_SOURCES)
+      !inventoried.has(path)
+      && !(path in EXPLICIT_OUT_OF_SCOPE_MUTATION_SOURCES)
+      && !(path in INVENTORIED_TRANSACTION_HELPERS)
     ))
     expect(unknown).toEqual([])
     for (const [path, reason] of Object.entries(EXPLICIT_OUT_OF_SCOPE_MUTATION_SOURCES)) {

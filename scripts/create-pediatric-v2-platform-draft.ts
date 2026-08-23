@@ -2,14 +2,15 @@
  * Append-only import of the source-controlled pediatric v2 platform draft.
  * The script never updates, publishes, selects or deletes a ruleset.
  *
- * Creating a platform ruleset is a governed clinical act, so the run is
- * attributed to the active clinical administrator named by
- * PUBLISHING_ADMIN_EMAIL. The draft and its audit row commit together.
+ * The draft and its audit row commit together. Against a protected database the
+ * run must name the accountable administrator in PUBLISHING_ADMIN_EMAIL;
+ * otherwise it is attributed to the LOSPOR release principal, exactly as the
+ * bundled baselines are.
  *
  * Usage:
  *   $env:CREATE_PEDIATRIC_V2_DRAFT="YES"
  *   $env:TARGET_CLINICAL_PRESET_ID="lospor-pediatrics-v2"
- *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:create-pediatric-v2
  */
 import "dotenv/config"
@@ -22,6 +23,13 @@ import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-dra
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 
 const TARGET_PRESET_ID = "lospor-pediatrics-v2"
 
@@ -31,9 +39,9 @@ if (process.env.CREATE_PEDIATRIC_V2_DRAFT !== "YES") {
 if (process.env.TARGET_CLINICAL_PRESET_ID !== TARGET_PRESET_ID) {
   throw new Error(`TARGET_CLINICAL_PRESET_ID must be exactly "${TARGET_PRESET_ID}".`)
 }
-assertDatabaseWritable("create the pediatric v2 draft")
+const database = assertDatabaseWritable("create the pediatric v2 draft")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
-if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 const canonical = createLosporPediatricV2Draft()
 if (canonical.id !== TARGET_PRESET_ID
@@ -84,13 +92,7 @@ async function main() {
   }
 
   await prisma.$transaction(async tx => {
-    const admin = await tx.user.findUnique({
-      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
-      select: { id: true, role: true, deletedAt: true },
-    })
-    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
-      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
-    }
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
     await tx.clinicalPreset.create({
       data: {
         id: canonical.id,
@@ -102,7 +104,8 @@ async function main() {
         version: canonical.version,
         status: "DRAFT",
         publishedAt: null,
-        createdById: admin.id,
+        createdById: actorUserId(actor),
+        createdByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         rules: {
           create: canonical.rules.map(rule => ({
             ruleKey: clinicalRuleKey(rule.payload),
@@ -113,19 +116,16 @@ async function main() {
         },
       },
     })
-    await tx.auditLog.create({
-      data: {
-        userId: admin.id,
-        action: "CLINICAL_RULESET_CREATE" satisfies AuditActionCode,
-        entityId: TARGET_PRESET_ID,
-        detail: {
-          scope: "PLATFORM",
-          clinicalMode: canonical.clinicalMode,
-          presetKey: canonical.key,
-          version: canonical.version,
-          ruleCount: canonical.rules.length,
-          source: "scripts/create-pediatric-v2-platform-draft.ts",
-        },
+    await writeMaintenanceAuditRow(tx, actor, {
+      action: "CLINICAL_RULESET_CREATE" satisfies AuditActionCode,
+      entityId: TARGET_PRESET_ID,
+      source: "scripts/create-pediatric-v2-platform-draft.ts",
+      detail: {
+        scope: "PLATFORM",
+        clinicalMode: canonical.clinicalMode,
+        presetKey: canonical.key,
+        version: canonical.version,
+        ruleCount: canonical.rules.length,
       },
     })
   }, { timeout: 120_000 })

@@ -6,15 +6,15 @@
  * deletes, publishes or selects a ruleset, and aborts if the target identity,
  * baseline rule keys or selection state differs from the reviewed DEV draft.
  *
- * Appending rules to a platform ruleset is a governed clinical act, so the run
- * is attributed to the active clinical administrator named by
- * PUBLISHING_ADMIN_EMAIL. The appended rules and the single audit row that
- * records the append commit together.
+ * The appended rules and the single audit row that records the append commit
+ * together. Against a protected database the run must name the accountable
+ * administrator in PUBLISHING_ADMIN_EMAIL; otherwise it is attributed to the
+ * LOSPOR release principal, exactly as the bundled baselines are.
  *
  * Dry-run (all checks, no write):
  *   $env:APPEND_PEDIATRIC_FLUID_PROFILES_TO_DRAFT="YES"
  *   $env:TARGET_CLINICAL_PRESET_ID="lospor-pediatrics-v1"
- *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:append-pediatric-fluid-profiles
  *
  * Apply after the dry-run succeeds:
@@ -30,6 +30,11 @@ import { createLosporPediatricPlatformDraft } from "@lospor/core/platform-clinic
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 
 const AUTHORIZATION_VARIABLE = "APPEND_PEDIATRIC_FLUID_PROFILES_TO_DRAFT"
 const TARGET_PRESET_ID = "lospor-pediatrics-v1"
@@ -48,9 +53,9 @@ if (process.env[AUTHORIZATION_VARIABLE] !== "YES") {
 if (process.env.TARGET_CLINICAL_PRESET_ID !== TARGET_PRESET_ID) {
   throw new Error(`TARGET_CLINICAL_PRESET_ID must be exactly "${TARGET_PRESET_ID}".`)
 }
-assertDatabaseWritable("append rules")
+const database = assertDatabaseWritable("append rules")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
-if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 const draft = createLosporPediatricPlatformDraft()
 const fluidRules = draft.rules.filter(rule => rule.payload.kind === "PEDIATRIC_FLUID_PROFILE")
@@ -113,13 +118,10 @@ async function main() {
       throw new Error("Target ruleset is not the exact inactive pediatric v1 platform draft.")
     }
 
-    const admin = await tx.user.findUnique({
-      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
-      select: { id: true, role: true, deletedAt: true },
+    const actor = await resolveMaintenanceActor(tx, {
+      protectedDatabase: database.protected,
+      dryRun: !apply,
     })
-    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
-      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
-    }
 
     const [platformSelections, institutionSelections, userSelections] = await Promise.all([
       tx.platformClinicalPresetSelection.count({ where: { presetId: TARGET_PRESET_ID } }),
@@ -165,20 +167,17 @@ async function main() {
     }
     // One row for the append, not one per rule: the append is the operation a
     // reader is looking for, and 22 identical rows would bury it.
-    await tx.auditLog.create({
-      data: {
-        userId: admin.id,
-        action: "CLINICAL_RULESET_RULE_UPSERT" satisfies AuditActionCode,
-        entityId: TARGET_PRESET_ID,
-        detail: {
-          scope: "PLATFORM",
-          clinicalMode: "PEDIATRIC",
-          presetKey: draft.key,
-          version: draft.version,
-          appendedRuleCount: fluidRules.length,
-          appendedRuleKeys: fluidRuleKeys,
-          source: "scripts/append-pediatric-fluid-profiles-to-draft.ts",
-        },
+    await writeMaintenanceAuditRow(tx, actor, {
+      action: "CLINICAL_RULESET_RULE_UPSERT" satisfies AuditActionCode,
+      entityId: TARGET_PRESET_ID,
+      source: "scripts/append-pediatric-fluid-profiles-to-draft.ts",
+      detail: {
+        scope: "PLATFORM",
+        clinicalMode: "PEDIATRIC",
+        presetKey: draft.key,
+        version: draft.version,
+        appendedRuleCount: fluidRules.length,
+        appendedRuleKeys: fluidRuleKeys,
       },
     })
   }, {

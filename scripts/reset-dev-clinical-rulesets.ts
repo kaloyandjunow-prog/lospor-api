@@ -1,6 +1,12 @@
 /**
  * Replaces DEV clinical rulesets with the canonical v8 adult platform baseline.
  *
+ * The replacement and its audit row commit together. Against a protected
+ * database the run must name the accountable administrator in
+ * PUBLISHING_ADMIN_EMAIL; otherwise it is attributed to the LOSPOR release
+ * principal, exactly as the bundled baselines are. A development database has
+ * no administrator to name until someone bootstraps one.
+ *
  * Usage:
  *   $env:RESET_DEV_CLINICAL_RULESETS="YES"
  *   npx tsx scripts/reset-dev-clinical-rulesets.ts
@@ -17,6 +23,13 @@ import {
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  actorTechnicalPrincipalId,
+  actorUserId,
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 import { buildClinicalRulesetExactDiff } from "../src/lib/clinical-rules/publication-evidence"
 import type { ClinicalRulePayload } from "@lospor/core/clinical-rules"
 
@@ -25,12 +38,10 @@ if (process.env.RESET_DEV_CLINICAL_RULESETS !== "YES") {
     'Refusing to replace clinical rulesets. Set RESET_DEV_CLINICAL_RULESETS="YES" explicitly.',
   )
 }
-assertDatabaseWritable("replace rulesets")
+const database = assertDatabaseWritable("replace rulesets")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required")
-}
-if (!process.env.PUBLISHING_ADMIN_EMAIL) {
-  throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 }
 
 const prisma = new PrismaClient({
@@ -40,13 +51,7 @@ const prisma = new PrismaClient({
 async function main() {
   const payloads = createLosporAdultRulePayloads()
   await prisma.$transaction(async tx => {
-    const admin = await tx.user.findUnique({
-      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
-      select: { id: true, role: true, deletedAt: true },
-    })
-    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
-      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
-    }
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
     const baseline = await tx.platformClinicalPresetSelection.findUnique({
       where: { clinicalMode: "ADULT" },
       include: { preset: { include: { rules: { orderBy: { ruleKey: "asc" } } } } },
@@ -96,7 +101,8 @@ async function main() {
         scope: "PLATFORM",
         version,
         status: "DRAFT",
-        createdById: admin.id,
+        createdById: actorUserId(actor),
+        createdByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         rules: {
           create: payloads.map(rule => ({
             ruleKey: clinicalRuleKey(rule),
@@ -115,33 +121,38 @@ async function main() {
         contentSha256: evidence.contentSha256,
         diffSha256: evidence.diffSha256,
         exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
-        confirmedById: admin.id,
+        confirmedById: actorUserId(actor),
+        confirmedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
         confirmedAt: publishedAt,
       },
     })
     await tx.clinicalPreset.update({
       where: { id },
-      data: { status: "PUBLISHED", publishedAt, publishedById: admin.id },
+      data: {
+        status: "PUBLISHED",
+        publishedAt,
+        publishedById: actorUserId(actor),
+        publishedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
+      },
     })
     await tx.platformClinicalPresetSelection.create({
       data: {
         clinicalMode: "ADULT",
         presetId: id,
-        selectedById: admin.id,
+        selectedById: actorUserId(actor),
+        selectedByTechnicalPrincipalId: actorTechnicalPrincipalId(actor),
       },
     })
-    await tx.auditLog.create({
-      data: {
-        userId: admin.id,
-        action: "CLINICAL_RULESET_DEV_RESET" satisfies AuditActionCode,
-        entityId: id,
-        detail: {
-          clinicalMode: "ADULT",
-          version,
-          previousPresetId: baseline?.preset.id ?? null,
-          contentSha256: evidence.contentSha256,
-          diffSha256: evidence.diffSha256,
-        },
+    await writeMaintenanceAuditRow(tx, actor, {
+      action: "CLINICAL_RULESET_DEV_RESET" satisfies AuditActionCode,
+      entityId: id,
+      source: "scripts/reset-dev-clinical-rulesets.ts",
+      detail: {
+        clinicalMode: "ADULT",
+        version,
+        previousPresetId: baseline?.preset.id ?? null,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
       },
     })
   }, { timeout: 120_000 })

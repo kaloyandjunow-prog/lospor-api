@@ -13,14 +13,16 @@
  *
  * Preset rules cascade with the preset (ClinicalPresetRule.onDelete: Cascade).
  *
- * Removing a ruleset is a governed clinical act, so the run is attributed to
- * the active clinical administrator named by PUBLISHING_ADMIN_EMAIL. The audit
- * row is written before the delete in the same transaction: afterwards there is
- * nothing left to describe, because the rules cascade away with the preset.
+ * The audit row is written before the delete in the same transaction:
+ * afterwards there is nothing left to describe, because the rules cascade away
+ * with the preset. Against a protected database the run must name the
+ * accountable administrator in PUBLISHING_ADMIN_EMAIL; otherwise it is
+ * attributed to the LOSPOR release principal, exactly as the bundled baselines
+ * are.
  *
  * Dry-run:
  *   $env:PRUNE_CLINICAL_RULESETS="YES"
- *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"
+ *   $env:PUBLISHING_ADMIN_EMAIL="admin@example.com"   # required for production
  *   npm run clinical-rules:prune
  * Apply:
  *   npm run clinical-rules:prune -- --apply
@@ -30,13 +32,18 @@ import type { AuditActionCode } from "../src/lib/audit-actions"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import {
+  assertMaintenanceActorConfigured,
+  resolveMaintenanceActor,
+  writeMaintenanceAuditRow,
+} from "../src/lib/clinical-rules/maintenance-actor"
 
 if (process.env.PRUNE_CLINICAL_RULESETS !== "YES") {
   throw new Error('Refusing to run. Set PRUNE_CLINICAL_RULESETS="YES" explicitly.')
 }
-assertDatabaseWritable("delete rulesets")
+const database = assertDatabaseWritable("delete rulesets")
+assertMaintenanceActorConfigured({ protectedDatabase: database.protected })
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
-if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 /** The only presets that survive. */
 const KEEP = new Set(["lospor-adults-v2", "lospor-pediatrics-v2"])
@@ -101,30 +108,21 @@ async function main() {
   if (!doomed.length) return
 
   await prisma.$transaction(async tx => {
-    const admin = await tx.user.findUnique({
-      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
-      select: { id: true, role: true, deletedAt: true },
-    })
-    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
-      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
-    }
+    const actor = await resolveMaintenanceActor(tx, { protectedDatabase: database.protected })
     for (const preset of doomed) {
       // Audit first. After the delete the preset and its cascaded rules are
       // gone, so this row is the only remaining description of what was removed.
-      await tx.auditLog.create({
-        data: {
-          userId: admin.id,
-          action: "CLINICAL_RULESET_PRUNE" satisfies AuditActionCode,
-          entityId: preset.id,
-          detail: {
-            scope: "PLATFORM",
-            presetKey: preset.key,
-            clinicalMode: preset.clinicalMode,
-            version: preset.version,
-            status: preset.status,
-            ruleCount: preset._count.rules,
-            source: "scripts/prune-clinical-rulesets.ts",
-          },
+      await writeMaintenanceAuditRow(tx, actor, {
+        action: "CLINICAL_RULESET_PRUNE" satisfies AuditActionCode,
+        entityId: preset.id,
+        source: "scripts/prune-clinical-rulesets.ts",
+        detail: {
+          scope: "PLATFORM",
+          presetKey: preset.key,
+          clinicalMode: preset.clinicalMode,
+          version: preset.version,
+          status: preset.status,
+          ruleCount: preset._count.rules,
         },
       })
       await tx.clinicalPreset.delete({ where: { id: preset.id } })

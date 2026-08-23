@@ -561,7 +561,7 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
       evidencePath: "src/__tests__/audit-governance-inventory.test.ts",
       marker: "HAUD_SOURCE_ONLY:clinical-rules-operator-publication",
     },
-    limit: "Guarded scripts execute main and require PostgreSQL; the source gate proves the audit row is inside their database transaction and the retained PostgreSQL suite proves rollback semantics.",
+    limit: "Every run writes its audit row. PUBLISHING_ADMIN_EMAIL is required only when the connection points at a protected database; otherwise the run is attributed to the immutable non-login LOSPOR release principal, exactly as the bundled baselines are. A supplied address is always resolved to an active clinical administrator and never falls back to the principal. scripts/promote-pediatric-platform-ruleset.ts is the exception: it promoted the superseded pediatric v1 and still demands a named administrator unconditionally. Guarded scripts execute main and require PostgreSQL; the source gate proves the audit row is inside their database transaction, src/lib/clinical-rules/maintenance-actor.test.ts proves the actor rule, and the retained PostgreSQL suite proves rollback semantics.",
   },
   {
     id: "clinical-rules-operator-maintenance",
@@ -600,7 +600,7 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
       evidencePath: "src/__tests__/audit-governance-inventory.test.ts",
       marker: "HAUD_SOURCE_ONLY:clinical-rules-operator-maintenance",
     },
-    limit: "Each script requires PUBLISHING_ADMIN_EMAIL to resolve to an active clinical administrator and refuses to run without one. They execute main() against PostgreSQL and cannot be imported into a unit test, so audit-failure injection is unavailable; the source gate proves the typed audit row is inside the same transaction as the change, and the retained PostgreSQL transaction contract supplies the rollback semantic. The append and prune scripts write nothing, and therefore no audit row, on a dry run.",
+    limit: "Every run writes its audit row. Each script requires PUBLISHING_ADMIN_EMAIL to resolve to an active clinical administrator only when the connection points at a protected database; otherwise the run is attributed to the immutable non-login LOSPOR release principal, exactly as the bundled baselines are, and a preset created that way carries the principal rather than a User foreign key. A supplied address is always validated and never falls back to the principal. These scripts execute main() against PostgreSQL and cannot be imported into a unit test, so audit-failure injection is unavailable; the source gate proves the typed audit row is inside the same transaction as the change, src/lib/clinical-rules/maintenance-actor.test.ts proves the actor rule, and the retained PostgreSQL transaction contract supplies the rollback semantic. The append and prune scripts write nothing at all, and therefore no audit row and no principal row, on a dry run.",
   },
   {
     id: "play-reviewer-no-actor-script",
