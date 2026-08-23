@@ -25,6 +25,8 @@
     "test:watch": "vitest",
     "test:pg": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run postgres.test.ts",
     "test:pg:governance": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/research-governance-postgres.test.ts",
+    "test:pg:bundled-baselines": "cross-env LOSPOR_POSTGRES_INTEGRATION=true LOSPOR_BUNDLED_BASELINE_POSTGRES=true vitest run src/__tests__/bundled-baseline-provisioner-postgres.test.ts",
+    "test:pg:username-identity": "cross-env LOSPOR_POSTGRES_INTEGRATION=true LOSPOR_USERNAME_IDENTITY_POSTGRES=true vitest run src/__tests__/deployment-username-identity-postgres.test.ts",
     "e2e:seed": "tsx scripts/seed-e2e-user.ts",
     "smoke:autosave": "tsx scripts/smoke-autosave.ts",
     "smoke:transfer": "tsx scripts/smoke-transfer.ts",
@@ -45,7 +47,8 @@
     "clinical-rules:verify-platform-drafts": "tsx scripts/verify-platform-clinical-drafts.ts",
     "clinical-rules:export-platform-drafts": "tsx scripts/export-platform-clinical-drafts.ts",
     "clinical-rules:publish-adult-v2": "tsx scripts/publish-adult-v2-platform-ruleset.ts",
-    "clinical-rules:prune": "tsx scripts/prune-clinical-rulesets.ts"
+    "clinical-rules:prune": "tsx scripts/prune-clinical-rulesets.ts",
+    "clinical-rules:provision-bundled-baselines": "tsx scripts/provision-bundled-clinical-baselines.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
