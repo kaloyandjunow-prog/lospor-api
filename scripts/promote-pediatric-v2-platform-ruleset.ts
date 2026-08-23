@@ -13,6 +13,7 @@
  *   npm run clinical-rules:promote-pediatric-v2 -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import { isDeepStrictEqual } from "node:util"
 import {
   clinicalRuleKey,
@@ -22,6 +23,8 @@ import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-dra
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import { buildClinicalRulesetExactDiff } from "../src/lib/clinical-rules/publication-evidence"
+import type { ClinicalRulePayload } from "@lospor/core/clinical-rules"
 
 const TARGET_PRESET_ID = "lospor-pediatrics-v2"
 const APPLY_ARGUMENT = "--apply"
@@ -120,7 +123,7 @@ async function main() {
 
     const currentSelection = await tx.platformClinicalPresetSelection.findUnique({
       where: { clinicalMode: "PEDIATRIC" },
-      include: { preset: { select: { id: true, status: true, clinicalMode: true, scope: true } } },
+      include: { preset: { include: { rules: { orderBy: { ruleKey: "asc" } } } } },
     })
     if (currentSelection && (
       currentSelection.preset.clinicalMode !== "PEDIATRIC"
@@ -148,6 +151,36 @@ async function main() {
       })
     }
     const publishedAt = new Date()
+    const evidence = buildClinicalRulesetExactDiff({
+      baselinePresetId: currentSelection?.preset.id ?? null,
+      baselinePresetVersion: currentSelection?.preset.version ?? null,
+      baselineRules: (currentSelection?.preset.rules ?? []).map(rule => ({
+        ruleKey: rule.ruleKey,
+        ruleVersion: rule.ruleVersion,
+        payload: rule.payload as unknown as ClinicalRulePayload,
+        sourceRefs: Array.isArray(rule.sourceRefs)
+          ? rule.sourceRefs.filter((item): item is string => typeof item === "string")
+          : [],
+      })),
+      nextRules: canonical.rules.map(rule => ({
+        ruleKey: clinicalRuleKey(rule.payload),
+        ruleVersion: `${canonical.key}.v${canonical.version}`,
+        payload: rule.payload,
+        sourceRefs: [...rule.sourceRefs],
+      })),
+    })
+    await tx.clinicalRulesetPublicationEvidence.create({
+      data: {
+        presetId: TARGET_PRESET_ID,
+        baselinePresetId: currentSelection?.preset.id ?? null,
+        baselinePresetVersion: currentSelection?.preset.version ?? null,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
+        exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
+        confirmedById: admin.id,
+        confirmedAt: publishedAt,
+      },
+    })
     await tx.clinicalPreset.update({
       where: { id: TARGET_PRESET_ID },
       data: {
@@ -169,7 +202,22 @@ async function main() {
       update: {
         presetId: TARGET_PRESET_ID,
         selectedById: admin.id,
+        selectedByTechnicalPrincipalId: null,
         selectedAt: publishedAt,
+      },
+    })
+    await tx.auditLog.create({
+      data: {
+        userId: admin.id,
+        action: "CLINICAL_RULESET_PUBLISH_AND_SELECT" satisfies AuditActionCode,
+        entityId: TARGET_PRESET_ID,
+        detail: {
+          scope: "PLATFORM",
+          clinicalMode: "PEDIATRIC",
+          previousPresetId: currentSelection?.presetId ?? null,
+          contentSha256: evidence.contentSha256,
+          diffSha256: evidence.diffSha256,
+        },
       },
     })
   }, {

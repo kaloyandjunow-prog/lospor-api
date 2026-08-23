@@ -90,7 +90,7 @@ describe("scopeGuardIssues", () => {
     expect(issues.map(issue => issue.field)).toContain("routes")
   })
 
-  it("blocks widening the slider beyond the reviewed platform envelope", () => {
+  it("blocks a personal ruleset widening the slider beyond the platform envelope", () => {
     const wider = variant(draft => {
       const profile = draft.profile as { routeModes: Record<string, { max: number }> }
       profile.routeModes.IV!.max = 900
@@ -103,17 +103,41 @@ describe("scopeGuardIssues", () => {
     expect(issues.map(issue => issue.field)).toContain("routeModes.IV.max")
   })
 
-  it("blocks inventing a concentration that is not canonical", () => {
+  it("allows a HOD to widen the institution slider for a reasoned publication", () => {
+    const wider = variant(draft => {
+      const profile = draft.profile as { routeModes: Record<string, { max: number }> }
+      profile.routeModes.IV!.max = 900
+    })
+    expect(scopeGuardIssues({
+      scope: "INSTITUTION",
+      next: wider,
+      baseline: platformPropofol,
+    })).toEqual([])
+  })
+
+  it("blocks a personal ruleset inventing a concentration", () => {
     const madeUp = variant(draft => {
       const profile = draft.profile as { routeModes: Record<string, { concentrationOptions: string[] }> }
       profile.routeModes.IV!.concentrationOptions = ["1%", "2%", "7.3%"]
     })
     const issues = scopeGuardIssues({
-      scope: "INSTITUTION",
+      scope: "USER",
       next: madeUp,
       baseline: platformPropofol,
     })
     expect(issues.map(issue => issue.field)).toContain("routeModes.IV.concentrationOptions")
+  })
+
+  it("allows an institution to record a locally governed concentration", () => {
+    const local = variant(draft => {
+      const profile = draft.profile as { routeModes: Record<string, { concentrationOptions: string[] }> }
+      profile.routeModes.IV!.concentrationOptions = ["1%", "2%", "0.5%"]
+    })
+    expect(scopeGuardIssues({
+      scope: "INSTITUTION",
+      next: local,
+      baseline: platformPropofol,
+    })).toEqual([])
   })
 
   it("allows narrowing: tighter bounds, fewer pills, a subset of concentrations", () => {
@@ -233,7 +257,7 @@ type Draft = Record<string, unknown>
 const doseCalcOfDraft = (draft: Draft) =>
   (draft.profile as Draft).doseCalc as Record<string, unknown>
 
-function guard(next: ClinicalRulePayload, scope: "INSTITUTION" | "USER" = "INSTITUTION") {
+function guard(next: ClinicalRulePayload, scope: "INSTITUTION" | "USER" = "USER") {
   return scopeGuardIssues({ scope, next, baseline: platformRocuronium })
 }
 
@@ -248,6 +272,13 @@ describe("scopeGuardIssues protects the dose calculation", () => {
     const issues = guard(pedVariant(d => { doseCalcOfDraft(d).perKg = 6 }))
     expect(issues.map(i => i.field)).toContain("routeModes.IV.doseCalc.perKg")
     expect(issues[0]!.message).toContain("0.6")
+  })
+
+  it("allows a HOD to broaden an institution calculation", () => {
+    expect(guard(pedVariant(d => {
+      doseCalcOfDraft(d).perKg = 0.9
+      doseCalcOfDraft(d).cap = 150
+    }), "INSTITUTION")).toEqual([])
   })
 
   it("allows lowering the per-kilogram dose — a department may prescribe less", () => {

@@ -18,8 +18,14 @@ import {
 } from "@lospor/core/clinical-rules"
 import { Prisma } from "@/generated/prisma/client"
 import type { AuthUser } from "@/lib/mobile-auth"
+import { logAuditInTransaction } from "@/lib/audit"
+import { verifyCurrentPassword } from "@/lib/credentials"
 import { prisma } from "@/lib/prisma"
-import { scopeGuardIssues } from "./authoring-scope"
+import { ruleItemKey, scopeGuardIssues } from "./authoring-scope"
+import {
+  buildClinicalRulesetExactDiff,
+  type ClinicalRuleEvidenceSnapshot,
+} from "./publication-evidence"
 
 const personSelect = {
   id: true,
@@ -34,6 +40,7 @@ const presetInclude = {
   rules: { orderBy: { ruleKey: "asc" as const } },
   ownerInstitution: { select: { id: true, name: true } },
   ownerUser: { select: personSelect },
+  publicationEvidence: true,
   _count: {
     select: {
       institutionSelections: true,
@@ -44,6 +51,23 @@ const presetInclude = {
 type PresetWithDetails = Prisma.ClinicalPresetGetPayload<{
   include: typeof presetInclude
 }>
+
+type ClinicalPresetWithPublicationEvidenceDto = ClinicalPresetDto & {
+  publicationEvidence: {
+    baselinePresetId: string | null
+    baselinePresetVersion: number | null
+    reason: string | null
+    contentSha256: string
+    diffSha256: string
+    exactDiff: unknown
+    confirmedAt: string
+  } | null
+}
+
+export type ClinicalRulesetSensitiveConfirmation = {
+  password: string
+  reason: string
+}
 
 function rawPayloadKind(value: unknown): string | null {
   return value !== null
@@ -112,7 +136,7 @@ function mapPresetRule(rule: {
   }
 }
 
-function mapPreset(item: PresetWithDetails): ClinicalPresetDto {
+function mapPreset(item: PresetWithDetails): ClinicalPresetWithPublicationEvidenceDto {
   return {
     id: item.id,
     key: item.key,
@@ -133,6 +157,17 @@ function mapPreset(item: PresetWithDetails): ClinicalPresetDto {
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
     publishedAt: item.publishedAt?.toISOString() ?? null,
+    publicationEvidence: item.publicationEvidence
+      ? {
+          baselinePresetId: item.publicationEvidence.baselinePresetId,
+          baselinePresetVersion: item.publicationEvidence.baselinePresetVersion,
+          reason: item.publicationEvidence.reason,
+          contentSha256: item.publicationEvidence.contentSha256,
+          diffSha256: item.publicationEvidence.diffSha256,
+          exactDiff: item.publicationEvidence.exactDiff,
+          confirmedAt: item.publicationEvidence.confirmedAt.toISOString(),
+        }
+      : null,
   }
 }
 
@@ -234,23 +269,79 @@ async function requirePreset(presetId: string): Promise<PresetWithDetails> {
   return preset
 }
 
-/**
- * The published platform rule for this key, which institution and personal
- * layers are allowed to narrow but never to invent beyond.
- */
-async function platformBaselineRule(
+/** The selected canonical platform preset, falling back to its latest release. */
+async function canonicalPlatformPreset(
   clinicalMode: ClinicalRuleMode,
-  ruleKey: string,
-): Promise<ClinicalRulePayload | null> {
-  const rule = await prisma.clinicalPresetRule.findFirst({
-    where: {
-      ruleKey,
-      preset: { scope: "PLATFORM", clinicalMode, status: "PUBLISHED" },
-    },
-    orderBy: { preset: { version: "desc" } },
-    select: { payload: true },
+): Promise<PresetWithDetails | null> {
+  const selected = await prisma.platformClinicalPresetSelection.findUnique({
+    where: { clinicalMode },
+    include: { preset: { include: presetInclude } },
   })
-  return (rule?.payload ?? null) as ClinicalRulePayload | null
+  if (
+    selected?.preset.scope === "PLATFORM"
+    && selected.preset.clinicalMode === clinicalMode
+    && selected.preset.status === "PUBLISHED"
+  ) return selected.preset
+  return prisma.clinicalPreset.findFirst({
+    where: { scope: "PLATFORM", clinicalMode, status: "PUBLISHED" },
+    include: presetInclude,
+    orderBy: [{ version: "desc" }, { publishedAt: "desc" }],
+  })
+}
+
+/**
+ * Resolve the platform rule an override is derived from. Personal rules must
+ * keep the exact canonical band/key. An institution may broaden an age/weight
+ * band, so a changed key may bind to an existing rule of the same kind/item.
+ */
+async function platformBaselineRuleForPayload(
+  clinicalMode: ClinicalRuleMode,
+  next: ClinicalRulePayload,
+  scope: Exclude<ClinicalPresetScope, "PLATFORM">,
+): Promise<ClinicalRulePayload | null> {
+  const preset = await canonicalPlatformPreset(clinicalMode)
+  if (!preset) return null
+  const nextKey = clinicalRuleKey(next)
+  const exact = editableRules(preset.rules).find(rule => rule.ruleKey === nextKey)
+  if (exact) return payload(exact.payload)
+  if (scope !== "INSTITUTION") return null
+  const itemKey = ruleItemKey(next)
+  const sameItem = editableRules(preset.rules).find(rule => {
+    const candidate = payload(rule.payload)
+    return candidate.kind === next.kind && ruleItemKey(candidate) === itemKey
+  })
+  return sameItem ? payload(sameItem.payload) : null
+}
+
+function evidenceRule(rule: PresetWithDetails["rules"][number]): ClinicalRuleEvidenceSnapshot {
+  return {
+    ruleKey: rule.ruleKey,
+    ruleVersion: rule.ruleVersion,
+    payload: payload(rule.payload),
+    sourceRefs: stringArray(rule.sourceRefs),
+  }
+}
+
+function normalizeSensitiveReason(value: string | undefined): string {
+  const reason = value?.trim() ?? ""
+  if (reason.length < 10 || reason.length > 1000) {
+    throw new ClinicalRuleServiceError(400, "A reason of 10-1000 characters is required")
+  }
+  return reason
+}
+
+async function confirmInstitutionRulesetAction(
+  actor: AuthUser,
+  confirmation: ClinicalRulesetSensitiveConfirmation | undefined,
+): Promise<string> {
+  if (!confirmation?.password) {
+    throw new ClinicalRuleServiceError(400, "Password re-entry is required")
+  }
+  const reason = normalizeSensitiveReason(confirmation.reason)
+  if (!await verifyCurrentPassword(actor.id, confirmation.password)) {
+    throw new ClinicalRuleServiceError(403, "Password confirmation failed")
+  }
+  return reason
 }
 
 async function requireEditablePreset(actor: AuthUser, presetId: string): Promise<PresetWithDetails> {
@@ -576,6 +667,13 @@ export async function createClinicalRuleset(input: {
         })),
       })
     }
+    await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_CREATE", created.id, {
+      scope: input.scope,
+      clinicalMode: input.clinicalMode,
+      version,
+      copiedFromPresetId: source?.id ?? null,
+      copiedRuleCount: sourceRules.length,
+    })
     return created
   })
 }
@@ -604,9 +702,14 @@ export async function upsertClinicalRulesetRule(input: {
     throw new ClinicalRuleServiceError(400, "Rule kind does not match the ruleset mode")
   }
   const ruleKey = clinicalRuleKey(parsed.value)
-  // Institution and personal layers may tune presentation, never the schema.
+  // Institution and personal layers may tune an existing catalog item, never
+  // redefine its identity, canonical units, or routes.
   if (preset.scope !== "PLATFORM") {
-    const baseline = await platformBaselineRule(preset.clinicalMode, ruleKey)
+    const baseline = await platformBaselineRuleForPayload(
+      preset.clinicalMode,
+      parsed.value,
+      preset.scope,
+    )
     const guardIssues = scopeGuardIssues({
       scope: preset.scope,
       next: parsed.value,
@@ -629,29 +732,42 @@ export async function upsertClinicalRulesetRule(input: {
       collectionValidation.issues,
     )
   }
-  if (input.existingRuleKey && input.existingRuleKey !== ruleKey) {
-    await prisma.clinicalPresetRule.deleteMany({
-      where: { presetId: preset.id, ruleKey: input.existingRuleKey },
-    })
-  }
-  return prisma.clinicalPresetRule.upsert({
-    where: {
-      presetId_ruleKey: {
+  const replacesExisting = editableRules(preset.rules).some(rule => (
+    rule.ruleKey === (input.existingRuleKey ?? ruleKey)
+  ))
+  return prisma.$transaction(async tx => {
+    if (input.existingRuleKey && input.existingRuleKey !== ruleKey) {
+      await tx.clinicalPresetRule.deleteMany({
+        where: { presetId: preset.id, ruleKey: input.existingRuleKey },
+      })
+    }
+    const saved = await tx.clinicalPresetRule.upsert({
+      where: {
+        presetId_ruleKey: {
+          presetId: preset.id,
+          ruleKey,
+        },
+      },
+      create: {
         presetId: preset.id,
         ruleKey,
+        ruleVersion: `${preset.key}.v${preset.version}.${Date.now()}`,
+        payload: parsed.value as Prisma.InputJsonValue,
+        sourceRefs: [],
       },
-    },
-    create: {
+      update: {
+        ruleVersion: `${preset.key}.v${preset.version}.${Date.now()}`,
+        payload: parsed.value as Prisma.InputJsonValue,
+      },
+    })
+    await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_RULE_UPSERT", saved.id, {
       presetId: preset.id,
-      ruleKey,
-      ruleVersion: `${preset.key}.v${preset.version}.${Date.now()}`,
-      payload: parsed.value as Prisma.InputJsonValue,
-      sourceRefs: [],
-    },
-    update: {
-      ruleVersion: `${preset.key}.v${preset.version}.${Date.now()}`,
-      payload: parsed.value as Prisma.InputJsonValue,
-    },
+      scope: preset.scope,
+      clinicalMode: preset.clinicalMode,
+      transition: replacesExisting ? "UPDATE" : "CREATE",
+      changedFields: ["payload", "ruleVersion"],
+    })
+    return saved
   })
 }
 
@@ -704,6 +820,25 @@ export async function replacePediatricDrugProfiles(input: {
     return parsed.value
   })
 
+  if (preset.scope !== "PLATFORM") {
+    const guardIssues: Array<{ field: string; message: string }> = []
+    for (const [index, next] of parsedProfiles.entries()) {
+      const baseline = await platformBaselineRuleForPayload(
+        preset.clinicalMode,
+        next,
+        preset.scope,
+      )
+      guardIssues.push(...scopeGuardIssues({
+        scope: preset.scope,
+        next,
+        baseline,
+      }).map(issue => ({ ...issue, field: `profiles.${index}.${issue.field}` })))
+    }
+    if (guardIssues.length) {
+      throw new ClinicalRuleServiceError(403, "Not permitted at this ruleset scope", guardIssues)
+    }
+  }
+
   const currentRules = editableRules(preset.rules).map(mapPresetRule)
   const replacedRules = currentRules.filter(rule => (
     pediatricDrugIdentity(rule.payload) === medicationIdentity
@@ -752,6 +887,19 @@ export async function replacePediatricDrugProfiles(input: {
         },
       })
     )))
+    await logAuditInTransaction(
+      tx,
+      input.actor.id,
+      "CLINICAL_RULESET_PEDIATRIC_DRUG_REPLACE",
+      preset.id,
+      {
+        scope: preset.scope,
+        clinicalMode: preset.clinicalMode,
+        replacedRuleCount: replacedRules.length,
+        createdRuleCount: created.length,
+        changedFields: ["rules"],
+      },
+    )
     return created
   })
 }
@@ -764,16 +912,31 @@ export async function deleteClinicalRulesetRule(input: {
   if (isLegacyEquipmentRule({ ruleKey: input.ruleKey })) {
     throw new ClinicalRuleServiceError(400, FIXED_EQUIPMENT_RULE_REJECTION_MESSAGE)
   }
-  await requireEditablePreset(input.actor, input.presetId)
-  await prisma.clinicalPresetRule.deleteMany({
-    where: {
-      presetId: input.presetId,
-      ruleKey: input.ruleKey,
-    },
+  const preset = await requireEditablePreset(input.actor, input.presetId)
+  return prisma.$transaction(async tx => {
+    const deleted = await tx.clinicalPresetRule.deleteMany({
+      where: {
+        presetId: input.presetId,
+        ruleKey: input.ruleKey,
+      },
+    })
+    if (deleted.count > 0) {
+      await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_RULE_DELETE", preset.id, {
+        scope: preset.scope,
+        clinicalMode: preset.clinicalMode,
+        deletedRuleCount: deleted.count,
+        changedFields: ["rules"],
+      })
+    }
+    return deleted
   })
 }
 
-export async function publishClinicalRuleset(actor: AuthUser, presetId: string) {
+export async function publishClinicalRuleset(
+  actor: AuthUser,
+  presetId: string,
+  confirmation?: ClinicalRulesetSensitiveConfirmation,
+) {
   const preset = await requireEditablePreset(actor, presetId)
   const rules = editableRules(preset.rules)
   if (!rules.length) {
@@ -789,13 +952,67 @@ export async function publishClinicalRuleset(actor: AuthUser, presetId: string) 
       collectionValidation.issues,
     )
   }
-  return prisma.clinicalPreset.update({
-    where: { id: preset.id },
-    data: {
-      status: "PUBLISHED",
-      publishedById: actor.id,
-      publishedAt: new Date(),
-    },
+
+  const reason = preset.scope === "INSTITUTION"
+    ? await confirmInstitutionRulesetAction(actor, confirmation)
+    : null
+  const baseline = preset.scope === "INSTITUTION"
+    ? await canonicalPlatformPreset(preset.clinicalMode)
+    : preset.copiedFromPresetId
+      ? await requirePreset(preset.copiedFromPresetId)
+      : null
+  if (preset.scope === "INSTITUTION" && !baseline) {
+    throw new ClinicalRuleServiceError(409, "A published platform baseline is required")
+  }
+  const evidence = buildClinicalRulesetExactDiff({
+    baselinePresetId: baseline?.id ?? null,
+    baselinePresetVersion: baseline?.version ?? null,
+    baselineRules: baseline ? editableRules(baseline.rules).map(evidenceRule) : [],
+    nextRules: rules.map(evidenceRule),
+  })
+  const publishedAt = new Date()
+
+  return prisma.$transaction(async tx => {
+    await tx.clinicalRulesetPublicationEvidence.create({
+      data: {
+        presetId: preset.id,
+        baselinePresetId: baseline?.id ?? null,
+        baselinePresetVersion: baseline?.version ?? null,
+        reason,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
+        exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
+        confirmedById: actor.id,
+        confirmedAt: publishedAt,
+      },
+    })
+    const changed = await tx.clinicalPreset.updateMany({
+      where: { id: preset.id, status: "DRAFT" },
+      data: {
+        status: "PUBLISHED",
+        publishedById: actor.id,
+        publishedAt,
+      },
+    })
+    if (changed.count !== 1) {
+      throw new ClinicalRuleServiceError(409, "Ruleset is no longer an editable draft")
+    }
+    await logAuditInTransaction(tx, actor.id, "CLINICAL_RULESET_PUBLISH", preset.id, {
+      key: preset.key,
+      version: preset.version,
+      scope: preset.scope,
+      clinicalMode: preset.clinicalMode,
+      baselinePresetId: baseline?.id ?? null,
+      baselinePresetVersion: baseline?.version ?? null,
+      contentSha256: evidence.contentSha256,
+      diffSha256: evidence.diffSha256,
+      addedRuleCount: evidence.exactDiff.added.length,
+      removedRuleCount: evidence.exactDiff.removed.length,
+      changedRuleCount: evidence.exactDiff.changed.length,
+      unchangedRuleCount: evidence.exactDiff.unchangedRuleCount,
+      reason,
+    })
+    return tx.clinicalPreset.findUniqueOrThrow({ where: { id: preset.id } })
   })
 }
 
@@ -805,6 +1022,7 @@ export async function selectClinicalRuleset(input: {
   clinicalMode: ClinicalRuleMode
   presetId: string
   institutionId?: string | null
+  confirmation?: ClinicalRulesetSensitiveConfirmation
 }) {
   const preset = await requirePreset(input.presetId)
   if (preset.status !== "PUBLISHED") {
@@ -834,58 +1052,102 @@ export async function selectClinicalRuleset(input: {
     throw new ClinicalRuleServiceError(403, "Personal ruleset ownership mismatch")
   }
 
+  const institutionReason = input.scope === "INSTITUTION"
+    ? await confirmInstitutionRulesetAction(input.actor, input.confirmation)
+    : null
+  const publication = await prisma.clinicalRulesetPublicationEvidence.findUnique({
+    where: { presetId: preset.id },
+    select: { contentSha256: true, diffSha256: true },
+  })
+  if (!publication) {
+    throw new ClinicalRuleServiceError(409, "Ruleset publication evidence is missing")
+  }
+
   if (input.scope === "PLATFORM") {
-    return prisma.platformClinicalPresetSelection.upsert({
-      where: { clinicalMode: input.clinicalMode },
-      create: {
+    return prisma.$transaction(async tx => {
+      const previous = await tx.platformClinicalPresetSelection.findUnique({
+        where: { clinicalMode: input.clinicalMode },
+        select: { presetId: true },
+      })
+      const selection = await tx.platformClinicalPresetSelection.upsert({
+        where: { clinicalMode: input.clinicalMode },
+        create: {
+          clinicalMode: input.clinicalMode,
+          presetId: preset.id,
+          selectedById: input.actor.id,
+        },
+        update: {
+          presetId: preset.id,
+          selectedById: input.actor.id,
+          selectedByTechnicalPrincipalId: null,
+          selectedAt: new Date(),
+        },
+      })
+      await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_SELECT", preset.id, {
+        scope: input.scope,
         clinicalMode: input.clinicalMode,
-        presetId: preset.id,
-        selectedById: input.actor.id,
-      },
-      update: {
-        presetId: preset.id,
-        selectedById: input.actor.id,
-        selectedAt: new Date(),
-      },
+        previousPresetId: previous?.presetId ?? null,
+        contentSha256: publication.contentSha256,
+        diffSha256: publication.diffSha256,
+      })
+      return selection
     })
   }
   if (input.scope === "INSTITUTION") {
-    return prisma.institutionClinicalPresetSelection.upsert({
-      where: {
-        institutionId_clinicalMode: {
-          institutionId: ownerInstitutionId!,
-          clinicalMode: input.clinicalMode,
-        },
-      },
-      create: {
+    return prisma.$transaction(async tx => {
+      const key = {
         institutionId: ownerInstitutionId!,
         clinicalMode: input.clinicalMode,
-        presetId: preset.id,
-        selectedById: input.actor.id,
-      },
-      update: {
-        presetId: preset.id,
-        selectedById: input.actor.id,
-        selectedAt: new Date(),
-      },
+      }
+      const previous = await tx.institutionClinicalPresetSelection.findUnique({
+        where: { institutionId_clinicalMode: key },
+        select: { presetId: true },
+      })
+      const selection = await tx.institutionClinicalPresetSelection.upsert({
+        where: { institutionId_clinicalMode: key },
+        create: {
+          ...key,
+          presetId: preset.id,
+          selectedById: input.actor.id,
+        },
+        update: {
+          presetId: preset.id,
+          selectedById: input.actor.id,
+          selectedAt: new Date(),
+        },
+      })
+      await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_SELECT", preset.id, {
+        scope: input.scope,
+        clinicalMode: input.clinicalMode,
+        institutionId: ownerInstitutionId,
+        previousPresetId: previous?.presetId ?? null,
+        contentSha256: publication.contentSha256,
+        diffSha256: publication.diffSha256,
+        reason: institutionReason,
+      })
+      return selection
     })
   }
-  return prisma.userClinicalPresetSelection.upsert({
-    where: {
-      userId_clinicalMode: {
-        userId: input.actor.id,
-        clinicalMode: input.clinicalMode,
-      },
-    },
-    create: {
-      userId: input.actor.id,
+  return prisma.$transaction(async tx => {
+    const key = { userId: input.actor.id, clinicalMode: input.clinicalMode }
+    const previous = await tx.userClinicalPresetSelection.findUnique({
+      where: { userId_clinicalMode: key },
+      select: { presetId: true },
+    })
+    const selection = await tx.userClinicalPresetSelection.upsert({
+      where: { userId_clinicalMode: key },
+      create: { ...key, presetId: preset.id },
+      update: { presetId: preset.id, selectedAt: new Date() },
+    })
+    await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_SELECT", preset.id, {
+      scope: input.scope,
       clinicalMode: input.clinicalMode,
-      presetId: preset.id,
-    },
-    update: {
-      presetId: preset.id,
-      selectedAt: new Date(),
-    },
+      previousPresetId: previous?.presetId ?? null,
+      contentSha256: publication.contentSha256,
+      diffSha256: publication.diffSha256,
+      personalOwnerId: input.actor.id,
+    })
+    return selection
   })
 }
 
@@ -894,6 +1156,7 @@ export async function clearClinicalRulesetSelection(input: {
   scope: ClinicalPresetScope
   clinicalMode: ClinicalRuleMode
   institutionId?: string | null
+  confirmation?: ClinicalRulesetSensitiveConfirmation
 }) {
   if (input.scope === "PLATFORM") {
     assertScopeOwner({
@@ -902,8 +1165,22 @@ export async function clearClinicalRulesetSelection(input: {
       ownerInstitutionId: null,
       ownerUserId: null,
     })
-    return prisma.platformClinicalPresetSelection.deleteMany({
-      where: { clinicalMode: input.clinicalMode },
+    return prisma.$transaction(async tx => {
+      const previous = await tx.platformClinicalPresetSelection.findUnique({
+        where: { clinicalMode: input.clinicalMode },
+        select: { presetId: true },
+      })
+      const result = await tx.platformClinicalPresetSelection.deleteMany({
+        where: { clinicalMode: input.clinicalMode },
+      })
+      if (result.count > 0) {
+        await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_SELECTION_CLEAR", input.actor.id, {
+          scope: input.scope,
+          clinicalMode: input.clinicalMode,
+          previousPresetId: previous?.presetId ?? null,
+        })
+      }
+      return result
     })
   }
   if (input.scope === "INSTITUTION") {
@@ -914,18 +1191,52 @@ export async function clearClinicalRulesetSelection(input: {
       ownerInstitutionId: institutionId,
       ownerUserId: null,
     })
-    return prisma.institutionClinicalPresetSelection.deleteMany({
-      where: {
-        institutionId: institutionId!,
-        clinicalMode: input.clinicalMode,
-      },
+    const reason = await confirmInstitutionRulesetAction(input.actor, input.confirmation)
+    return prisma.$transaction(async tx => {
+      const previous = await tx.institutionClinicalPresetSelection.findUnique({
+        where: {
+          institutionId_clinicalMode: {
+            institutionId: institutionId!,
+            clinicalMode: input.clinicalMode,
+          },
+        },
+        select: { presetId: true },
+      })
+      const result = await tx.institutionClinicalPresetSelection.deleteMany({
+        where: {
+          institutionId: institutionId!,
+          clinicalMode: input.clinicalMode,
+        },
+      })
+      if (result.count > 0) {
+        await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_SELECTION_CLEAR", input.actor.id, {
+          scope: input.scope,
+          clinicalMode: input.clinicalMode,
+          institutionId,
+          previousPresetId: previous?.presetId ?? null,
+          reason,
+        })
+      }
+      return result
     })
   }
-  return prisma.userClinicalPresetSelection.deleteMany({
-    where: {
-      userId: input.actor.id,
-      clinicalMode: input.clinicalMode,
-    },
+  return prisma.$transaction(async tx => {
+    const key = { userId: input.actor.id, clinicalMode: input.clinicalMode }
+    const previous = await tx.userClinicalPresetSelection.findUnique({
+      where: { userId_clinicalMode: key },
+      select: { presetId: true },
+    })
+    const result = await tx.userClinicalPresetSelection.deleteMany({
+      where: key,
+    })
+    if (result.count > 0) {
+      await logAuditInTransaction(tx, input.actor.id, "CLINICAL_RULESET_SELECTION_CLEAR", input.actor.id, {
+        scope: input.scope,
+        clinicalMode: input.clinicalMode,
+        previousPresetId: previous?.presetId ?? null,
+      })
+    }
+    return result
   })
 }
 

@@ -23,6 +23,7 @@
  *   npm run clinical-rules:publish-adult-v2 -- --apply
  */
 import "dotenv/config"
+import type { AuditActionCode } from "../src/lib/audit-actions"
 import {
   clinicalRuleKey,
   validateClinicalRuleCollection,
@@ -31,12 +32,15 @@ import { createLosporAdultV2Draft } from "@lospor/core/platform-clinical-drafts"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
+import { buildClinicalRulesetExactDiff } from "../src/lib/clinical-rules/publication-evidence"
+import type { ClinicalRulePayload } from "@lospor/core/clinical-rules"
 
 if (process.env.PUBLISH_ADULT_V2_RULESET !== "YES") {
   throw new Error('Refusing to run. Set PUBLISH_ADULT_V2_RULESET="YES" explicitly.')
 }
 assertDatabaseWritable("publish rulesets")
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required")
+if (!process.env.PUBLISHING_ADMIN_EMAIL) throw new Error("PUBLISHING_ADMIN_EMAIL is required")
 
 const apply = process.argv.includes("--apply")
 
@@ -89,14 +93,23 @@ async function main() {
   }
 
   await prisma.$transaction(async tx => {
+    const admin = await tx.user.findUnique({
+      where: { email: process.env.PUBLISHING_ADMIN_EMAIL },
+      select: { id: true, role: true, deletedAt: true },
+    })
+    if (!admin || admin.role !== "ADMIN" || admin.deletedAt) {
+      throw new Error("PUBLISHING_ADMIN_EMAIL must identify an active platform administrator")
+    }
+    const baseline = await tx.platformClinicalPresetSelection.findUnique({
+      where: { clinicalMode: "ADULT" },
+      include: { preset: { include: { rules: { orderBy: { ruleKey: "asc" } } } } },
+    })
     await tx.clinicalPresetRule.deleteMany({ where: { presetId: target.id } })
     await tx.clinicalPreset.update({
       where: { id: target.id },
       data: {
         name: draft.name,
         description: draft.description,
-        status: "PUBLISHED",
-        publishedAt: new Date(),
         rules: {
           create: draft.rules.map(rule => ({
             ruleKey: clinicalRuleKey(rule.payload),
@@ -104,6 +117,58 @@ async function main() {
             payload: rule.payload as Prisma.InputJsonValue,
             sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
           })),
+        },
+      },
+    })
+    const publishedAt = new Date()
+    const evidence = buildClinicalRulesetExactDiff({
+      baselinePresetId: baseline?.preset.id ?? null,
+      baselinePresetVersion: baseline?.preset.version ?? null,
+      baselineRules: (baseline?.preset.rules ?? []).map(rule => ({
+        ruleKey: rule.ruleKey,
+        ruleVersion: rule.ruleVersion,
+        payload: rule.payload as unknown as ClinicalRulePayload,
+        sourceRefs: Array.isArray(rule.sourceRefs)
+          ? rule.sourceRefs.filter((item): item is string => typeof item === "string")
+          : [],
+      })),
+      nextRules: draft.rules.map(rule => ({
+        ruleKey: clinicalRuleKey(rule.payload),
+        ruleVersion: `${draft.key}.v${draft.version}.published1`,
+        payload: rule.payload,
+        sourceRefs: [...rule.sourceRefs],
+      })),
+    })
+    await tx.clinicalRulesetPublicationEvidence.create({
+      data: {
+        presetId: target.id,
+        baselinePresetId: baseline?.preset.id ?? null,
+        baselinePresetVersion: baseline?.preset.version ?? null,
+        contentSha256: evidence.contentSha256,
+        diffSha256: evidence.diffSha256,
+        exactDiff: evidence.exactDiff as unknown as Prisma.InputJsonValue,
+        confirmedById: admin.id,
+        confirmedAt: publishedAt,
+      },
+    })
+    await tx.clinicalPreset.update({
+      where: { id: target.id },
+      data: {
+        status: "PUBLISHED",
+        publishedById: admin.id,
+        publishedAt,
+      },
+    })
+    await tx.auditLog.create({
+      data: {
+        userId: admin.id,
+        action: "CLINICAL_RULESET_PUBLISH" satisfies AuditActionCode,
+        entityId: target.id,
+        detail: {
+          scope: "PLATFORM",
+          clinicalMode: "ADULT",
+          contentSha256: evidence.contentSha256,
+          diffSha256: evidence.diffSha256,
         },
       },
     })
