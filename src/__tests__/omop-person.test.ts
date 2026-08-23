@@ -5,7 +5,7 @@ type AnyCase = Parameters<typeof mapCasesToOmop>[0][number]
 
 const makeCase = (over: Partial<AnyCase> = {}): AnyCase => ({
   id: "case-1",
-  caseCode: "2026-0001",
+  researchId: "10000000-0000-4000-8000-000000000001",
   createdAt: new Date("2026-03-04T08:00:00Z"),
   status: "COMPLETE",
   finalizations: [{ id: "finalization-1" }],
@@ -53,7 +53,10 @@ describe("OMOP person + observation_period", () => {
   // The previous 32-bit string hash collided around ~70k cases, silently
   // merging two unrelated operations into one person.
   it("gives every case a distinct person_id across a large batch", () => {
-    const cases = Array.from({ length: 5000 }, (_, i) => makeCase({ id: `case-${i}`, caseCode: `C-${i}` }))
+    const cases = Array.from({ length: 5000 }, (_, i) => makeCase({
+      id: `case-${i}`,
+      researchId: `10000000-0000-4000-8000-${i.toString().padStart(12, "0")}`,
+    }))
     const ids = new Set(mapCasesToOmop(cases).person.map(p => p.person_id))
     expect(ids.size).toBe(5000)
   })

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { logAuditInTransaction } from "@/lib/audit"
 import { authorizeResearchRequest, researchRouteError } from "@/lib/research/request"
 import { researchGrantCreateSchema } from "@/lib/research/schemas"
+import { researchGrantExpiry } from "@/lib/research/grant-policy"
 
 export async function GET(request: Request) {
   const auth = await authorizeResearchRequest(request, "manageAccess")
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
   try {
     const grants = await prisma.researchAccessGrant.findMany({
       include: {
-        user: { select: { id: true, name: true, email: true, role: true } },
+        user: { select: { id: true, name: true, email: true, username: true, role: true, accountKind: true } },
         institution: { select: { id: true, name: true } },
         grantedBy: { select: { id: true, name: true } },
       },
@@ -35,15 +36,31 @@ export async function POST(request: Request) {
     }
     const target = await prisma.user.findUnique({
       where: { id: parsed.data.userId },
-      select: { id: true, role: true },
+      select: {
+        id: true,
+        role: true,
+        accountKind: true,
+        activatedAt: true,
+        suspendedAt: true,
+        recoveryRequiredAt: true,
+        deletedAt: true,
+        anonymizedAt: true,
+      },
     })
     if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 })
-    if (target.role !== "RESEARCHER") {
+    if (
+      !target.activatedAt
+      || target.suspendedAt
+      || target.recoveryRequiredAt
+      || target.deletedAt
+      || target.anonymizedAt
+    ) {
       return NextResponse.json(
-        { error: "The account must have the RESEARCHER role", code: "RESEARCHER_ROLE_REQUIRED" },
+        { error: "Research access cannot be granted to an inactive account", code: "RESEARCH_ACCOUNT_INACTIVE" },
         { status: 422 },
       )
     }
+    const expiresAt = researchGrantExpiry(parsed.data.expiresAt)
     // The grant and the record of who issued it commit together. Granting
     // someone access to the register is exactly the kind of act whose audit
     // entry must not be able to go missing on its own.
@@ -55,14 +72,16 @@ export async function POST(request: Request) {
             ? null
             : parsed.data.institutionId ?? null,
           allInstitutions: parsed.data.allInstitutions,
+          canQuery: parsed.data.canQuery,
           canInspectCases: parsed.data.canInspectCases,
           canExport: parsed.data.canExport,
           canExportOmop: parsed.data.canExportOmop,
-          expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
+          canShareCohorts: parsed.data.canShareCohorts,
+          expiresAt,
           grantedById: auth.context.user.id,
         },
         include: {
-          user: { select: { id: true, name: true, email: true, role: true } },
+          user: { select: { id: true, name: true, email: true, username: true, role: true, accountKind: true } },
           institution: { select: { id: true, name: true } },
         },
       })
@@ -70,8 +89,12 @@ export async function POST(request: Request) {
         targetUserId: created.userId,
         institutionId: created.institutionId,
         allInstitutions: created.allInstitutions,
+        canQuery: created.canQuery,
+        canInspectCases: created.canInspectCases,
         canExport: created.canExport,
         canExportOmop: created.canExportOmop,
+        canShareCohorts: created.canShareCohorts,
+        expiresAt: created.expiresAt.toISOString(),
       })
       return created
     })

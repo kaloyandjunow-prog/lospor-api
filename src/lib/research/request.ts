@@ -6,6 +6,7 @@ import {
   resolveResearchContext,
   type ResearchContext,
 } from "./access"
+import { ResearchGrantPolicyError } from "./grant-policy"
 
 function actionForPermission(permission: keyof ResearchPermissionSet): ResearchDataAction {
   if (permission === "inspectCases") return "inspectCases"
@@ -50,6 +51,12 @@ export async function authorizeResearchRequest(
 export function researchRouteError(error: unknown): NextResponse {
   if (error instanceof SyntaxError) {
     return NextResponse.json({ error: "Invalid JSON request", code: "INVALID_JSON" }, { status: 400 })
+  }
+  if (error instanceof ResearchGrantPolicyError) {
+    return NextResponse.json(
+      { error: error.message, code: error.code },
+      { status: 422 },
+    )
   }
   console.error("[research]", error)
   return NextResponse.json(

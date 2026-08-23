@@ -360,7 +360,8 @@ interface OmopObservation {
 
 type CaseRow = {
   id: string
-  caseCode: string | null
+  /** Dedicated opaque research identifier; never substitute caseCode here. */
+  researchId: string
   createdAt: Date
   status: string
   clinicalMode?: "ADULT" | "PEDIATRIC"
@@ -888,7 +889,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       birth_datetime:       null,
       race_concept_id:      0,   // not collected
       ethnicity_concept_id: 0,   // not collected
-      person_source_value:  c.caseCode,
+      person_source_value:  `RC-${c.researchId}`,
       gender_source_value:  c.preop?.sex ?? null,
     })
 
@@ -922,7 +923,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       visit_start_date:      startDate,
       visit_end_date:        endDate,
       visit_type_concept_id: 32817, // EHR
-      visit_source_value:    c.caseCode,
+      visit_source_value:    `RC-${c.researchId}`,
       care_site_source_value: careSite,
       // The reference a CDM consumer reads. Null when the case records no
       // institution, which is a real state; the source value stays alongside.

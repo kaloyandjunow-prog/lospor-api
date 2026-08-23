@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { logAuditInTransaction } from "@/lib/audit"
 import { authorizeResearchRequest, researchRouteError } from "@/lib/research/request"
 import { researchGrantPatchSchema } from "@/lib/research/schemas"
+import { researchGrantExpiry } from "@/lib/research/grant-policy"
 
 export async function PATCH(
   request: Request,
@@ -21,12 +22,32 @@ export async function PATCH(
     }
     const existing = await prisma.researchAccessGrant.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: "Grant not found" }, { status: 404 })
+    const nextPermissions = {
+      canQuery: parsed.data.canQuery ?? existing.canQuery,
+      canInspectCases: parsed.data.canInspectCases ?? existing.canInspectCases,
+      canExport: parsed.data.canExport ?? existing.canExport,
+      canExportOmop: parsed.data.canExportOmop ?? existing.canExportOmop,
+      canShareCohorts: parsed.data.canShareCohorts ?? existing.canShareCohorts,
+    }
+    if (!nextPermissions.canQuery || (nextPermissions.canExportOmop && !nextPermissions.canExport)) {
+      return NextResponse.json(
+        {
+          error: "Query is required for every grant and OMOP also requires export",
+          code: "INVALID_RESEARCH_GRANT_PERMISSIONS",
+        },
+        { status: 422 },
+      )
+    }
+    const expiresAt = parsed.data.expiresAt === undefined
+      ? undefined
+      : researchGrantExpiry(parsed.data.expiresAt, new Date(), existing.createdAt)
     // Changing what someone may see, and the record of who changed it,
     // commit together.
     const grant = await prisma.$transaction(async tx => {
       const updated = await tx.researchAccessGrant.update({
         where: { id },
         data: {
+          ...(parsed.data.canQuery !== undefined ? { canQuery: parsed.data.canQuery } : {}),
           ...(parsed.data.canInspectCases !== undefined
             ? { canInspectCases: parsed.data.canInspectCases }
             : {}),
@@ -34,9 +55,10 @@ export async function PATCH(
           ...(parsed.data.canExportOmop !== undefined
             ? { canExportOmop: parsed.data.canExportOmop }
             : {}),
-          ...(parsed.data.expiresAt !== undefined
-            ? { expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null }
+          ...(parsed.data.canShareCohorts !== undefined
+            ? { canShareCohorts: parsed.data.canShareCohorts }
             : {}),
+          ...(expiresAt ? { expiresAt } : {}),
           ...(parsed.data.revoked !== undefined
             ? { revokedAt: parsed.data.revoked ? new Date() : null }
             : {}),
@@ -44,6 +66,12 @@ export async function PATCH(
       })
       await logAuditInTransaction(tx, auth.context.user.id, "RESEARCH_GRANT_UPDATE", id, {
         targetUserId: updated.userId,
+        canQuery: updated.canQuery,
+        canInspectCases: updated.canInspectCases,
+        canExport: updated.canExport,
+        canExportOmop: updated.canExportOmop,
+        canShareCohorts: updated.canShareCohorts,
+        expiresAt: updated.expiresAt.toISOString(),
         revoked: !!updated.revokedAt,
       })
       return updated
