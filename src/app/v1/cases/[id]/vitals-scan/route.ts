@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { canAccessCase } from "@/lib/access-control"
+import { canWriteCase } from "@/lib/access-control"
 import { fetchMistralChatCompletions } from "@/lib/mistral"
 import { prisma } from "@/lib/prisma"
 import { rateLimit } from "@/lib/rate-limit"
+import { clinicalAiRefusal } from "@/lib/deployment-capabilities"
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY ?? ""
 
@@ -17,6 +18,8 @@ export async function OPTIONS(req: NextRequest) {
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const refusal = clinicalAiRefusal("monitorOcr")
+  if (refusal) return NextResponse.json(refusal.body, { status: refusal.status })
 
   const rl = await rateLimit(`vitals-scan:${user.id}`, 30, 60 * 60 * 1000)
   if (!rl.allowed) {
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   })
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (!canAccessCase(user, existing)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!canWriteCase(user, existing)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   let image: string
   let mimeType = "image/jpeg"

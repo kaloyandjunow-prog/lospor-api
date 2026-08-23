@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
   const caseRecord = await prisma.case.create({
     data: {
       userId,
+      createdById: userId,
       notes:  "__DEMO__",
       status: "IN_PROGRESS",
       preop: {

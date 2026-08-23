@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { caseWhereForUser } from "@/lib/access-control"
+import { caseReadWhereForUser } from "@/lib/access-control"
 import { prisma } from "@/lib/prisma"
 
 const CORS = (req: NextRequest) => corsHeaders(req, "GET, OPTIONS")
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id: caseId } = await params
   const caseRecord = await prisma.case.findFirst({
-    where: caseWhereForUser(user, caseId),
+    where: caseReadWhereForUser(user, caseId),
     select: { id: true },
   })
   if (!caseRecord) return NextResponse.json({ error: "Case not found" }, { status: 404 })

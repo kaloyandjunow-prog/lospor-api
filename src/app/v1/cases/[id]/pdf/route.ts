@@ -1,4 +1,4 @@
-import { caseWhereForUser } from "@/lib/access-control"
+import { caseReadWhereForUser } from "@/lib/access-control"
 import { NextRequest, NextResponse } from "next/server"
 import { SignJWT } from "jose"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -44,7 +44,7 @@ export async function GET(
     // Shared predicate: a case belongs to the institution it was performed at.
     // This route used to scope by the owner's current institution, so a case
     // followed its author to a new hospital.
-    where = caseWhereForUser(user, id)
+    where = caseReadWhereForUser(user, id)
   }
 
   const record = await prisma.case.findFirst({ where, select: { id: true, caseCode: true, userId: true } })

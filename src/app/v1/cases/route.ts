@@ -7,7 +7,7 @@ import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
 import { parseLenient, type RejectedField } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
-import { caseWhereForUser } from "@/lib/access-control"
+import { caseCapabilitiesForUser, caseReadWhereForUser } from "@/lib/access-control"
 import { generateCaseCode, isPrismaUniqueError } from "@/lib/case-code"
 import { corsHeaders } from "@/lib/cors"
 import { z } from "zod"
@@ -21,7 +21,7 @@ export async function OPTIONS(req: NextRequest) {
 
 async function findIdempotentCase(userId: string, idempotencyKey: string) {
   return prisma.case.findFirst({
-    where: { userId, clientDraftId: idempotencyKey },
+    where: { createdById: userId, clientDraftId: idempotencyKey },
     select: { id: true, caseCode: true, preop: { select: { updatedAt: true, syncRevision: true } } },
   })
 }
@@ -127,6 +127,7 @@ export async function POST(req: NextRequest) {
             clinicalMode: pediatricDecision.clinicalMode,
             clinicalRulesVersion: pediatricDecision.clinicalRulesVersion,
             userId,
+            createdById: userId,
             status,
             institutionId: user.institutionId ?? null,
             caseCode: await generateCaseCode(userId, prisma),
@@ -181,7 +182,7 @@ export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const where = caseWhereForUser(user)
+  const where = caseReadWhereForUser(user)
 
   // Item 28: Pagination — accept optional ?skip and ?take; cap take at 200 per request
   const url = new URL(req.url)
@@ -213,5 +214,13 @@ export async function GET(req: NextRequest) {
     prisma.case.count({ where }),
   ])
 
-  return NextResponse.json({ cases, total, skip, take })
+  return NextResponse.json({
+    cases: cases.map(record => ({
+      ...record,
+      capabilities: caseCapabilitiesForUser(user, record),
+    })),
+    total,
+    skip,
+    take,
+  })
 }

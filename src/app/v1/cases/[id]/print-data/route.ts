@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
-import { caseWhereForUser } from "@/lib/access-control"
+import { caseReadWhereForUser } from "@/lib/access-control"
 import { verifyPrintToken } from "@/lib/print-token"
 
 export async function GET(
@@ -22,7 +22,7 @@ export async function GET(
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    where = caseWhereForUser(user, id)
+    where = caseReadWhereForUser(user, id)
   }
 
   const record = await prisma.case.findFirst({

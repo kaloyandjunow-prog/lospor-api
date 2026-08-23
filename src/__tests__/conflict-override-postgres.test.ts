@@ -70,7 +70,7 @@ describe.skipIf(!runPostgres)("overriding a save conflict", () => {
         passwordHash: "not-a-real-password",
       },
     })
-    await prisma.case.create({ data: { id: caseId, userId, status: "IN_PROGRESS" } })
+    await prisma.case.create({ data: { id: caseId, userId, createdById: userId, status: "IN_PROGRESS" } })
     await patch({ preop: { asaScore: "II" } })
   })
 

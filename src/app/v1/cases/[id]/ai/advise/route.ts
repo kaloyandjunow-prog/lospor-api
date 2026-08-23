@@ -7,6 +7,7 @@ import { fetchMistralChatCompletions } from "@/lib/mistral"
 import { redactText } from "@/lib/pii-check"
 import { corsHeaders } from "@/lib/cors"
 import { SYSTEM_PROMPT, buildPatientSummary } from "@/lib/ai-advisor"
+import { canReadCase } from "@/lib/access-control"
 import {
   AI_MAX_REQUESTS_PER_HOUR,
   AI_BURST_COOLDOWN_MS,
@@ -51,7 +52,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
 
-  if (existing.userId !== user.id) {
+  // This endpoint derives advice without changing the record, so it follows
+  // the same explicit read predicate as case detail and print. In particular,
+  // the immutable creator may still consult a case they handed over while they
+  // remain at the recorded institution, but cannot mutate it.
+  if (!canReadCase(user, existing)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
   if (existing.clinicalMode === "PEDIATRIC") {

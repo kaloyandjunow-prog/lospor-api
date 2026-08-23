@@ -28,7 +28,10 @@ describe("personal data archive", () => {
     getAuthUser.mockResolvedValue({ id: "user-1" })
     findAccount.mockResolvedValue({
       id: "user-1",
-      email: "clinician@example.test",
+      email: null,
+      username: "Clinician.One",
+      usernameCanonical: "clinician.one",
+      activatedAt: new Date("2026-08-01T00:00:00.000Z"),
       deletedAt: null,
     })
     caseCount.mockResolvedValue(251)
@@ -58,5 +61,13 @@ describe("personal data archive", () => {
       cursor: { id: "case-249" },
       skip: 1,
     })
+    expect(findAccount).toHaveBeenCalledWith(expect.objectContaining({
+      select: expect.objectContaining({
+        email: true,
+        username: true,
+        usernameCanonical: true,
+        activatedAt: true,
+      }),
+    }))
   })
 })

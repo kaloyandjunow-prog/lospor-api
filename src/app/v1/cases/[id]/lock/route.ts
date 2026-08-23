@@ -5,6 +5,7 @@ import { acquireCaseLockAtomic, readCaseLock } from "@/lib/case-lock-repository"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
+import { caseWriteWhereForUser } from "@/lib/access-control"
 
 const lockBodySchema = z.object({
   deviceId: z.string().trim().min(1).max(256),
@@ -17,24 +18,11 @@ async function resolveCase(
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const existing = await prisma.case.findUnique({
-    where: { id },
-    select: {
-      userId: true,
-      status: true,
-      user: { select: { institutionId: true } },
-    },
+  const existing = await prisma.case.findFirst({
+    where: caseWriteWhereForUser(user, id),
+    select: { status: true },
   })
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
-
-  const isAdmin = user.role === "ADMIN"
-  const isHOD =
-    user.role === "HEAD_OF_DEPT" &&
-    !!user.institutionId &&
-    existing.user?.institutionId === user.institutionId
-  if (existing.userId !== user.id && !isAdmin && !isHOD) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
 
   return { userId: user.id, status: existing.status }
 }
@@ -92,9 +80,9 @@ export async function POST(
     try {
       const holder = await prisma.user.findUnique({
         where: { id: existing.userId },
-        select: { name: true, email: true },
+        select: { name: true, username: true, email: true },
       })
-      holderName = holder?.name ?? holder?.email ?? null
+      holderName = holder?.name ?? holder?.username ?? holder?.email ?? null
     } catch {}
   }
   return NextResponse.json({

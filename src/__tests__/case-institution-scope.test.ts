@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { canAccessCase, caseWhereForUser, headOfDeptCaseScope } from "../lib/access-control"
+import { canAccessCase, caseReadWhereForUser, headOfDeptCaseScope } from "../lib/access-control"
 import type { AuthUser } from "../lib/mobile-auth"
 
 /**
@@ -34,27 +34,27 @@ describe("headOfDeptCaseScope", () => {
 
 describe("caseWhereForUser", () => {
   it("scopes a head of department by the case's institution, not the owner's", () => {
-    const where = caseWhereForUser(hod(HOSPITAL_A))
+    const where = caseReadWhereForUser(hod(HOSPITAL_A))
     expect(where).toEqual(headOfDeptCaseScope(HOSPITAL_A))
     // The old behaviour, which let a case follow its author.
     expect(where).not.toEqual({ user: { institutionId: HOSPITAL_A } })
   })
 
   it("keeps the id constraint alongside the institution scope", () => {
-    expect(caseWhereForUser(hod(HOSPITAL_A), "case-1")).toMatchObject({ id: "case-1" })
+    expect(caseReadWhereForUser(hod(HOSPITAL_A), "case-1")).toMatchObject({ id: "case-1" })
   })
 
   it("gives an admin everything", () => {
-    expect(caseWhereForUser({ id: "a", role: "ADMIN" } as AuthUser)).toEqual({})
+    expect(caseReadWhereForUser({ id: "a", role: "ADMIN" } as AuthUser)).toEqual({})
   })
 
   it("gives an ordinary member only their own cases", () => {
-    expect(caseWhereForUser({ id: "u-1", role: "MEMBER" } as AuthUser))
+    expect(caseReadWhereForUser({ id: "u-1", role: "MEMBER" } as AuthUser))
       .toEqual({ userId: "u-1" })
   })
 
   it("falls back to own-cases for a head of department with no institution", () => {
-    expect(caseWhereForUser({ id: "h", role: "HEAD_OF_DEPT" } as AuthUser))
+    expect(caseReadWhereForUser({ id: "h", role: "HEAD_OF_DEPT" } as AuthUser))
       .toEqual({ userId: "h" })
   })
 })

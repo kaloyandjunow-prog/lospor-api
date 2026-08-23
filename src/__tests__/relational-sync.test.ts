@@ -390,7 +390,13 @@ describe("syncCaseRelational", () => {
     await syncCaseRelationalSafe(db as never, "case-1", "user-1")
     await new Promise(resolve => setTimeout(resolve, 0))
 
-    expect(logAuditMock).toHaveBeenCalledWith("user-1", "RELATIONAL_SYNC_FAILED", "case-1", { error: "database unavailable" })
+    expect(logAuditMock).toHaveBeenCalledWith(
+      "user-1",
+      "RELATIONAL_SYNC_FAILED",
+      "case-1",
+      { failureStage: "RELATIONAL_PROJECTION" },
+    )
+    expect(logAuditMock.mock.calls[0]?.[3]).not.toHaveProperty("error")
   })
 })
 

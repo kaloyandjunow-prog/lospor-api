@@ -657,7 +657,7 @@ export function syncCaseRelationalLockedSafe(
     console.error("[relational-sync]", caseId, err)
     if (userId) {
       import("@/lib/audit").then(({ logAudit }) =>
-        logAudit(userId, "RELATIONAL_SYNC_FAILED", caseId, { error: String(err?.message ?? err) })
+        logAudit(userId, "RELATIONAL_SYNC_FAILED", caseId, { failureStage: "RELATIONAL_PROJECTION" })
       ).catch(() => {})
     }
   })
@@ -672,7 +672,7 @@ export function syncCaseRelationalSafe(db: Db, caseId: string, userId?: string):
     console.error("[relational-sync]", caseId, err)
     if (userId) {
       import("@/lib/audit").then(({ logAudit }) =>
-        logAudit(userId, "RELATIONAL_SYNC_FAILED", caseId, { error: String(err?.message ?? err) })
+        logAudit(userId, "RELATIONAL_SYNC_FAILED", caseId, { failureStage: "RELATIONAL_PROJECTION" })
       ).catch(() => {})
     }
   })

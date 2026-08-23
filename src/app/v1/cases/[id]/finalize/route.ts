@@ -3,7 +3,7 @@ import { getAuthUser } from "@/lib/mobile-auth"
 import { logAuditInTransaction } from "@/lib/audit"
 import { writeSnapshotAsync } from "@/lib/case-audit"
 import { syncCaseRelational } from "@/lib/relational-sync"
-import { canAccessCaseWithOwnerFallback } from "@/lib/access-control"
+import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         select: { userId: true, status: true, institutionId: true, clinicalMode: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canAccessCaseWithOwnerFallback(tx, user, caseRecord)) {
+      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status === "COMPLETE") {

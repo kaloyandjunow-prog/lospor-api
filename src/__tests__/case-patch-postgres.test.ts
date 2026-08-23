@@ -72,7 +72,7 @@ describe.skipIf(!runPostgres)("case PATCH PostgreSQL transaction", () => {
       },
     })
     await prisma.case.create({
-      data: { id: caseId, userId, status: "IN_PROGRESS" },
+      data: { id: caseId, userId, createdById: userId, status: "IN_PROGRESS" },
     })
   })
 
