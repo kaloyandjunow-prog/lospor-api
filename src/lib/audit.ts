@@ -1,7 +1,66 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
+import type { AuditActionCode } from "@/lib/audit-actions"
 
 type Db = PrismaClient | Prisma.TransactionClient
+
+const FORBIDDEN_DETAIL_KEYS = new Set([
+  "address",
+  "casecode",
+  "clinicalpayload",
+  "email",
+  "firstname",
+  "fullname",
+  "lastname",
+  "name",
+  "password",
+  "passwordhash",
+  "patientid",
+  "patientnumber",
+  "payload",
+  "phone",
+  "secret",
+  "token",
+  "tokenhash",
+])
+
+function normalizedDetailKey(key: string): string {
+  return key.toLowerCase().replace(/[^a-z0-9]/g, "")
+}
+
+/**
+ * Fails closed when a caller tries to place obvious credentials, patient
+ * numbers, raw clinical payloads, or direct account PII in audit JSON.
+ * Stable opaque entity/user IDs remain permitted because they are required to
+ * prove who acted on what.
+ */
+export function assertSafeAuditDetail(detail: object | undefined): void {
+  const visit = (value: unknown): void => {
+    if (value === null || typeof value !== "object") return
+    if (Array.isArray(value)) {
+      value.forEach(visit)
+      return
+    }
+    for (const [key, child] of Object.entries(value)) {
+      const normalized = normalizedDetailKey(key)
+      if (
+        FORBIDDEN_DETAIL_KEYS.has(normalized)
+        || normalized.endsWith("password")
+        || normalized.endsWith("passwordhash")
+        || normalized.endsWith("token")
+        || normalized.endsWith("tokenhash")
+        || normalized.endsWith("secret")
+        || normalized.endsWith("casecode")
+        || normalized.endsWith("patientnumber")
+        || normalized.endsWith("clinicalpayload")
+      ) {
+        throw new Error(`Unsafe audit detail field: ${key}`)
+      }
+      visit(child)
+    }
+  }
+  visit(detail)
+}
 
 /**
  * Record an act that must be provable, in the same transaction that performs it.
@@ -26,10 +85,11 @@ type Db = PrismaClient | Prisma.TransactionClient
 export async function logAuditInTransaction(
   db: Db,
   userId: string,
-  action: string,
+  action: AuditActionCode,
   entityId: string,
   detail?: object,
 ): Promise<void> {
+  assertSafeAuditDetail(detail)
   await db.auditLog.create({ data: { userId, action, entityId, detail } })
 }
 
@@ -46,11 +106,12 @@ export async function logAuditInTransaction(
  */
 export async function logAudit(
   userId: string,
-  action: string,
+  action: AuditActionCode,
   entityId: string,
   detail?: object,
 ): Promise<void> {
   try {
+    assertSafeAuditDetail(detail)
     await prisma.auditLog.create({ data: { userId, action, entityId, detail } })
   } catch (err) {
     console.error("[audit] Failed to write audit log:", err)

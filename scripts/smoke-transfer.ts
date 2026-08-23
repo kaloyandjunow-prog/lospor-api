@@ -39,7 +39,7 @@ async function main() {
     data: {
       email: `${TAG}-${suffix}@lospor.invalid`,
       name: `Smoke ${suffix}`, firstName: "Smoke", lastName: suffix, title: "Dr",
-      passwordHash: "x", role: "MEMBER", institutionId,
+      passwordHash: "x", role: "MEMBER", institutionId, activatedAt: new Date(),
     },
   })
   const userA = await mkUser("a", instA.id)
@@ -48,10 +48,10 @@ async function main() {
   // The collision: both clinicians hold the same code in their own sequence.
   const sharedCode = `${new Date().getFullYear()}-0001`
   const caseA = await prisma.case.create({
-    data: { userId: userA.id, institutionId: instA.id, caseCode: sharedCode, status: "IN_PROGRESS" },
+    data: { userId: userA.id, createdById: userA.id, institutionId: instA.id, caseCode: sharedCode, status: "IN_PROGRESS" },
   })
   await prisma.case.create({
-    data: { userId: userB.id, institutionId: instB.id, caseCode: sharedCode, status: "IN_PROGRESS" },
+    data: { userId: userB.id, createdById: userB.id, institutionId: instB.id, caseCode: sharedCode, status: "IN_PROGRESS" },
   })
   console.log(`both users hold ${sharedCode}; moving A's case to B\n`)
 
@@ -83,7 +83,7 @@ async function main() {
     // when it genuinely has to.
     const userC = await mkUser("c", instA.id)
     const caseC = await prisma.case.create({
-      data: { userId: userA.id, institutionId: instA.id, caseCode: `${new Date().getFullYear()}-0777`, status: "IN_PROGRESS" },
+      data: { userId: userA.id, createdById: userA.id, institutionId: instA.id, caseCode: `${new Date().getFullYear()}-0777`, status: "IN_PROGRESS" },
     })
     const clean = await transferCaseOwnership(prisma, caseC.id, userC.id, { supersedePending: true })
     const movedC = await prisma.case.findUniqueOrThrow({ where: { id: caseC.id }, select: { caseCode: true } })
