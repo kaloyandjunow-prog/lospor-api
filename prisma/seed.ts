@@ -2,6 +2,7 @@ import "dotenv/config"
 import { PrismaClient, Prisma } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { NO_INSTITUTION } from "../src/lib/institutions"
+import { provisionBundledClinicalBaselines } from "../src/lib/clinical-rules/bundled-baseline-provisioner"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter } satisfies Prisma.PrismaClientOptions)
@@ -39,9 +40,15 @@ async function main() {
     create: { ...NO_INSTITUTION },
   })
 
+  const baselines = await provisionBundledClinicalBaselines(prisma)
+
   console.log(`Seeded ${institutions.length} institutions, plus ${NO_INSTITUTION.name}`)
+  console.log(`Bundled clinical baselines: ${baselines.outcome} (${baselines.baselines.map(item => `${item.clinicalMode} ${item.ruleCount}`).join(", ")})`)
 }
 
 main()
-  .catch(console.error)
+  .catch(error => {
+    console.error(error)
+    process.exitCode = 1
+  })
   .finally(() => prisma.$disconnect())
