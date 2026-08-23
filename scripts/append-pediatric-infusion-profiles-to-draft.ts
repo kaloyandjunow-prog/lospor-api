@@ -24,11 +24,6 @@ import { PEDIATRIC_INFUSION_PROFILE_RULE_COUNT } from "@lospor/core"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
-import type { AuditActionCode } from "../src/lib/audit-actions"
-import {
-  ensureMaintenancePrincipal,
-  recordMaintenanceAudit,
-} from "../src/lib/maintenance-principal"
 
 const AUTHORIZATION_VARIABLE = "APPEND_PEDIATRIC_INFUSION_PROFILES_TO_DRAFT"
 const TARGET_PRESET_ID = "lospor-pediatrics-v1"
@@ -150,21 +145,6 @@ async function main() {
         },
       })
     }
-    // One row for the append, not one per rule: the operation is the unit a
-    // reader cares about.
-    const appendAction = "CLINICAL_RULESET_RULE_UPSERT" satisfies AuditActionCode
-    await recordMaintenanceAudit(tx, {
-      actorId: await ensureMaintenancePrincipal(tx),
-      action: appendAction,
-      entityId: TARGET_PRESET_ID,
-      script: "clinical-rules:append-pediatric-infusion-profiles",
-      detail: {
-        presetKey: draft.key,
-        appendedRuleCount: infusionRules.length,
-        appendedRuleKeys: infusionRuleKeys,
-        baselineRuleCount: REVIEWED_BASELINE_COUNT,
-      },
-    })
   }, {
     isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     timeout: 120_000,

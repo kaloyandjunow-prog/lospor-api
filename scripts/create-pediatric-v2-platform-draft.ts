@@ -16,11 +16,6 @@ import { createLosporPediatricV2Draft } from "@lospor/core/platform-clinical-dra
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
-import type { AuditActionCode } from "../src/lib/audit-actions"
-import {
-  ensureMaintenancePrincipal,
-  recordMaintenanceAudit,
-} from "../src/lib/maintenance-principal"
 
 const TARGET_PRESET_ID = "lospor-pediatrics-v2"
 
@@ -81,48 +76,27 @@ async function main() {
     )
   }
 
-  const createAction = "CLINICAL_RULESET_CREATE" satisfies AuditActionCode
-  // The preset, its authorship and the audit row commit together. A draft that
-  // existed with no record of what created it would be a ruleset nobody can
-  // account for, which is exactly the gap this closes.
-  await prisma.$transaction(async tx => {
-    const actorId = await ensureMaintenancePrincipal(tx)
-    await tx.clinicalPreset.create({
-      data: {
-        id: canonical.id,
-        key: canonical.key,
-        name: canonical.name,
-        description: canonical.description,
-        clinicalMode: canonical.clinicalMode,
-        scope: "PLATFORM",
-        version: canonical.version,
-        status: "DRAFT",
-        publishedAt: null,
-        createdByTechnicalPrincipalId: actorId,
-        rules: {
-          create: canonical.rules.map(rule => ({
-            ruleKey: clinicalRuleKey(rule.payload),
-            ruleVersion: `${canonical.key}.v${canonical.version}.draft1`,
-            payload: rule.payload as Prisma.InputJsonValue,
-            sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
-          })),
-        },
+  await prisma.clinicalPreset.create({
+    data: {
+      id: canonical.id,
+      key: canonical.key,
+      name: canonical.name,
+      description: canonical.description,
+      clinicalMode: canonical.clinicalMode,
+      scope: "PLATFORM",
+      version: canonical.version,
+      status: "DRAFT",
+      publishedAt: null,
+      rules: {
+        create: canonical.rules.map(rule => ({
+          ruleKey: clinicalRuleKey(rule.payload),
+          ruleVersion: `${canonical.key}.v${canonical.version}.draft1`,
+          payload: rule.payload as Prisma.InputJsonValue,
+          sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
+        })),
       },
-    })
-    await recordMaintenanceAudit(tx, {
-      actorId,
-      action: createAction,
-      entityId: canonical.id,
-      script: "clinical-rules:create-pediatric-v2-draft",
-      detail: {
-        presetKey: canonical.key,
-        clinicalMode: canonical.clinicalMode,
-        version: canonical.version,
-        ruleCount: canonical.rules.length,
-        status: "DRAFT",
-      },
-    })
-  }, { timeout: 120_000 })
+    },
+  })
   console.log(
     `Created inactive ${TARGET_PRESET_ID} with ${canonical.rules.length} rules. It was not published or selected.`,
   )

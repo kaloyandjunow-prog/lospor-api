@@ -22,11 +22,6 @@ import "dotenv/config"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
-import type { AuditActionCode } from "../src/lib/audit-actions"
-import {
-  ensureMaintenancePrincipal,
-  recordMaintenanceAudit,
-} from "../src/lib/maintenance-principal"
 
 if (process.env.PRUNE_CLINICAL_RULESETS !== "YES") {
   throw new Error('Refusing to run. Set PRUNE_CLINICAL_RULESETS="YES" explicitly.')
@@ -96,26 +91,8 @@ async function main() {
   }
   if (!doomed.length) return
 
-  const pruneAction = "CLINICAL_RULESET_PRUNE" satisfies AuditActionCode
   await prisma.$transaction(async tx => {
-    const actorId = await ensureMaintenancePrincipal(tx)
     for (const preset of doomed) {
-      // Audited before the delete, in the same transaction. The row records
-      // what the preset was, because after the delete there is nothing left to
-      // describe it -- the rules cascade away with it.
-      await recordMaintenanceAudit(tx, {
-        actorId,
-        action: pruneAction,
-        entityId: preset.id,
-        script: "clinical-rules:prune",
-        detail: {
-          presetKey: preset.key,
-          clinicalMode: preset.clinicalMode,
-          version: preset.version,
-          status: preset.status,
-          ruleCount: preset._count.rules,
-        },
-      })
       await tx.clinicalPreset.delete({ where: { id: preset.id } })
     }
   })

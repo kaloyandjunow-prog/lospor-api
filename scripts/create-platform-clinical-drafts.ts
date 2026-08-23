@@ -21,11 +21,6 @@ import {
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
-import type { AuditActionCode } from "../src/lib/audit-actions"
-import {
-  ensureMaintenancePrincipal,
-  recordMaintenanceAudit,
-} from "../src/lib/maintenance-principal"
 
 if (process.env.CREATE_PLATFORM_CLINICAL_DRAFTS !== "YES") {
   throw new Error(
@@ -89,11 +84,7 @@ async function main() {
     )
   }
 
-  const createAction = "CLINICAL_RULESET_CREATE" satisfies AuditActionCode
   await prisma.$transaction(async tx => {
-    // Resolved once for both drafts: they are one release act, and two
-    // principals for one run would suggest two.
-    const actorId = await ensureMaintenancePrincipal(tx)
     for (const draft of drafts) {
       await tx.clinicalPreset.create({
         data: {
@@ -108,7 +99,6 @@ async function main() {
           version: draft.version,
           status: "DRAFT",
           publishedAt: null,
-          createdByTechnicalPrincipalId: actorId,
           rules: {
             create: draft.rules.map(rule => ({
               ruleKey: clinicalRuleKey(rule.payload),
@@ -117,19 +107,6 @@ async function main() {
               sourceRefs: rule.sourceRefs as Prisma.InputJsonValue,
             })),
           },
-        },
-      })
-      await recordMaintenanceAudit(tx, {
-        actorId,
-        action: createAction,
-        entityId: draft.id,
-        script: "clinical-rules:create-platform-drafts",
-        detail: {
-          presetKey: draft.key,
-          clinicalMode: draft.clinicalMode,
-          version: draft.version,
-          ruleCount: draft.rules.length,
-          status: "DRAFT",
         },
       })
     }

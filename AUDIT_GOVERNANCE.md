@@ -24,10 +24,7 @@ without an inventory entry or a narrow, explained exclusion.
   Hospital research-grant control, or Central control-plane mutations. These
   operations are not exposed as public serverless mutation paths.
 - `DECISION_BLOCKED` — implementation is intentionally unchanged until a
-  truthful actor-principal policy is selected. One script remains here.
-- `RELEASE_PRINCIPAL` (an `auditPath`, not a disposition) — the mutation is an
-  automated release-content operation with no human actor, and writes under the
-  release `TechnicalPrincipal` via `recordMaintenanceAudit`.
+  truthful actor-principal policy is selected.
 
 The matrix explicitly covers public registration and initial legal evidence;
 first-administrator bootstrap; activation-link reissue and activation;
@@ -65,43 +62,28 @@ boundary. Ordinary login/session issuance, pre-auth MFA challenge bookkeeping,
 and routine high-volume case/view telemetry are also outside HAUD-01; governed
 revocation and MFA completion remain inventoried.
 
-## The actor-principal decision, resolved for release content
+## Unresolved actor-principal decision
 
-The choice was between requiring the operator to name an existing administrator
-(by explicit administrator email) and using a non-human principal. Naming a
-person attributes each run to someone accountable, but it also writes a trail
-saying that clinician created a ruleset at 03:00 on a release night when they
-did not — and nothing downstream can tell that entry apart from a real action by
-them. A false actor is worse than an unfamiliar one.
-
-Five scripts are therefore resolved and now write under the release
-`TechnicalPrincipal`, inside the transaction that makes the change, via
-`recordMaintenanceAudit`:
+These six scripts remain unchanged and explicitly fail the inventory's
+HAUD-complete classification:
 
 - `scripts/create-platform-clinical-drafts.ts`
 - `scripts/create-pediatric-v2-platform-draft.ts`
 - `scripts/append-pediatric-fluid-profiles-to-draft.ts`
 - `scripts/append-pediatric-infusion-profiles-to-draft.ts`
 - `scripts/prune-clinical-rulesets.ts`
-
-The scope is exactly what the release principal can honestly attest to: each of
-these imports or prunes source-controlled content of this release, so "the
-release did it" is true. Each audit row additionally carries `script`,
-`principalId`, `releaseVersion` and `actorKind: TECHNICAL_PRINCIPAL`, and the
-principal has no email, no password and no User row — it cannot sign in and must
-never be given the means to.
-
-### Still blocked
-
 - `scripts/seed-play-reviewer.ts`
 
-Deliberately not covered by the same reasoning. It provisions and resets a live
-production account whenever an operator runs it, which the release did not do
-and cannot vouch for. Self-attribution is wrong on the reset path: it would
-record the Play reviewer as having changed their own password. Resolving it
-needs either a named accountable operator identity or a maintenance principal
-kind with its own lifecycle and enum value. That is an open decision, not an
-oversight, and the inventory gate fails if it is quietly dropped.
+The decision is between requiring the operator to name an existing
+administrator (for example by explicit administrator email) or creating a
+dedicated non-human system principal with a narrowly defined operator identity.
+The first option attributes each run to a real accountable person but requires
+operator credentials/selection. The second cleanly identifies automation but
+adds a new principal lifecycle and policy. No script may invent actor identity
+or falsely attribute an update to the affected account. The release-only
+`LOSPOR 1.2.0` technical principal does not resolve this operator decision: it
+can attest only to the two exact source-controlled 1.2.0 bundles and has no
+authority to run maintenance or provision accounts.
 
 ## Client boundary
 

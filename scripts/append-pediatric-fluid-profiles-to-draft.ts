@@ -23,11 +23,6 @@ import { createLosporPediatricPlatformDraft } from "@lospor/core/platform-clinic
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { assertDatabaseWritable } from "./lib/protected-database"
-import type { AuditActionCode } from "../src/lib/audit-actions"
-import {
-  ensureMaintenancePrincipal,
-  recordMaintenanceAudit,
-} from "../src/lib/maintenance-principal"
 
 const AUTHORIZATION_VARIABLE = "APPEND_PEDIATRIC_FLUID_PROFILES_TO_DRAFT"
 const TARGET_PRESET_ID = "lospor-pediatrics-v1"
@@ -152,21 +147,6 @@ async function main() {
         },
       })
     }
-    // One row for the append, not one per rule: the operation is the unit a
-    // reader cares about, and 51 identical rows would bury it.
-    const appendAction = "CLINICAL_RULESET_RULE_UPSERT" satisfies AuditActionCode
-    await recordMaintenanceAudit(tx, {
-      actorId: await ensureMaintenancePrincipal(tx),
-      action: appendAction,
-      entityId: TARGET_PRESET_ID,
-      script: "clinical-rules:append-pediatric-fluid-profiles",
-      detail: {
-        presetKey: draft.key,
-        appendedRuleCount: fluidRules.length,
-        appendedRuleKeys: fluidRuleKeys,
-        baselineRuleCount: baselineRules.length,
-      },
-    })
   }, {
     isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     timeout: 120_000,

@@ -27,19 +27,10 @@ export type AuditGovernanceRequirement =
   | "CLINICAL_RULE_GOVERNANCE"
   | "CENTRAL_CONTROL"
 
-/**
- * `auditPath` says which durable writer the source is required to use, so the
- * gate looks for the right thing rather than for any writer at all.
- *
- * - TRANSACTION_HELPER      logAuditInTransaction, for routes acting as a person
- * - DIRECT_TRANSACTION_ROW  an inline auditLog.create, for scripts that predate the helpers
- * - RELEASE_PRINCIPAL       recordMaintenanceAudit, for automated release operations
- *                           that have no human actor to name
- */
 export type AuditMutationSource = Readonly<{
   path: string
   actionCodes: readonly AuditActionCode[]
-  auditPath: "TRANSACTION_HELPER" | "DIRECT_TRANSACTION_ROW" | "RELEASE_PRINCIPAL"
+  auditPath: "TRANSACTION_HELPER" | "DIRECT_TRANSACTION_ROW"
 }>
 
 type OwnerTransactionalCoverage = Readonly<{
@@ -573,43 +564,18 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
     limit: "Guarded scripts execute main and require PostgreSQL; the source gate proves the audit row is inside their database transaction and the retained PostgreSQL suite proves rollback semantics.",
   },
   {
-    id: "clinical-rules-release-principal-scripts",
+    id: "clinical-rules-no-actor-scripts",
     requirement: "CLINICAL_RULE_GOVERNANCE",
-    transition: "Create, append to and prune rulesets from guarded release scripts",
-    disposition: "OWNER_TRANSACTIONAL",
-    sources: [
-      {
-        path: "scripts/create-platform-clinical-drafts.ts",
-        actionCodes: ["CLINICAL_RULESET_CREATE"],
-        auditPath: "RELEASE_PRINCIPAL",
-      },
-      {
-        path: "scripts/create-pediatric-v2-platform-draft.ts",
-        actionCodes: ["CLINICAL_RULESET_CREATE"],
-        auditPath: "RELEASE_PRINCIPAL",
-      },
-      {
-        path: "scripts/append-pediatric-fluid-profiles-to-draft.ts",
-        actionCodes: ["CLINICAL_RULESET_RULE_UPSERT"],
-        auditPath: "RELEASE_PRINCIPAL",
-      },
-      {
-        path: "scripts/append-pediatric-infusion-profiles-to-draft.ts",
-        actionCodes: ["CLINICAL_RULESET_RULE_UPSERT"],
-        auditPath: "RELEASE_PRINCIPAL",
-      },
-      {
-        path: "scripts/prune-clinical-rulesets.ts",
-        actionCodes: ["CLINICAL_RULESET_PRUNE"],
-        auditPath: "RELEASE_PRINCIPAL",
-      },
+    transition: "Create/append/prune rulesets from guarded scripts that cannot yet name a truthful actor",
+    disposition: "DECISION_BLOCKED",
+    blockedSources: [
+      "scripts/create-platform-clinical-drafts.ts",
+      "scripts/create-pediatric-v2-platform-draft.ts",
+      "scripts/append-pediatric-fluid-profiles-to-draft.ts",
+      "scripts/append-pediatric-infusion-profiles-to-draft.ts",
+      "scripts/prune-clinical-rulesets.ts",
     ],
-    rollback: {
-      kind: "SOURCE_ONLY_SCRIPT",
-      evidencePath: "src/__tests__/audit-governance-inventory.test.ts",
-      marker: "HAUD_SOURCE_ONLY:clinical-rules-release-principal-scripts",
-    },
-    limit: "Guarded scripts execute main and require PostgreSQL; the source gate proves the audit row is inside their transaction, and maintenance-principal.test.ts proves the attribution and the audit payload.",
+    limit: "Awaiting the explicit-admin-email versus dedicated-system-principal decision. These scripts remain unchanged and must not be treated as HAUD-complete.",
   },
   {
     id: "play-reviewer-no-actor-script",
@@ -617,7 +583,7 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
     transition: "Provision or reset the production Google Play reviewer account",
     disposition: "DECISION_BLOCKED",
     blockedSources: ["scripts/seed-play-reviewer.ts"],
-    limit: "Still blocked, and deliberately not resolved by the release principal that now covers the clinical-rules scripts. Those import exactly the source-controlled release content, so attributing them to the release is true. This one provisions and resets a real production account at an operator's chosen moment, which the release did not do and cannot vouch for. Self-attribution stays wrong on the reset path: it would record the reviewer as having changed their own password. Resolving it needs either a named accountable operator identity or a maintenance principal kind with its own lifecycle -- an open decision, not an oversight.",
+    limit: "CREATE could self-attribute, but UPDATE would falsely claim the reviewer acted. It awaits the same explicit-admin versus system-principal decision.",
   },
   {
     id: "hospital-central-control",

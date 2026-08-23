@@ -4,17 +4,8 @@ import { describe, expect, it } from "vitest"
 import { AUDIT_ACTION_REGISTRY } from "@/lib/audit-actions"
 import {
   AUDIT_GOVERNANCE_INVENTORY,
-  type AuditGovernanceCoverage,
   type AuditGovernanceRequirement,
 } from "@/lib/audit-governance-inventory"
-
-/**
- * Widened on purpose. No entry is DECISION_BLOCKED any more, so the inferred
- * literal union drops that member and TypeScript calls the guards below
- * unreachable -- which would mean deleting the very assertions that keep a
- * blocked entry from reappearing without anyone noticing.
- */
-const INVENTORY: readonly AuditGovernanceCoverage[] = AUDIT_GOVERNANCE_INVENTORY
 
 const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), "utf8")
@@ -38,25 +29,14 @@ const REQUIRED_HAUD_REQUIREMENTS = [
   "CENTRAL_CONTROL",
 ] as const satisfies readonly AuditGovernanceRequirement[]
 
-// Formerly DECISION_BLOCKED on an explicit-admin-email versus
-// dedicated-system-principal choice. Resolved for these five: naming a person
-// as the actor of an automated operation produces a trail that is false in a
-// way nobody can later tell apart from a real action by that person. They
-// import exactly the source-controlled release content, so the release
-// TechnicalPrincipal -- already the publisher of the bundled baselines -- is
-// the true actor.
-const RELEASE_PRINCIPAL_SCRIPTS = [
+const DECISION_BLOCKED_SCRIPTS = [
   "scripts/create-platform-clinical-drafts.ts",
   "scripts/create-pediatric-v2-platform-draft.ts",
   "scripts/append-pediatric-fluid-profiles-to-draft.ts",
   "scripts/append-pediatric-infusion-profiles-to-draft.ts",
   "scripts/prune-clinical-rulesets.ts",
+  "scripts/seed-play-reviewer.ts",
 ] as const
-
-// Not resolved by the same reasoning, and deliberately left blocked: this one
-// provisions and resets a real production account whenever an operator runs it,
-// which the release did not do and cannot vouch for.
-const DECISION_BLOCKED_SCRIPTS = ["scripts/seed-play-reviewer.ts"] as const
 
 // These mutate only short-lived authentication/session bookkeeping or
 // disposable test fixtures. They are deliberately outside HAUD-01's durable
@@ -68,7 +48,6 @@ const EXPLICIT_OUT_OF_SCOPE_MUTATION_SOURCES: Readonly<Record<string, string>> =
   "src/app/v1/auth/session/route.ts": "Ordinary Web sign-in/session issuance bookkeeping",
   "src/app/v1/auth/token/route.ts": "Ordinary Native sign-in/session issuance bookkeeping",
   "src/lib/auth-sessions.ts": "Low-level session helper; governed revocation callers are inventoried",
-  "src/lib/maintenance-principal.ts": "Shared release-principal and audit writer; every calling script is inventoried",
 }
 
 function sourceFiles(directory: string): string[] {
@@ -104,15 +83,6 @@ describe("HAUD-01 governance inventory gate", () => {
           expect(code, `${item.id} bypasses the durable writer`).toContain("logAuditInTransaction")
           expect(code, `${item.id} defers audit after commit`).not.toMatch(
             /after\s*\([\s\S]{0,160}\blogAudit(?:InTransaction)?\s*\(/,
-          )
-        } else if (source.auditPath === "RELEASE_PRINCIPAL") {
-          expect(code, `${item.id} bypasses the release-principal writer`)
-            .toContain("recordMaintenanceAudit")
-          expect(code, `${item.id} does not resolve the release principal`)
-            .toContain("ensureMaintenancePrincipal")
-          expect(code, `${item.id} lacks compile-time action typing`).toContain("AuditActionCode")
-          expect(code, `${item.id} defers audit after commit`).not.toMatch(
-            /after\s*\([\s\S]{0,160}\brecordMaintenanceAudit\s*\(/,
           )
         } else {
           expect(code, `${item.id} lacks an in-transaction audit row`).toContain("auditLog.create")
@@ -151,7 +121,7 @@ describe("HAUD-01 governance inventory gate", () => {
     expect(source).not.toMatch(/\.(?:create|update|upsert|delete)(?:Many)?\s*\(/)
   })
 
-  it("names Hospital ownership and exactly the one unresolved actor-principal script", () => {
+  it("names Hospital ownership and exactly the six unresolved actor-principal scripts", () => {
     const hospitalOwned = AUDIT_GOVERNANCE_INVENTORY.filter(
       item => item.disposition === "HOSPITAL_OWNED",
     )
@@ -162,34 +132,15 @@ describe("HAUD-01 governance inventory gate", () => {
     ])
     for (const item of hospitalOwned) expect(item.limit.trim()).not.toBe("")
 
-    const blocked = INVENTORY.flatMap(item => (
+    const blocked = AUDIT_GOVERNANCE_INVENTORY.flatMap(item => (
       item.disposition === "DECISION_BLOCKED" ? [...item.blockedSources] : []
     )).sort()
     expect(blocked).toEqual([...DECISION_BLOCKED_SCRIPTS].sort())
     for (const path of blocked) expect(existsSync(join(root, path)), path).toBe(true)
   })
 
-  it("writes the five resolved clinical-rules scripts under the release principal", () => {
-    const owned = new Set(AUDIT_GOVERNANCE_INVENTORY.flatMap(item => (
-      item.disposition === "OWNER_TRANSACTIONAL" ? item.sources.map(source => source.path) : []
-    )))
-    for (const path of RELEASE_PRINCIPAL_SCRIPTS) {
-      expect(existsSync(join(root, path)), path).toBe(true)
-      expect(owned.has(path), `${path} is no longer inventoried as owner-transactional`).toBe(true)
-      const code = read(path)
-      expect(code, `${path} does not resolve the release principal`)
-        .toContain("ensureMaintenancePrincipal")
-      expect(code, `${path} does not write a maintenance audit row`)
-        .toContain("recordMaintenanceAudit")
-      // The point of the decision: no script may take a person's identity as
-      // the actor of an automated operation.
-      expect(code, `${path} accepts an operator identity as the audit actor`)
-        .not.toMatch(/\b(?:ACTOR|AUDIT_ACTOR|OPERATOR)_(?:EMAIL|USER_ID)\b/)
-    }
-  })
-
   it("fails when a governed-model mutation source is neither inventoried nor explicitly excluded", () => {
-    const inventoried = new Set<string>(INVENTORY.flatMap(item => {
+    const inventoried = new Set<string>(AUDIT_GOVERNANCE_INVENTORY.flatMap(item => {
       if (item.disposition === "OWNER_TRANSACTIONAL") return item.sources.map(source => source.path)
       if (item.disposition === "DECISION_BLOCKED") return [...item.blockedSources]
       return []
@@ -211,4 +162,3 @@ describe("HAUD-01 governance inventory gate", () => {
 
 // HAUD_SOURCE_ONLY:bootstrap-first-administrator
 // HAUD_SOURCE_ONLY:clinical-rules-operator-publication
-// HAUD_SOURCE_ONLY:clinical-rules-release-principal-scripts
