@@ -22,6 +22,14 @@ export const schemas = {
     details: {},
   }, ["error"]),
   Message: object({ message: { type: "string" }, ok: { type: "boolean" } }),
+  ReadinessResponse: object({
+    status: { type: "string", enum: ["ready", "unavailable"] },
+    database: { type: "string", enum: ["ok", "error"] },
+    email: { type: "string", enum: ["configured", "not-configured"] },
+    legalDocuments: { type: "string", enum: ["configured", "unavailable", "unchecked"] },
+    legalDeployment: { type: "string" },
+    administratorMfa: { type: "string", enum: ["configured", "not-required", "unavailable", "unchecked"] },
+  }, ["status", "database", "email", "legalDocuments", "administratorMfa"]),
   IdResponse: object({
     id: { type: "string" },
     caseCode: nullable({ type: "string" }),
@@ -34,45 +42,277 @@ export const schemas = {
   }, ["total", "skip", "take"]),
   User: object({
     id: { type: "string" },
-    email: { type: "string", format: "email" },
+    email: nullable({ type: "string", format: "email" }),
+    username: nullable({ type: "string", pattern: "^[A-Za-z][A-Za-z0-9._-]{2,63}$" }),
     name: { type: "string" },
     firstName: { type: "string" },
     lastName: { type: "string" },
     title: { type: "string" },
     role: { type: "string" },
+    accountKind: { type: "string", enum: ["CLINICAL", "RESEARCH_ONLY"] },
+    preferredLocale: { type: "string", enum: ["bg", "en"], default: "bg" },
     institutionId: nullable({ type: "string" }),
     preferences: { type: "object", additionalProperties: true },
-  }, ["id", "email", "name", "role"]),
+  }, ["id", "email", "username", "name", "role", "accountKind", "preferredLocale"]),
+  SessionUser: object({
+    id: { type: "string" },
+    email: nullable({ type: "string", format: "email" }),
+    username: nullable({ type: "string", pattern: "^[A-Za-z][A-Za-z0-9._-]{2,63}$" }),
+    name: { type: "string" },
+    firstName: nullable({ type: "string" }),
+    lastName: nullable({ type: "string" }),
+    title: nullable({ type: "string" }),
+    role: { type: "string" },
+    accountKind: { type: "string", enum: ["CLINICAL", "RESEARCH_ONLY"] },
+    preferredLocale: { type: "string", enum: ["bg", "en"], default: "bg" },
+    institutionId: nullable({ type: "string" }),
+    institutionName: nullable({ type: "string" }),
+    jti: nullable({ type: "string" }),
+    acceptedTermsAt: nullable({ type: "string", format: "date-time" }),
+    legalAcceptances: { type: "array", items: ref("LegalAcceptanceRecord") },
+    lastLoginAt: nullable({ type: "string", format: "date-time" }),
+  }, ["id", "email", "username", "name", "firstName", "lastName", "title", "role", "accountKind", "preferredLocale", "institutionId", "institutionName", "acceptedTermsAt", "legalAcceptances", "lastLoginAt"]),
+  AccountResponse: object({
+    id: { type: "string" },
+    email: nullable({ type: "string", format: "email" }),
+    username: nullable({ type: "string", pattern: "^[A-Za-z][A-Za-z0-9._-]{2,63}$" }),
+    name: { type: "string" },
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+    title: { type: "string" },
+    role: { type: "string" },
+    accountKind: { type: "string", enum: ["CLINICAL", "RESEARCH_ONLY"] },
+    preferredLocale: { type: "string", enum: ["bg", "en"], default: "bg" },
+    institutionId: nullable({ type: "string" }),
+    institution: nullable(ref("AccountInstitution")),
+    preferences: { type: "object", additionalProperties: true },
+    clinicalPreferences: { type: "object", additionalProperties: true },
+  }, ["id", "email", "username", "name", "firstName", "lastName", "title", "role", "accountKind", "preferredLocale", "institutionId", "institution", "preferences", "clinicalPreferences"]),
+  AccountPatchResponse: object({
+    ok: { type: "boolean", const: true },
+    name: { type: "string" },
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+    title: { type: "string" },
+    institution: nullable(ref("AccountInstitution")),
+    preferences: { type: "object", additionalProperties: true },
+    preferredLocale: { type: "string", enum: ["bg", "en"], default: "bg" },
+  }, ["ok", "name", "firstName", "lastName", "title", "institution", "preferences", "preferredLocale"]),
+  Colleague: object({
+    id: { type: "string" },
+    name: { type: "string" },
+    title: { type: "string" },
+    role: { type: "string" },
+  }, ["id", "name", "title", "role"]),
+  CaseAssigneeSummary: object({
+    name: { type: "string" },
+    institution: nullable(object({ name: { type: "string" } }, ["name"])),
+  }, ["name", "institution"]),
+  AdminUser: object({
+    id: { type: "string" },
+    email: nullable({ type: "string", format: "email" }),
+    username: nullable({ type: "string", pattern: "^[A-Za-z][A-Za-z0-9._-]{2,63}$" }),
+    name: { type: "string" },
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+    title: { type: "string" },
+    role: { type: "string" },
+    accountKind: { type: "string", enum: ["CLINICAL", "RESEARCH_ONLY"] },
+    preferredLocale: { type: "string", enum: ["bg", "en"], default: "bg" },
+    activatedAt: nullable({ type: "string", format: "date-time" }),
+    emailVerifiedAt: nullable({ type: "string", format: "date-time" }),
+    suspendedAt: nullable({ type: "string", format: "date-time" }),
+    recoveryRequiredAt: nullable({ type: "string", format: "date-time" }),
+    deletedAt: nullable({ type: "string", format: "date-time" }),
+    anonymizedAt: nullable({ type: "string", format: "date-time" }),
+    deletionDeadline: nullable({ type: "string", format: "date-time" }),
+    status: { type: "string", enum: ["INVITED", "ACTIVE", "SUSPENDED", "DELETION_PENDING", "RECOVERY_REQUIRED"] },
+    lastLoginAt: nullable({ type: "string", format: "date-time" }),
+    passwordChangedAt: nullable({ type: "string", format: "date-time" }),
+    legalCurrent: nullable({ type: "boolean" }),
+    legalAcceptances: { type: "array", items: ref("LegalAcceptanceRecord") },
+    createdAt: { type: "string", format: "date-time" },
+    institution: nullable(object({
+      id: { type: "string" },
+      name: { type: "string" },
+      city: { type: "string" },
+    }, ["id", "name", "city"])),
+  }, ["id", "email", "username", "name", "firstName", "lastName", "title", "role", "accountKind", "preferredLocale", "activatedAt", "emailVerifiedAt", "suspendedAt", "recoveryRequiredAt", "deletedAt", "status", "createdAt", "lastLoginAt", "passwordChangedAt", "legalCurrent", "legalAcceptances", "institution"]),
+  AdminAccountUpdateResponse: object({
+    id: { type: "string" },
+    role: { type: "string" },
+    accountKind: { type: "string", enum: ["CLINICAL", "RESEARCH_ONLY"] },
+    reauthenticationRequired: { type: "boolean" },
+  }, ["id", "role", "accountKind", "reauthenticationRequired"]),
   Institution: object({
     id: { type: "string" },
     name: { type: "string" },
     city: { type: "string" },
     country: { type: "string" },
   }, ["id", "name", "city", "country"]),
-  LoginRequest: object({
+  AccountInstitution: object({
+    id: { type: "string" },
+    name: { type: "string" },
+    city: { type: "string" },
+  }, ["id", "name", "city"]),
+  CaseInstitutionSummary: object({
+    name: { type: "string" },
+    city: { type: "string" },
+  }, ["name", "city"]),
+  PublicLoginRequest: object({
     email: { type: "string", format: "email" },
     password: { type: "string", minLength: 1 },
+    locale: { type: "string", enum: ["bg", "en"] },
+    deviceLabel: { type: "string", maxLength: 120 },
   }, ["email", "password"]),
+  HospitalLoginRequest: object({
+    username: {
+      type: "string",
+      minLength: 3,
+      maxLength: 64,
+      pattern: "^[A-Za-z][A-Za-z0-9._-]{2,63}$",
+    },
+    password: { type: "string", minLength: 1 },
+    locale: { type: "string", enum: ["bg", "en"] },
+    deviceLabel: { type: "string", maxLength: 120 },
+  }, ["username", "password"]),
+  LoginRequest: {
+    oneOf: [ref("PublicLoginRequest"), ref("HospitalLoginRequest")],
+    description: "Exactly one deployment-selected login identity. Email is public-only; username is trusted-Hospital-only.",
+  },
+  MfaChallenge: object({
+    code: { type: "string", enum: ["MFA_REQUIRED", "MFA_ENROLLMENT_REQUIRED"] },
+    challengeToken: { type: "string", minLength: 32, maxLength: 256 },
+    expiresIn: { type: "integer", const: 300 },
+    enrollmentRequired: { type: "boolean" },
+    manualKey: { type: "string", pattern: "^[A-Z2-7]{32}$" },
+    otpauthUri: { type: "string", format: "uri", pattern: "^otpauth://totp/" },
+  }, ["code", "challengeToken", "expiresIn", "enrollmentRequired"]),
+  MfaChallengeResponse: object({
+    code: { type: "string", enum: ["MFA_REQUIRED", "MFA_ENROLLMENT_REQUIRED"] },
+    mfa: ref("MfaChallenge"),
+  }, ["code", "mfa"]),
+  MfaLoginContinuationRequest: object({
+    challengeToken: { type: "string", minLength: 32, maxLength: 256 },
+    code: { type: "string", minLength: 6, maxLength: 64 },
+  }, ["challengeToken", "code"]),
+  PasswordChangeRequest: object({
+    currentPassword: { type: "string", minLength: 1 },
+    newPassword: { type: "string", minLength: 8 },
+  }, ["currentPassword", "newPassword"]),
+  PasswordChangeResponse: object({
+    ok: { type: "boolean", const: true },
+    reauthenticationRequired: { type: "boolean", const: true },
+  }, ["ok", "reauthenticationRequired"]),
+  AuthSession: object({
+    id: { type: "string" },
+    clientType: { type: "string", enum: ["WEB", "PWA", "NATIVE"] },
+    deviceLabel: { type: "string" },
+    issuedAt: { type: "string", format: "date-time" },
+    lastSeenAt: { type: "string", format: "date-time" },
+    expiresAt: { type: "string", format: "date-time" },
+    current: { type: "boolean" },
+  }, ["id", "clientType", "deviceLabel", "issuedAt", "lastSeenAt", "expiresAt", "current"]),
+  AuthSessionList: object({
+    sessions: { type: "array", items: ref("AuthSession") },
+  }, ["sessions"]),
+  SessionRevocationResponse: object({
+    ok: { type: "boolean", const: true },
+    revokedCount: { type: "integer", minimum: 0 },
+  }, ["ok", "revokedCount"]),
+  LocaleResponse: object({
+    locale: { type: "string", enum: ["bg", "en"], default: "bg" },
+  }, ["locale"]),
+  LegalDocumentReference: object({
+    kind: { type: "string", enum: ["TERMS", "PRIVACY"] },
+    version: { type: "string", minLength: 1 },
+    effectiveDate: { type: "string", format: "date" },
+    locale: { type: "string", enum: ["bg", "en"] },
+    contentSha256: { type: "string", pattern: "^[0-9a-f]{64}$" },
+    deployment: { type: "string", minLength: 1 },
+  }, ["kind", "version", "effectiveDate", "locale", "contentSha256", "deployment"]),
+  LegalDocument: {
+    allOf: [
+      ref("LegalDocumentReference"),
+      object({ content: { type: "string", minLength: 1 } }, ["content"]),
+    ],
+  },
+  LegalAcceptanceRecord: {
+    allOf: [
+      ref("LegalDocumentReference"),
+      object({ acceptedAt: { type: "string", format: "date-time" } }, ["acceptedAt"]),
+    ],
+  },
+  LegalAcceptancesRequest: object({
+    acceptances: { type: "array", minItems: 2, maxItems: 2, items: ref("LegalDocumentReference") },
+  }, ["acceptances"]),
+  LegalAcceptancesGetResponse: object({
+    acceptances: { type: "array", items: ref("LegalAcceptanceRecord") },
+  }, ["acceptances"]),
+  LegalAcceptancesMutationResponse: object({
+    ok: { type: "boolean" },
+    acceptances: { type: "array", items: ref("LegalDocumentReference") },
+  }, ["ok", "acceptances"]),
+  LegalDocumentsResponse: object({
+    locale: { type: "string", enum: ["bg", "en"] },
+    documents: { type: "array", minItems: 2, maxItems: 2, items: ref("LegalDocument") },
+  }, ["locale", "documents"]),
   RegisterRequest: object({
     title: { type: "string" },
     firstName: { type: "string", minLength: 1 },
     lastName: { type: "string", minLength: 1 },
     email: { type: "string", format: "email" },
     institutionId: { type: "string" },
-    acceptedTerms: { type: "boolean", const: true },
-    password: { type: "string", minLength: 12 },
-  }, ["firstName", "lastName", "email", "acceptedTerms", "password"]),
+    locale: { type: "string", enum: ["bg", "en"] },
+    legalAcceptances: { type: "array", minItems: 2, maxItems: 2, items: ref("LegalDocumentReference") },
+    password: { type: "string", minLength: 8 },
+  }, ["firstName", "lastName", "email", "institutionId", "legalAcceptances", "password"]),
+  RegisterResponse: object({
+    id: { type: "string" },
+    email: { type: "string", format: "email" },
+    verificationRequired: { type: "boolean", const: true },
+    emailSent: { type: "boolean" },
+    devVerifyUrl: { type: "string", format: "uri" },
+  }, ["id", "email", "verificationRequired", "emailSent"]),
   EmailRequest: object({ email: { type: "string", format: "email" } }, ["email"]),
   PasswordResetConfirmRequest: object({
     token: { type: "string", minLength: 1 },
-    password: { type: "string", minLength: 12 },
+    password: { type: "string", minLength: 8 },
   }, ["token", "password"]),
   TokenResponse: object({
     access_token: { type: "string" },
     token_type: { type: "string", const: "Bearer" },
     expires_in: { type: "integer", minimum: 1 },
-  }, ["access_token", "token_type", "expires_in"]),
-  SessionResponse: object({ user: ref("User"), expires: { type: "string", format: "date-time" } }),
+    preferredLocale: { type: "string", enum: ["bg", "en"], default: "bg" },
+  }, ["access_token", "token_type", "expires_in", "preferredLocale"]),
+  SessionResponse: object({ user: ref("SessionUser") }, ["user"]),
+  MfaWebLoginContinuationResponse: object({
+    user: ref("SessionUser"),
+    recoveryCodes: {
+      type: "array",
+      minItems: 10,
+      maxItems: 10,
+      items: { type: "string", pattern: "^[A-Z2-7]{4}(?:-[A-Z2-7]{4}){3}$" },
+    },
+  }, ["user"]),
+  MfaNativeLoginContinuationResponse: object({
+    access_token: { type: "string" },
+    token_type: { type: "string", const: "Bearer" },
+    expires_in: { type: "integer", minimum: 1 },
+    preferredLocale: { type: "string", enum: ["bg", "en"], default: "bg" },
+    recoveryCodes: {
+      type: "array",
+      minItems: 10,
+      maxItems: 10,
+      items: { type: "string", pattern: "^[A-Z2-7]{4}(?:-[A-Z2-7]{4}){3}$" },
+    },
+  }, ["access_token", "token_type", "expires_in", "preferredLocale"]),
+  MfaLoginContinuationResponse: {
+    oneOf: [
+      ref("MfaWebLoginContinuationResponse"),
+      ref("MfaNativeLoginContinuationResponse"),
+    ],
+  },
   CaseSection: { type: "object", additionalProperties: true },
   PreopCaseSection: {
     type: "object",
@@ -103,6 +343,8 @@ export const schemas = {
   CaseSummary: object({
     id: { type: "string" },
     caseCode: nullable({ type: "string" }),
+    userId: { type: "string" },
+    createdById: { type: "string" },
     clinicalMode: { type: "string", enum: ["ADULT", "PEDIATRIC"] },
     clinicalRulesVersion: nullable({ type: "string" }),
     status: { type: "string", enum: ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE"] },
@@ -111,14 +353,20 @@ export const schemas = {
     preop: nullable(ref("PreopCaseSection")),
     intraop: nullable(ref("CaseSection")),
     postop: nullable(ref("CaseSection")),
-  }, ["id", "status", "createdAt", "updatedAt"]),
+    capabilities: object({
+      canRead: { type: "boolean" },
+      canWrite: { type: "boolean" },
+      isCreator: { type: "boolean" },
+      isAssignee: { type: "boolean" },
+    }, ["canRead", "canWrite", "isCreator", "isAssignee"]),
+  }, ["id", "userId", "createdById", "status", "createdAt", "updatedAt", "capabilities"]),
   CaseDetail: {
     allOf: [
       ref("CaseSummary"),
       { type: "object", properties: {
         notes: nullable({ type: "string" }),
-        institution: nullable(ref("Institution")),
-        user: ref("User"),
+        institution: nullable(ref("CaseInstitutionSummary")),
+        user: ref("CaseAssigneeSummary"),
       }, additionalProperties: true },
     ],
   },
@@ -252,6 +500,17 @@ export const schemas = {
     catalogVersion: { type: "string" },
     minimumSupportedClients: { type: "object", additionalProperties: { type: "string" } },
     compatibilityPaths: { type: "object", additionalProperties: { type: "string" } },
+    support: object({
+      configured: { type: "boolean" },
+      contactUrl: nullable({ type: "string", format: "uri" }),
+    }, ["configured", "contactUrl"]),
+    authentication: object({
+      loginIdentifier: { type: "string", enum: ["EMAIL", "USERNAME"] },
+      selfRegistration: { type: "boolean" },
+      passwordRecovery: { type: "string", enum: ["EMAIL", "ADMINISTRATOR", "UNAVAILABLE"] },
+      passwordChange: { type: "boolean" },
+      sessionInventory: { type: "boolean" },
+    }, ["loginIdentifier", "selfRegistration", "passwordRecovery", "passwordChange", "sessionInventory"]),
     features: { type: "object", additionalProperties: true },
   }),
   PediatricCalculationRequest: {
@@ -299,6 +558,7 @@ export const schemas = {
     status: { type: "string" },
     requestedAt: { type: "string", format: "date-time" },
     resolvedAt: nullable({ type: "string", format: "date-time" }),
+    targetReauthenticationRequired: { type: "boolean" },
   }, ["id", "userId", "status"]),
   InstitutionChangeRequest: object({
     id: { type: "string" },
@@ -309,15 +569,34 @@ export const schemas = {
     requestedAt: { type: "string", format: "date-time" },
     resolvedAt: nullable({ type: "string", format: "date-time" }),
     resolvedById: nullable({ type: "string" }),
+    targetReauthenticationRequired: { type: "boolean" },
   }, ["id", "userId", "requestedInstitutionId", "status"]),
   AuditLog: object({
     id: { type: "string" },
-    userId: { type: "string" },
     action: { type: "string" },
-    entityId: nullable({ type: "string" }),
+    entityId: { type: "string" },
     detail: {},
     createdAt: { type: "string", format: "date-time" },
-  }, ["id", "action", "createdAt"]),
+    user: ref("JsonObject"),
+  }, ["id", "action", "entityId", "createdAt", "user"]),
+  AuditActionDefinition: object({
+    code: { type: "string" },
+    category: {
+      type: "string",
+      enum: ["ACCOUNT", "AUTHENTICATION", "CASE", "CLINICAL_RULES", "INSTITUTION", "MAINTENANCE", "RESEARCH", "SECURITY"],
+    },
+    labels: object({
+      bg: { type: "string" },
+      en: { type: "string" },
+    }, ["bg", "en"]),
+  }, ["code", "category", "labels"]),
+  AuditLogPage: object({
+    logs: arrayOf("AuditLog"),
+    total: { type: "integer", minimum: 0 },
+    page: { type: "integer", minimum: 0 },
+    pageSize: { type: "integer", minimum: 1 },
+    actions: arrayOf("AuditActionDefinition"),
+  }, ["logs", "total", "page", "pageSize", "actions"]),
   ExportLimitError: object({
     error: { type: "string" },
     code: { type: "string", const: "EXPORT_LIMIT_EXCEEDED" },
@@ -616,6 +895,7 @@ export const schemas = {
     visibility: { type: "string", enum: ["PRIVATE", "INSTITUTION"] },
     institutionId: nullable({ type: "string" }),
     definition: ref("ResearchCohort"),
+    expectedUpdatedAt: { type: "string", format: "date-time" },
   }),
   ResearchExportRequest: object({
     name: { type: "string", minLength: 1, maxLength: 120 },
@@ -626,25 +906,30 @@ export const schemas = {
     userId: { type: "string" },
     institutionId: nullable({ type: "string" }),
     allInstitutions: { type: "boolean" },
+    canQuery: { type: "boolean" },
     canInspectCases: { type: "boolean" },
     canExport: { type: "boolean" },
     canExportOmop: { type: "boolean" },
-    expiresAt: nullable({ type: "string", format: "date-time" }),
+    canShareCohorts: { type: "boolean" },
+    expiresAt: { type: "string", format: "date-time" },
   }, ["userId"]),
   ResearchGrantPatch: object({
+    canQuery: { type: "boolean" },
     canInspectCases: { type: "boolean" },
     canExport: { type: "boolean" },
     canExportOmop: { type: "boolean" },
-    expiresAt: nullable({ type: "string", format: "date-time" }),
+    canShareCohorts: { type: "boolean" },
+    expiresAt: { type: "string", format: "date-time" },
     revoked: { type: "boolean" },
   }),
   ResearchGrant: {
     type: "object",
     properties: {
       id: { type: "string" }, userId: { type: "string" }, institutionId: nullable({ type: "string" }),
-      allInstitutions: { type: "boolean" }, canInspectCases: { type: "boolean" },
-      canExport: { type: "boolean" }, canExportOmop: { type: "boolean" },
-      expiresAt: nullable({ type: "string", format: "date-time" }),
+      allInstitutions: { type: "boolean" }, canQuery: { type: "boolean" },
+      canInspectCases: { type: "boolean" }, canExport: { type: "boolean" },
+      canExportOmop: { type: "boolean" }, canShareCohorts: { type: "boolean" },
+      expiresAt: { type: "string", format: "date-time" },
       revokedAt: nullable({ type: "string", format: "date-time" }),
       createdAt: { type: "string", format: "date-time" },
       updatedAt: { type: "string", format: "date-time" },
@@ -653,11 +938,23 @@ export const schemas = {
       grantedBy: { type: "object", additionalProperties: true },
     },
     required: [
-      "id", "userId", "institutionId", "allInstitutions", "canInspectCases",
-      "canExport", "canExportOmop", "expiresAt", "revokedAt", "createdAt", "updatedAt",
+      "id", "userId", "institutionId", "allInstitutions", "canQuery", "canInspectCases",
+      "canExport", "canExportOmop", "canShareCohorts", "expiresAt", "revokedAt", "createdAt", "updatedAt",
     ],
     additionalProperties: true,
   },
+  ResearchSelfAuthorizationStatus: object({
+    eligible: { type: "boolean" },
+    activeUntil: nullable({ type: "string", format: "date-time" }),
+    nextEligibleAt: { type: "string", format: "date-time" },
+    permissions: object({
+      query: { type: "boolean" },
+      inspectCases: { type: "boolean" },
+      export: { type: "boolean" },
+      exportOmop: { type: "boolean" },
+      shareInstitutionCohorts: { type: "boolean" },
+    }, ["query", "inspectCases", "export", "exportOmop", "shareInstitutionCohorts"]),
+  }, ["activeUntil", "nextEligibleAt", "permissions"]),
   ResearchExportCleanup: object({
     expiredArtifacts: { type: "integer", minimum: 0 },
     workingArtifacts: { type: "integer", minimum: 0 },
@@ -697,10 +994,13 @@ function add(method, path, summary, options = {}) {
   if (contracts.has(key)) throw new Error(`Duplicate OpenAPI contract: ${key}`)
   const tag = options.tag ?? path.split("/").filter(Boolean)[1] ?? "health"
   const errors = options.errors ?? [400, 401, 403, 404, 409, 422, 429, 500]
-  const responses = {
-    [options.status ?? 200]: options.response ??
-      response("Successful response", options.result ?? ref("JsonObject")),
-  }
+  const responses = options.tombstone
+    ? { 410: response("Compatibility endpoint removed", ref("ApiError")) }
+    : {
+        [options.status ?? 200]: options.response ??
+          response("Successful response", options.result ?? ref("JsonObject")),
+        ...(options.additionalResponses ?? {}),
+      }
   for (const status of errors) {
     if (!responses[status]) responses[status] = response(
       status === 400 ? "Invalid request"
@@ -719,6 +1019,7 @@ function add(method, path, summary, options = {}) {
     tags: [tag],
     "x-lospor-explicit-contract": true,
     "x-lospor-stability": options.stability ?? "stable",
+    ...(options.tombstone ? { "x-lospor-tombstone": true } : {}),
     ...(options.public ? { security: [] } : {}),
     ...(options.parameters?.length ? { parameters: options.parameters } : {}),
     ...(options.requestBody ? { requestBody: options.requestBody } : {}),
@@ -735,21 +1036,51 @@ const revisions = ["preop", "intraop", "postop"].map(section =>
   header(`x-lospor-${section}-revision`, { type: "integer", minimum: 0 }, false, "Last acknowledged section revision"))
 
 add("GET", "/health/live", "Check whether the API process is alive", { public: true, result: ref("Message"), errors: [500], tag: "health" })
-add("GET", "/health/ready", "Check API and database readiness", { public: true, result: ref("Message"), errors: [500, 503], tag: "health" })
+add("GET", "/health/ready", "Check API, database and exact legal-document readiness", { public: true, result: ref("ReadinessResponse"), errors: [500, 503], tag: "health" })
 add("GET", "/v1/capabilities", "Read API synchronization capabilities", { public: true, result: ref("Capabilities") })
 add("GET", "/v1/institutions", "List selectable institutions", { public: true, result: arrayOf("Institution") })
 
-add("GET", "/v1/auth/check-pending", "Check whether the signed-in account is pending", { public: true, result: ref("JsonObject") })
+add("GET", "/v1/auth/check-pending", "Compatibility response: account approval queues are removed", { public: true, result: ref("JsonObject"), stability: "deprecated" })
 add("GET", "/v1/auth/session", "Read the current browser session", { public: true, result: ref("SessionResponse") })
-add("POST", "/v1/auth/session", "Create a browser session", { public: true, requestBody: body(ref("LoginRequest")), result: ref("SessionResponse") })
-add("DELETE", "/v1/auth/session", "End the current browser session", { result: ref("Message") })
-add("POST", "/v1/auth/logout", "Revoke the current bearer or browser session", { result: ref("Message") })
-add("POST", "/v1/auth/token", "Create a mobile bearer token", { public: true, requestBody: body(ref("LoginRequest")), result: ref("TokenResponse") })
-add("POST", "/v1/auth/register", "Register an account", { public: true, requestBody: body(ref("RegisterRequest")), status: 201, result: ref("Message") })
-add("GET", "/v1/auth/verify-email", "Verify an email address", { public: true, parameters: [query("token", { type: "string" }, true)], result: ref("Message") })
-add("POST", "/v1/auth/verify-email/resend", "Resend email verification", { public: true, requestBody: body(ref("EmailRequest")), result: ref("Message") })
-add("POST", "/v1/auth/password-reset/request", "Request a password reset", { public: true, requestBody: body(ref("EmailRequest")), result: ref("Message") })
-add("POST", "/v1/auth/password-reset/confirm", "Set a new password", { public: true, requestBody: body(ref("PasswordResetConfirmRequest")), result: ref("Message") })
+add("POST", "/v1/auth/session", "Create a browser session", {
+  public: true,
+  requestBody: body(ref("LoginRequest")),
+  result: ref("SessionResponse"),
+  errors: [400, 401, 429, 503],
+  additionalResponses: {
+    202: response("Administrator MFA continuation required", ref("MfaChallengeResponse")),
+  },
+})
+add("DELETE", "/v1/auth/session", "End the current browser session", { result: ref("Message"), errors: [401, 503] })
+add("POST", "/v1/auth/logout", "Revoke the current bearer or browser session", { result: ref("Message"), errors: [401, 503] })
+add("POST", "/v1/auth/token", "Create a mobile bearer token", {
+  public: true,
+  requestBody: body(ref("LoginRequest")),
+  result: ref("TokenResponse"),
+  errors: [400, 401, 429, 503],
+  additionalResponses: {
+    202: response("Administrator MFA continuation required", ref("MfaChallengeResponse")),
+  },
+})
+add("POST", "/v1/auth/mfa/login", "Complete a one-use administrator TOTP or recovery-code login challenge", {
+  public: true,
+  requestBody: body(ref("MfaLoginContinuationRequest")),
+  result: ref("MfaLoginContinuationResponse"),
+  errors: [400, 401, 409, 429, 503],
+})
+add("POST", "/v1/auth/register", "Public-only registration for an institution-bound member pending email verification", { public: true, requestBody: body(ref("RegisterRequest")), status: 201, result: ref("RegisterResponse"), errors: [400, 404, 409, 422, 503] })
+add("GET", "/v1/auth/verify-email", "Public-only email verification and account activation", { public: true, parameters: [query("token", { type: "string" }, true)], result: ref("Message"), errors: [404, 503] })
+add("POST", "/v1/auth/verify-email/resend", "Public-only email verification resend", { public: true, requestBody: body(ref("EmailRequest")), result: ref("Message"), errors: [404, 503] })
+add("POST", "/v1/auth/password-reset/request", "Public-only email password reset request without disclosing account or delivery state", { public: true, status: 202, requestBody: body(ref("EmailRequest")), result: ref("Message"), errors: [404, 503] })
+add("POST", "/v1/auth/password-reset/confirm", "Public-only claim of a one-time email reset token and password change", { public: true, requestBody: body(ref("PasswordResetConfirmRequest")), result: ref("Message"), errors: [400, 404, 409, 503] })
+
+add("GET", "/v1/legal/documents", "Read the exact active Terms and Privacy content for one locale", {
+  public: true,
+  parameters: [query("locale", { type: "string", enum: ["bg", "en"] }, true)],
+  result: ref("LegalDocumentsResponse"),
+  errors: [400, 503],
+  tag: "legal",
+})
 
 add("GET", "/v1/cases", "List accessible cases", { parameters: skipTake, result: ref("CaseListResponse") })
 add("POST", "/v1/cases", "Create an idempotent clinical case draft", {
@@ -783,7 +1114,7 @@ add("PATCH", "/v1/cases/{id}/lock", "Refresh or reclaim a case editing lease", {
 add("DELETE", "/v1/cases/{id}/lock", "Release or force-release a case editing lease", { parameters: [id], requestBody: body(ref("LockReleaseRequest")), result: ref("ReleaseResponse") })
 
 add("POST", "/v1/cases/{id}/events", "Append an idempotent intraoperative event", {
-  parameters: [id, header("x-lospor-intraop-revision", { type: "integer" }), header("x-lospor-source", { type: "string", enum: ["web", "mobile", "ai", "import"] })],
+  parameters: [id, header("x-lospor-intraop-revision", { type: "integer" })],
   requestBody: body(ref("Event")),
   status: 201,
   result: ref("EventMutationResponse"),
@@ -807,7 +1138,7 @@ add("POST", "/v1/cases/{id}/transfer", "Offer a case transfer", { parameters: [i
 add("PATCH", "/v1/cases/{id}/transfer", "Accept or decline a case transfer", { parameters: [id], requestBody: body(ref("TransferDecisionRequest")), result: ref("Transfer") })
 add("GET", "/v1/cases/{id}/transfers", "Read a case handover history", { parameters: [id], result: arrayOf("Transfer") })
 add("GET", "/v1/cases/transfers/pending", "List pending case transfers", { parameters: [query("direction", { type: "string", enum: ["incoming", "outgoing"], default: "incoming" })], result: arrayOf("Transfer") })
-add("GET", "/v1/users/colleagues", "List colleagues eligible for transfer", { result: arrayOf("User") })
+add("GET", "/v1/users/colleagues", "List colleagues eligible for transfer", { result: arrayOf("Colleague") })
 
 add("POST", "/v1/cases/{id}/ai/advise", "Generate case-specific AI advice", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 add("POST", "/v1/ai/advise", "Generate AI advice from supplied structured data", { requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
@@ -830,12 +1161,19 @@ add("GET", "/v1/clinical/rules/runtime", "Read the effective mode-specific perso
 add("GET", "/v1/clinical/rules/workbench", "Read mode-specific rulesets in the caller's active management scope", { parameters: [query("mode", { type: "string", enum: ["ADULT", "PEDIATRIC"] }), query("scope", { type: "string", enum: ["PLATFORM", "INSTITUTION", "USER"] })], result: ref("JsonObject"), errors: [400, 401, 403, 500], tag: "clinical" })
 add("POST", "/v1/clinical/rules/workbench", "Copy, edit, publish, select, or clear a clinical ruleset", { requestBody: body(ref("JsonObject")), result: ref("JsonObject"), errors: [400, 401, 403, 404, 409, 500], tag: "clinical" })
 
-add("GET", "/v1/user", "Read the current account", { result: ref("User") })
-add("PATCH", "/v1/user", "Update account and clinical preferences", { requestBody: body(ref("JsonObject")), result: ref("User") })
-add("PATCH", "/v1/user/accept-terms", "Accept the current terms", { requestBody: body(ref("JsonObject")), result: ref("User") })
+add("GET", "/v1/user", "Read the current account", { result: ref("AccountResponse") })
+add("PATCH", "/v1/user", "Update account and clinical preferences", { requestBody: body(ref("JsonObject")), result: ref("AccountPatchResponse") })
+add("POST", "/v1/user/change-password", "Change the current password and revoke every session", { requestBody: body(ref("PasswordChangeRequest")), result: ref("PasswordChangeResponse"), errors: [400, 401, 409] })
+add("GET", "/v1/user/sessions", "List active sessions for the current account", { result: ref("AuthSessionList") })
+add("DELETE", "/v1/user/sessions", "Revoke every other active session", { result: ref("SessionRevocationResponse") })
+add("DELETE", "/v1/user/sessions/{id}", "Revoke one other active session", { parameters: [id], result: ref("Message"), errors: [401, 404, 409] })
+add("GET", "/v1/user/legal-acceptances", "List exact legal acceptance evidence for the current account", { result: ref("LegalAcceptancesGetResponse"), tag: "legal" })
+add("POST", "/v1/user/legal-acceptances", "Accept the exact active Terms and Privacy documents", { requestBody: body(ref("LegalAcceptancesRequest")), result: ref("LegalAcceptancesMutationResponse"), errors: [400, 401, 422, 503], tag: "legal" })
+add("PATCH", "/v1/user/accept-terms", "Compatibility alias for exact Terms and Privacy acceptance", { requestBody: body(ref("LegalAcceptancesRequest")), result: ref("LegalAcceptancesMutationResponse"), stability: "deprecated", tag: "legal" })
 add("POST", "/v1/user/delete", "Soft-delete the current account", { requestBody: body(ref("JsonObject")), result: ref("Message") })
 add("GET", "/v1/user/export", "Download the complete personal data archive", { response: response("ZIP archive", { type: "string", format: "binary" }, "application/zip") })
-add("POST", "/v1/locale", "Set the browser locale", { requestBody: body(object({ locale: { type: "string", enum: ["en", "bg"] } }, ["locale"])), result: ref("Message") })
+add("GET", "/v1/locale", "Read the validated installation default locale without changing the account", { public: true, result: ref("LocaleResponse") })
+add("POST", "/v1/locale", "Set the pre-auth browser/device locale without changing the account", { public: true, requestBody: body(object({ locale: { type: "string", enum: ["bg", "en"] } }, ["locale"])), result: ref("LocaleResponse") })
 
 add("GET", "/v1/custom-terms", "Search institution custom terms", { parameters: [query("q", { type: "string" }), query("type", { type: "string" })], result: arrayOf("JsonObject") })
 add("POST", "/v1/custom-terms", "Create an institution custom term", { requestBody: body(object({ term: { type: "string" }, termType: { type: "string" } }, ["term", "termType"])), status: 201, result: ref("JsonObject") })
@@ -884,13 +1222,48 @@ add("GET", "/v1/research/grants", "List research access grants", { result: array
 add("POST", "/v1/research/grants", "Create a research access grant", { requestBody: body(ref("ResearchGrantRequest")), status: 201, result: ref("ResearchGrant"), errors: [400, 401, 403, 404, 409, 422, 500], tag: "research" })
 add("PATCH", "/v1/research/grants/{id}", "Update a research access grant", { parameters: [id], requestBody: body(ref("ResearchGrantPatch")), result: ref("ResearchGrant"), errors: [400, 401, 403, 404, 409, 422, 500], tag: "research" })
 add("DELETE", "/v1/research/grants/{id}", "Revoke a research access grant", { parameters: [id], result: ref("Message"), errors: [401, 403, 404, 500], tag: "research" })
+add("GET", "/v1/research/self-authorization", "Read aggregate-only research self-authorization availability", { result: ref("ResearchSelfAuthorizationStatus"), errors: [401, 403, 500], tag: "research" })
+add("POST", "/v1/research/self-authorization", "Issue an eight-hour aggregate-only research self-authorization", { status: 201, result: ref("ResearchSelfAuthorizationStatus"), errors: [401, 403, 429, 500], tag: "research" })
 
 add("GET", "/v1/admin/clinical-rules", "Compatibility alias for the clinical-rules workbench", { result: ref("JsonObject"), stability: "admin" })
 add("POST", "/v1/admin/clinical-rules", "Compatibility alias for clinical-rules workbench actions", { requestBody: body(ref("JsonObject")), result: ref("JsonObject"), errors: [400, 401, 403, 404, 409, 500], stability: "admin" })
-add("GET", "/v1/admin/users", "List users for administration", { parameters: [query("pending", { type: "boolean" })], result: arrayOf("User"), stability: "admin" })
-add("PATCH", "/v1/admin/users/{id}", "Update a user role or institution", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("User"), stability: "admin" })
+add("GET", "/v1/admin/users", "List recoverable users and their lifecycle state", {
+  parameters: [
+    query("status", { type: "string", enum: ["INVITED", "ACTIVE", "SUSPENDED", "DELETION_PENDING", "RECOVERY_REQUIRED"] }),
+    query("pending", { type: "boolean" }, false, "Deprecated compatibility alias for status=INVITED"),
+    query("q", { type: "string", maxLength: 100 }, false, "Case-insensitive username, contact-email, or display-name filter"),
+  ],
+  result: arrayOf("AdminUser"),
+  stability: "admin",
+})
+add("PATCH", "/v1/admin/users/{id}", "Update an active user's Member or HOD role and revoke prior sessions", { parameters: [id], requestBody: body(object({ role: { type: "string", enum: ["MEMBER", "HEAD_OF_DEPT"] } }, ["role"])), result: ref("AdminAccountUpdateResponse"), errors: [400, 403, 404, 409, 422], stability: "admin" })
 add("DELETE", "/v1/admin/users/{id}", "Delete a user account", { parameters: [id], result: ref("Message"), stability: "admin" })
-add("POST", "/v1/admin/users/{id}/approve", "Approve a registered user", { parameters: [id], result: ref("User"), stability: "admin" })
+add("POST", "/v1/admin/users/{id}/authority", "Change administrator authority or clinical/research account kind with password re-entry", {
+  parameters: [id],
+  requestBody: body(object({
+    role: { type: "string", enum: ["MEMBER", "HEAD_OF_DEPT", "ADMIN"] },
+    accountKind: { type: "string", enum: ["CLINICAL", "RESEARCH_ONLY"] },
+    currentPassword: { type: "string", minLength: 1 },
+    reason: { type: "string", minLength: 3, maxLength: 500 },
+  }, ["currentPassword", "reason"])),
+  result: ref("AdminAccountUpdateResponse"),
+  errors: [400, 401, 403, 404, 409],
+  stability: "admin",
+})
+for (const [operation, summary] of [
+  ["suspend", "Suspend an account and revoke every session"],
+  ["reactivate", "Reactivate a suspended account"],
+  ["restore", "Restore a deletion-pending account into recovery-required state"],
+]) {
+  add("POST", `/v1/admin/users/{id}/${operation}`, summary, {
+    parameters: [id],
+    requestBody: body(object({ reason: { type: "string", minLength: 3, maxLength: 500 } }, ["reason"])),
+    result: ref("Message"),
+    errors: [400, 401, 403, 404, 409],
+    stability: "admin",
+  })
+}
+add("POST", "/v1/admin/users/{id}/approve", "Removed account-approval compatibility endpoint", { parameters: [id], tombstone: true, errors: [401, 403], stability: "deprecated" })
 // Joining a department is what lets its head see a clinician's cases, so an
 // administrator sees every request and a head of department sees only requests
 // to join their own institution.
@@ -898,7 +1271,7 @@ add("GET", "/v1/admin/institution-requests", "List pending institution-change re
 add("POST", "/v1/admin/institution-requests/{id}", "Approve or reject an institution change", { parameters: [id], requestBody: body(object({ decision: { type: "string", enum: ["APPROVE", "REJECT"] } }, ["decision"])), result: ref("InstitutionChangeRequest"), stability: "admin" })
 add("GET", "/v1/admin/role-requests", "List role-elevation requests", { result: arrayOf("RoleRequest"), stability: "admin" })
 add("PATCH", "/v1/admin/role-requests/{id}", "Approve or reject a role request", { parameters: [id], requestBody: body(object({ action: { type: "string", enum: ["approve", "reject"] } }, ["action"])), result: ref("RoleRequest"), stability: "admin" })
-add("GET", "/v1/admin/audit-logs", "List paged audit history", { parameters: [query("page", { type: "integer", minimum: 0 }), query("action", { type: "string" })], result: arrayOf("AuditLog"), stability: "admin" })
+add("GET", "/v1/admin/audit-logs", "List paged audit history and its bilingual action catalog", { parameters: [query("page", { type: "integer", minimum: 0 }), query("action", { type: "string" })], result: ref("AuditLogPage"), stability: "admin" })
 add("POST", "/v1/admin/repair-relational", "Repair relational projections in batches", { parameters: [query("caseId", { type: "string" }), query("batch", { type: "integer", minimum: 1, maximum: 200 }), query("cursor", { type: "string" })], result: ref("JsonObject"), stability: "maintenance" })
 add("POST", "/v1/admin/maintenance/seed-option-library", "Synchronize the canonical option catalog", { result: ref("JsonObject"), stability: "maintenance" })
 

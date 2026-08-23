@@ -14,8 +14,19 @@ type ContractParameter = {
   required?: boolean
 }
 
+type ContractSchema = {
+  $ref?: string
+  oneOf?: ContractSchema[]
+  allOf?: ContractSchema[]
+  properties?: Record<string, ContractSchema>
+  required?: string[]
+  additionalProperties?: boolean
+  minItems?: number
+  maxItems?: number
+}
+
 type ContractResponse = {
-  content?: unknown
+  content?: Record<string, { schema?: ContractSchema }>
 }
 
 type ContractOperation = {
@@ -23,12 +34,14 @@ type ContractOperation = {
   parameters?: ContractParameter[]
   responses: Record<string, ContractResponse>
   "x-lospor-explicit-contract"?: boolean
+  "x-lospor-tombstone"?: boolean
 }
 
 type ContractPathItem = Partial<Record<Lowercase<(typeof methods)[number]>, ContractOperation>>
 type ContractDocument = {
   info: { version: string }
   paths: Record<string, ContractPathItem>
+  components: { schemas: Record<string, ContractSchema> }
 }
 
 const publicContract = document as unknown as ContractDocument
@@ -100,6 +113,10 @@ describe("OpenAPI contract", () => {
       for (const operation of Object.values(pathItem).filter(
         (candidate): candidate is ContractOperation => Boolean(candidate),
       )) {
+        if (operation["x-lospor-tombstone"]) {
+          expect(operation.responses["410"]?.content).toBeDefined()
+          continue
+        }
         const success = Object.entries(operation.responses)
           .find(([status]) => Number(status) >= 200 && Number(status) < 300)?.[1]
         expect(success, `${operation.operationId} has no success response`).toBeDefined()
@@ -113,5 +130,53 @@ describe("OpenAPI contract", () => {
     expect(publicContract.paths["/v1/auth/check-pending"].post).toBeUndefined()
     expect(publicContract.paths["/v1/auth/verify-email"].get).toBeDefined()
     expect(publicContract.paths["/v1/auth/verify-email"].post).toBeUndefined()
+  })
+
+  it("documents the API-owned bilingual audit action catalog", () => {
+    expect(publicContract.paths["/v1/admin/audit-logs"].get?.responses["200"]
+      ?.content?.["application/json"]?.schema).toEqual({
+      $ref: "#/components/schemas/AuditLogPage",
+    })
+    expect(publicContract.components.schemas.AuditLogPage.required).toContain("actions")
+    expect(publicContract.components.schemas.AuditLogPage.properties?.actions).toEqual({
+      type: "array",
+      items: { $ref: "#/components/schemas/AuditActionDefinition" },
+    })
+    expect(publicContract.components.schemas.AuditActionDefinition.required).toEqual([
+      "code",
+      "category",
+      "labels",
+    ])
+  })
+
+  it("documents the administrator MFA branch on both password-login operations", () => {
+    for (const path of ["/v1/auth/session", "/v1/auth/token"]) {
+      const continuation = publicContract.paths[path].post?.responses["202"]
+        ?.content?.["application/json"]?.schema
+      expect(continuation, `${path} is missing its 202 continuation`).toEqual({
+        $ref: "#/components/schemas/MfaChallengeResponse",
+      })
+      expect(publicContract.paths[path].post?.responses["503"], `${path} is missing its fail-closed key error`)
+        .toBeDefined()
+    }
+  })
+
+  it("keeps successful MFA response variants satisfiable as closed objects", () => {
+    const continuation = publicContract.components.schemas.MfaLoginContinuationResponse
+    expect(continuation.oneOf).toEqual([
+      { $ref: "#/components/schemas/MfaWebLoginContinuationResponse" },
+      { $ref: "#/components/schemas/MfaNativeLoginContinuationResponse" },
+    ])
+    expect(continuation.allOf).toBeUndefined()
+
+    const web = publicContract.components.schemas.MfaWebLoginContinuationResponse
+    expect(web.required).toEqual(["user"])
+    expect(web.additionalProperties).toBe(false)
+    expect(web.properties?.recoveryCodes).toMatchObject({ minItems: 10, maxItems: 10 })
+
+    const native = publicContract.components.schemas.MfaNativeLoginContinuationResponse
+    expect(native.required).toEqual(["access_token", "token_type", "expires_in", "preferredLocale"])
+    expect(native.additionalProperties).toBe(false)
+    expect(native.properties?.recoveryCodes).toMatchObject({ minItems: 10, maxItems: 10 })
   })
 })
