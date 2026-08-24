@@ -1,9 +1,13 @@
 # Changelog - LOSPOR API
 
-## [Unreleased]
+## [9.3.1] - 2026-08-24
 
 ### Changed
 
+- Repinned to `@lospor/core` v9.3.1. No API behaviour changes: the fix is in
+  the mobile/PWA client's offline-save status, not this service.
+- Migrated Vitest config to ESM (`vitest.config.mts`) and declared trusted
+  install scripts under npm 11's `allowScripts`.
 - Durable governance evidence now commits in the same database transaction as
   account provisioning/activation, activation and recovery-link issuance,
   legal acceptance, role and institution decisions, account lifecycle and
