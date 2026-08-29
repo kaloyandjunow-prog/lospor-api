@@ -116,3 +116,64 @@ describe("pediatric API gate", () => {
     })
   })
 })
+
+describe("correcting a pediatric case to adult", () => {
+  // The stored record is the one that decides. A patch that merely omits the
+  // pediatric age leaves the server's own ageValue/ageUnit in place, its
+  // precise age keeps winning over any ageYears, and the adult mode is refused
+  // again on every retry -- which is how a corrected case ended up replaying
+  // the same rejection forever while the server was reachable.
+  const storedPediatric = { clinicalMode: "PEDIATRIC", ageValue: 13, ageUnit: "YEARS", ageYears: 13 }
+
+  it("refuses adult mode when the patch only omits the pediatric age", () => {
+    expect(decidePediatricWrite({
+      clinicalMode: "ADULT",
+      preop: { sex: "FEMALE" },
+      currentPreop: storedPediatric,
+      enforceAgeDecision: true,
+      allowIncompleteAge: true,
+    })).toMatchObject({ allowed: false, status: 409, code: "PEDIATRIC_MODE_REQUIRED" })
+  })
+
+  it("accepts adult mode when the patch clears the precise age explicitly", () => {
+    expect(decidePediatricWrite({
+      clinicalMode: "ADULT",
+      preop: { ageValue: null, ageUnit: null, ageYears: null },
+      currentPreop: storedPediatric,
+      enforceAgeDecision: true,
+      allowIncompleteAge: true,
+    })).toMatchObject({ allowed: true })
+  })
+
+  it("accepts adult mode when the clear arrives with a real adult age", () => {
+    expect(decidePediatricWrite({
+      clinicalMode: "ADULT",
+      preop: { ageValue: null, ageUnit: null, ageYears: 41 },
+      currentPreop: storedPediatric,
+      enforceAgeDecision: true,
+      allowIncompleteAge: true,
+    })).toMatchObject({ allowed: true })
+  })
+
+  // The safety rule is unchanged: this fixes correcting age and mode together,
+  // it does not provide a way around the boundary itself.
+  it("still refuses adult mode for a genuinely under-age patient", () => {
+    expect(decidePediatricWrite({
+      clinicalMode: "ADULT",
+      preop: { ageValue: null, ageUnit: null, ageYears: 13 },
+      currentPreop: storedPediatric,
+      enforceAgeDecision: true,
+      allowIncompleteAge: true,
+    })).toMatchObject({ allowed: false, status: 409, code: "PEDIATRIC_MODE_REQUIRED" })
+  })
+
+  it("still refuses adult mode when a fresh under-age precise age is supplied", () => {
+    expect(decidePediatricWrite({
+      clinicalMode: "ADULT",
+      preop: { ageValue: 8, ageUnit: "MONTHS", ageYears: null },
+      currentPreop: storedPediatric,
+      enforceAgeDecision: true,
+      allowIncompleteAge: true,
+    })).toMatchObject({ allowed: false, status: 409, code: "PEDIATRIC_MODE_REQUIRED" })
+  })
+})
