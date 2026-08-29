@@ -1,5 +1,31 @@
 # Changelog - LOSPOR API
 
+## [9.4.0] - 2026-08-29
+
+### Changed
+
+- Repinned to `@lospor/core` v9.4.0. No API behaviour changes: the service
+  already returned a top-level `code` on a refused write and already merged a
+  partial preop patch over the stored record, which is what the corrected
+  clients now rely on.
+
+### Tests
+
+- The pediatric-to-adult correction is now pinned from the server's side, in
+  both directions. A patch that merely *omits* the pediatric age leaves the
+  stored `ageValue`/`ageUnit` in place, where the precise age keeps outranking
+  any submitted `ageYears`, and the write is refused again on every retry — a
+  test now asserts that, so the behaviour cannot be mistaken for a bug and
+  "fixed" by making the merge non-partial. A patch that clears them explicitly
+  with `null` is accepted, with or without a real adult age alongside it.
+- Two negative tests keep the safety boundary itself unchanged: a stored or
+  freshly supplied age below eighteen still refuses adult mode.
+- `README-postgres-tests.md` listed four gated suites while ten exist, two of
+  them behind a second flag that `npm run test:pg` does not set — so a whole
+  tier of concurrency and confidentiality coverage was easy to believe was
+  running. The inventory is corrected and the machine-specific clock-incident
+  instructions are reduced to the general caution.
+
 ## [9.3.1] - 2026-08-24
 
 ### Changed
