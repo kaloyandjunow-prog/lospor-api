@@ -104,12 +104,23 @@ export async function POST(req: NextRequest) {
   }
 
   // Free-text fields that may contain PHI are explicitly excluded by
-  // buildPatientSummary's field allowlist. redactText is a defense-in-depth
-  // backstop in case a future edit adds a free-text field without updating
-  // that allowlist — accepted trade-off: it can occasionally over-redact a
-  // legitimate two-word diagnosis/procedure label, which only degrades advice
-  // quality for this one streamed response, not stored data.
-  const patientSummary = redactText(buildPatientSummary(parsed))
+  // buildPatientSummary's field allowlist: every line it emits is a number, an
+  // enum, a coded catalogue label, or a literal this file writes itself, and
+  // the two prose fields are deliberately reduced to "details withheld".
+  // redactText stays as a defence-in-depth backstop in case a future edit adds
+  // a free-text field without updating that allowlist.
+  //
+  // The name heuristic is off here. The trade-off this comment used to accept —
+  // "it can occasionally over-redact a legitimate two-word diagnosis label" —
+  // was true for Title-Case English but catastrophic in Bulgarian, where the
+  // pattern matched any two adjacent words whatever their case. It was not
+  // occasional: it removed the diagnosis, the planned procedure, most
+  // comorbidities and the previous Cormack-Lehane grade from essentially every
+  // Bulgarian summary, and the model is told not to refuse — so it answered
+  // confidently on mutilated input. On an allowlist of structured fields the
+  // heuristic has nothing legitimate to catch; EGN, long numbers, dates and
+  // email are still stripped below.
+  const patientSummary = redactText(buildPatientSummary(parsed), { nameHeuristic: false })
 
   // Item 15: await the audit write so it completes (or logs an error) before responding.
   await logAudit(user.id, "AI_ADVISE", user.id, { optIn: true })

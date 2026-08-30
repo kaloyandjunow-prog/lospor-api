@@ -1,5 +1,98 @@
 # Changelog - LOSPOR API
 
+## [Unreleased]
+
+### Fixed
+
+- **`redactText` destroyed Bulgarian and Title-Case clinical text on every path
+  that leaves the system.** The "two capitalised words is probably a name"
+  pattern put the whole Cyrillic block (`Ѐ-ӿ`, U+0400–U+04FF, lowercase а–я
+  included) in its *uppercase-first-letter* position, so any two adjacent
+  Cyrillic words matched whatever their case. Reproduced against the shipped
+  regex: `остър апендицит` → `[REDACTED]`, `Захарен диабет тип 2` →
+  `[REDACTED] тип 2`, `хронична обструктивна белодробна болест` →
+  `[REDACTED] [REDACTED]`, while the equivalent lowercase Latin text was
+  untouched — locale-asymmetric data destruction, worse in Bulgarian than in
+  English. Both AI advise routes build their prompt with
+  `redactText(buildPatientSummary(...))`, so in a Bulgarian hospital the model
+  was asked for ASA class, airway strategy and drug cautions about a patient
+  whose diagnosis, planned procedure, comorbidities and previous
+  Cormack-Lehane grade had been blanked — without being told anything was
+  removed, and with a prompt that tells it not to refuse. OMOP research exports
+  were corrupted the same way. `\p{Lu}` already covers Cyrillic capitals; the
+  explicit range was the entire defect.
+- **The name heuristic no longer runs over coded clinical vocabulary.** Even
+  once the range was fixed, `Acute Cholecystitis`, `Laparoscopic
+  Cholecystectomy` and `Sodium Chloride` are all genuinely two capitalised
+  words. `redactText` now takes `nameHeuristic: false`, which keeps every
+  structural check — validated EGN, 7+ digit numbers, dates, email — and drops
+  only the guess. It is passed for diagnosis, planned procedure, allergy and
+  medication names, event labels, and the AI patient summary, whose fields are
+  entirely an allowlist of numbers, enums, catalogue labels and literals this
+  codebase writes itself. `findPII` already carried exactly this exemption via
+  `skipNameCheck` for the same drug fields at data entry; the read-time path
+  now agrees with it, and `omop-export-source.ts` applies to its scalar columns
+  the reasoning its own comment already applied to the JSON ones.
+- **Neither AI image route required consent, and neither recorded a
+  successful transfer.** `/v1/ai/read-labs` and `/v1/cases/[id]/vitals-scan`
+  each send a photograph — of a laboratory report, or of a monitor screen — to
+  the configured provider. No text redaction is possible on an image and none
+  is attempted, and a lab printout carries the patient's name and EGN in its
+  header, so these are the most identifying payloads the system can transmit.
+  Both were reachable with the AI opt-in unticked, while the consent text next
+  to that tickbox promises that only structured clinical fields are sent.
+  `vitals-scan` now reads `aiOptIn` from the database like the case advise
+  route; `read-labs` is unscoped by design (it serves draft cases with no row
+  yet) and now requires the client to assert consent explicitly. Both write an
+  audit row on success — previously only *failures* left any trace, which is
+  the inverse of the right priority.
+- **A rejected AI request extended its own cooldown.** `checkBurst` recorded
+  the request timestamp before comparing it, so every retry refreshed the
+  timestamp it was being measured against. A client retrying faster than the
+  cooldown locked itself out permanently rather than for one interval. Only a
+  request that is actually served now starts a new window.
+- **`vitals-scan` passed non-numeric model output straight through.** Its
+  plausibility filter only nulled values that were numerically out of range,
+  and a string fails every comparison silently, so `{"systolic": "not visible"}`
+  reached the client as a string in a vitals field. Values are now discarded
+  unless they are finite numbers within range. The route also had no timeout,
+  unlike the other two AI routes, so a hung provider connection held the
+  request open indefinitely; it now shares their `AbortController` pattern.
+- **`vitals-scan` used a floating model tag.** It defaulted to
+  `mistral-small-latest` while `read-labs` defaulted to `pixtral-12b-2409` from
+  the *same* environment variable. In a system where every image, archive and
+  dependency is pinned to a digest or checksum, one clinical behaviour could
+  change without a release. Both now default to the pinned vision model.
+
+### Changed
+
+- **Clinical inference defaults to the EU endpoint.** `MISTRAL_API_BASE` fell
+  back to `https://api.mistral.ai/v1`, so a deployment that configured nothing
+  was on global inference by omission. It now defaults to
+  `https://api.eu.mistral.ai/v1`. This value, not the fallback flag, is what
+  decides residency — the fallback cannot even engage while the configured base
+  already is the global one.
+- **A regional refusal no longer silently relocates a clinical payload.** On a
+  403 `regional_inference_not_allowed` this service re-sent the same payload to
+  the global endpoint unconditionally. It now requires
+  `MISTRAL_ALLOW_GLOBAL_FALLBACK=true`, defaulting to off. The guard already
+  existed in the Hospital appliance's vendored copy of this file but had never
+  been ported upstream, so the appliance failed closed while this codebase
+  failed open.
+
+### Tests
+
+- `redactText` had **no tests at all** — the only suite touching `pii-check`
+  covered `checkPII`, and the AI route's own suite mocks `redactText` to the
+  identity function, so nothing ever exercised redaction against realistic
+  clinical text. Added coverage for the Bulgarian and Latin regressions, for
+  real names still being caught in both scripts, and for `nameHeuristic: false`
+  preserving catalogue labels while still stripping every structural
+  identifier.
+- Added the EU-default and absent-flag cases to the Mistral suite, and ported
+  the appliance's "does not silently move a clinical payload out of region"
+  test upstream.
+
 ## [9.4.0] - 2026-08-29
 
 ### Changed

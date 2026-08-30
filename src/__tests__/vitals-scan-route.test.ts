@@ -60,8 +60,55 @@ describe("case vitals scan route", () => {
       select: {
         userId: true,
         user: { select: { institutionId: true } },
+        // Consent is read from the database, never from the client, exactly as
+        // the case advise route does it.
+        preop: { select: { aiOptIn: true } },
       },
     })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  // This route photographs a monitor screen and sends the image to an external
+  // provider. Nothing can redact text in an image, so it must be at least as
+  // gated as the advice routes — and it was not gated at all.
+  it("refuses to send a monitor photograph when the case has not consented", async () => {
+    findUniqueMock.mockResolvedValue({
+      userId: "user-1",
+      user: { institutionId: "inst-1" },
+      preop: { aiOptIn: false },
+    })
+
+    const { POST } = await import("@/app/v1/cases/[id]/vitals-scan/route")
+    const response = await POST(
+      new Request("http://localhost/api/cases/case-1/vitals-scan", {
+        method: "POST",
+        body: JSON.stringify({ image: "base64-image" }),
+      }) as Parameters<typeof POST>[0],
+      { params: Promise.resolve({ id: "case-1" }) },
+    )
+
+    expect(response.status).toBe(403)
+    // The image must not reach the provider.
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("refuses when the case has no preop record to consent with", async () => {
+    findUniqueMock.mockResolvedValue({
+      userId: "user-1",
+      user: { institutionId: "inst-1" },
+      preop: null,
+    })
+
+    const { POST } = await import("@/app/v1/cases/[id]/vitals-scan/route")
+    const response = await POST(
+      new Request("http://localhost/api/cases/case-1/vitals-scan", {
+        method: "POST",
+        body: JSON.stringify({ image: "base64-image" }),
+      }) as Parameters<typeof POST>[0],
+      { params: Promise.resolve({ id: "case-1" }) },
+    )
+
+    expect(response.status).toBe(403)
     expect(fetch).not.toHaveBeenCalled()
   })
 })

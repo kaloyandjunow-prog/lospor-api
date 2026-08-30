@@ -26,8 +26,14 @@ function checkBurst(userId: string): boolean {
     if (now - ts > BURST_PRUNE_AGE_MS) lastRequestAt.delete(uid)
   }
   const last = lastRequestAt.get(userId)
-  lastRequestAt.set(userId, now)
-  return last === undefined || now - last >= AI_BURST_COOLDOWN_MS
+  const allowed = last === undefined || now - last >= AI_BURST_COOLDOWN_MS
+  // Only a request that is actually served starts a new cooldown. Recording
+  // the timestamp unconditionally meant a rejected request pushed its own
+  // window forward, so a client retrying faster than the cooldown could never
+  // escape: every attempt refreshed the very timestamp it was being measured
+  // against, locking the user out permanently rather than for one interval.
+  if (allowed) lastRequestAt.set(userId, now)
+  return allowed
 }
 
 export async function OPTIONS(req: NextRequest) {
@@ -89,8 +95,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "AI advisor not configured" }, { status: 503 })
   }
 
-  // Build prompt from server-loaded DB fields only
-  const patientSummary = redactText(buildPatientSummary(existing.preop as Record<string, unknown>))
+  // Build prompt from server-loaded DB fields only.
+  //
+  // Name heuristic off: buildPatientSummary emits only numbers, enums, coded
+  // catalogue labels and literals this codebase writes, so two capitalised
+  // words there is a diagnosis, not a patient. Leaving it on deleted the
+  // diagnosis and planned procedure from every Bulgarian summary. The
+  // structural checks (EGN, long numbers, dates, email) still run.
+  const patientSummary = redactText(
+    buildPatientSummary(existing.preop as Record<string, unknown>),
+    { nameHeuristic: false },
+  )
 
   // Log against case ID (not user.id twice)
   await logAudit(user.id, "AI_ADVISE", id, { optIn: true })

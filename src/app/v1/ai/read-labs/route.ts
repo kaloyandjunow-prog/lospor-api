@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { convertLabValue, isConfidentConversion } from "@lospor/core/lab-unit-conversion"
 import { LAB_LIBRARY } from "@/lib/labs"
+import { logAudit } from "@/lib/audit"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { fetchMistralChatCompletions } from "@/lib/mistral"
 import { rateLimit } from "@/lib/rate-limit"
@@ -79,17 +80,38 @@ export async function POST(req: NextRequest) {
 
   let imageBase64: string
   let mimeType: string
+  let aiOptIn = false
   try {
     const body = await req.json()
     imageBase64 = body.imageBase64
     mimeType = body.mimeType
+    aiOptIn = body.aiOptIn === true
     if (typeof imageBase64 !== "string" || !imageBase64) throw new Error("missing imageBase64")
     if (!(MIME_TYPES as readonly string[]).includes(mimeType)) throw new Error("invalid mimeType")
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 })
   }
+
+  // Size first: an oversized payload is rejected on its own terms, before any
+  // policy question, so the cheap structural guard cannot be masked by a
+  // different refusal.
   if (imageBase64.length > MAX_BASE64_CHARS) {
     return NextResponse.json({ error: "Image too large" }, { status: 413 })
+  }
+
+  // This route sends a photograph of a laboratory report to an external
+  // provider. A lab printout carries the patient's name and EGN in its header,
+  // no text redaction is possible on an image, and none is attempted — so it
+  // is the single most identifying payload the system can transmit, and it was
+  // reachable with the AI opt-in unticked while the consent text beside that
+  // tickbox promises no names or free text ever leave.
+  //
+  // The route is unscoped by design (it serves draft cases that have no row
+  // yet), so consent cannot be read from the database here as it is for
+  // case-scoped routes. The client must assert it explicitly, and the UI only
+  // offers the control once the box is ticked.
+  if (!aiOptIn) {
+    return NextResponse.json({ error: "AI advice not enabled for this case" }, { status: 403 })
   }
 
   let mistralRes: Response
@@ -175,6 +197,14 @@ export async function POST(req: NextRequest) {
   } catch {
     console.warn("[ai/read-labs] Could not parse model output:", content.slice(0, 200))
   }
+
+  // A successful send of a laboratory report photograph to an external
+  // provider must leave a record. Previously only failures emitted anything,
+  // so the one outcome that actually moved an identifying image off the
+  // appliance was the one that left no trace. The image itself is never
+  // logged — only that the transfer happened, by whom, and how many rows came
+  // back.
+  await logAudit(user.id, "AI_LAB_SCAN", user.id, { optIn: true, rowCount: results.length })
 
   return NextResponse.json({ results })
 }
