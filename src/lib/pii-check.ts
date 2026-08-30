@@ -9,21 +9,32 @@ const DATE_RE   = /\b\d{1,2}[.\/-]\d{1,2}[.\/-]\d{4}\b/
 
 // Two consecutive capitalised words of 2+ chars each — likely a person's name.
 // Supports:
-//   - Latin letters (via \p{Lu}/\p{Ll} Unicode properties)
-//   - Cyrillic letters (Unicode block Ѐ-ӿ, covers Bulgarian and other Slavic scripts)
-//   - Hyphenated names: "Marie-Louise", "Jean-Paul"
-// Each name segment must be 2+ letters.  The first letter of each word must be
-// uppercase (Latin or Cyrillic).  Words are separated by whitespace.
+//   - Every script, via the \p{Lu}/\p{L} Unicode properties and the /u flag.
+//     \p{Lu} already covers Cyrillic capitals (А is U+0410, category Lu), so no
+//     explicit Cyrillic range is needed — and adding one is actively harmful.
+//   - Hyphenated names: "Marie-Louise", "Jean-Paul", "Иванов-Петров"
+// Each name segment must be 2+ letters. The first letter of each word must be
+// genuinely uppercase. Words are separated by whitespace.
+//
+// The explicit range this used to carry — Ѐ-ӿ, in the *first-letter* position —
+// is the whole Cyrillic block U+0400–U+04FF, lowercase а–я included. It made
+// every pair of adjacent Cyrillic words match regardless of case, so Bulgarian
+// clinical text was destroyed wholesale on the way out:
+//   "остър апендицит"       -> "[REDACTED]"
+//   "Захарен диабет тип 2"  -> "[REDACTED] тип 2"
+// while the equivalent lowercase Latin text was untouched — locale-asymmetric
+// data loss in the AI and export paths. See redactText's nameHeuristic option
+// for the second half of the fix.
 //
 // Pattern breakdown:
-//   (?<![^\s])              — word must start at beginning of string or after whitespace
-//   [\p{Lu}Ѐ-ӿ]            — uppercase letter (Latin or Cyrillic)
-//   [\p{Lu}\p{Ll}Ѐ-ӿ]+     — one or more letters (any case, Latin or Cyrillic) — 2+ total
-//   (?:-[\p{Lu}\p{Ll}Ѐ-ӿ]{2,})* — optional hyphenated segments (e.g. "-Louise")
-//   \s+                     — whitespace separator
+//   (?<![^\s])        — word must start at beginning of string or after whitespace
+//   \p{Lu}            — a genuine uppercase letter, any script
+//   \p{L}+            — one or more letters, any case or script — 2+ total
+//   (?:-\p{L}{2,})*   — optional hyphenated segments (e.g. "-Louise")
+//   \s+               — whitespace separator
 //   (same pattern for second word)
-//   (?=\s|$)                — must be followed by whitespace or end of string
-const NAME_RE = /(?<![^\s])[\p{Lu}Ѐ-ӿ][\p{Lu}\p{Ll}Ѐ-ӿ]+(?:-[\p{Lu}\p{Ll}Ѐ-ӿ]{2,})*\s+[\p{Lu}Ѐ-ӿ][\p{Lu}\p{Ll}Ѐ-ӿ]+(?:-[\p{Lu}\p{Ll}Ѐ-ӿ]{2,})*(?=\s|$)/u
+//   (?=\s|$)          — must be followed by whitespace or end of string
+const NAME_RE = /(?<![^\s])\p{Lu}\p{L}+(?:-\p{L}{2,})*\s+\p{Lu}\p{L}+(?:-\p{L}{2,})*(?=\s|$)/u
 
 // EGN: Bulgarian personal identifier — 10 digits with date + checksum structure.
 const EGN_RE    = /\b(\d{10})\b/g
@@ -88,13 +99,29 @@ function isValidEGN(s: string): boolean {
 // Read-time redaction for export/AI paths, where blocking isn't an option
 // (the data already exists) — scrubs the same patterns checkPII detects,
 // replacing matches in place rather than rejecting the whole value.
-export function redactText(value: string): string {
+//
+// `nameHeuristic: false` keeps the four structural checks (EGN, long numbers,
+// dates, email) and drops only the "two capitalised words" guess. Pass it for
+// coded clinical vocabulary — diagnosis, planned procedure, drug names, event
+// labels — where the guess cannot distinguish a patient from a disease and is
+// wrong far more often than it is right:
+//   "Acute Cholecystitis", "Laparoscopic Cholecystectomy", "Sodium Chloride"
+// all read as names. findPII already carries this exemption via skipNameCheck
+// for the same drug fields at data entry; this is its read-time counterpart,
+// so the two paths finally agree. Free prose a clinician types — notes,
+// complications, airway comments — keeps the heuristic on by default.
+export function redactText(
+  value: string,
+  opts: { nameHeuristic?: boolean } = {},
+): string {
   let out = value
   out = out.replace(EGN_RE, (m, g1) => (isValidEGN(g1) ? "[REDACTED]" : m))
   out = out.replace(new RegExp(DIGIT7_RE, "g"), "[REDACTED]")
   out = out.replace(new RegExp(DATE_RE, "g"), "[REDACTED]")
   out = out.replace(new RegExp(EMAIL_RE, "g"), "[REDACTED]")
-  out = out.replace(new RegExp(NAME_RE, "gu"), "[REDACTED]")
+  if (opts.nameHeuristic !== false) {
+    out = out.replace(new RegExp(NAME_RE, "gu"), "[REDACTED]")
+  }
   return out
 }
 

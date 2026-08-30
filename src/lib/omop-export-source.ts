@@ -3,33 +3,46 @@ import { deepRedactPII, redactText } from "@/lib/pii-check"
 
 type ExportRow = Prisma.CaseGetPayload<{ select: typeof CASE_SELECT }>
 
-// Redacts the free-text fields this export actually selects ??? scalar String
+// Redacts the free-text fields this export actually selects — scalar String
 // fields a clinician can type into directly, plus the freeform keyEvents
 // JSON blob and each CaseEvent's label/value. Coded fields (comorbidities,
 // diagnosesJson, proceduresJson, labRows) are left untouched: they're
 // structured vocabulary entries, and blanket-redacting them would corrupt
 // legitimate two-word diagnosis/institution labels via the name-pattern check.
+//
+// That reasoning was right but was applied only to the JSON columns. The
+// scalar columns below hold the *same* clinical vocabulary, and they were
+// going through the full name-pattern check — so a register received
+// "[REDACTED]" where a diagnosis belonged ("Acute Cholecystitis" and
+// "Sodium Chloride" both read as names). They now use nameHeuristic: false,
+// which keeps every structural check — EGN, long numbers, dates, email — and
+// drops only the two-capitalised-words guess that cannot tell a disease from
+// a patient. Genuine prose keeps the guess on.
 export function redactExportRow(c: ExportRow) {
+  const coded = { nameHeuristic: false } as const
   return {
     ...c,
     preop: c.preop ? {
       ...c.preop,
-      diagnosis: c.preop.diagnosis ? redactText(c.preop.diagnosis) : c.preop.diagnosis,
-      plannedProcedure: c.preop.plannedProcedure ? redactText(c.preop.plannedProcedure) : c.preop.plannedProcedure,
-      allergyDetails: c.preop.allergyDetails ? redactText(c.preop.allergyDetails) : c.preop.allergyDetails,
-      currentMedications: c.preop.currentMedications ? redactText(c.preop.currentMedications) : c.preop.currentMedications,
+      // Coded clinical vocabulary.
+      diagnosis: c.preop.diagnosis ? redactText(c.preop.diagnosis, coded) : c.preop.diagnosis,
+      plannedProcedure: c.preop.plannedProcedure ? redactText(c.preop.plannedProcedure, coded) : c.preop.plannedProcedure,
+      allergyDetails: c.preop.allergyDetails ? redactText(c.preop.allergyDetails, coded) : c.preop.allergyDetails,
+      currentMedications: c.preop.currentMedications ? redactText(c.preop.currentMedications, coded) : c.preop.currentMedications,
       // Free prose written by a clinician, so it goes through the same
       // redaction as every other note before it can leave.
       familyAnesthesiaDetails: c.preop.familyAnesthesiaDetails ? redactText(c.preop.familyAnesthesiaDetails) : c.preop.familyAnesthesiaDetails,
       difficultAirwayNotes: c.preop.difficultAirwayNotes ? redactText(c.preop.difficultAirwayNotes) : c.preop.difficultAirwayNotes,
       medications: c.preop.medications.map(row => ({
         ...row,
-        nameRaw: row.nameRaw ? redactText(row.nameRaw) : row.nameRaw,
+        nameRaw: row.nameRaw ? redactText(row.nameRaw, coded) : row.nameRaw,
       })),
     } : c.preop,
     events: (c.events ?? []).map(e => ({
       ...e,
-      label: e.label ? redactText(e.label) : e.label,
+      // label is the coded event/drug name; value is whatever was recorded
+      // against it, so only the label is exempt.
+      label: e.label ? redactText(e.label, coded) : e.label,
       value: e.value ? redactText(e.value) : e.value,
     })),
     complications: (c.complications ?? []).map(comp => ({
@@ -44,7 +57,7 @@ export function redactExportRow(c: ExportRow) {
       keyEvents: deepRedactPII(c.intraop.keyEvents),
       premedicationRows: c.intraop.premedicationRows.map(row => ({
         ...row,
-        nameRaw: row.nameRaw ? redactText(row.nameRaw) : row.nameRaw,
+        nameRaw: row.nameRaw ? redactText(row.nameRaw, coded) : row.nameRaw,
       })),
     } : c.intraop,
   }

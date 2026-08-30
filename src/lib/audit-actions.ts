@@ -92,6 +92,11 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "RELATIONAL_SYNC_FAILED", category: "CASE", labels: { bg: "Неуспешна синхронизация на данните за случай", en: "Case data synchronisation failed" } },
 
   { code: "AI_ADVISE", category: "SECURITY", labels: { bg: "Използван съвет от ИИ", en: "AI advice used" } },
+  // The two image routes send a photograph to an external provider. No text
+  // redaction is possible on an image, so these are the highest-exposure AI
+  // actions in the system and previously recorded nothing on success.
+  { code: "AI_VITALS_SCAN", category: "SECURITY", labels: { bg: "Сканирано изображение от монитор с ИИ", en: "Monitor image scanned with AI" } },
+  { code: "AI_LAB_SCAN", category: "SECURITY", labels: { bg: "Сканирано изображение от лабораторен резултат с ИИ", en: "Laboratory report image scanned with AI" } },
   { code: "PII_BLOCKED", category: "SECURITY", labels: { bg: "Блокирани лични данни", en: "Personal data blocked" } },
 
   { code: "RESEARCH_SELF_AUTHORIZE", category: "RESEARCH", labels: { bg: "Самооторизиран изследователски достъп", en: "Research access self-authorised" } },
