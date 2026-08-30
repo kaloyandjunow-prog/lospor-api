@@ -10,7 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        # Must match the major version the appliance actually runs. The 37
+        # *-postgres.test.ts assertions gated behind LOSPOR_POSTGRES_INTEGRATION
+        # cover case locking, audit atomicity, conflict override and clinical
+        # serialization -- locking and transaction visibility are exactly what
+        # can differ across a major version, so proving them on 16 while
+        # shipping 17 tested the wrong database. Bookworm rather than Alpine
+        # keeps the libc and collation family aligned with production too,
+        # matching lospor-hospital's own CI service.
+        image: postgres:17.6-bookworm
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
@@ -46,3 +54,16 @@ jobs:
         env:
           LOSPOR_POSTGRES_INTEGRATION: "true"
       - run: npm run build
+      # Advisory only, deliberately. Nothing upstream of the appliance audited
+      # its own dependencies: lospor-hospital gates `npm audit`, but it audits
+      # its own seven packages, so an advisory reaching a vendored app stayed
+      # invisible until someone looked by hand. A scan today reports a
+      # high-severity production advisory here (nanoid <3.3.18, reached through
+      # next -> postcss), which no gate would have surfaced.
+      #
+      # It does not fail the build yet: the fix means rewriting a lockfile, and
+      # that is a deliberate change rather than something to force on whoever
+      # pushes next. Turn this blocking once the current findings are cleared.
+      - name: Dependency advisories (advisory, non-blocking)
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
