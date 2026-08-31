@@ -1,6 +1,37 @@
 # Changelog - LOSPOR API
 
-## [Unreleased]
+## [9.6.0] - 2026-08-31
+
+### Fixed
+
+- **Lab report scanning returned 403 for every caller.** 9.5.0 added a per-case
+  consent gate to `POST /v1/ai/read-labs`, requiring `aiOptIn: true` in the
+  request body, and no client sent it. The web app was updated in the same
+  release; the phone app was not, and its 9.5.0 contained no source change at
+  all, so lab scanning was broken in production from the moment 9.5.0 shipped.
+
+### Changed
+
+- **Lab scanning is now case-scoped, and consent is read from the record.**
+  `POST /v1/ai/read-labs` is replaced by `POST /v1/cases/{id}/ai/read-labs`,
+  which loads the case, checks access, and reads `preop.aiOptIn` from the
+  database — a client-supplied `aiOptIn` is ignored entirely.
+
+  The old route took the caller's word for consent, so any authenticated caller
+  could assert consent the clinical record did not contain. That matters more
+  here than anywhere else in the system: this route sends a photograph of a lab
+  printout, which carries the patient's name and EGN in its header, and no
+  redaction is possible on an image. An attestation the server never checks is
+  not a consent control. The monitor scanner has always done this correctly and
+  is now the pattern both image routes follow.
+
+  The cost is that a report cannot be scanned into a case that does not exist
+  yet — the client saves first, then scans. That is the same order the monitor
+  scanner already required, and the only honest one: an unsaved draft has no
+  recorded consent to read. The text-only advice routes are unchanged, because
+  what they send is redacted and a draft has somewhere to send it from.
+
+## [9.5.0] - 2026-08-31
 
 ### Fixed
 
