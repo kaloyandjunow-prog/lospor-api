@@ -1142,7 +1142,7 @@ add("GET", "/v1/users/colleagues", "List colleagues eligible for transfer", { re
 
 add("POST", "/v1/cases/{id}/ai/advise", "Generate case-specific AI advice", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 add("POST", "/v1/ai/advise", "Generate AI advice from supplied structured data", { requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
-add("POST", "/v1/ai/read-labs", "Extract laboratory values from an uploaded image", { requestBody: body(ref("JsonObject")), result: arrayOf("JsonObject") })
+add("POST", "/v1/cases/{id}/ai/read-labs", "Extract laboratory values from an uploaded image", { parameters: [id], requestBody: body(ref("JsonObject")), result: arrayOf("JsonObject") })
 add("POST", "/v1/cases/{id}/vitals-scan", "Extract preoperative vitals from an image", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 
 add("POST", "/v1/cases/{id}/print-token", "Create a short-lived print token", { parameters: [id], result: ref("JsonObject") })
