@@ -268,7 +268,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "mallampati",
-    exportName: "observation.value_as_string (LOSPOR:MALLAMPATI)",
+    exportName: "measurement.value_as_concept_id (LOSPOR:MALLAMPATI)",
     meaning: "Mallampati airway classification",
     type: "enum",
     allowedValues: "'I'|'II'|'III'|'IV'",
@@ -422,7 +422,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "mouthOpeningCm",
-    exportName: "observation.value_as_number (LOSPOR:MOUTH_OPENING_CM)",
+    exportName: "measurement.value_as_number (LOSPOR:MOUTH_OPENING_CM)",
     meaning: "Interincisor distance on maximal mouth opening",
     type: "float",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
@@ -431,7 +431,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "thyromental",
-    exportName: "observation.value_as_number (LOSPOR:THYROMENTAL_DISTANCE_CM)",
+    exportName: "measurement.value_as_number (LOSPOR:THYROMENTAL_DISTANCE_CM)",
     meaning: "Thyromental distance",
     type: "float",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
@@ -550,7 +550,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "cormackLehane",
-    exportName: "observation.value_as_string (LOSPOR:CORMACK_LEHANE)",
+    exportName: "measurement.value_as_concept_id (LOSPOR:CORMACK_LEHANE)",
     meaning: "Cormack-Lehane grade of the laryngoscopic view",
     type: "string",
     allowedValues: "I | IIa | IIb | III | IV",
