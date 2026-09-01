@@ -132,7 +132,14 @@ export function caseReadWhereForUser(user: AuthUser, id?: string): Prisma.CaseWh
   const base = id ? { id } : {}
   if (user.role === "ADMIN") return base
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
-    return { ...base, ...headOfDeptCaseScope(user.institutionId) }
+    // canReadCase permits the assignee unconditionally, before it ever looks
+    // at role or institution — this must stay a superset of that, or a case
+    // assigned to this head of department at a different institution reads
+    // fine one at a time (canReadCase says yes) but vanishes from every list,
+    // detail-adjacent query and export that scopes through this function
+    // instead, exactly because promotion to HOD replaced the assignee clause
+    // rather than adding to it.
+    return { ...base, OR: [{ userId: user.id }, headOfDeptCaseScope(user.institutionId)] }
   }
   if (user.institutionId) {
     return {
@@ -150,7 +157,11 @@ export function caseWriteWhereForUser(user: AuthUser, id?: string): Prisma.CaseW
   const base = id ? { id } : {}
   if (user.role === "ADMIN") return base
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
-    return { ...base, ...headOfDeptCaseScope(user.institutionId) }
+    // Same gap as caseReadWhereForUser, and canWriteCase permits the assignee
+    // the same way canReadCase does: this must stay a superset too, or a
+    // write to an HOD's own case at a different institution fails to match
+    // any row here even though canWriteCase itself would allow it.
+    return { ...base, OR: [{ userId: user.id }, headOfDeptCaseScope(user.institutionId)] }
   }
   return { ...base, userId: user.id }
 }
