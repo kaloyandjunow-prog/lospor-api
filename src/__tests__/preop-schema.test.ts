@@ -56,6 +56,26 @@ describe("preopSchema", () => {
       expect((result.data as Record<string, unknown>).customField).toBe(true)
     }
   })
+
+  it("keeps source/takenAt on a lab result — the outer passthrough does not reach nested array items", () => {
+    // labResults items are a *closed* z.object, so preopSchema's own
+    // .passthrough() (proven above) does not save these keys — they need
+    // their own fields on the item schema, which is what this pins.
+    const result = preopSchema.safeParse({
+      labResults: [{ test: "Hemoglobin", value: "180", unit: "g/L", source: "ai-scan", takenAt: "2026-08-01T09:00:00.000Z" }],
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.labResults?.[0]).toMatchObject({ source: "ai-scan", takenAt: "2026-08-01T09:00:00.000Z" })
+    }
+  })
+
+  it("rejects a lab result source outside the closed provenance set", () => {
+    const result = preopSchema.safeParse({
+      labResults: [{ test: "Hemoglobin", value: "180", source: "made-up" }],
+    })
+    expect(result.success).toBe(false)
+  })
 })
 
 describe("postopSchema", () => {

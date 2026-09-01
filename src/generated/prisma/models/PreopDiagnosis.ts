@@ -50,6 +50,7 @@ export type PreopDiagnosisMinAggregateOutputType = {
   standardConceptId: number | null
   mappingStatus: $Enums.ConceptMappingStatus | null
   source: string | null
+  clinicalSource: string | null
   sourceVersion: string | null
   ordinal: number | null
   createdAt: Date | null
@@ -69,6 +70,7 @@ export type PreopDiagnosisMaxAggregateOutputType = {
   standardConceptId: number | null
   mappingStatus: $Enums.ConceptMappingStatus | null
   source: string | null
+  clinicalSource: string | null
   sourceVersion: string | null
   ordinal: number | null
   createdAt: Date | null
@@ -88,6 +90,7 @@ export type PreopDiagnosisCountAggregateOutputType = {
   standardConceptId: number
   mappingStatus: number
   source: number
+  clinicalSource: number
   sourceVersion: number
   ordinal: number
   createdAt: number
@@ -119,6 +122,7 @@ export type PreopDiagnosisMinAggregateInputType = {
   standardConceptId?: true
   mappingStatus?: true
   source?: true
+  clinicalSource?: true
   sourceVersion?: true
   ordinal?: true
   createdAt?: true
@@ -138,6 +142,7 @@ export type PreopDiagnosisMaxAggregateInputType = {
   standardConceptId?: true
   mappingStatus?: true
   source?: true
+  clinicalSource?: true
   sourceVersion?: true
   ordinal?: true
   createdAt?: true
@@ -157,6 +162,7 @@ export type PreopDiagnosisCountAggregateInputType = {
   standardConceptId?: true
   mappingStatus?: true
   source?: true
+  clinicalSource?: true
   sourceVersion?: true
   ordinal?: true
   createdAt?: true
@@ -263,6 +269,7 @@ export type PreopDiagnosisGroupByOutputType = {
   standardConceptId: number | null
   mappingStatus: $Enums.ConceptMappingStatus
   source: string
+  clinicalSource: string | null
   sourceVersion: string | null
   ordinal: number
   createdAt: Date
@@ -305,6 +312,7 @@ export type PreopDiagnosisWhereInput = {
   standardConceptId?: Prisma.IntNullableFilter<"PreopDiagnosis"> | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"PreopDiagnosis"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"PreopDiagnosis"> | string
+  clinicalSource?: Prisma.StringNullableFilter<"PreopDiagnosis"> | string | null
   sourceVersion?: Prisma.StringNullableFilter<"PreopDiagnosis"> | string | null
   ordinal?: Prisma.IntFilter<"PreopDiagnosis"> | number
   createdAt?: Prisma.DateTimeFilter<"PreopDiagnosis"> | Date | string
@@ -325,6 +333,7 @@ export type PreopDiagnosisOrderByWithRelationInput = {
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  clinicalSource?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   ordinal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -348,6 +357,7 @@ export type PreopDiagnosisWhereUniqueInput = Prisma.AtLeast<{
   standardConceptId?: Prisma.IntNullableFilter<"PreopDiagnosis"> | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"PreopDiagnosis"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"PreopDiagnosis"> | string
+  clinicalSource?: Prisma.StringNullableFilter<"PreopDiagnosis"> | string | null
   sourceVersion?: Prisma.StringNullableFilter<"PreopDiagnosis"> | string | null
   ordinal?: Prisma.IntFilter<"PreopDiagnosis"> | number
   createdAt?: Prisma.DateTimeFilter<"PreopDiagnosis"> | Date | string
@@ -368,6 +378,7 @@ export type PreopDiagnosisOrderByWithAggregationInput = {
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  clinicalSource?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   ordinal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -395,6 +406,7 @@ export type PreopDiagnosisScalarWhereWithAggregatesInput = {
   standardConceptId?: Prisma.IntNullableWithAggregatesFilter<"PreopDiagnosis"> | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusWithAggregatesFilter<"PreopDiagnosis"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringWithAggregatesFilter<"PreopDiagnosis"> | string
+  clinicalSource?: Prisma.StringNullableWithAggregatesFilter<"PreopDiagnosis"> | string | null
   sourceVersion?: Prisma.StringNullableWithAggregatesFilter<"PreopDiagnosis"> | string | null
   ordinal?: Prisma.IntWithAggregatesFilter<"PreopDiagnosis"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"PreopDiagnosis"> | Date | string
@@ -413,6 +425,7 @@ export type PreopDiagnosisCreateInput = {
   standardConceptId?: number | null
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
+  clinicalSource?: string | null
   sourceVersion?: string | null
   ordinal?: number
   createdAt?: Date | string
@@ -433,6 +446,7 @@ export type PreopDiagnosisUncheckedCreateInput = {
   standardConceptId?: number | null
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
+  clinicalSource?: string | null
   sourceVersion?: string | null
   ordinal?: number
   createdAt?: Date | string
@@ -451,6 +465,7 @@ export type PreopDiagnosisUpdateInput = {
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
+  clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ordinal?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -471,6 +486,7 @@ export type PreopDiagnosisUncheckedUpdateInput = {
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
+  clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ordinal?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -490,6 +506,7 @@ export type PreopDiagnosisCreateManyInput = {
   standardConceptId?: number | null
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
+  clinicalSource?: string | null
   sourceVersion?: string | null
   ordinal?: number
   createdAt?: Date | string
@@ -508,6 +525,7 @@ export type PreopDiagnosisUpdateManyMutationInput = {
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
+  clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ordinal?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -527,6 +545,7 @@ export type PreopDiagnosisUncheckedUpdateManyInput = {
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
+  clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ordinal?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -556,6 +575,7 @@ export type PreopDiagnosisCountOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  clinicalSource?: Prisma.SortOrder
   sourceVersion?: Prisma.SortOrder
   ordinal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -580,6 +600,7 @@ export type PreopDiagnosisMaxOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  clinicalSource?: Prisma.SortOrder
   sourceVersion?: Prisma.SortOrder
   ordinal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -599,6 +620,7 @@ export type PreopDiagnosisMinOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
+  clinicalSource?: Prisma.SortOrder
   sourceVersion?: Prisma.SortOrder
   ordinal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -664,6 +686,7 @@ export type PreopDiagnosisCreateWithoutPreopInput = {
   standardConceptId?: number | null
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
+  clinicalSource?: string | null
   sourceVersion?: string | null
   ordinal?: number
   createdAt?: Date | string
@@ -682,6 +705,7 @@ export type PreopDiagnosisUncheckedCreateWithoutPreopInput = {
   standardConceptId?: number | null
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
+  clinicalSource?: string | null
   sourceVersion?: string | null
   ordinal?: number
   createdAt?: Date | string
@@ -730,6 +754,7 @@ export type PreopDiagnosisScalarWhereInput = {
   standardConceptId?: Prisma.IntNullableFilter<"PreopDiagnosis"> | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"PreopDiagnosis"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"PreopDiagnosis"> | string
+  clinicalSource?: Prisma.StringNullableFilter<"PreopDiagnosis"> | string | null
   sourceVersion?: Prisma.StringNullableFilter<"PreopDiagnosis"> | string | null
   ordinal?: Prisma.IntFilter<"PreopDiagnosis"> | number
   createdAt?: Prisma.DateTimeFilter<"PreopDiagnosis"> | Date | string
@@ -748,6 +773,7 @@ export type PreopDiagnosisCreateManyPreopInput = {
   standardConceptId?: number | null
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
+  clinicalSource?: string | null
   sourceVersion?: string | null
   ordinal?: number
   createdAt?: Date | string
@@ -766,6 +792,7 @@ export type PreopDiagnosisUpdateWithoutPreopInput = {
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
+  clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ordinal?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -784,6 +811,7 @@ export type PreopDiagnosisUncheckedUpdateWithoutPreopInput = {
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
+  clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ordinal?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -802,6 +830,7 @@ export type PreopDiagnosisUncheckedUpdateManyWithoutPreopInput = {
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
+  clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ordinal?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -823,6 +852,7 @@ export type PreopDiagnosisSelect<ExtArgs extends runtime.Types.Extensions.Intern
   standardConceptId?: boolean
   mappingStatus?: boolean
   source?: boolean
+  clinicalSource?: boolean
   sourceVersion?: boolean
   ordinal?: boolean
   createdAt?: boolean
@@ -843,6 +873,7 @@ export type PreopDiagnosisSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   standardConceptId?: boolean
   mappingStatus?: boolean
   source?: boolean
+  clinicalSource?: boolean
   sourceVersion?: boolean
   ordinal?: boolean
   createdAt?: boolean
@@ -863,6 +894,7 @@ export type PreopDiagnosisSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   standardConceptId?: boolean
   mappingStatus?: boolean
   source?: boolean
+  clinicalSource?: boolean
   sourceVersion?: boolean
   ordinal?: boolean
   createdAt?: boolean
@@ -883,12 +915,13 @@ export type PreopDiagnosisSelectScalar = {
   standardConceptId?: boolean
   mappingStatus?: boolean
   source?: boolean
+  clinicalSource?: boolean
   sourceVersion?: boolean
   ordinal?: boolean
   createdAt?: boolean
 }
 
-export type PreopDiagnosisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "preopId" | "caseId" | "code" | "label" | "labelEn" | "labelBg" | "system" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "mappingStatus" | "source" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["preopDiagnosis"]>
+export type PreopDiagnosisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "preopId" | "caseId" | "code" | "label" | "labelEn" | "labelBg" | "system" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "mappingStatus" | "source" | "clinicalSource" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["preopDiagnosis"]>
 export type PreopDiagnosisInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   preop?: boolean | Prisma.PreoperativeAssessmentDefaultArgs<ExtArgs>
 }
@@ -918,6 +951,7 @@ export type $PreopDiagnosisPayload<ExtArgs extends runtime.Types.Extensions.Inte
     standardConceptId: number | null
     mappingStatus: $Enums.ConceptMappingStatus
     source: string
+    clinicalSource: string | null
     sourceVersion: string | null
     ordinal: number
     createdAt: Date
@@ -1358,6 +1392,7 @@ export interface PreopDiagnosisFieldRefs {
   readonly standardConceptId: Prisma.FieldRef<"PreopDiagnosis", 'Int'>
   readonly mappingStatus: Prisma.FieldRef<"PreopDiagnosis", 'ConceptMappingStatus'>
   readonly source: Prisma.FieldRef<"PreopDiagnosis", 'String'>
+  readonly clinicalSource: Prisma.FieldRef<"PreopDiagnosis", 'String'>
   readonly sourceVersion: Prisma.FieldRef<"PreopDiagnosis", 'String'>
   readonly ordinal: Prisma.FieldRef<"PreopDiagnosis", 'Int'>
   readonly createdAt: Prisma.FieldRef<"PreopDiagnosis", 'DateTime'>

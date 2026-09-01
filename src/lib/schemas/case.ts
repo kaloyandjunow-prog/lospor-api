@@ -161,11 +161,21 @@ export const preopSchema = z.object({
   })).optional(),
 
   // Item 27: Strict lab result shape matching the lab scan extractor output
+  //
+  // This object is closed (no .passthrough()), and the outer preopSchema's
+  // .passthrough() does not reach inside nested array items — Zod only
+  // widens the object it is called on. `source`/`takenAt` were dropped
+  // silently here for that reason: LabResult.source and .takenAt already
+  // exist as DB columns and relational-sync already reads them, but every
+  // request arrived with them already stripped, so AI-scanned labs were
+  // indistinguishable from manually typed ones in the data.
   labResults: z.array(z.object({
     test:  z.string(),
     value: z.string(),
     unit:  z.string().optional(),
     flag:  z.string().optional(),
+    source: z.enum(["manual", "ai-scan", "import"]).optional(),
+    takenAt: z.string().optional(),
   })).optional(),
 }).passthrough().superRefine((data, ctx) => addCoreIssues(validatePreopPatch(data), ctx))
 

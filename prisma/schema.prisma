@@ -1590,7 +1590,8 @@ model PreopDiagnosis {
   sourceCode        String?
   standardConceptId Int?
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
-  source            String                 @default("sync")
+  source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
+  clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
   sourceVersion     String?
   ordinal           Int                    @default(0)
   createdAt         DateTime               @default(now())
@@ -1615,7 +1616,8 @@ model PreopProcedure {
   sourceCode        String?
   standardConceptId Int?
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
-  source            String                 @default("sync")
+  source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
+  clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
   sourceVersion     String?
   ordinal           Int                    @default(0)
   createdAt         DateTime               @default(now())
@@ -1642,7 +1644,8 @@ model Comorbidity {
   sourceCode        String?
   standardConceptId Int?
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
-  source            String                 @default("sync")
+  source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
+  clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
   sourceVersion     String?
   ordinal           Int                    @default(0)
   createdAt         DateTime               @default(now())
@@ -1705,7 +1708,8 @@ model Medication {
   sourceCode        String?
   standardConceptId Int?
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
-  source            String                 @default("sync")
+  source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
+  clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
   sourceVersion     String?
   ordinal           Int                    @default(0)
   createdAt         DateTime               @default(now())

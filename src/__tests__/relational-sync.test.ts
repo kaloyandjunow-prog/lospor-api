@@ -72,22 +72,22 @@ function makeCaseRow() {
       bloodType: "A",
       rhFactor: "POS",
       diagnosesJson: [
-        { code: "K35", label: "Acute appendicitis", labelEn: "Acute appendicitis", labelBg: "Остър апендицит", system: "ICD10" },
+        { code: "K35", label: "Acute appendicitis", labelEn: "Acute appendicitis", labelBg: "Остър апендицит", system: "ICD10", source: "ai-scan" },
         { code: "Z99", label: "Source-only diagnosis" },
         { label: "Uncoded diagnosis" },
       ],
       proceduresJson: [
-        { code: "APPY", group: "Appendectomy", domain: "LOSPOR_PROCEDURE", description: "Laparoscopic appendectomy" },
+        { code: "APPY", group: "Appendectomy", domain: "LOSPOR_PROCEDURE", description: "Laparoscopic appendectomy", source: "manual" },
       ],
       comorbidities: [
-        { code: "K35", label: "Appendicitis history", labelEn: "Appendicitis history" },
+        { code: "K35", label: "Appendicitis history", labelEn: "Appendicitis history", source: "import" },
       ],
       labResults: [
-        { test: "Hemoglobin", value: "180", unit: "g/L", source: "scan" },
-        { test: "Unknown lab", value: "7", unit: "x" },
+        { test: "Hemoglobin", value: "180", unit: "g/L", source: "scan", takenAt: "2026-08-01T09:00:00.000Z" },
+        { test: "Unknown lab", value: "7", unit: "x", takenAt: "not-a-date" },
       ],
       currentMedications: JSON.stringify([
-        { label: "Diazepam", inn: "diazepam", atc: "N05BA01", dose: "5 mg", route: "PO", frequency: "night" },
+        { label: "Diazepam", inn: "diazepam", atc: "N05BA01", dose: "5 mg", route: "PO", frequency: "night", source: "ai-scan" },
       ]),
       allergies: true,
       allergyDetails: "Penicillin",
@@ -251,6 +251,9 @@ describe("syncCaseRelational", () => {
           standardConceptId: 12345,
           mappingStatus: "MAPPED",
           ordinal: 0,
+          // Clinical provenance of the diagnosis item, distinct from `source`
+          // (sync-audit metadata, asserted below) which never varies per row.
+          clinicalSource: "ai-scan",
         }),
         expect.objectContaining({
           code: "Z99",
@@ -259,6 +262,7 @@ describe("syncCaseRelational", () => {
           standardConceptId: null,
           mappingStatus: "SOURCE_ONLY",
           ordinal: 1,
+          clinicalSource: null,
         }),
         expect.objectContaining({
           code: null,
@@ -267,9 +271,15 @@ describe("syncCaseRelational", () => {
           standardConceptId: null,
           mappingStatus: "UNMAPPED",
           ordinal: 2,
+          clinicalSource: null,
         }),
       ],
     })
+    // source is sync-audit metadata (always "relational-sync") and must not
+    // have been overwritten by wiring clinicalSource through.
+    expect(db.preopDiagnosis.createMany.mock.calls[0][0].data.every(
+      (row: { source: string }) => row.source === "relational-sync",
+    )).toBe(true)
     expect(db.preopProcedure.createMany).toHaveBeenCalledWith({
       data: [
         expect.objectContaining({
@@ -280,7 +290,13 @@ describe("syncCaseRelational", () => {
           sourceCode: "APPY",
           standardConceptId: 23456,
           mappingStatus: "MAPPED",
+          clinicalSource: "manual",
         }),
+      ],
+    })
+    expect(db.comorbidity.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({ code: "K35", label: "Appendicitis history", clinicalSource: "import" }),
       ],
     })
     expect(db.labResult.createMany).toHaveBeenCalledWith({
@@ -294,12 +310,16 @@ describe("syncCaseRelational", () => {
           standardConceptId: 3000963,
           mappingStatus: "MAPPED",
           source: "scan",
+          takenAt: new Date("2026-08-01T09:00:00.000Z"),
         }),
         expect.objectContaining({
           test: "Unknown lab",
           loincCode: null,
           unitCanon: null,
           mappingStatus: "UNMAPPED",
+          // An unparseable takenAt must resolve to null, never to the raw
+          // string or a fabricated "now".
+          takenAt: null,
         }),
       ],
     })
@@ -311,6 +331,7 @@ describe("syncCaseRelational", () => {
           atcCode: "N05BA01",
           standardConceptId: 19019905,
           mappingStatus: "MAPPED",
+          clinicalSource: "ai-scan",
         }),
         expect.objectContaining({
           kind: "ALLERGY",
@@ -318,6 +339,9 @@ describe("syncCaseRelational", () => {
           sourceVocabulary: "LOSPOR_DRUG_RAW",
           sourceCode: "Penicillin",
           mappingStatus: "SOURCE_ONLY",
+          // No source on this allergy item in the fixture — must be null,
+          // never defaulted to the sync-audit "relational-sync" value.
+          clinicalSource: null,
         }),
       ]),
     })

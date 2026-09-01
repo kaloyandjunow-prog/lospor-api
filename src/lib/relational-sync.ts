@@ -27,6 +27,16 @@ const flt = (v: unknown): number | null => {
   return isFinite(n) ? n : null
 }
 
+// A malformed or absent takenAt must resolve to null, not to "now" or the
+// unparsed string — a fabricated draw time is worse than an absent one, and
+// this column already exists specifically to distinguish "not recorded" from
+// a real instant.
+const isoDate = (v: unknown): Date | null => {
+  if (typeof v !== "string" || !v) return null
+  const d = new Date(v)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
 type MappingStatus = "MAPPED" | "MANUALLY_CURATED" | "REJECTED" | "SOURCE_ONLY" | "UNMAPPED"
 type ConceptInfo = {
   sourceVocabulary: string | null
@@ -136,6 +146,12 @@ function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts:
     system: str(d?.system),
     ...concept(concepts, "condition", "ICD10", str(d?.sub ?? d?.code)),
     source: SYNC_SOURCE,
+    // Clinical provenance (who/what recorded this item) is a different fact
+    // from `source` above, which is sync-audit metadata hard-coded to
+    // "relational-sync" for every row this function writes — it says this
+    // table is a mirror, not who entered the diagnosis. Kept as a separate
+    // column rather than repurposing `source` so neither meaning is lost.
+    clinicalSource: str(d?.source),
     sourceVersion: SYNC_SOURCE_VERSION,
     ordinal: i,
   }))
@@ -150,6 +166,9 @@ function procedureRows(preopId: string, caseId: string, json: unknown, concepts:
     description: str(p?.description ?? p?.label),
     ...concept(concepts, "procedure", str(p?.domain) ?? "LOSPOR_PROCEDURE", str(p?.sub ?? p?.code)),
     source: SYNC_SOURCE,
+    // See diagnosisRows: `source` is sync-audit metadata, not who/what
+    // recorded the item, so clinical provenance gets its own column.
+    clinicalSource: str(p?.source),
     sourceVersion: SYNC_SOURCE_VERSION,
     ordinal: i,
   }))
@@ -170,6 +189,9 @@ function comorbidityRows(preopId: string, caseId: string, json: unknown, concept
       system:   str(c?.system),
       ...concept(concepts, "condition", "ICD10", icd10Code ?? rawCode),
       source: SYNC_SOURCE,
+      // See diagnosisRows: `source` is sync-audit metadata, not who/what
+      // recorded the item, so clinical provenance gets its own column.
+      clinicalSource: str(c?.source),
       sourceVersion: SYNC_SOURCE_VERSION,
       ordinal: i,
     }
@@ -200,6 +222,7 @@ async function labRowsWithLoinc(
         referenceLow:  loinc?.referenceLow ?? null,
         referenceHigh: loinc?.referenceHigh ?? null,
         abnormalFlag,
+        takenAt:      isoDate(l?.takenAt),
         source:       str(l?.source) ?? "manual",
         ...concept(concepts, "measurement", "LOINC", loinc?.loincCode ?? null),
         sourceVersion: SYNC_SOURCE_VERSION,
@@ -242,6 +265,9 @@ function medicationRows(preopId: string, caseId: string, json: unknown, kind: "C
         frequency: str(m.frequency),
         ...mapped,
         source: SYNC_SOURCE,
+        // See diagnosisRows: `source` is sync-audit metadata, not who/what
+        // recorded the item, so clinical provenance gets its own column.
+        clinicalSource: str(m.source),
         sourceVersion: SYNC_SOURCE_VERSION,
         ordinal: i,
       }

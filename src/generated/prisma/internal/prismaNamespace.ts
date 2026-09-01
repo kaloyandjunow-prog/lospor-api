@@ -6036,6 +6036,7 @@ export const PreopDiagnosisScalarFieldEnum = {
   standardConceptId: 'standardConceptId',
   mappingStatus: 'mappingStatus',
   source: 'source',
+  clinicalSource: 'clinicalSource',
   sourceVersion: 'sourceVersion',
   ordinal: 'ordinal',
   createdAt: 'createdAt'
@@ -6057,6 +6058,7 @@ export const PreopProcedureScalarFieldEnum = {
   standardConceptId: 'standardConceptId',
   mappingStatus: 'mappingStatus',
   source: 'source',
+  clinicalSource: 'clinicalSource',
   sourceVersion: 'sourceVersion',
   ordinal: 'ordinal',
   createdAt: 'createdAt'
@@ -6080,6 +6082,7 @@ export const ComorbidityScalarFieldEnum = {
   standardConceptId: 'standardConceptId',
   mappingStatus: 'mappingStatus',
   source: 'source',
+  clinicalSource: 'clinicalSource',
   sourceVersion: 'sourceVersion',
   ordinal: 'ordinal',
   createdAt: 'createdAt'
@@ -6132,6 +6135,7 @@ export const MedicationScalarFieldEnum = {
   standardConceptId: 'standardConceptId',
   mappingStatus: 'mappingStatus',
   source: 'source',
+  clinicalSource: 'clinicalSource',
   sourceVersion: 'sourceVersion',
   ordinal: 'ordinal',
   createdAt: 'createdAt'
