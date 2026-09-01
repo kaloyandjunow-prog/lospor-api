@@ -854,6 +854,7 @@ export const IntraoperativeRecordScalarFieldEnum = {
   bloodMl: 'bloodMl',
   bloodProductsNote: 'bloodProductsNote',
   urineMl: 'urineMl',
+  bloodLossMl: 'bloodLossMl',
   timeSeriesData: 'timeSeriesData',
   keyEvents: 'keyEvents',
   complications: 'complications',

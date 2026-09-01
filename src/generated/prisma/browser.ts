@@ -6,7 +6,7 @@
 /*
  * This file should be your main import to use Prisma-related types and utilities in a browser. 
  * Use it to get access to models, enums, and input types.
- *
+ * 
  * This file does not contain a `PrismaClient` class, nor several other helpers that are intended as server-side only.
  * See `client.ts` for the standard, server-side entry point.
  *
@@ -19,12 +19,12 @@ export * as $Enums from './enums'
 export * from './enums';
 /**
  * Model User
- *
+ * 
  */
 export type User = Prisma.UserModel
 /**
  * Model EmailVerificationToken
- *
+ * 
  */
 export type EmailVerificationToken = Prisma.EmailVerificationTokenModel
 /**
@@ -35,7 +35,7 @@ export type PasswordResetToken = Prisma.PasswordResetTokenModel
 /**
  * Model AuthSession
  * Server-side inventory for every session issued by 1.2.0 or later.
- *
+ * 
  * JWTs remain the transport credential, while this row makes selective and
  * all-device revocation immediate and gives users a truthful device list.
  */
@@ -54,13 +54,13 @@ export type MfaLoginChallenge = Prisma.MfaLoginChallengeModel
 export type MfaRecoveryCode = Prisma.MfaRecoveryCodeModel
 /**
  * Model TechnicalPrincipal
- *
+ * 
  */
 export type TechnicalPrincipal = Prisma.TechnicalPrincipalModel
 /**
  * Model LegalAcceptance
  * Exact evidence of the legal text accepted by an account.
- *
+ * 
  * The legacy timestamp/version columns on User remain temporary compatibility
  * shadows. They are not sufficient evidence because they cannot identify the
  * deployment, privacy document, language, effective date, or exact content.

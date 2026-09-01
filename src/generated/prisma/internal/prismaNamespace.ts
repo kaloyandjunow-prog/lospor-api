@@ -5828,6 +5828,7 @@ export const IntraoperativeRecordScalarFieldEnum = {
   bloodMl: 'bloodMl',
   bloodProductsNote: 'bloodProductsNote',
   urineMl: 'urineMl',
+  bloodLossMl: 'bloodLossMl',
   timeSeriesData: 'timeSeriesData',
   keyEvents: 'keyEvents',
   complications: 'complications',
@@ -6400,14 +6401,14 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
  * Reference to a field of type 'AccountKind'
  */
 export type EnumAccountKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountKind'>
-
+    
 
 
 /**
  * Reference to a field of type 'AccountKind[]'
  */
 export type ListEnumAccountKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AccountKind[]'>
-
+    
 
 
 /**
@@ -6477,56 +6478,56 @@ export type EnumTechnicalPrincipalKindFieldRefInput<$PrismaModel> = FieldRefInpu
  * Reference to a field of type 'TechnicalPrincipalKind[]'
  */
 export type ListEnumTechnicalPrincipalKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TechnicalPrincipalKind[]'>
-
+    
 
 
 /**
  * Reference to a field of type 'LegalDocumentKind'
  */
 export type EnumLegalDocumentKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentKind'>
-
+    
 
 
 /**
  * Reference to a field of type 'LegalDocumentKind[]'
  */
 export type ListEnumLegalDocumentKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentKind[]'>
-
+    
 
 
 /**
  * Reference to a field of type 'LegalDocumentLocale'
  */
 export type EnumLegalDocumentLocaleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentLocale'>
-
+    
 
 
 /**
  * Reference to a field of type 'LegalDocumentLocale[]'
  */
 export type ListEnumLegalDocumentLocaleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'LegalDocumentLocale[]'>
-
+    
 
 
 /**
  * Reference to a field of type 'CaseStatus'
  */
 export type EnumCaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStatus'>
-
+    
 
 
 /**
  * Reference to a field of type 'CaseStatus[]'
  */
 export type ListEnumCaseStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStatus[]'>
-
+    
 
 
 /**
  * Reference to a field of type 'ClinicalMode'
  */
 export type EnumClinicalModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ClinicalMode'>
-
+    
 
 
 /**
@@ -7223,3 +7224,4 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
+

@@ -1,3 +1,9 @@
+// 4.2.0 adds bloodLossMl, the first intraoperative quantity a clinician enters
+// that is not derivable from the fluid events. Crystalloids, colloids and blood
+// products are projections of what was actually given; blood lost is an
+// observation only the anaesthetist can make. NULL means not recorded, which is
+// deliberately distinct from a recorded 0 mL.
+//
 // 4.1.0 points the entries at columns that exist. Twenty-six entries declared
 // observation.value_as_number, a column the export did not have until
 // source_version 3.7.0 added it; five more named a column by a name the export
@@ -14,7 +20,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.1.0"
+export const DICTIONARY_VERSION = "4.2.0"
 
 export interface DictionaryEntry {
   name: string
@@ -763,6 +769,17 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not measured",
     sourceTable: "IntraoperativeRecord", sourceColumn: "urineMl",
     versionIntroduced: "3.0.0",
+  },
+  {
+    name: "bloodLossMl",
+    exportName: "observation.value_as_number (LOSPOR:BLOOD_LOSS_ML)",
+    meaning: "Estimated blood loss during the procedure",
+    unit: "mL",
+    type: "integer",
+    allowedValues: "0–20000",
+    missingnessRule: "NULL = not recorded (distinct from a recorded 0)",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "bloodLossMl",
+    versionIntroduced: "4.2.0",
   },
   // ── Intraop events (vitals) ───────────────────────────────────────────────────
   {

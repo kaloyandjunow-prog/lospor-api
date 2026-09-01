@@ -224,6 +224,7 @@ export const intraopSchema = z.object({
   bloodMl:           cInt("intraop", "bloodMl"),
   bloodProductsNote: z.string().max(1000).nullable().optional(),
   urineMl:           cInt("intraop", "urineMl"),
+  bloodLossMl:       cInt("intraop", "bloodLossMl"),
 
   timeSeriesData: z.array(z.unknown()).optional(),
   keyEvents:      z.array(z.unknown()).optional(),

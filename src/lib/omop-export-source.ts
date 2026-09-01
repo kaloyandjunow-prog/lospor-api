@@ -206,7 +206,7 @@ export const CASE_SELECT = {
       // Legacy single-device columns, still the only size on older rows.
       tubeSize: true, cuffed: true,
       ventilationModes: true, ippv: true, jetVentilation: true, peepCmH2O: true,
-      crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true,
+      crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true, bloodLossMl: true,
       complications: true, premedicationEvening: true, premedicationMorning: true,
       vascularAccessRows: {
         select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },

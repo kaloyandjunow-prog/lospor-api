@@ -575,6 +575,7 @@ type CaseRow = {
     colloidsMl: number | null
     bloodMl: number | null
     urineMl: number | null
+    bloodLossMl: number | null
     complications: string | null
     premedicationEvening: string | null
     premedicationMorning: string | null
@@ -1578,6 +1579,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:COLLOIDS_ML", c.intraop.colloidsMl, endDate)
       sourceObservation("LOSPOR:BLOOD_PRODUCTS_ML", c.intraop.bloodMl, endDate)
       sourceObservation("LOSPOR:URINE_OUTPUT_ML", c.intraop.urineMl, endDate)
+      sourceObservation("LOSPOR:BLOOD_LOSS_ML", c.intraop.bloodLossMl, endDate)
     }
 
     for (const sel of c.selections ?? []) {
