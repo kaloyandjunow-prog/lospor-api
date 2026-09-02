@@ -1,5 +1,33 @@
 # Changelog - LOSPOR API
 
+## [9.7.2] - 2026-09-03
+
+### Fixed
+
+- **Every production deploy failed.** 9.7.1 added bundled-baseline provisioning
+  to the production build, chained so that a baseline which could not be
+  established stopped the release. It stopped every release instead, on
+  `BUNDLED_BASELINE_PARTIAL_STATE`, and left `main` unable to reach production
+  at all — including any fix for the condition causing it.
+
+  The mistake was about what the provisioner is for. It installs onto a pristine
+  deployment and verifies its own work by its release principal; a deployment an
+  administrator configured through the application is, to it, an unfamiliar
+  state it must refuse to touch. That refusal is right — it cannot tell a
+  half-finished install from a deliberate choice — but it is a poor gate for a
+  build, because legitimate history then blocks shipping forever.
+
+  The public deployment is that case: both baselines are published and selected
+  there, arranged by hand. Nothing was wrong with it.
+
+### Added
+
+- **`clinical-rules:inspect-bundled-baselines`**, which reports what a
+  deployment holds — the counts the provisioner requires, the platform presets
+  and selections, and the audit rows — and writes nothing. The provisioner names
+  the rule that was broken but not the state that broke it, because it is inside
+  a transaction it is about to abandon; this is how to look without guessing.
+
 ## [9.7.1] - 2026-09-03
 
 ### Fixed

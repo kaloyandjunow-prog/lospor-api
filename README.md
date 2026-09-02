@@ -352,21 +352,24 @@ retention cron. The web project must not receive those values.
 `output: standalone` is enabled so the same service can later run as a local
 Node/container process at an institution.
 
-### A production deploy is this deployment's installation
+### The bundled baselines are not provisioned by the build
 
-An appliance has an installer that puts the bundled adult and paediatric
-rulesets in place and selects them for the whole deployment. This deployment has
-no installer, so the production build does it: `prisma migrate deploy`, then
-`clinical-rules:provision-bundled-baselines -- --apply`.
+They were, for one release, and it blocked every deploy. The reasoning was that
+a deploy is this deployment's installation, so it should do what an installer
+does. The flaw is in what the provisioner is *for*: it installs onto a pristine
+deployment and verifies its own work afterwards, and it recognises that work by
+its release principal. Anything a person set up through the application is, to
+it, an unfamiliar state it must refuse to touch — correctly, since it cannot
+tell a half-finished install from a deliberate choice.
 
-It was missing, and nothing said so. The provisioner was reachable only from
-`prisma/seed.ts` and by hand, so on the public deployment neither ruleset was
-ever installed and neither was ever selected — the app simply had no platform
-ruleset, quietly, for as long as it had been deployed.
+The public deployment is exactly that case. Both baselines are published and
+selected there, arranged by an administrator through the application, so the
+provisioner will never verify them and the build failed on
+`BUNDLED_BASELINE_PARTIAL_STATE` every time. One row of legitimate history
+removed the ability to ship anything, including the fix.
 
-Two properties make running it on every deploy the right shape rather than a
-risk. It is idempotent: it reports `installed` or `verified` from inside one
-serializable transaction, and refuses a partial or conflicting state rather than
-writing over it. And it is chained with `&&`, so a baseline that cannot be
-established stops the release exactly as a failed migration does. Skipping
-quietly is precisely how its absence went unnoticed.
+Use `clinical-rules:inspect-bundled-baselines` to read what a deployment holds —
+it writes nothing — and `clinical-rules:provision-bundled-baselines -- --apply`
+to install onto a pristine one. Reach for the second only after the first says
+the deployment is empty; a platform selection pointing anywhere else is a
+governed decision and is not ours to overwrite.
