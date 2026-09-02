@@ -135,6 +135,13 @@ export const CASE_SELECT = {
       sex: true, heightCm: true, weightKg: true, bodySurfaceAreaM2: true,
       bpSystolic: true, bpDiastolic: true, heartRate: true, spO2: true,
       temperature: true, respiratoryRate: true,
+      // The unobtainable flags travel with the values they qualify. Without
+      // them the export cannot tell a measurement nobody attempted from one
+      // that was attempted and could not be obtained — and the second is a
+      // finding about the patient, not a gap in the paperwork.
+      bpUnobtainable: true, heartRateUnobtainable: true, spO2Unobtainable: true,
+      temperatureUnobtainable: true, respiratoryRateUnobtainable: true,
+      airwayUnobtainable: true,
       diagnosis: true, diagnosesJson: true, plannedProcedure: true, proceduresJson: true,
       comorbidities: true, asaScore: true, emergencySurgery: true, highRiskSurgery: true,
       allergies: true, allergyDetails: true, smoking: true, substanceAbuse: true,
@@ -206,7 +213,7 @@ export const CASE_SELECT = {
       // Legacy single-device columns, still the only size on older rows.
       tubeSize: true, cuffed: true,
       ventilationModes: true, ippv: true, jetVentilation: true, peepCmH2O: true,
-      crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true,
+      crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true, bloodLossMl: true,
       complications: true, premedicationEvening: true, premedicationMorning: true,
       vascularAccessRows: {
         select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
@@ -227,6 +234,8 @@ export const CASE_SELECT = {
       aldreteTotal: true, painScoreNRS: true, pediatricPainScale: true,
       pediatricPainScore: true, paedScore: true, ponv: true, disposition: true,
       recoveryBpSystolic: true, recoveryBpDiastolic: true, recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true,
+      recoveryBpUnobtainable: true, recoveryHeartRateUnobtainable: true,
+      recoverySpO2Unobtainable: true, recoveryTemperatureUnobtainable: true,
       complications: true,
     },
   },

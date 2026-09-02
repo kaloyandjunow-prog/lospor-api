@@ -1,3 +1,9 @@
+// 4.2.0 adds bloodLossMl, the first intraoperative quantity a clinician enters
+// that is not derivable from the fluid events. Crystalloids, colloids and blood
+// products are projections of what was actually given; blood lost is an
+// observation only the anaesthetist can make. NULL means not recorded, which is
+// deliberately distinct from a recorded 0 mL.
+//
 // 4.1.0 points the entries at columns that exist. Twenty-six entries declared
 // observation.value_as_number, a column the export did not have until
 // source_version 3.7.0 added it; five more named a column by a name the export
@@ -14,7 +20,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.1.0"
+export const DICTIONARY_VERSION = "4.2.0"
 
 export interface DictionaryEntry {
   name: string
@@ -262,7 +268,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "mallampati",
-    exportName: "observation.value_as_string (LOSPOR:MALLAMPATI)",
+    exportName: "measurement.value_as_concept_id (LOSPOR:MALLAMPATI)",
     meaning: "Mallampati airway classification",
     type: "enum",
     allowedValues: "'I'|'II'|'III'|'IV'",
@@ -416,7 +422,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "mouthOpeningCm",
-    exportName: "observation.value_as_number (LOSPOR:MOUTH_OPENING_CM)",
+    exportName: "measurement.value_as_number (LOSPOR:MOUTH_OPENING_CM)",
     meaning: "Interincisor distance on maximal mouth opening",
     type: "float",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
@@ -425,7 +431,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "thyromental",
-    exportName: "observation.value_as_number (LOSPOR:THYROMENTAL_DISTANCE_CM)",
+    exportName: "measurement.value_as_number (LOSPOR:THYROMENTAL_DISTANCE_CM)",
     meaning: "Thyromental distance",
     type: "float",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
@@ -544,7 +550,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "cormackLehane",
-    exportName: "observation.value_as_string (LOSPOR:CORMACK_LEHANE)",
+    exportName: "measurement.value_as_concept_id (LOSPOR:CORMACK_LEHANE)",
     meaning: "Cormack-Lehane grade of the laryngoscopic view",
     type: "string",
     allowedValues: "I | IIa | IIb | III | IV",
@@ -763,6 +769,17 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not measured",
     sourceTable: "IntraoperativeRecord", sourceColumn: "urineMl",
     versionIntroduced: "3.0.0",
+  },
+  {
+    name: "bloodLossMl",
+    exportName: "observation.value_as_number (LOSPOR:BLOOD_LOSS_ML)",
+    meaning: "Estimated blood loss during the procedure",
+    unit: "mL",
+    type: "integer",
+    allowedValues: "0–20000",
+    missingnessRule: "NULL = not recorded (distinct from a recorded 0)",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "bloodLossMl",
+    versionIntroduced: "4.2.0",
   },
   // ── Intraop events (vitals) ───────────────────────────────────────────────────
   {

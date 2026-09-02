@@ -51,7 +51,7 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   ],
   measurement: [
     "measurement_id", "person_id", "measurement_concept_id", "measurement_date",
-    "measurement_datetime", "measurement_type_concept_id", "value_as_number", "unit_concept_id",
+    "measurement_datetime", "measurement_type_concept_id", "value_as_number", "value_as_concept_id", "unit_concept_id",
     "unit_source_value", "measurement_source_value", "value_source_value",
     "range_low", "range_high", "visit_occurrence_id",
   ],

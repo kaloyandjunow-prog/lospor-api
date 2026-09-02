@@ -35,7 +35,12 @@ describe("headOfDeptCaseScope", () => {
 describe("caseWhereForUser", () => {
   it("scopes a head of department by the case's institution, not the owner's", () => {
     const where = caseReadWhereForUser(hod(HOSPITAL_A))
-    expect(where).toEqual(headOfDeptCaseScope(HOSPITAL_A))
+    // headOfDeptCaseScope alone is one of two ways in now, not the whole
+    // scope: canAccessCase permits the assignee unconditionally, before it
+    // ever looks at institution, so this must stay a superset or promotion
+    // to HOD silently drops cases assigned to them elsewhere (see the
+    // "case assigned outside the department" block below).
+    expect(where).toEqual({ OR: [{ userId: "hod-1" }, headOfDeptCaseScope(HOSPITAL_A)] })
     // The old behaviour, which let a case follow its author.
     expect(where).not.toEqual({ user: { institutionId: HOSPITAL_A } })
   })
@@ -85,6 +90,32 @@ describe("a case does not follow its author to another hospital", () => {
 
     expect(headOfDeptCaseScope(HOSPITAL_B).institutionId).not.toBe(caseAtA.institutionId)
     expect(canAccessCase(hod(HOSPITAL_B), caseAtA)).toBe(false)
+  })
+})
+
+/**
+ * A case assigned to this head of department, performed at a different
+ * institution — the promotion bug. canAccessCase always said yes to this
+ * (the assignee clause runs before role or institution are ever consulted),
+ * but caseReadWhereForUser's HOD branch used to replace the assignee clause
+ * with the institution scope instead of adding to it, so this exact case
+ * read fine one at a time and vanished from every list, print, transfer,
+ * version and export query that scopes through it instead.
+ */
+describe("a case assigned outside the department still belongs to its assignee", () => {
+  const assignedElsewhere = {
+    id: "case-2",
+    userId: "hod-1",
+    institutionId: HOSPITAL_B,
+  }
+
+  it("canAccessCase already permits it", () => {
+    expect(canAccessCase(hod(HOSPITAL_A), assignedElsewhere)).toBe(true)
+  })
+
+  it("the query predicate now agrees", () => {
+    const where = caseReadWhereForUser(hod(HOSPITAL_A))
+    expect(where).toMatchObject({ OR: expect.arrayContaining([{ userId: "hod-1" }]) })
   })
 })
 

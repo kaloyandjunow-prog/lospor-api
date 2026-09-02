@@ -145,7 +145,8 @@ function sameContent(a: Record<string, unknown> | null | undefined, b: Record<st
   return JSON.stringify(stable(sa)) === JSON.stringify(stable(sb))
 }
 
-function buildRow(
+/** Exported for tests: the one place every stored case event passes through. */
+export function buildRow(
   caseId: string,
   userId: string | null,
   ev: LogEvent,
@@ -154,6 +155,19 @@ function buildRow(
   idempotencyKey: string,
   source: string,
 ) {
+  // A drug event's dose has one shape, `dose` -- every real client sends it
+  // that way. metadataJson below stores whatever is passed here verbatim,
+  // and rebuildProjection reads FROM that verbatim record, not from the
+  // `value` column further down. A drug event that arrives with `value`
+  // instead (every other event kind on LogEvent uses `value`, so reaching
+  // for the wrong field is an easy mistake for a server-side writer with no
+  // client form to catch it first) would otherwise store and reproject
+  // doseless, silently. Normalize it here, at the one place every drug
+  // event this route stores passes through, rather than trusting every
+  // future writer to remember the difference.
+  if (ev.type === "drug" && !ev.dose && ev.value) {
+    ev = { ...ev, dose: ev.value }
+  }
   // The resolved drug concept rides along on the event the caller passes in.
   // It is not part of LogEvent, which lives in @lospor/core and describes what
   // a client sends; this is server-resolved provenance, so it is widened here

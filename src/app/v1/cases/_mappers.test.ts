@@ -80,6 +80,20 @@ describe("mapPreop — biometrics + enums + structured lists", () => {
     expect(typeof r.currentMedications).toBe("string")
     expect(JSON.parse(r.currentMedications as string)[0]).toMatchObject({ label: "Aspirin", atcCode: "B01AC06" })
   })
+
+  it("preserves per-item clinical source through the medication/allergy rebuild", () => {
+    // taggedListToStorage rebuilds each item from a fixed key list, so a new
+    // key silently drops unless named — this pins that `source` survives for
+    // both currentMedications and allergyDetails (allergies must be true for
+    // allergyDetails to reach storage at all).
+    const r = mapPreop({
+      currentMedications: [{ label: "Aspirin", atcCode: "B01AC06", source: "ai-scan" }],
+      allergies: true,
+      allergyDetails: [{ label: "Penicillin", source: "manual" }],
+    })
+    expect(JSON.parse(r.currentMedications as string)[0]).toMatchObject({ label: "Aspirin", source: "ai-scan" })
+    expect(JSON.parse(r.allergyDetails as string)[0]).toMatchObject({ label: "Penicillin", source: "manual" })
+  })
 })
 
 // ── Start/end times ──────────────────────────────────────────────────────────

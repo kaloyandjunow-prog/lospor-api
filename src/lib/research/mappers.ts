@@ -164,6 +164,7 @@ export const RESEARCH_DETAIL_SELECT = {
       colloidsMl: true,
       bloodMl: true,
       urineMl: true,
+      bloodLossMl: true,
     },
   },
   postop: {
@@ -467,6 +468,7 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       colloidsMl: row.intraop?.colloidsMl ?? null,
       bloodMl: row.intraop?.bloodMl ?? null,
       urineMl: row.intraop?.urineMl ?? null,
+      bloodLossMl: row.intraop?.bloodLossMl ?? null,
     },
     postoperative: {
       aldreteTotal: row.postop?.aldreteTotal ?? null,

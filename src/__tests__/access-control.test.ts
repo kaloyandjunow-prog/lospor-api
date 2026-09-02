@@ -18,19 +18,33 @@ describe("access control helpers", () => {
     expect(canReadCase(user, { userId: "hod-1", user: { institutionId: null } })).toBe(true)
   })
 
-  it("scopes head of department access to their institution only when present", () => {
+  it("scopes head of department access to their institution, plus their own cases anywhere", () => {
     const user = { id: "hod-1", role: "HEAD_OF_DEPT", institutionId: "inst-1" }
 
-    // Scopes by the case's own institution snapshot and nothing else. It once
-    // scoped by the owner's current institution, which let a case follow its
-    // author to another hospital; the fallback for unstamped cases did the
-    // same thing more quietly, so it is gone too.
-    expect(caseReadWhereForUser(user)).toEqual({ institutionId: "inst-1" })
+    // Scopes by the case's own institution snapshot, or by being the
+    // assignee. It once scoped by the owner's current institution, which let
+    // a case follow its author to another hospital; the fallback for
+    // unstamped cases did the same thing more quietly, so both are gone.
+    //
+    // The assignee branch is not optional: canReadCase permits the assignee
+    // unconditionally, before it ever looks at institution, so promoting a
+    // clinician to HOD must not silently drop the cases assigned to them at
+    // a different institution — that was the bug this OR fixes.
+    expect(caseReadWhereForUser(user)).toEqual({
+      OR: [{ userId: "hod-1" }, { institutionId: "inst-1" }],
+    })
+    expect(caseWriteWhereForUser(user)).toEqual({
+      OR: [{ userId: "hod-1" }, { institutionId: "inst-1" }],
+    })
     expect(canReadCase(user, { userId: "other", institutionId: "inst-1" })).toBe(true)
     expect(canReadCase(user, { userId: "other", institutionId: "inst-2" })).toBe(false)
     // The owner's institution is not consulted, whichever it is.
     expect(canReadCase(user, { userId: "other", user: { institutionId: "inst-1" } })).toBe(false)
     expect(canReadCase(user, { userId: "other", user: { institutionId: "inst-2" } })).toBe(false)
+    // canReadCase already said yes to this — the case reserving this
+    // regression was that the list/detail scope disagreed with it.
+    expect(canReadCase(user, { userId: "hod-1", institutionId: "inst-2" })).toBe(true)
+    expect(canWriteCase(user, { userId: "hod-1", institutionId: "inst-2" })).toBe(true)
   })
 
   it("no longer looks the owner up for an unstamped case", async () => {

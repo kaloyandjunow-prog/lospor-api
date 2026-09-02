@@ -39,10 +39,14 @@ describe("mapCasesToOmop", () => {
       // infusion + the sevoflurane agent + the fluid administration. The last
       // three used to be one, two, or none of these.
       drug_exposure: 6,
-      measurement: 27,
+      // Four more than before, and four fewer observations: Mallampati, mouth
+      // opening, thyromental distance and the Cormack-Lehane grade moved from
+      // unmapped LOSPOR observations to measurements carrying their SNOMED
+      // concepts. The same facts, in the table that makes them poolable.
+      measurement: 31,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 64,
+      observation: 60,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -673,7 +677,15 @@ describe("airway management", () => {
     // placed but not which, what size, whether it was cuffed, or how difficult
     // the view was -- the substance of any difficult-airway study.
     const bundle = omop({})
-    expect(obs(bundle, "LOSPOR:CORMACK_LEHANE")[0]?.value_as_string).toBe("IIa")
+    // The laryngoscopy grade is a measurement carrying its SNOMED scale
+    // concept, not an unmapped observation. SNOMED collapses the Cook
+    // subdivision to grade 2, so IIa maps to the grade-2 concept while the
+    // exact subgrade survives in value_source_value.
+    const cormack = bundle.measurement.filter(m => m.measurement_source_value === "LOSPOR:CORMACK_LEHANE")
+    expect(cormack).toHaveLength(1)
+    expect(cormack[0].measurement_concept_id).toBe(37398987)
+    expect(cormack[0].value_as_concept_id).toBe(4221760)
+    expect(cormack[0].value_source_value).toBe("IIa")
     expect(obs(bundle, "LOSPOR:ORAL_TUBE_SIZE")[0]?.value_as_number).toBe(7.5)
     expect(obs(bundle, "LOSPOR:ORAL_TUBE_CUFFED")[0]?.value_as_string).toBe("true")
     expect(obs(bundle, "LOSPOR:PEEP_CMH2O")[0]?.value_as_number).toBe(5)
@@ -801,8 +813,15 @@ describe("clinical data that used to never leave", () => {
   it("exports the airway examination separately from the airway history", () => {
     // A predictive study needs what was found on examining this patient, not
     // only whether a previous anaesthetist had trouble.
-    expect(obs("LOSPOR:MOUTH_OPENING_CM")[0]?.value_as_number).toBe(4.5)
-    expect(obs("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.value_as_number).toBe(6.5)
+    // The two distances are quantities with standard concepts, so they are
+    // measurements now rather than LOSPOR-only observations: an airway study
+    // elsewhere can pool them without being told what our codes mean.
+    const airway = (source: string) =>
+      bundle().measurement.filter(m => m.measurement_source_value === source)
+    expect(airway("LOSPOR:MOUTH_OPENING_CM")[0]?.value_as_number).toBe(4.5)
+    expect(airway("LOSPOR:MOUTH_OPENING_CM")[0]?.measurement_concept_id).toBe(4303387)
+    expect(airway("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.value_as_number).toBe(6.5)
+    expect(airway("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.measurement_concept_id).toBe(4142891)
     expect(obs("LOSPOR:NECK_MOBILITY")[0]?.value_as_string).toBe("FULL")
     expect(obs("LOSPOR:UPPER_LIP_BITE_TEST")[0]?.value_as_string).toBe("CLASS_I")
     expect(obs("LOSPOR:RETROGNATHIA")[0]?.value_as_string).toBe("false")

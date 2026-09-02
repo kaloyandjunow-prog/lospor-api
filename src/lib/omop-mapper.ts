@@ -148,6 +148,26 @@ function isoDate(d: Date | string | null | undefined): string | null {
   return isNaN(dt.getTime()) ? null : dt.toISOString().substring(0, 10)
 }
 
+// ─── Attempted, no result ────────────────────────────────────────────────────
+//
+// A vital the anaesthetist tried and could not obtain is not the same as one
+// nobody recorded, and the difference is clinical: unobtainable readings
+// cluster in shocked, arrhythmic and peripherally shut-down patients. Exporting
+// both as an absent row makes the sickest cases indistinguishable from
+// paperwork gaps, and any downstream imputation then fills in a plausible
+// number for a patient whose finding was that no number existed.
+//
+// SNOMED 876785008 "Unobtainable" is a Meas Value qualifier — the same family
+// as Positive/Negative/Decreased — so it belongs in measurement.value_as_concept_id
+// beside a null value_as_number, which reads as "this was measured; the result
+// was: unobtainable".
+const UNOBTAINABLE_CONCEPT_ID = 618772
+
+// The airway examination has its own SNOMED concept for the same idea, and it
+// is more specific than the generic qualifier: the score itself is what could
+// not be assessed, not a measurement that returned nothing.
+const MALLAMPATI_NOT_ASSESSABLE_CONCEPT_ID = 4309852
+
 // ─── LOINC / OMOP vital concept map ──────────────────────────────────────────
 
 const VITAL_CONCEPTS: Record<string, { concept_id: number; loinc: string; unit: string }> = {
@@ -166,6 +186,40 @@ const VITAL_CONCEPTS: Record<string, { concept_id: number; loinc: string; unit: 
   // reviewer cannot check a dose or study dosing at all.
   heightCm:    { concept_id: 3036277, loinc: "8302-2",  unit: "cm" },
   weightKg:    { concept_id: 3025315, loinc: "29463-7", unit: "kg" },
+}
+
+// ─── Airway examination concepts ─────────────────────────────────────────────
+//
+// The airway assessment used to leave the building as LOSPOR-namespaced
+// observations with concept_id 0 — present in the file, but unrecognisable to
+// any tool that did not already know what LOSPOR:MALLAMPATI meant, and
+// therefore not poolable with anyone else's data. Airway prediction is exactly
+// what an anaesthesia register exists to study, so these carry their standard
+// concepts now. The LOSPOR source values are kept alongside: they are what the
+// data dictionary documents and what already-exported datasets were keyed by.
+const AIRWAY_MEASUREMENTS: Record<string, { concept_id: number; unit: string | null; source: string }> = {
+  mouthOpeningCm: { concept_id: 4303387, unit: "cm", source: "LOSPOR:MOUTH_OPENING_CM" },
+  thyromental:    { concept_id: 4142891, unit: "cm", source: "LOSPOR:THYROMENTAL_DISTANCE_CM" },
+}
+
+/** Mallampati and Cormack-Lehane are graded scales, not quantities. */
+const AIRWAY_GRADES: Record<string, {
+  concept_id: number
+  source: string
+  grades: Record<string, number>
+}> = {
+  mallampati: {
+    concept_id: 4165278,
+    source: "LOSPOR:MALLAMPATI",
+    grades: { I: 4322393, II: 4313490, III: 4312672, IV: 4314609 },
+  },
+  cormackLehane: {
+    concept_id: 37398987,
+    source: "LOSPOR:CORMACK_LEHANE",
+    // IIa and IIb are the Cook subdivision; SNOMED grades to II for both, and
+    // the exact subgrade stays in the LOSPOR source value.
+    grades: { I: 4219400, II: 4221760, IIa: 4221760, IIb: 4221760, III: 4212073, IV: 4166735 },
+  },
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -316,6 +370,12 @@ interface OmopMeasurement {
   measurement_datetime: string | null
   measurement_type_concept_id: number
   value_as_number: number | null
+  /**
+   * The coded answer, for results that are not a quantity: a graded scale, or
+   * a measurement that was attempted and could not be obtained. Null whenever
+   * value_as_number carries the result instead.
+   */
+  value_as_concept_id: number | null
   unit_concept_id: number
   unit_source_value: string | null
   measurement_source_value: string | null
@@ -477,6 +537,15 @@ type CaseRow = {
     coldsScore?: number | null
     difficultAirwayHistory: boolean | null
     mallampati: string | null
+    // Attempted-but-not-obtained. One flag can qualify several readings: the
+    // blood-pressure flag covers systolic and diastolic, the airway flag covers
+    // the whole examination.
+    bpUnobtainable?: boolean | null
+    heartRateUnobtainable?: boolean | null
+    spO2Unobtainable?: boolean | null
+    temperatureUnobtainable?: boolean | null
+    respiratoryRateUnobtainable?: boolean | null
+    airwayUnobtainable?: boolean | null
     // Clinical detail the export used to read and discard.
     bmi?: number | null
     bloodType?: string | null
@@ -575,6 +644,7 @@ type CaseRow = {
     colloidsMl: number | null
     bloodMl: number | null
     urineMl: number | null
+    bloodLossMl: number | null
     complications: string | null
     premedicationEvening: string | null
     premedicationMorning: string | null
@@ -634,6 +704,10 @@ type CaseRow = {
     aldreteConsciousness: number | null
     aldreteSpO2: number | null
     aldreteTotal: number | null
+    recoveryBpUnobtainable?: boolean | null
+    recoveryHeartRateUnobtainable?: boolean | null
+    recoverySpO2Unobtainable?: boolean | null
+    recoveryTemperatureUnobtainable?: boolean | null
     recoveryBpSystolic: number | null
     recoveryBpDiastolic: number | null
     recoveryHeartRate: number | null
@@ -956,6 +1030,42 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       })
     }
 
+    /**
+     * A graded airway scale as a measurement: the concept is the scale, the
+     * grade is the coded answer, and the original grade text stays in
+     * value_source_value so the Cook subdivision of Cormack-Lehane II is not
+     * lost when SNOMED collapses IIa and IIb to grade 2.
+     */
+    const emitAirwayGrade = (
+      key: keyof typeof AIRWAY_GRADES,
+      grade: string | null | undefined,
+      date: string | null,
+      notAssessable: boolean,
+    ) => {
+      if (grade == null && !notAssessable) return
+      const cfg = AIRWAY_GRADES[key]
+      const graded = grade == null ? null : cfg.grades[grade] ?? null
+      measurements.push({
+        measurement_id:              nextId(),
+        person_id:                   personId,
+        measurement_concept_id:      cfg.concept_id,
+        measurement_date:            date,
+        measurement_datetime:        date,
+        measurement_type_concept_id: 32817,
+        value_as_number:             null,
+        value_as_concept_id: grade == null
+          ? (key === "mallampati" ? MALLAMPATI_NOT_ASSESSABLE_CONCEPT_ID : UNOBTAINABLE_CONCEPT_ID)
+          : graded,
+        unit_concept_id:             0,
+        unit_source_value:           null,
+        measurement_source_value:    cfg.source,
+        value_source_value:          grade ?? null,
+        range_low:                   null,
+        range_high:                  null,
+        visit_occurrence_id:         visitId,
+      })
+    }
+
     sourceObservation("LOSPOR:CLINICAL_MODE", c.clinicalMode ?? "ADULT")
     sourceObservation("LOSPOR:CLINICAL_RULES_VERSION", c.clinicalRulesVersion)
 
@@ -984,18 +1094,24 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         preop.pediatricFasting == null ? null : JSON.stringify(preop.pediatricFasting),
         vitDate,
       )
-      const vitalMap: [keyof typeof VITAL_CONCEPTS, number | null | undefined][] = [
-        ["systolic",        preop.bpSystolic],
-        ["diastolic",       preop.bpDiastolic],
-        ["heartRate",       preop.heartRate],
-        ["spO2",            preop.spO2],
-        ["temp",            preop.temperature],
-        ["respiratoryRate", preop.respiratoryRate],
-        ["heightCm",         preop.heightCm],
-        ["weightKg",         preop.weightKg],
+      // One flag can qualify more than one reading: a blood pressure that could
+      // not be obtained is neither a systolic nor a diastolic, so both rows
+      // carry the qualifier. Height and weight have no flag — a case cannot
+      // reach the intraoperative form without them.
+      const vitalMap: [keyof typeof VITAL_CONCEPTS, number | null | undefined, boolean][] = [
+        ["systolic",        preop.bpSystolic,      Boolean(preop.bpUnobtainable)],
+        ["diastolic",       preop.bpDiastolic,     Boolean(preop.bpUnobtainable)],
+        ["heartRate",       preop.heartRate,       Boolean(preop.heartRateUnobtainable)],
+        ["spO2",            preop.spO2,            Boolean(preop.spO2Unobtainable)],
+        ["temp",            preop.temperature,     Boolean(preop.temperatureUnobtainable)],
+        ["respiratoryRate", preop.respiratoryRate, Boolean(preop.respiratoryRateUnobtainable)],
+        ["heightCm",        preop.heightCm,        false],
+        ["weightKg",        preop.weightKg,        false],
       ]
-      for (const [key, val] of vitalMap) {
-        if (val == null) continue
+      for (const [key, val, unobtainable] of vitalMap) {
+        // A recorded value wins over the flag: if a number is present the
+        // measurement was obtained, whatever the tickbox says.
+        if (val == null && !unobtainable) continue
         const cfg = VITAL_CONCEPTS[key]
         measurements.push({
           measurement_id:            nextId(),
@@ -1004,7 +1120,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           measurement_date:          vitDate,
           measurement_datetime:      vitDate,
           measurement_type_concept_id: 32817,
-          value_as_number:           val,
+          value_as_number:           val ?? null,
+          value_as_concept_id:       val == null ? UNOBTAINABLE_CONCEPT_ID : null,
           unit_concept_id:           0,
           unit_source_value:         cfg.unit,
           measurement_source_value:  `LOINC:${cfg.loinc}`,
@@ -1035,6 +1152,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           measurement_datetime:        vitDate,
           measurement_type_concept_id: 32817,
           value_as_number:             lab.valueNum,
+          value_as_concept_id: null,
           unit_concept_id:             0,
           unit_source_value:           lab.unitCanon ?? null,
           measurement_source_value:    labSource,
@@ -1133,7 +1251,11 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // so an answered "no" finally reaches the export as a finding rather than
       // being rounded off to silence.
       sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", preop.difficultAirwayHistory, preopDate)
-      sourceObservation("LOSPOR:MALLAMPATI", preop.mallampati, preopDate)
+      // Mallampati is a graded scale: the grade is the answer, so it goes in
+      // value_as_concept_id rather than being flattened to text. SNOMED has a
+      // dedicated concept for a score that could not be assessed, which is more
+      // specific than the generic Unobtainable qualifier and is used instead.
+      emitAirwayGrade("mallampati", preop.mallampati, preopDate, Boolean(preop.airwayUnobtainable))
 
       // ── Preop findings that used to be read and discarded ────────────────
       //
@@ -1172,10 +1294,45 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // anaesthetist found on examining this patient, and it is what a
       // predictive study needs alongside the Cormack-Lehane grade the intraop
       // record now carries.
-      sourceObservation("LOSPOR:MOUTH_OPENING_CM", preop.mouthOpeningCm, preopDate)
-      sourceObservation("LOSPOR:THYROMENTAL_DISTANCE_CM", preop.thyromental, preopDate)
+      // The two airway distances are quantities with standard concepts, so they
+      // are measurements now rather than LOSPOR-only observations. When the
+      // examination could not be performed they carry the same Unobtainable
+      // qualifier the vitals use.
+      const airwayNotAssessable = Boolean(preop.airwayUnobtainable)
+      const airwayDistances: [keyof typeof AIRWAY_MEASUREMENTS, number | null | undefined][] = [
+        ["mouthOpeningCm", preop.mouthOpeningCm],
+        ["thyromental", preop.thyromental],
+      ]
+      for (const [key, val] of airwayDistances) {
+        if (val == null && !airwayNotAssessable) continue
+        const cfg = AIRWAY_MEASUREMENTS[key]
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      cfg.concept_id,
+          measurement_date:            preopDate,
+          measurement_datetime:        preopDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             val ?? null,
+          value_as_concept_id:         val == null ? UNOBTAINABLE_CONCEPT_ID : null,
+          unit_concept_id:             0,
+          unit_source_value:           cfg.unit,
+          measurement_source_value:    cfg.source,
+          value_source_value:          null,
+          range_low:                   null,
+          range_high:                  null,
+          visit_occurrence_id:         visitId,
+        })
+      }
       sourceObservation("LOSPOR:NECK_MOBILITY", preop.neckMobility, preopDate)
       sourceObservation("LOSPOR:UPPER_LIP_BITE_TEST", preop.upperLipBiteTest, preopDate)
+      if (airwayNotAssessable) {
+        // Neck mobility and the upper lip bite test have no standard concept
+        // assigned here, so their unassessability is carried the same way their
+        // values are — as a LOSPOR source value.
+        sourceObservation("LOSPOR:NECK_MOBILITY", "unobtainable", preopDate)
+        sourceObservation("LOSPOR:UPPER_LIP_BITE_TEST", "unobtainable", preopDate)
+      }
       sourceObservation("LOSPOR:RETROGNATHIA", preop.retrognathia, preopDate)
       sourceObservation("LOSPOR:PROMINENT_INCISORS", preop.prominentIncisors, preopDate)
       sourceObservation("LOSPOR:FACIAL_HAIR", preop.facialHair, preopDate)
@@ -1283,7 +1440,11 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       const devices = [...new Set([...(ia.airwayDevice ? [ia.airwayDevice] : []), ...strList(ia.airwayDevices)])]
       for (const device of devices) sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
 
-      sourceObservation("LOSPOR:CORMACK_LEHANE", ia.cormackLehane)
+      // The laryngoscopy grade is what an airway-prediction study compares the
+      // preoperative assessment against, so it carries its standard concept
+      // rather than a LOSPOR-only code. There is no unobtainable flag on the
+      // intraoperative record: an absent grade means no direct laryngoscopy.
+      emitAirwayGrade("cormackLehane", ia.cormackLehane, startDate, false)
       for (const tool of strList(ia.airwayTools)) sourceObservation("LOSPOR:AIRWAY_TOOL", tool)
       sourceObservation("LOSPOR:FIBREOPTIC_BRONCHOSCOPY", ia.fob)
 
@@ -1398,6 +1559,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               measurement_datetime:      ev.timestamp.toISOString(),
               measurement_type_concept_id: 32817,
               value_as_number:           val,
+              value_as_concept_id: null,
               unit_concept_id:           0,
               unit_source_value:         key === "bgl" ? ev.bglUnitCanon ?? cfg.unit : cfg.unit,
               measurement_source_value:  `LOINC:${loincOverride ?? cfg.loinc}`,
@@ -1428,6 +1590,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               measurement_datetime: ev.timestamp.toISOString(),
               measurement_type_concept_id: 32817,
               value_as_number: val,
+              value_as_concept_id: null,
               unit_concept_id: 0,
               unit_source_value: unit,
               measurement_source_value: source,
@@ -1516,6 +1679,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               measurement_datetime: ev.timestamp.toISOString(),
               measurement_type_concept_id: 32817,
               value_as_number: ev.calculationWeightKg,
+              value_as_concept_id: null,
               unit_concept_id: 0,
               unit_source_value: "kg",
               measurement_source_value: "LOSPOR:DOSE_CALCULATION_WEIGHT_KG",
@@ -1578,6 +1742,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:COLLOIDS_ML", c.intraop.colloidsMl, endDate)
       sourceObservation("LOSPOR:BLOOD_PRODUCTS_ML", c.intraop.bloodMl, endDate)
       sourceObservation("LOSPOR:URINE_OUTPUT_ML", c.intraop.urineMl, endDate)
+      sourceObservation("LOSPOR:BLOOD_LOSS_ML", c.intraop.bloodLossMl, endDate)
     }
 
     for (const sel of c.selections ?? []) {
@@ -1615,17 +1780,20 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // ── Postop -> OBSERVATION ─────────────────────────────────────────────────
     if (c.postop) {
       const postDate = endDate ?? isoDate(c.createdAt)
-      const postopVitals: [keyof typeof VITAL_CONCEPTS, number | null | undefined][] = [
-        ["systolic", c.postop.recoveryBpSystolic],
-        ["diastolic", c.postop.recoveryBpDiastolic],
-        ["heartRate", c.postop.recoveryHeartRate],
-        ["spO2", c.postop.recoverySpO2],
-        ["temp", c.postop.temperatureCelsius],
+      // Same qualifier as preop: recovery observations that could not be taken
+      // are a finding about the patient, not an omission. One flag covers both
+      // halves of a blood pressure.
+      const postopVitals: [keyof typeof VITAL_CONCEPTS, number | null | undefined, boolean][] = [
+        ["systolic", c.postop.recoveryBpSystolic, Boolean(c.postop.recoveryBpUnobtainable)],
+        ["diastolic", c.postop.recoveryBpDiastolic, Boolean(c.postop.recoveryBpUnobtainable)],
+        ["heartRate", c.postop.recoveryHeartRate, Boolean(c.postop.recoveryHeartRateUnobtainable)],
+        ["spO2", c.postop.recoverySpO2, Boolean(c.postop.recoverySpO2Unobtainable)],
+        ["temp", c.postop.temperatureCelsius, Boolean(c.postop.recoveryTemperatureUnobtainable)],
       ]
-      for (const [key, val] of postopVitals) {
-        if (val == null) continue
+      for (const [key, val, unobtainable] of postopVitals) {
+        if (val == null && !unobtainable) continue
         const cfg = VITAL_CONCEPTS[key]
-        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val, unit_concept_id: 0, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
+        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val ?? null, value_as_concept_id: val == null ? UNOBTAINABLE_CONCEPT_ID : null, unit_concept_id: 0, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
       }
       // Aldrete subscores and their total: 0-2 each, 0-10 summed. A discharge
       // threshold is a numeric comparison, so these have to be numbers.

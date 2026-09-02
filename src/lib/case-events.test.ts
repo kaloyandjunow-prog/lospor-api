@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import {
   CASE_EVENT_SCHEMA_VERSION,
+  buildRow,
   caseEventDrugAuditColumns,
   projectTimetable,
   reserveIntraopRevision,
@@ -171,6 +172,41 @@ describe("reserveIntraopRevision", () => {
   it("reports a lost claim when another writer advanced first", async () => {
     const tx = { intraoperativeRecord: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) } }
     await expect(reserveIntraopRevision(tx as never, "case-1", 7)).resolves.toBe(false)
+  })
+})
+
+describe("buildRow", () => {
+  it("normalizes value into dose for a drug event before it is stored", () => {
+    // metadataJson stores the row verbatim, and reprojection reads FROM
+    // that, not the typed `value` column below -- a drug event that reaches
+    // this function with `value` set but no `dose` (every other event kind
+    // on LogEvent uses `value`, so a server-side writer reaching for it is
+    // an easy mistake) must not store and later reproject doseless.
+    const row = buildRow(
+      "case-1", "user-1",
+      { id: "ev-1", ts: at(0), type: "drug", name: "Fentanyl", value: "100", unit: "mcg" } as LogEvent,
+      1, "active", "key-1", "web",
+    )
+    expect(row.metadataJson).toMatchObject({ dose: "100" })
+    expect(row.value).toBe("100")
+  })
+
+  it("leaves an explicit dose untouched even when value is also present", () => {
+    const row = buildRow(
+      "case-1", "user-1",
+      { id: "ev-1", ts: at(0), type: "drug", name: "Fentanyl", dose: "50", value: "100", unit: "mcg" } as LogEvent,
+      1, "active", "key-1", "web",
+    )
+    expect(row.metadataJson).toMatchObject({ dose: "50" })
+  })
+
+  it("does not touch value on a non-drug event", () => {
+    const row = buildRow(
+      "case-1", "user-1",
+      { id: "ev-1", ts: at(0), type: "agent_start", name: "Sevoflurane", value: "2" } as LogEvent,
+      1, "active", "key-1", "web",
+    )
+    expect(row.metadataJson).toEqual({ id: "ev-1", ts: at(0), type: "agent_start", name: "Sevoflurane", value: "2" })
   })
 })
 

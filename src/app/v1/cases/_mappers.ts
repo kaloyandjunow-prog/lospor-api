@@ -44,8 +44,8 @@ type PreopRawInput = Partial<Prisma.PreoperativeAssessmentUncheckedCreateWithout
   familyProblemNotes?: string | null
   diagnoses?: { label?: string; sub?: string; code?: string }[]
   procedures?: { label?: string; sub?: string; code?: string; group?: string; domain?: string; description?: string }[]
-  allergyDetails?: string | { label?: string; inn?: string; atcCode?: string; dose?: string; route?: string; frequency?: string }[] | null
-  currentMedications?: string | { label?: string; inn?: string; atcCode?: string; dose?: string; route?: string; frequency?: string }[] | null
+  allergyDetails?: string | { label?: string; inn?: string; atcCode?: string; dose?: string; route?: string; frequency?: string; source?: string }[] | null
+  currentMedications?: string | { label?: string; inn?: string; atcCode?: string; dose?: string; route?: string; frequency?: string; source?: string }[] | null
   clinicalMode?: ClinicalMode
 }
 
@@ -62,6 +62,10 @@ function taggedListToStorage(value: TaggedDrugList): string | null {
       dose: item.dose ?? undefined,
       route: item.route ?? undefined,
       frequency: item.frequency ?? undefined,
+      // Provenance for this item — e.g. "ai-scan" for a med read off a photo.
+      // Rebuilt from a fixed key list like the rest of this object, so a new
+      // key silently vanishes here unless it is named explicitly.
+      source: item.source ?? undefined,
     }))
   return items.length ? JSON.stringify(items) : null
 }
@@ -326,7 +330,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     // they are derived from the fluid events and written server-side in
     // rebuildProjection (case-events.ts), so a client PATCH can't override the
     // single source of truth. The read path (below) still returns them.
-    "bloodProductsNote","urineMl","complications",
+    "bloodProductsNote","urineMl","bloodLossMl","complications",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
     if (has(k)) copyKey(r, full, k)
@@ -526,6 +530,7 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     bloodMl:           intraop.bloodMl           ?? null,
     bloodProductsNote: intraop.bloodProductsNote ?? null,
     urineMl:           intraop.urineMl           ?? null,
+    bloodLossMl:       intraop.bloodLossMl       ?? null,
     complications:     intraop.complications     ?? null,
   }
 }
