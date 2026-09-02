@@ -1,5 +1,34 @@
 # Changelog - LOSPOR API
 
+## [9.7.1] - 2026-09-03
+
+### Fixed
+
+- **The public deployment had no platform ruleset at all.** An appliance runs an
+  installer that puts the bundled adult and paediatric rulesets in place and
+  selects them for the whole deployment. This deployment has no installer, and
+  the provisioner was reachable only from `prisma/seed.ts` and by hand — so
+  `lospor-adults-v2` (251 rules) and `lospor-pediatrics-v2` (335 rules) were
+  never installed and never selected, quietly, for as long as it had been
+  deployed.
+
+  A production deploy *is* this deployment's installation, so it now does what
+  an installer does: `prisma migrate deploy`, then provision and select both
+  baselines. Chained with `&&`, so a baseline that cannot be established stops
+  the release exactly as a failed migration does — skipping quietly is precisely
+  how its absence went unnoticed.
+
+  Safe to repeat on every deploy: the provisioner reports `installed` or
+  `verified` from inside one serializable transaction, and refuses a partial or
+  conflicting state rather than writing over it.
+
+## [9.7.0] - 2026-09-02
+
+### Added
+
+- Per-item provenance on imported clinical data, an optional blood loss field,
+  and OMOP concept mappings for the airway examination.
+
 ## [9.6.0] - 2026-08-31
 
 ### Fixed
