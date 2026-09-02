@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "9.7.1",
+  "version": "9.7.2",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -48,7 +48,8 @@
     "clinical-rules:export-platform-drafts": "tsx scripts/export-platform-clinical-drafts.ts",
     "clinical-rules:publish-adult-v2": "tsx scripts/publish-adult-v2-platform-ruleset.ts",
     "clinical-rules:prune": "tsx scripts/prune-clinical-rulesets.ts",
-    "clinical-rules:provision-bundled-baselines": "tsx scripts/provision-bundled-clinical-baselines.ts"
+    "clinical-rules:provision-bundled-baselines": "tsx scripts/provision-bundled-clinical-baselines.ts",
+    "clinical-rules:inspect-bundled-baselines": "tsx scripts/inspect-bundled-baseline-state.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
