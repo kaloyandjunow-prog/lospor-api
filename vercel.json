@@ -1,5 +1,5 @@
 {
-  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then prisma migrate deploy; fi && npm run build",
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then prisma migrate deploy && npm run clinical-rules:provision-bundled-baselines -- --apply; fi && npm run build",
   "crons": [
     {
       "path": "/v1/internal/purge-deleted",

@@ -351,3 +351,22 @@ retention cron. The web project must not receive those values.
 
 `output: standalone` is enabled so the same service can later run as a local
 Node/container process at an institution.
+
+### A production deploy is this deployment's installation
+
+An appliance has an installer that puts the bundled adult and paediatric
+rulesets in place and selects them for the whole deployment. This deployment has
+no installer, so the production build does it: `prisma migrate deploy`, then
+`clinical-rules:provision-bundled-baselines -- --apply`.
+
+It was missing, and nothing said so. The provisioner was reachable only from
+`prisma/seed.ts` and by hand, so on the public deployment neither ruleset was
+ever installed and neither was ever selected — the app simply had no platform
+ruleset, quietly, for as long as it had been deployed.
+
+Two properties make running it on every deploy the right shape rather than a
+risk. It is idempotent: it reports `installed` or `verified` from inside one
+serializable transaction, and refuses a partial or conflicting state rather than
+writing over it. And it is chained with `&&`, so a baseline that cannot be
+established stops the release exactly as a failed migration does. Skipping
+quietly is precisely how its absence went unnoticed.
