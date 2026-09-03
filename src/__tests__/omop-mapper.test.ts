@@ -1198,9 +1198,10 @@ describe("what anaesthetic was given", () => {
     // forty leaves and each leaf can be refined later without touching a stored
     // value. TAP, femoral and interscalene were examples of this until their
     // own leaves were mapped; rectus sheath, supraclavicular and popliteal are
-    // still inherited.
+    // still inherited. All four brachial plexus approaches are now mapped, so
+    // BLOCK_WRIST stands in as the still-inherited upper-limb example.
     expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
-    expect(techRow("BLOCK_SUPRACLAVICULAR")?.procedure_concept_id).toBe(4332443)
+    expect(techRow("BLOCK_WRIST")?.procedure_concept_id).toBe(4332443)
     expect(techRow("BLOCK_POPLITEAL")?.procedure_concept_id).toBe(4333960)
   })
 
@@ -1349,5 +1350,33 @@ describe("the first named block leaves", () => {
     // asserted for every case rather than read from the record. If the form
     // gains an approach field, this is the line to revisit.
     expect(techRow("BLOCK_SCIATIC")?.procedure_concept_id).toBe(4215528)
+  })
+})
+
+describe("the brachial plexus family, complete, and intercostal", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes all four brachial plexus approaches, each as itself", () => {
+    expect(techRow("BLOCK_INTERSCALENE")?.procedure_concept_id).toBe(4333843)
+    expect(techRow("BLOCK_SUPRACLAVICULAR")?.procedure_concept_id).toBe(4332444)
+    expect(techRow("BLOCK_INFRACLAVICULAR")?.procedure_concept_id).toBe(4332445)
+    expect(techRow("BLOCK_AXILLARY")?.procedure_concept_id).toBe(4336448)
+  })
+
+  it("codes intercostal", () => {
+    expect(techRow("BLOCK_INTERCOSTAL")?.procedure_concept_id).toBe(4332575)
+  })
+
+  it("codes ilioinguinal, and drops the iliohypogastric half by product decision", () => {
+    // The form has one checkbox for both nerves; SNOMED has two concepts and no
+    // combined one, so a single row cannot say "both". This is stated as a
+    // decision, not a derived fact, the same way BLOCK_SCIATIC's approach is --
+    // the iliohypogastric concept (4332577) is not coded here.
+    expect(techRow("BLOCK_ILIOINGUINAL")?.procedure_concept_id).toBe(4333290)
   })
 })

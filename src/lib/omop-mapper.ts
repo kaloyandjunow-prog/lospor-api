@@ -221,7 +221,17 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // convenience: the adductor canal block is a saphenous nerve block done at
   // that level, and the saphenous nerve is what it anaesthetises.
   BLOCK_ADDUCTOR: 4333280,
-  BLOCK_INTERSCALENE: 4333843,
+  BLOCK_INTERSCALENE:    4333843,
+  BLOCK_SUPRACLAVICULAR: 4332444,
+  BLOCK_INFRACLAVICULAR: 4332445,
+  BLOCK_AXILLARY:        4336448,
+  BLOCK_INTERCOSTAL:     4332575,
+  // The form has one checkbox for both nerves; SNOMED has two concepts and no
+  // combined one, so a single row cannot say "both". Ilioinguinal by product
+  // decision, the more commonly cited target of the two, documented as a
+  // decision rather than a derived fact -- the iliohypogastric half
+  // (4332577) is not coded. Same shape of gap as BLOCK_SCIATIC's approach.
+  BLOCK_ILIOINGUINAL: 4333290,
   // SNOMED splits the sciatic block by approach and has no unqualified
   // concept; the form does not record which approach was used, so this is
   // stated as one specific approach by product decision rather than derived
