@@ -404,27 +404,38 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "dentalProsthetics",
-    exportName: "observation.value_as_string (LOSPOR:DENTAL_PROSTHETICS)",
-    meaning: "Dental prosthetics present",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:DENTAL_PROSTHETICS)",
+    meaning: "Dental prosthetics present — dentures, crowns, caps or bridges — "
+      + "as LOINC 3029182 (Dental prosthesis) answered with 4188539 (Yes) or "
+      + "4188540 (No). The broad concept on purpose: the denture-specific ones "
+      + "would miss the patient with anterior crowns, and crowns are what a "
+      + "laryngoscope chips.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "dentalProsthetics",
     versionIntroduced: "3.8.0",
   },
   {
     name: "looseTeeth",
-    exportName: "observation.value_as_string (LOSPOR:LOOSE_TEETH)",
-    meaning: "Loose teeth present",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:LOOSE_TEETH)",
+    meaning: "Loose teeth, as SNOMED 4002000 (Abnormal tooth mobility) answered "
+      + "with 4188539 (Yes) or 4188540 (No). The abnormality rather than the "
+      + "neutral 'Tooth mobility' finding, so that a No means no abnormal "
+      + "mobility was found rather than saying nothing at all.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "looseTeeth",
     versionIntroduced: "3.8.0",
   },
   {
     name: "heartArrhythmia",
-    exportName: "observation.value_as_string (LOSPOR:HEART_ARRHYTHMIA)",
-    meaning: "Cardiac arrhythmia present",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:HEART_ARRHYTHMIA)",
+    meaning: "Cardiac arrhythmia present, as SNOMED 44784217 (Cardiac "
+      + "arrhythmia) answered with 4188539 (Yes) or 4188540 (No). The umbrella "
+      + "concept, which is the level the question asks at: atrial fibrillation, "
+      + "flutter, block and ectopics all answer it, and the specific rhythm is "
+      + "not recorded here.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "heartArrhythmia",
     versionIntroduced: "3.8.0",

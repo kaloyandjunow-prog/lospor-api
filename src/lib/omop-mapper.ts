@@ -1405,9 +1405,25 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate, null, 764557,
         preop.familyAnesthesiaProblems ? YES_CONCEPT_ID : NO_CONCEPT_ID)
       sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_DETAILS", preop.familyAnesthesiaDetails, preopDate)
-      sourceObservation("LOSPOR:DENTAL_PROSTHETICS", preop.dentalProsthetics, preopDate)
-      sourceObservation("LOSPOR:LOOSE_TEETH", preop.looseTeeth, preopDate)
-      sourceObservation("LOSPOR:HEART_ARRHYTHMIA", preop.heartArrhythmia, preopDate, null, 44784217)
+      // "Dental prosthesis" rather than any of the denture concepts, because
+      // the question is broader than dentures: crowns, caps and bridges are
+      // what a laryngoscope chips, and dental damage is the commonest claim
+      // against an anaesthetist. A denture-specific concept would miss the
+      // patient with anterior crowns, who is the higher risk of the two.
+      sourceObservation("LOSPOR:DENTAL_PROSTHETICS", preop.dentalProsthetics, preopDate, null, 3029182,
+        preop.dentalProsthetics ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // "Abnormal tooth mobility", which is what the question means and what
+      // makes a No worth recording: no abnormal mobility found. The neutral
+      // "Tooth mobility" concept would leave a No saying nothing.
+      sourceObservation("LOSPOR:LOOSE_TEETH", preop.looseTeeth, preopDate, null, 4002000,
+        preop.looseTeeth ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // The umbrella, which is the level the question asks at: atrial
+      // fibrillation, flutter, block and ectopics all answer it. "Irregular
+      // heart beat" is what a patient reports rather than what a
+      // pre-assessment records, and the irregularly-irregular pulse is one
+      // arrhythmia rather than the class.
+      sourceObservation("LOSPOR:HEART_ARRHYTHMIA", preop.heartArrhythmia, preopDate, null, 44784217,
+        preop.heartArrhythmia ? YES_CONCEPT_ID : NO_CONCEPT_ID)
 
       // The allergy flag already reaches DRUG_ALLERGY observations per
       // substance, but the free-text detail carries allergens that were never
