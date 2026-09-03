@@ -666,6 +666,9 @@ type CaseRow = {
     prominentIncisors?: boolean | null
     facialHair?: boolean | null
     difficultAirwayNotes?: string | null
+    anticipatedDifficultAirway?: boolean | null
+    malignantHyperthermiaHistory?: boolean | null
+    unexplainedAnaesthesiaComplications?: boolean | null
     labResults: unknown
     labRows?: {
       test: string
@@ -1651,12 +1654,17 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       }
       sourceObservation("LOSPOR:RETROGNATHIA", preop.retrognathia, preopDate, null, 4142490,
         preop.retrognathia ? YES_CONCEPT_ID : NO_CONCEPT_ID)
-      // Also deliberately uncoded. Every plausible match is HPO, a phenotype
-      // vocabulary for dysmorphology, and none of it is in the vocabulary this
-      // product ships; the one SNOMED near-miss is macrodontia, which is a
-      // different finding. Prominent incisors as an airway predictor simply do
-      // not exist as a concept.
-      sourceObservation("LOSPOR:PROMINENT_INCISORS", preop.prominentIncisors, preopDate)
+      // "Protrusion of tooth", which is the finding the assessor made. An
+      // earlier pass here concluded no concept existed and left this at 0; that
+      // was a search that only tried dysmorphology phrasings and came back with
+      // HPO entries this product does not ship. The plain SNOMED term was there
+      // the whole time.
+      //
+      // Not "Horizontal overbite", which is the orthodontic measurement every
+      // mouth has some of, and not "Prominent maxilla", which is the jaw rather
+      // than the teeth the laryngoscope meets.
+      sourceObservation("LOSPOR:PROMINENT_INCISORS", preop.prominentIncisors, preopDate, null, 4033016,
+        preop.prominentIncisors ? YES_CONCEPT_ID : NO_CONCEPT_ID)
       // Deliberately uncoded, and this is the record of why rather than an
       // omission waiting to be tidied up.
       //
@@ -1672,6 +1680,38 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // worth coding. This stays a source value beneath it.
       sourceObservation("LOSPOR:FACIAL_HAIR", preop.facialHair, preopDate)
       sourceObservation("LOSPOR:DIFFICULT_AIRWAY_NOTES", preop.difficultAirwayNotes, preopDate)
+      // "At increased risk for difficult tracheal intubation" rather than
+      // "Expected difficult tracheal intubation", which is the closer wording
+      // and the weaker claim. What the assessor puts in this box is a
+      // prediction from bedside tests, and bedside tests predict poorly: most
+      // patients flagged here are intubated without trouble. A risk statement
+      // is what the evidence supports, and it is also what stays true when the
+      // intubation turns out to be easy -- an expectation the case then
+      // contradicts reads, in a database, like an error rather than a
+      // precaution that paid off.
+      //
+      // Its outcome counterpart is 37397717, Unexpected difficult airway, which
+      // nothing writes yet.
+      sourceObservation("LOSPOR:ANTICIPATED_DIFFICULT_AIRWAY", preop.anticipatedDifficultAirway, preopDate, null,
+        37159176, preop.anticipatedDifficultAirway ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // Malignant hyperthermia in this patient, as distinct from the family
+      // history above. A personal MH history is the one anaesthetic fact that
+      // changes the whole plan -- no volatile agent, no suxamethonium, a
+      // flushed machine -- and it had no field at all until now, so a patient
+      // who told the assessor could only have it written into free text.
+      sourceObservation("LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY", preop.malignantHyperthermiaHistory, preopDate, null,
+        440285, preop.malignantHyperthermiaHistory ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // "Complication due to anesthesia during surgery" -- the operative
+      // setting is part of what is being asked. The unqualified umbrella
+      // (4142195) would also admit a reaction to a dental local, which is a
+      // different and much weaker signal than something going wrong in theatre.
+      //
+      // The field exists for the events nobody could explain afterwards, so it
+      // is deliberately not coded as a drug reaction: naming a cause is exactly
+      // what the record cannot do.
+      sourceObservation("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", preop.unexplainedAnaesthesiaComplications,
+        preopDate, null, 37017043,
+        preop.unexplainedAnaesthesiaComplications ? YES_CONCEPT_ID : NO_CONCEPT_ID)
     }
 
     // ── Planned procedure -> PROCEDURE_OCCURRENCE ─────────────────────────────

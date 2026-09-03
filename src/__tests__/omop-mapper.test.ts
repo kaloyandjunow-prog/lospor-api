@@ -48,7 +48,7 @@ describe("mapCasesToOmop", () => {
       measurement: 37,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 53,
+      observation: 55,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -1029,5 +1029,92 @@ describe("the risk scores that have a concept", () => {
 
     expect(apfel).toHaveLength(1)
     expect(apfel[0].observation_concept_id).toBe(0)
+  })
+})
+
+describe("the anaesthesia history that is about the patient, not their family", () => {
+  const withPreop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    Object.assign(c.preop, patch)
+    return c as never
+  }
+  const obs = (source: string, value: boolean | null) => {
+    const key = source === "LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY"
+      ? "malignantHyperthermiaHistory"
+      : "unexplainedAnaesthesiaComplications"
+    return mapCasesToOmop([withPreop({ [key]: value })]).observation
+      .filter(row => row.observation_source_value === source)
+  }
+
+  it("codes a personal malignant hyperthermia history separately from the family question", () => {
+    // These were the same question until now: a patient who had had MH himself
+    // could only be recorded through familyAnesthesiaProblems, which is about
+    // relatives, or in free text. They are different concepts and now different
+    // rows.
+    const mine = obs("LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY", true)
+    const family = mapCasesToOmop([completeCase() as never]).observation
+      .filter(row => row.observation_source_value === "LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")
+
+    expect(mine[0]).toMatchObject({ observation_concept_id: 440285, value_as_concept_id: 4188539 })
+    expect(family[0].observation_concept_id).not.toBe(440285)
+  })
+
+  it("records a denied malignant hyperthermia history as a denial", () => {
+    // The whole reason the field is tri-state. "Asked, and the patient said no"
+    // is a safety check another anaesthetist relies on; it must not read as
+    // "nobody asked".
+    expect(obs("LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY", false)[0])
+      .toMatchObject({ observation_concept_id: 440285, value_as_concept_id: 4188540 })
+    expect(obs("LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY", null)).toHaveLength(0)
+  })
+
+  it("codes an unexplained event to the operative complication, not to a drug reaction", () => {
+    // 4171869 (Anesthetics adverse reaction) is the tempting match and names a
+    // cause. This field exists for the events where nobody could.
+    const row = obs("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", true)[0]
+
+    expect(row.observation_concept_id).toBe(37017043)
+    expect(row.value_as_concept_id).toBe(4188539)
+  })
+
+  it("keeps all three states of the unexplained-event question apart", () => {
+    expect(obs("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", false)[0].value_as_concept_id).toBe(4188540)
+    expect(obs("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", null)).toHaveLength(0)
+  })
+})
+
+describe("the airway examination findings that gained a concept", () => {
+  const airway = (source: string) => mapCasesToOmop([completeCase() as never]).observation
+    .filter(row => row.observation_source_value === source)
+
+  it("codes an anticipated difficult airway as a risk rather than an expectation", () => {
+    // 37397720 (Expected difficult tracheal intubation) is the closer wording
+    // and the stronger claim. Bedside tests predict poorly, so most patients
+    // flagged here are intubated uneventfully, and an expectation the case then
+    // contradicts reads like an error rather than a precaution that paid off.
+    const row = airway("LOSPOR:ANTICIPATED_DIFFICULT_AIRWAY")[0]
+
+    expect(row.observation_concept_id).toBe(37159176)
+    expect(row.value_as_concept_id).toBe(4188539)
+  })
+
+  it("codes prominent incisors, which an earlier search wrongly gave up on", () => {
+    // That search only tried dysmorphology phrasings and came back with HPO
+    // entries this product does not ship. The plain SNOMED term was always
+    // there.
+    expect(airway("LOSPOR:PROMINENT_INCISORS")[0])
+      .toMatchObject({ observation_concept_id: 4033016, value_as_concept_id: 4188539 })
+  })
+
+  it("leaves facial hair uncoded, because every candidate means hirsutism", () => {
+    // An ordinary beard is not a pathological finding, and coding it as one
+    // would put every bearded patient into a hirsutism cohort. The conclusion a
+    // beard feeds — whether difficulty is anticipated — is what carries a
+    // concept instead.
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.facialHair = true
+
+    expect(mapCasesToOmop([c as never]).observation
+      .filter(row => row.observation_source_value === "LOSPOR:FACIAL_HAIR")[0].observation_concept_id).toBe(0)
   })
 })

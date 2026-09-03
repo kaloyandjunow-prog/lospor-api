@@ -555,9 +555,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "prominentIncisors",
-    exportName: "observation.value_as_string (LOSPOR:PROMINENT_INCISORS)",
-    meaning: "Prominent incisors on examination",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:PROMINENT_INCISORS)",
+    meaning: "Prominent incisors on examination, as SNOMED 4033016 (Protrusion "
+      + "of tooth) answered with 4188539 (Yes) or 4188540 (No).",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "prominentIncisors",
     versionIntroduced: "3.8.0",
@@ -565,7 +566,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "facialHair",
     exportName: "observation.value_as_string (LOSPOR:FACIAL_HAIR)",
-    meaning: "Facial hair, which affects mask seal",
+    meaning: "Facial hair, which affects mask seal. Deliberately uncoded: the "
+      + "vocabulary's facial-hair concepts all mean hirsutism, a pathological "
+      + "finding, and an ordinary beard is not that. See "
+      + "anticipatedDifficultAirway, which is the conclusion a beard feeds and "
+      + "which is coded.",
     type: "boolean",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "facialHair",
@@ -579,6 +584,46 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "difficultAirwayNotes",
     versionIntroduced: "3.8.0",
+  },
+  {
+    name: "anticipatedDifficultAirway",
+    exportName: "observation.value_as_concept_id (LOSPOR:ANTICIPATED_DIFFICULT_AIRWAY)",
+    meaning: "Whether the assessor expects this airway to be difficult, as "
+      + "SNOMED 37159176 (At increased risk for difficult tracheal intubation) "
+      + "answered with 4188539 (Yes) or 4188540 (No). A risk statement rather "
+      + "than the available 'Expected difficult tracheal intubation', because "
+      + "bedside airway tests predict poorly and most patients flagged here are "
+      + "intubated uneventfully. Its outcome counterpart, 37397717 (Unexpected "
+      + "difficult airway), is not written by anything yet.",
+    type: "concept_id",
+    missingnessRule: "No row = the question was not asked, or the value was not recorded",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "anticipatedDifficultAirway",
+    versionIntroduced: "4.3.0",
+  },
+  {
+    name: "malignantHyperthermiaHistory",
+    exportName: "observation.value_as_concept_id (LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY)",
+    meaning: "Malignant hyperthermia in this patient, as SNOMED 440285 "
+      + "(Malignant hyperthermia) answered with 4188539 (Yes) or 4188540 (No). "
+      + "Distinct from familyAnesthesiaProblems, which asks about relatives.",
+    type: "concept_id",
+    missingnessRule: "No row = the question was not asked, or the value was not recorded",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "malignantHyperthermiaHistory",
+    versionIntroduced: "4.3.0",
+  },
+  {
+    name: "unexplainedAnaesthesiaComplications",
+    exportName: "observation.value_as_concept_id (LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS)",
+    meaning: "Something went wrong under a previous anaesthetic and was never "
+      + "explained, as SNOMED 37017043 (Complication due to anesthesia during "
+      + "surgery) answered with 4188539 (Yes) or 4188540 (No). The operative "
+      + "setting is part of the question, so the unqualified umbrella (4142195) "
+      + "is not used; nor is any drug-reaction concept, since naming a cause is "
+      + "what this record cannot do.",
+    type: "concept_id",
+    missingnessRule: "No row = the question was not asked, or the value was not recorded",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "unexplainedAnaesthesiaComplications",
+    versionIntroduced: "4.3.0",
   },
   {
     name: "labAbnormalFlag",

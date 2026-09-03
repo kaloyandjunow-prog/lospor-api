@@ -162,6 +162,12 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
       retrognathia: false,
       prominentIncisors: true,
       facialHair: null,
+      // One of each tri-state, so the fixture proves the difference rather than
+      // just the true case: anticipated yes, MH asked and denied, the
+      // unexplained-event question never asked at all.
+      anticipatedDifficultAirway: true,
+      malignantHyperthermiaHistory: false,
+      unexplainedAnaesthesiaComplications: null,
       labResults: [],
       labRows: [
         { test: "Hemoglobin", valueNum: 180, value: "180", unitCanon: "g/L", loincCode: "718-7", abnormalFlag: "high", referenceLow: 130, referenceHigh: 175, standardConceptId: 3000963, mappingStatus: "MAPPED" },
