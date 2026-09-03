@@ -80,6 +80,11 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         timestamp: new Date("2026-06-01T08:35:00Z"),
         label: "Sevoflurane", value: null, unit: "%",
         agentPercent: 2, metadataJson: { name: "Sevoflurane" },
+        // ATC N01AB08, resolved the way a real event now is: at write time, by
+        // resolveDrugExposureConcepts. Left without one for a while after that
+        // resolver shipped, which is exactly the state a case charted before
+        // this concept existed in the vocabulary would still be in.
+        atcCode: "N01AB08", standardConceptId: 19039298, mappingStatus: "MAPPED",
       },
       {
         type: "agent_stop",
@@ -91,6 +96,11 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         timestamp: new Date("2026-06-01T08:40:00Z"),
         label: "Ringer lactate", value: null, unit: "mL", fluidId: "fl-1",
         volume: 500, fluidCategory: "CRYSTALLOID", metadataJson: { name: "Ringer lactate" },
+        // B05BB01 is a real, correctly-resolved ATC code with no OMOP standard
+        // concept behind it -- SOURCE_ONLY, verified against the live
+        // ConceptMap, not a gap in this fixture. Left uncoded on purpose: this
+        // is the honest state, not something to "fix".
+        atcCode: "B05BB01", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
       },
       {
         type: "gas_change",

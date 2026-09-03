@@ -51,7 +51,7 @@ describe("mapCasesToOmop", () => {
       // blood group is one row instead of a type row and a rhesus row.
       measurement: 42,
       // Two planned procedures + anaesthesia technique + vascular access.
-      procedure_occurrence: 5,
+      procedure_occurrence: 6,
       observation: 48,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
@@ -1871,5 +1871,56 @@ describe("a recorded dose of zero survives, the same way a recorded volume of ze
       .find(r => String(r.drug_source_value).includes("Test premed"))
 
     expect(row?.dose_value).toBe(0)
+  })
+})
+
+describe("fluid and premedication administration as procedure facts", () => {
+  const withIntraop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    Object.assign(c.intraop, patch)
+    return mapCasesToOmop([c as never])
+  }
+  const proc = (b: ReturnType<typeof mapCasesToOmop>, src: string) =>
+    b.procedure_occurrence.filter(r => r.procedure_source_value === src)
+
+  it("emits the administration fact alongside the volume, not instead of it", () => {
+    const b = withIntraop({ colloidsMl: 500, bloodMl: 300 })
+
+    expect(proc(b, "LOSPOR:COLLOID_ADMINISTRATION")[0]?.procedure_concept_id).toBe(44790654)
+    expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")[0]?.procedure_concept_id).toBe(4024656)
+    // The mL figure is unaffected -- still an observation, still uncoded, since
+    // PROCEDURE_OCCURRENCE has nowhere to put a continuous volume.
+    expect(b.observation.find(r => r.observation_source_value === "LOSPOR:COLLOIDS_ML")
+      ?.value_as_number).toBe(500)
+  })
+
+  it("does not claim an administration happened when the recorded total is a documented zero", () => {
+    // colloidsMl: 0 means "none given", not "unknown". A procedure row here
+    // would assert something that was recorded not to have occurred.
+    const b = withIntraop({ colloidsMl: 0, bloodMl: 0 })
+
+    expect(proc(b, "LOSPOR:COLLOID_ADMINISTRATION")).toHaveLength(0)
+    expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")).toHaveLength(0)
+  })
+
+  it("never codes crystalloids, because no concept names the pooled total honestly", () => {
+    // Every candidate either asserts a specific fluid (Hartmann's, dextrose,
+    // saline) this pooled figure does not distinguish, or is generic enough
+    // (Intravenous infusion) to be equally true of a drug or a transfusion.
+    const b = withIntraop({ crystalloidsMl: 1000 })
+    expect(proc(b, "LOSPOR:CRYSTALLOID_ADMINISTRATION")).toHaveLength(0)
+    expect(b.procedure_occurrence.filter(r => String(r.procedure_source_value).includes("CRYSTALLOID")))
+      .toHaveLength(0)
+  })
+
+  it("codes premedication as a procedure fact alongside its drug row", () => {
+    const bundle = mapCasesToOmop([completeCase() as never])
+    const fact = proc(bundle, "LOSPOR:PREMEDICATION")
+
+    expect(fact).toHaveLength(1)
+    expect(fact[0].procedure_concept_id).toBe(4169397)
+    // The drug row still says which substance; this says the clinical act of
+    // premedicating happened. Neither replaces the other.
+    expect(bundle.drug_exposure.some(r => String(r.drug_source_value).startsWith("PREMED:"))).toBe(true)
   })
 })

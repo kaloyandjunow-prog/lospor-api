@@ -2714,6 +2714,22 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           visit_occurrence_id: visitId,
         })
         sourceObservation("LOSPOR:PREMEDICATION_PHASE", prem.phase, startDate)
+        // 4169397, Premedication for anesthetic procedure. A fact alongside
+        // the drug row above, not a replacement for it: the drug row says
+        // which substance and dose, this says the clinical act of
+        // premedicating happened. One per row, matching the one-event-one-row
+        // pattern used everywhere else in this file.
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      4169397,
+          procedure_date:            startDate,
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    "LOSPOR:PREMEDICATION",
+          visit_occurrence_id:       visitId,
+        })
       }
 
       for (const line of c.intraop.vascularAccessRows ?? []) {
@@ -2746,6 +2762,44 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:CRYSTALLOIDS_ML", c.intraop.crystalloidsMl, endDate)
       sourceObservation("LOSPOR:COLLOIDS_ML", c.intraop.colloidsMl, endDate)
       sourceObservation("LOSPOR:BLOOD_PRODUCTS_ML", c.intraop.bloodMl, endDate)
+
+      // The volume stays uncoded above -- PROCEDURE_OCCURRENCE has no volume
+      // or unit column to put it in, in this export or in the CDM's own
+      // spec, where the nearest field is an integer "quantity" meant for a
+      // repeat count, not a continuous measurement. What can be coded here is
+      // the separate fact that an administration of this kind happened, so
+      // these are additional rows, not a replacement for the mL figures.
+      //
+      // Only when the volume is a recorded positive number: a colloidsMl of 0
+      // is a documented "none given", and a row asserting the procedure
+      // occurred would misstate that.
+      const administrationOccurred = (v: unknown) => (numOrNull(v) ?? 0) > 0
+      const emitAdministration = (source: string, conceptId: number) => {
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      conceptId,
+          procedure_date:            endDate,
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    source,
+          visit_occurrence_id:       visitId,
+        })
+      }
+      // Not crystalloids: SNOMED names the specific fluid -- Hartmann's,
+      // dextrose, saline -- and this field is a pooled total that does not
+      // say which. Every candidate concept would assert a fluid that may not
+      // be the one actually given, and 4030886 (Intravenous infusion) is true
+      // of every drug, colloid and blood product too, so it would say nothing
+      // that distinguishes a crystalloid from anything else. No concept here
+      // is more honest than a wrong or a meaningless one.
+      if (administrationOccurred(c.intraop.colloidsMl)) {
+        emitAdministration("LOSPOR:COLLOID_ADMINISTRATION", 44790654)
+      }
+      if (administrationOccurred(c.intraop.bloodMl)) {
+        emitAdministration("LOSPOR:BLOOD_PRODUCT_TRANSFUSION", 4024656)
+      }
       // 3014315, unqualified. Not the 1-hour or 8-hour variants, which assert
       // a collection window this records nothing about -- what is stored is a
       // case total.

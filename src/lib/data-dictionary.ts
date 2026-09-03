@@ -1007,7 +1007,13 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "crystalloidsMl",
     exportName: "observation.value_as_number (LOSPOR:CRYSTALLOIDS_ML)",
-    meaning: "Total crystalloid fluid administered intraoperatively",
+    meaning: "Total crystalloid fluid administered intraoperatively. Unlike "
+      + "colloidsMl and bloodMl this never gains a companion procedure fact: "
+      + "SNOMED names the specific fluid (Hartmann's, dextrose, saline) and "
+      + "this is a pooled total that does not say which, so every specific "
+      + "concept could be false, and the generic alternative (4030886, "
+      + "Intravenous infusion) is equally true of a drug or a transfusion and "
+      + "would distinguish nothing.",
     unit: "mL",
     type: "integer",
     allowedValues: "0–50000",
@@ -1018,7 +1024,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "colloidsMl",
     exportName: "observation.value_as_number (LOSPOR:COLLOIDS_ML)",
-    meaning: "Total colloid fluid administered intraoperatively",
+    meaning: "Total colloid fluid administered intraoperatively. The volume "
+      + "stays uncoded -- PROCEDURE_OCCURRENCE has no volume column, in this "
+      + "export or in the CDM spec, whose nearest field is an integer count "
+      + "rather than a continuous measurement -- but a positive total also "
+      + "emits a separate procedure_occurrence row, 44790654 (Intravenous "
+      + "fluid colloid administration), stating the fact that colloid was "
+      + "given. A recorded 0 emits neither the fact nor a false one: 0 means "
+      + "none was given, not that it is unknown.",
     unit: "mL",
     type: "integer",
     allowedValues: "0–20000",
@@ -1029,7 +1042,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "bloodMl",
     exportName: "observation.value_as_number (LOSPOR:BLOOD_PRODUCTS_ML)",
-    meaning: "Total blood products administered intraoperatively",
+    meaning: "Total blood products administered intraoperatively. Same "
+      + "pattern as colloidsMl: the volume stays uncoded, and a positive total "
+      + "also emits procedure_occurrence 4024656 (Transfusion of blood "
+      + "product) as a separate fact. A recorded 0 emits neither row.",
     unit: "mL",
     type: "integer",
     allowedValues: "0–20000",
@@ -1461,8 +1477,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "premedication",
-    exportName: "observation.value_as_string (LOSPOR:PREMEDICATION_PHASE)",
-    meaning: "Premedication recorded for the case, by phase (evening before or morning of surgery)",
+    exportName: "observation.value_as_string (LOSPOR:PREMEDICATION_PHASE) + procedure_occurrence.procedure_concept_id",
+    meaning: "Premedication recorded for the case, by phase (evening before "
+      + "or morning of surgery). Each row also emits a procedure_occurrence "
+      + "fact, 4169397 (Premedication for anesthetic procedure) -- the phase "
+      + "observation says when, the drug_exposure row (see premedicationRows) "
+      + "says what, and this says the clinical act itself occurred.",
     type: "string",
     missingnessRule: "No row = no premedication recorded for that phase",
     sourceTable: "IntraoperativeRecord", sourceColumn: "premedicationEvening / premedicationMorning",
