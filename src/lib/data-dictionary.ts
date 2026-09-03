@@ -409,7 +409,13 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "guidance the form does not record -- accepted because ESP is not a "
       + "landmark technique in current practice. Paravertebral carries 4205280, "
       + "unqualified, rather than the thoracic or lumbar variants, because the "
-      + "form does not ask which level. "
+      + "form does not ask which level. Wrist (4332447), elbow (4332446, "
+      + "unqualified rather than ulnar/radial/median-at-elbow) and digital "
+      + "(4333956, the hand-specific concept, scoped correctly since this leaf "
+      + "sits under Upper extremity) complete the named upper-limb blocks. "
+      + "Bier block carries 4117443, Local anesthetic intravenous regional "
+      + "block: there is no concept literally named Bier block, and IVRA is "
+      + "the technical term this maps to exactly. "
       + "LOCAL carries 4124873, Wound infiltration of local anesthetic, and "
       + "not 4303995 (Local anesthesia): that concept looked like the obvious "
       + "umbrella and is verified, against CONCEPT_ANCESTOR, as the parent of "
@@ -775,10 +781,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "tracheobronchial tube), ENDOBRONCHIAL_TUBE_PLACEMENT 4335585 "
       + "(Endobronchial intubation, the deliberate placement, not 4134538 "
       + "Unintended endobronchial intubation, the complication of an ordinary "
-      + "tube slipping too far). SURGICAL_AIRWAY is 0 pending a decision: a "
-      + "surgical airway in an anaesthesia record almost always means an "
-      + "emergency cricothyroidotomy rather than an elective tracheostomy, and "
-      + "that distinction needs checking before being asserted.",
+      + "tube slipping too far). SURGICAL_AIRWAY is 4068680 (Cricothyroidotomy, "
+      + "unqualified): checked against a tracheostomy reading, and this device "
+      + "list never records one -- a tracheostomy is a separate planned "
+      + "procedure done by a different team, and both tracheostomy concepts in "
+      + "this vocabulary are deprecated regardless. Not 4134560 (Emergency "
+      + "cricothyroidotomy): real-world use of this device is almost always an "
+      + "emergency, but the form does not record emergency or elective for it, "
+      + "so this states what is known rather than what is likely.",
     type: "string",
     allowedValues: "SUPRAGLOTTIC_AIRWAY_PLACEMENT | TRACHEAL_INTUBATION_ORAL | TRACHEAL_INTUBATION_NASAL | DOUBLE_LUMEN_TUBE_PLACEMENT | ENDOBRONCHIAL_TUBE_PLACEMENT | SURGICAL_AIRWAY",
     missingnessRule: "No row = no instrumented airway recorded",

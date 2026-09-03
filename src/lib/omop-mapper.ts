@@ -239,6 +239,18 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // decision rather than a derived fact -- the iliohypogastric half
   // (4332577) is not coded. Same shape of gap as BLOCK_SCIATIC's approach.
   BLOCK_ILIOINGUINAL: 4333290,
+  BLOCK_WRIST:   4332447,
+  // Scoped correctly by the tree: this node sits under Upper extremity, so the
+  // hand-specific concept is right rather than one of SNOMED's five per-toe
+  // foot concepts.
+  BLOCK_DIGITAL: 4333956,
+  // There is no concept literally named "Bier block"; IVRA is the technical
+  // name and this is its exact SNOMED term.
+  BLOCK_BIER:    4117443,
+  // Unqualified, matching the form's node, the same reasoning as
+  // BLOCK_PARAVERTEBRAL: SNOMED also has ulnar/radial/median-at-elbow
+  // concepts, each more specific than the form asks for.
+  BLOCK_ELBOW:   4332446,
 
   // PECS I has no concept literally named for it. 37017575 is not a
   // stand-in: the vocabulary's own ancestry has it as the direct parent of
@@ -349,10 +361,15 @@ const AIRWAY_ACT_CONCEPTS: Record<string, number> = {
   // endobronchial intubation), which is the complication of an ordinary
   // single-lumen tube slipping too far, a different fact entirely.
   ENDOBRONCHIAL_TUBE_PLACEMENT:   4335585,
-  // SURGICAL_AIRWAY is not yet decided: a surgical airway in an anaesthesia
-  // record almost always means an emergency cricothyroidotomy rather than an
-  // elective tracheostomy, and that distinction needs checking before being
-  // asserted.
+  // Cricothyroidotomy, checked: a surgical airway logged from this device
+  // list is never a tracheostomy, which is a separate planned procedure done
+  // by a different team, not chosen here -- and both tracheostomy concepts in
+  // this vocabulary are deprecated in any case. Unqualified rather than
+  // 4134560 (Emergency cricothyroidotomy): real-world use of this device is
+  // almost always an emergency, but the form does not record emergency or
+  // elective for it, the same reasoning as the sciatic approach and ESP's
+  // ultrasound guidance -- state what is known, not what is likely.
+  SURGICAL_AIRWAY: 4068680,
 }
 
 function isoDate(d: Date | string | null | undefined): string | null {

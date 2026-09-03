@@ -1196,12 +1196,11 @@ describe("what anaesthetic was given", () => {
     // SNOMED has a "Local anesthetic nerve block in <region>" family that
     // mirrors this part of the tree almost exactly, so four nodes cover roughly
     // forty leaves and each leaf can be refined later without touching a stored
-    // value. TAP, femoral and interscalene were examples of this until their
-    // own leaves were mapped; rectus sheath, supraclavicular and popliteal are
-    // still inherited. All four brachial plexus approaches are now mapped, so
-    // BLOCK_WRIST stands in as the still-inherited upper-limb example.
+    // value. TAP, femoral, interscalene and every other upper-limb leaf were
+    // examples of this until their own concepts were mapped; rectus sheath and
+    // popliteal are still inherited -- the latter for the same approach
+    // ambiguity as BLOCK_SCIATIC, undecided on purpose.
     expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
-    expect(techRow("BLOCK_WRIST")?.procedure_concept_id).toBe(4332443)
     expect(techRow("BLOCK_POPLITEAL")?.procedure_concept_id).toBe(4333960)
   })
 
@@ -1241,14 +1240,17 @@ describe("what anaesthetic was given", () => {
     expect(endo?.procedure_concept_id).toBe(4335585)
   })
 
-  it("leaves the surgical airway act at 0, undecided rather than unmapped by oversight", () => {
+  it("codes a surgical airway as a cricothyroidotomy, unqualified", () => {
     const rows = proc(withTechniques(["GENERAL"], ["SURGICAL_AIRWAY"]))
     const surgical = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:SURGICAL_AIRWAY")
 
-    // A surgical airway in an anaesthesia record almost always means an
-    // emergency cricothyroidotomy rather than an elective tracheostomy, and
-    // that distinction needs checking before being asserted.
-    expect(surgical?.procedure_concept_id).toBe(0)
+    // Never a tracheostomy: that is a separate planned procedure done by a
+    // different team, not something chosen from this device list, and both
+    // tracheostomy concepts in this vocabulary are deprecated regardless.
+    // Unqualified rather than "Emergency cricothyroidotomy" -- real-world use
+    // is almost always an emergency, but the form does not record that, the
+    // same reasoning as the sciatic approach and ESP's ultrasound guidance.
+    expect(surgical?.procedure_concept_id).toBe(4068680)
   })
 })
 
@@ -1444,5 +1446,24 @@ describe("the chest wall plane blocks", () => {
 
   it("codes paravertebral without asserting a spinal level the form does not ask for", () => {
     expect(techRow("BLOCK_PARAVERTEBRAL")?.procedure_concept_id).toBe(4205280)
+  })
+})
+
+describe("the last upper-limb block leaves", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes wrist, digital, elbow and IVRA", () => {
+    expect(techRow("BLOCK_WRIST")?.procedure_concept_id).toBe(4332447)
+    // The tree scopes this leaf under Upper extremity, so the hand-specific
+    // concept applies rather than one of SNOMED's five per-toe foot concepts.
+    expect(techRow("BLOCK_DIGITAL")?.procedure_concept_id).toBe(4333956)
+    expect(techRow("BLOCK_ELBOW")?.procedure_concept_id).toBe(4332446)
+    // No concept is literally named "Bier block"; IVRA is the technical name.
+    expect(techRow("BLOCK_BIER")?.procedure_concept_id).toBe(4117443)
   })
 })
