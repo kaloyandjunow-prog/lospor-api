@@ -57,11 +57,19 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   ],
   procedure_occurrence: [
     "procedure_occurrence_id", "person_id", "procedure_concept_id", "procedure_date",
-    "procedure_type_concept_id", "procedure_source_value", "visit_occurrence_id",
+    "procedure_type_concept_id",
+    // How the operation was performed — urgency, for now. A qualifier on the
+    // operation rather than an operation of its own, which is what keeps one
+    // appendectomy counting as one procedure.
+    "modifier_concept_id", "modifier_source_value",
+    "procedure_source_value", "visit_occurrence_id",
   ],
   observation: [
     "observation_id", "person_id", "observation_concept_id", "observation_date",
     "observation_type_concept_id", "value_as_number", "value_as_string",
+    // A coded answer where the vocabulary can state one -- a clinical yes or no
+    // that no tool can read out of the string "true".
+    "value_as_concept_id",
     "observation_source_value", "visit_occurrence_id",
   ],
 }

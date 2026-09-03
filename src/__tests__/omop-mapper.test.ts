@@ -43,10 +43,10 @@ describe("mapCasesToOmop", () => {
       // opening, thyromental distance and the Cormack-Lehane grade moved from
       // unmapped LOSPOR observations to measurements carrying their SNOMED
       // concepts. The same facts, in the table that makes them poolable.
-      measurement: 31,
+      measurement: 32,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 60,
+      observation: 59,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -124,8 +124,10 @@ describe("mapCasesToOmop", () => {
     ]))
     // A textual observation carries no number: an ASA class is "I", not 1, and
     // writing it as 1 would make it addable to something.
+    //
+    // ASA itself is no longer here: it is a graded scale and now carries the
+    // scale concept with the class as a coded answer, asserted above.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:ASA_CLASS", value_as_string: "I", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg", value_as_number: null }),

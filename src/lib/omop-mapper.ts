@@ -202,6 +202,36 @@ const AIRWAY_MEASUREMENTS: Record<string, { concept_id: number; unit: string | n
   thyromental:    { concept_id: 4142891, unit: "cm", source: "LOSPOR:THYROMENTAL_DISTANCE_CM" },
 }
 
+/**
+ * A clinical yes and no, as SNOMED Qualifier Values.
+ *
+ * The same concept class the procedure urgency modifier uses. These say only
+ * what was answered and add nothing to the question, which is the point: a
+ * question-specific value concept — "Never smoked" for a false smoking flag —
+ * states more than the form asked.
+ */
+const YES_CONCEPT_ID = 4188539
+const NO_CONCEPT_ID = 4188540
+
+/**
+ * ASA physical status, one standard concept per class.
+ *
+ * SNOMED also carries an older "ASA grade I/II/III" set — 4199572, 4201721,
+ * 4200663 and the rest — which reads as the obvious match and is invalid
+ * (`invalid_reason` U). These are the current ones.
+ */
+const ASA_CLASS_CONCEPTS: Record<string, number> = {
+  // Keyed on the Roman numerals the form stores and the schema enumerates.
+  // Arabic keys would have looked entirely correct and resolved every class to
+  // concept 0.
+  I: 4186042,
+  II: 4184967,
+  III: 4186043,
+  IV: 4211334,
+  V: 4186044,
+  VI: 4186045,
+}
+
 /** Mallampati and Cormack-Lehane are graded scales, not quantities. */
 const AIRWAY_GRADES: Record<string, {
   concept_id: number
@@ -393,6 +423,18 @@ interface OmopProcedure {
   procedure_concept_id: number
   procedure_date: string | null
   procedure_type_concept_id: number
+  /**
+   * A qualifier on the operation, not a second operation.
+   *
+   * Urgency is the case this exists for. "Emergency procedure" (4158569) is the
+   * closest concept to what the form asks, but emitted as its own
+   * procedure_occurrence row it would make one appendectomy count as two
+   * procedures and put an extra hit into any cohort defined over a procedure
+   * concept set. The CDM's answer is this column: the operation stays one row,
+   * and how it was performed hangs off it.
+   */
+  modifier_concept_id: number
+  modifier_source_value: string | null
   procedure_source_value: string | null
   visit_occurrence_id: number
 }
@@ -412,6 +454,20 @@ interface OmopObservation {
   // one, the string so nothing already reading value_as_string breaks.
   value_as_number: number | null
   value_as_string: string | null
+  /**
+   * The answer as a concept, where the answer is one the vocabulary can state.
+   *
+   * A clinical yes/no lives here as SNOMED Yes (4188539) or No (4188540), which
+   * no tool can read out of the string "true". The alternative was a value
+   * concept per question — "Never smoked" for a false smoking flag — and that
+   * asserts more than the form asked: a boolean that means "not currently
+   * smoking" covers the never-smoker and the ex-smoker alike, and calling both
+   * "never" is wrong for one of them.
+   *
+   * 0 where there is no coded answer, which is every free-text and numeric
+   * observation.
+   */
+  value_as_concept_id: number
   observation_source_value: string | null
   visit_occurrence_id: number
 }
@@ -1012,12 +1068,26 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // concentration written "0.5%" — the number is passed in rather than
       // parsed back out of the string.
       numericValue?: number | null,
+      // A standard concept where the vocabulary has one for this finding.
+      //
+      // Defaulting to 0 keeps every existing caller unchanged: concept_id 0
+      // means "we had nowhere standard to put this", which is honest for a
+      // LOSPOR-specific observation and dishonest for one OMOP already knows.
+      // The source value is kept either way — it is what the data dictionary
+      // documents and what already-exported datasets are keyed by.
+      conceptId = 0,
+      // The answer as a concept, for a question whose answer the vocabulary
+      // can state. Left 0 unless a caller passes one: a wrong coded answer is
+      // worse than an uncoded one, which is the lesson of every other concept
+      // on this page.
+      valueConceptId = 0,
     ) => {
       if (value == null || value === "") return
       observations.push({
         observation_id: nextId(),
         person_id: personId,
-        observation_concept_id: 0,
+        observation_concept_id: conceptId,
+        value_as_concept_id: valueConceptId,
         observation_date: date,
         observation_type_concept_id: 32817,
         // A boolean is not a measurement, so it stays text only: "true" in
@@ -1085,7 +1155,16 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // Emergency also appears as the conventional "E" suffix on the ASA class
       // below; this is the same fact as a value a cohort can be filtered on.
       sourceObservation("LOSPOR:EMERGENCY_SURGERY", preop.emergencySurgery, vitDate)
-      sourceObservation("LOSPOR:HIGH_RISK_SURGERY", preop.highRiskSurgery, vitDate)
+      // An RCRI criterion, and the one that is not a patient condition — the
+      // other four are ordinary diagnoses and reach condition_occurrence as
+      // themselves. RCRI defines this by operation type (intraperitoneal,
+      // intrathoracic, suprainguinal vascular), which SNOMED has no concept
+      // for; this is the nearest and says "at increased risk" rather than
+      // "high-risk operation", so it is an approximation and the dictionary
+      // says so. It stays an observation because urgency owns the procedure's
+      // modifier column, and because a statement about risk is about the
+      // patient rather than about how the operation was performed.
+      sourceObservation("LOSPOR:HIGH_RISK_SURGERY", preop.highRiskSurgery, vitDate, null, 4250613)
       sourceObservation("LOSPOR:POVOC_SCORE", preop.povocScore, vitDate)
       sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocRiskPercent, vitDate)
       sourceObservation("LOSPOR:COLDS_SCORE", preop.coldsScore, vitDate)
@@ -1220,16 +1299,34 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // ── Observations: ASA, RCRI, Apfel, STOP-BANG, airway ───────────────
       const preopDate = isoDate(c.createdAt)
       if (preop.asaScore) {
-        observations.push({
-          observation_id:           nextId(),
-          person_id:                personId,
-          observation_concept_id:   4173987, // ASA Physical Status concept
-          observation_date:         preopDate,
-          observation_type_concept_id: 32817,
-          // A Roman numeral, optionally suffixed "E" — a class, not a quantity.
-          value_as_number:          null,
-          value_as_string:          preop.asaScore + (preop.emergencySurgery ? "E" : ""),
-          observation_source_value: "LOSPOR:ASA_CLASS",
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          // The scale, with the class as a coded answer — the same shape the
+          // airway grades use, and the shape ASA has in SNOMED.
+          //
+          // This replaces observation_concept_id 4173987, which was on every
+          // exported ASA class and is "Ethacrynic acid overdose". It is a
+          // standard, valid concept, so nothing automated objected; only
+          // reading the concept's name catches it. Every existing dataset
+          // carries that error and is keyed by LOSPOR:ASA_CLASS, which is why
+          // the source value is unchanged.
+          measurement_concept_id:      4199571,
+          measurement_date:            preopDate,
+          measurement_datetime:        preopDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             null,
+          value_as_concept_id:         ASA_CLASS_CONCEPTS[String(preop.asaScore)] ?? 0,
+          unit_concept_id:             0,
+          unit_source_value:           null,
+          range_low:                   null,
+          range_high:                  null,
+          // The E suffix is kept as reported, but it is not what carries the
+          // urgency: emergencySurgery exports separately as a procedure. There
+          // is no ASA-with-E concept, and inventing one from the two would be a
+          // claim the vocabulary does not make.
+          value_source_value:       preop.asaScore + (preop.emergencySurgery ? "E" : ""),
+          measurement_source_value: "LOSPOR:ASA_CLASS",
           visit_occurrence_id:      visitId,
         })
       }
@@ -1267,14 +1364,28 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // Everything below follows the same rule as the airway history above --
       // an answered "no" is a finding and reaches the export, and only an
       // unasked question stays silent.
-      sourceObservation("LOSPOR:SMOKING", preop.smoking, preopDate)
-      sourceObservation("LOSPOR:SUBSTANCE_ABUSE", preop.substanceAbuse, preopDate)
-      sourceObservation("LOSPOR:LATEX_ALLERGY", preop.latexAllergy, preopDate)
-      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate)
+      // Tobacco smoking status. The field is a plain yes/no, which is what this
+      // register records, so the answer stays in value_as_string rather than
+      // being forced into a smoker/former/never value concept it does not have.
+      // Tobacco smoking status, answered Yes or No rather than with a value
+      // concept of its own. "Never smoked" would assert what the form did not
+      // ask: this boolean means "not currently smoking", which is true of the
+      // never-smoker and the ex-smoker alike, and they carry different
+      // perioperative risk.
+      sourceObservation("LOSPOR:SMOKING", preop.smoking, preopDate, null, 43054909,
+        preop.smoking ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // "Harmful pattern of substance use", which says substance rather than
+      // drugs and so covers alcohol — the question a clinician is actually
+      // answering here. Reached from the deprecated SNOMED "Drug abuse"
+      // (436954) through its Maps to; that one is invalid_reason D and cannot
+      // carry a concept_id itself.
+      sourceObservation("LOSPOR:SUBSTANCE_ABUSE", preop.substanceAbuse, preopDate, null, 1448779)
+      sourceObservation("LOSPOR:LATEX_ALLERGY", preop.latexAllergy, preopDate, null, 4032362)
+      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate, null, 4294884)
       sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_DETAILS", preop.familyAnesthesiaDetails, preopDate)
       sourceObservation("LOSPOR:DENTAL_PROSTHETICS", preop.dentalProsthetics, preopDate)
       sourceObservation("LOSPOR:LOOSE_TEETH", preop.looseTeeth, preopDate)
-      sourceObservation("LOSPOR:HEART_ARRHYTHMIA", preop.heartArrhythmia, preopDate)
+      sourceObservation("LOSPOR:HEART_ARRHYTHMIA", preop.heartArrhythmia, preopDate, null, 44784217)
 
       // The allergy flag already reaches DRUG_ALLERGY observations per
       // substance, but the free-text detail carries allergens that were never
@@ -1347,6 +1458,28 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     //
     // The unstructured plannedProcedure text is the fallback for cases recorded
     // before procedure rows existed, and only when there are no rows at all.
+    // Urgency, hung off the operation rather than emitted as an operation of
+    // its own. As its own procedure_occurrence row it would make one
+    // appendectomy count as two and add a spurious hit to any cohort defined
+    // over a procedure concept set.
+    //
+    // SNOMED Qualifier Values, which is the concept class a modifier column is
+    // for: Emergency 4093606 against Elective 4013731. The obvious-looking
+    // "Emergency procedure" (4158569) is Procedure-domain — it names an
+    // operation, not a way of performing one, and would have put a second
+    // procedure concept in a qualifier slot. Urgent (4014167) and Routine
+    // (4176260) are the same class if the form ever needs them.
+    //
+    // The two are one toggle in the form and cannot both be true, which is what
+    // lets a single column carry the whole dimension. A case recorded before
+    // the field existed has neither, and takes 0: unmodified, rather than a
+    // guess that it was elective.
+    const emergency = preop?.emergencySurgery
+    const surgicalUrgencyConcept = emergency == null ? 0 : emergency ? 4093606 : 4013731
+    const surgicalUrgencySource = emergency == null
+      ? null
+      : emergency ? "LOSPOR:EMERGENCY_SURGERY" : "LOSPOR:ELECTIVE_SURGERY"
+
     const procedureRows = preop?.procedureRows ?? []
     if (procedureRows.length > 0) {
       for (const row of procedureRows) {
@@ -1357,6 +1490,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           procedure_concept_id:      row.standardConceptId ?? 0,
           procedure_date:            startDate,
           procedure_type_concept_id: 32817,
+          modifier_concept_id:       surgicalUrgencyConcept,
+          modifier_source_value:     surgicalUrgencySource,
           procedure_source_value:    sourceValue("PROCEDURE", row.sourceVocabulary, row.sourceCode, row.group ?? row.description),
           visit_occurrence_id:       visitId,
         })
@@ -1368,6 +1503,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         procedure_concept_id:      0,
         procedure_date:            startDate,
         procedure_type_concept_id: 32817,
+        modifier_concept_id:       surgicalUrgencyConcept,
+        modifier_source_value:     surgicalUrgencySource,
         procedure_source_value:    preop.plannedProcedure,
         visit_occurrence_id:       visitId,
       })
@@ -1484,6 +1621,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           procedure_concept_id:      0,
           procedure_date:            startDate,
           procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
           procedure_source_value:    `AIRWAY_MANAGEMENT:${act}`,
           visit_occurrence_id:       visitId,
         })
@@ -1497,6 +1636,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           procedure_concept_id:      0,
           procedure_date:            startDate,
           procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
           procedure_source_value:    `ANAESTHESIA_TECHNIQUE:${tech}`,
           visit_occurrence_id:       visitId,
         })
@@ -1723,6 +1864,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           procedure_concept_id: line.standardConceptId ?? 0,
           procedure_date: startDate,
           procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
           procedure_source_value: `VASCULAR_ACCESS:${line.siteLabel ?? line.site ?? "unknown"}${line.size ? ` ${line.size}${line.sizeUnit ?? ""}` : ""}`,
           visit_occurrence_id: visitId,
         })
@@ -1759,6 +1902,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         observation_type_concept_id: 32817,
         value_as_number: null,
         value_as_string: sel.value,
+        value_as_concept_id: 0,
         observation_source_value: `LOSPOR:${sel.section.toUpperCase()}_${sel.category.toUpperCase()}`,
         visit_occurrence_id: visitId,
       })
@@ -1772,6 +1916,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         observation_type_concept_id: 32817,
         value_as_number: null,
         value_as_string: comp.note ? `${comp.label}; ${comp.note}` : comp.label,
+        value_as_concept_id: 0,
         observation_source_value: `LOSPOR:${comp.section.toUpperCase()}_COMPLICATION`,
         visit_occurrence_id: visitId,
       })
@@ -1818,6 +1963,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           observation_type_concept_id: 32817,
           value_as_number: c.postop.painScoreNRS,
           value_as_string: String(c.postop.painScoreNRS),
+          value_as_concept_id: 0,
           observation_source_value: "LOINC:72514-3",
           visit_occurrence_id: visitId,
         })

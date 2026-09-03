@@ -20,7 +20,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.2.0"
+export const DICTIONARY_VERSION = "4.3.0"
 
 export interface DictionaryEntry {
   name: string
@@ -198,11 +198,15 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   // ── Preop scores ──────────────────────────────────────────────────────────────
   {
     name: "asaScore",
-    exportName: "observation.value_as_string (LOSPOR:ASA_CLASS)",
-    meaning: "ASA Physical Status Classification (I–VI)",
-    type: "enum",
-    allowedValues: "'I'|'II'|'III'|'IV'|'V'|'VI'",
-    missingnessRule: "NULL = not recorded",
+    exportName: "measurement.value_as_concept_id (LOSPOR:ASA_CLASS)",
+    meaning: "ASA Physical Status Classification, as SNOMED concept 4199571 with "
+      + "the class in value_as_concept_id (1=4186042, 2=4184967, 3=4186043, "
+      + "4=4211334, 5=4186044, 6=4186045). The reported string, including any E "
+      + "suffix, stays in value_source_value; urgency itself is carried by "
+      + "emergencySurgery, as there is no ASA-with-E concept.",
+    type: "concept_id",
+    allowedValues: "'1'|'2'|'3'|'4'|'5'|'6', optionally suffixed 'E' in value_source_value",
+    missingnessRule: "Absent row = not recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "asaScore",
     versionIntroduced: "3.0.0",
   },
@@ -242,7 +246,13 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "emergencySurgery",
     exportName: "observation.value_as_string (LOSPOR:EMERGENCY_SURGERY)",
-    meaning: "Whether the procedure was performed as an emergency",
+    meaning: "Whether the procedure was performed as an emergency. Urgency is "
+      + "also carried on the operation itself as "
+      + "procedure_occurrence.modifier_concept_id, using SNOMED Qualifier "
+      + "Values: 4093606 (Emergency) against 4013731 (Elective). A qualifier on "
+      + "the operation rather than a second procedure, so one operation still "
+      + "counts as one. The two are one toggle in the form and cannot both be "
+      + "true; a case recorded before the field existed carries modifier 0.",
     type: "boolean",
     missingnessRule: "NULL = not recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "emergencySurgery",
@@ -251,11 +261,32 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "highRiskSurgery",
     exportName: "observation.value_as_string (LOSPOR:HIGH_RISK_SURGERY)",
-    meaning: "Whether the procedure was classified as high-risk",
+    meaning: "Whether the procedure was classified as high-risk. Carries SNOMED "
+      + "4250613 (At increased risk for perioperative injury), which is an "
+      + "approximation and should be read as one: RCRI defines high-risk by "
+      + "operation type — intraperitoneal, intrathoracic, suprainguinal "
+      + "vascular — and no concept exists for that category. Anyone pooling on "
+      + "4250613 across sites is pooling this operation-type flag with other "
+      + "sites' patient-risk assessments. The operation itself is exported with "
+      + "its own concept, so the category can be derived from it instead.",
     type: "boolean",
     missingnessRule: "NULL = not recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "highRiskSurgery",
     versionIntroduced: "3.0.0",
+  },
+  {
+    name: "elective",
+    exportName: "procedure_occurrence.modifier_concept_id (LOSPOR:ELECTIVE_SURGERY)",
+    meaning: "An elective case, as SNOMED Qualifier Value 4013731 on the "
+      + "operation. Derived from emergencySurgery being false rather than "
+      + "stored separately: the form records one urgency toggle. Until 4.3.0 "
+      + "this left the building nowhere at all — only emergency did, so an "
+      + "elective case was indistinguishable from one where urgency was never "
+      + "recorded.",
+    type: "concept_id",
+    missingnessRule: "Modifier 0 = urgency not recorded, which is a case predating the field",
+    sourceTable: "PreoperativeRecord", sourceColumn: "emergencySurgery",
+    versionIntroduced: "4.3.0",
   },
   {
     name: "difficultAirwayHistory",
@@ -305,9 +336,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "smoking",
-    exportName: "observation.value_as_string (LOSPOR:SMOKING)",
-    meaning: "Whether the patient smokes",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:SMOKING)",
+    meaning: "Whether the patient currently smokes, as LOINC 43054909 (Tobacco "
+      + "smoking status) answered with SNOMED 4188539 (Yes) or 4188540 (No). "
+      + "Answered rather than characterised on purpose: a value concept such as "
+      + "'Never smoked' would state what the form did not ask, since this "
+      + "boolean covers the never-smoker and the ex-smoker alike and they carry "
+      + "different perioperative risk. value_as_string keeps 'true'/'false'.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "smoking",
     versionIntroduced: "3.8.0",
