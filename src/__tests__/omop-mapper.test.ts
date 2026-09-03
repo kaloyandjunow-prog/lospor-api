@@ -1181,7 +1181,7 @@ describe("what anaesthetic was given", () => {
     // spinal anaesthetic, and coding it as one is true; inventing a concept for
     // the exact node would not be.
     expect(techRow("SPINAL_SINGLE_LUMBAR")?.procedure_concept_id).toBe(4332593)
-    expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4171773)
+    expect(techRow("SPINAL_CONT_MID_THORACIC")?.procedure_concept_id).toBe(4332593)
     expect(techRow("EPIDURAL_CAUDAL")?.procedure_concept_id).toBe(4078199)
   })
 
@@ -1266,5 +1266,31 @@ describe("the rest of the technique tree", () => {
     // "tenon" anywhere in CONCEPT.csv are drug names and orbital inflammation.
     // A widely used technique with no concept.
     expect(techRow("BLOCK_SUB_TENONS")?.procedure_concept_id).toBe(4140397)
+  })
+})
+
+describe("how a general anaesthetic was maintained", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("tells inhalational and TIVA apart", () => {
+    // Both used to inherit the general-anaesthesia parent, so the register
+    // could not answer the question the specialty most often asks of it —
+    // volatile against total intravenous, for PONV, emergence and oncological
+    // outcome.
+    expect(techRow("GENERAL_INHALATION")?.procedure_concept_id).toBe(4118897)
+    expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4086418)
+  })
+
+  it("keeps a balanced anaesthetic at the parent, deliberately", () => {
+    // Neither sibling is true of it. TIVA means *total* intravenous, so a case
+    // running a volatile is not TIVA, and it is not inhalation-only either.
+    // The parent is the right answer rather than a fallback, and this test is
+    // here so nobody later "corrects" it to one of the other two.
+    expect(techRow("GENERAL_BALANCED")?.procedure_concept_id).toBe(4171773)
   })
 })

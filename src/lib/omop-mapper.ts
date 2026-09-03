@@ -162,6 +162,24 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // which ship here, so this is the umbrella available to us — and it says what
   // is meant: general anaesthesia for an operation.
   GENERAL:  4171773,
+  // The three children split on what maintained the anaesthetic, which is the
+  // axis research asks about: volatile only, intravenous only, or both.
+  GENERAL_INHALATION: 4118897,
+  GENERAL_TIVA:       4086418,
+  // Balanced is stated here rather than left to inherit, so it reads as a
+  // decision and not as a node nobody reached.
+  //
+  // There is no concept for it, and that gap is the right shape. Neither
+  // sibling is true of a balanced anaesthetic: TIVA means *total* intravenous,
+  // so a case running sevoflurane is not TIVA, and it is not inhalation-only
+  // either. The parent is the correct answer, not a fallback -- do not "fix"
+  // this later by picking one of the other two.
+  //
+  // The drug rows answer this better than any technique code can in any case.
+  // Sevoflurane and propofol both appear on the case with start and stop times,
+  // so the maintenance route is visible directly, including the case that began
+  // volatile and switched to TIVA, which no single code expresses.
+  GENERAL_BALANCED:   4171773,
   SPINAL:   4332593,
   EPIDURAL: 4078199,
   // Not "Conscious sedation", which asserts the patient stayed rousable. MAC
