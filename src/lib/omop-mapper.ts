@@ -144,6 +144,45 @@ export const AIRWAY_ACTS: Record<string, string | null> = {
   SURGICAL_AIRWAY:    "SURGICAL_AIRWAY",
 }
 
+/**
+ * The device itself, for DEVICE_EXPOSURE.
+ *
+ * Distinct from AIRWAY_ACTS above, which is the act of placing one. A face
+ * mask and the oral and nasal airways produce no procedure -- nothing is
+ * instrumented -- but they are still devices that were in the patient, so
+ * unlike the act map this one has no nulls to skip.
+ *
+ * SURGICAL_AIRWAY has no device concept: the vocabulary names the
+ * cricothyroidotomy procedure and the cannula used for it separately, and
+ * which was used is not recorded, so it stays 0 rather than guessing.
+ */
+export const AIRWAY_DEVICE_CONCEPTS: Record<string, number> = {
+  FACE_MASK:          0,
+  OPA:                4139134,
+  NPA:                4266238,
+  LMA:                4106029,
+  ORAL_ETT:           4097216,
+  NASAL_ETT:          4097216,
+  DOUBLE_LUMEN_TUBE:  4161796,
+  ENDOBRONCHIAL_TUBE: 4161796,
+  SURGICAL_AIRWAY:    0,
+}
+
+/** Laryngoscopy and intubation aids, for DEVICE_EXPOSURE. */
+export const AIRWAY_TOOL_CONCEPTS: Record<string, number> = {
+  VIDEO_LARY:  40492457,
+  DIRECT_LARY: 4106016,
+  FOB:         4220610,
+  BOUGIE:      4094381,
+  // STYLET, AWAKE, RETROGRADE and SUPRAGLOTTIC have no device concept: the
+  // last three are techniques rather than instruments, and a stylet is not
+  // separately named. They stay source values.
+  STYLET:      0,
+  AWAKE:       0,
+  RETROGRADE:  0,
+  SUPRAGLOTTIC: 0,
+}
+
 // ─── What anaesthetic was given ──────────────────────────────────────────────
 //
 // The technique tree is about a hundred nodes deep — GENERAL to GENERAL_TIVA,
@@ -672,7 +711,35 @@ export interface OmopBundle {
   drug_exposure: OmopDrug[]
   measurement: OmopMeasurement[]
   procedure_occurrence: OmopProcedure[]
+  device_exposure: OmopDevice[]
   observation: OmopObservation[]
+}
+
+/**
+ * A device placed in the patient.
+ *
+ * The airway devices had exact Device-domain concepts and nowhere to put them:
+ * this export produced nine tables and none of them was the one the CDM
+ * reserves for exactly this. Emitting an endotracheal tube as an observation
+ * would have put a Device-domain concept in an Observation column, which is
+ * the violation the OHDSI data-quality checks exist to catch, so they stayed
+ * at concept 0 instead -- correct, and useless to anyone searching for them.
+ *
+ * Separate from the airway *act* in PROCEDURE_OCCURRENCE, which is deliberate
+ * and not duplication: placing a tube is something done to the patient, and
+ * the tube itself is a thing that was in them. A cohort of "patients
+ * intubated" wants the procedure; a cohort of "cases where a videolaryngoscope
+ * was used" wants the device.
+ */
+export interface OmopDevice {
+  device_exposure_id: number
+  person_id: number
+  device_concept_id: number
+  device_exposure_start_date: string | null
+  device_exposure_end_date: string | null
+  device_type_concept_id: number
+  device_source_value: string | null
+  visit_occurrence_id: number
 }
 
 export interface OmopCareSite {
@@ -1300,6 +1367,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
   const drugs: OmopDrug[] = []
   const measurements: OmopMeasurement[] = []
   const procedures: OmopProcedure[] = []
+  // Trailing underscore because "devices" is already the local name for the
+  // airway device codes read off a case further down.
+  const devices_: OmopDevice[] = []
   const observations: OmopObservation[] = []
   const mappingSummary = { mapped_rows: 0, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
 
@@ -1499,6 +1569,24 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         range_high:                  null,
         visit_occurrence_id:         visitId,
       })
+    }
+
+    /**
+     * Whether a tracheal tube was cuffed, as the coded answer it has.
+     *
+     * LOINC registers "Cuffed endotracheal tube" (36311248) and "Uncuffed"
+     * (36311029) as the answers to question 40771868, Artificial airway, so
+     * both halves of the pair are codeable rather than the usual Yes/No
+     * qualifiers -- the vocabulary names the actual clinical states here.
+     *
+     * The field is always one or the other when a tube was placed, so unlike
+     * the tri-state history questions there is no "not asked" to preserve: a
+     * null means no tube of that kind, and emits nothing.
+     */
+    const cuffedObservation = (source: string, cuffed: boolean | null | undefined) => {
+      if (cuffed == null) return
+      sourceObservation(source, cuffed, startDate, null, 40771868,
+        cuffed ? 36311248 : 36311029)
     }
 
     /**
@@ -2235,14 +2323,40 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // list. Both may be populated, so they are merged and de-duplicated
       // rather than one being preferred and the other silently dropped.
       const devices = [...new Set([...(ia.airwayDevice ? [ia.airwayDevice] : []), ...strList(ia.airwayDevices)])]
-      for (const device of devices) sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
+      // The device itself, alongside the act of placing it. Both are true and
+      // they answer different questions -- see OmopDevice.
+      for (const device of devices) {
+        sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
+        devices_.push({
+          device_exposure_id:         nextId(),
+          person_id:                  personId,
+          device_concept_id:          AIRWAY_DEVICE_CONCEPTS[device] ?? 0,
+          device_exposure_start_date: startDate,
+          device_exposure_end_date:   endDate,
+          device_type_concept_id:     32817,
+          device_source_value:        "AIRWAY_DEVICE:" + device,
+          visit_occurrence_id:        visitId,
+        })
+      }
 
       // The laryngoscopy grade is what an airway-prediction study compares the
       // preoperative assessment against, so it carries its standard concept
       // rather than a LOSPOR-only code. There is no unobtainable flag on the
       // intraoperative record: an absent grade means no direct laryngoscopy.
       emitAirwayGrade("cormackLehane", ia.cormackLehane, startDate, false)
-      for (const tool of strList(ia.airwayTools)) sourceObservation("LOSPOR:AIRWAY_TOOL", tool)
+      for (const tool of strList(ia.airwayTools)) {
+        sourceObservation("LOSPOR:AIRWAY_TOOL", tool)
+        devices_.push({
+          device_exposure_id:         nextId(),
+          person_id:                  personId,
+          device_concept_id:          AIRWAY_TOOL_CONCEPTS[tool] ?? 0,
+          device_exposure_start_date: startDate,
+          device_exposure_end_date:   endDate,
+          device_type_concept_id:     32817,
+          device_source_value:        "AIRWAY_TOOL:" + tool,
+          visit_occurrence_id:        visitId,
+        })
+      }
       // 4337615, Orotracheal fiberoptic intubation. This field sits in the
       // airway-tools section, so it means fibreoptic intubation rather than
       // 604177 (Flexible bronchoscopy), which is a diagnostic procedure. The
@@ -2262,15 +2376,15 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // every tube whose diameter is recorded in millimetres; which tube it
       // was stays in measurement_source_value.
       sourceMeasurement("LOSPOR:ORAL_TUBE_SIZE", numOrNull(ia.oralTubeSize), 21491186, 8588, "mm")
-      sourceObservation("LOSPOR:ORAL_TUBE_CUFFED", ia.oralCuffed)
+      cuffedObservation("LOSPOR:ORAL_TUBE_CUFFED", ia.oralCuffed)
       sourceMeasurement("LOSPOR:NASAL_TUBE_SIZE", numOrNull(ia.nasalTubeSize), 21491186, 8588, "mm")
-      sourceObservation("LOSPOR:NASAL_TUBE_CUFFED", ia.nasalCuffed)
+      cuffedObservation("LOSPOR:NASAL_TUBE_CUFFED", ia.nasalCuffed)
       sourceObservation("LOSPOR:DLT_TYPE", ia.dltType)
       sourceObservation("LOSPOR:DLT_SIDE", ia.dltSide)
       sourceObservation("LOSPOR:DLT_SIZE", ia.dltSize)
       sourceObservation("LOSPOR:ENDOBRONCHIAL_TUBE_SIZE", ia.endobronchialSize)
       sourceMeasurement("LOSPOR:TUBE_SIZE_LEGACY", numOrNull(ia.tubeSize), 21491186, 8588, "mm")
-      sourceObservation("LOSPOR:TUBE_CUFFED_LEGACY", ia.cuffed)
+      cuffedObservation("LOSPOR:TUBE_CUFFED_LEGACY", ia.cuffed)
 
       // ── Ventilation ──────────────────────────────────────────────────────
       // 3004921, Ventilation mode Ventilator. The mode names themselves --
@@ -2800,6 +2914,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     drug_exposure: drugs.length,
     measurement: measurements.length,
     procedure_occurrence: procedures.length,
+    device_exposure: devices_.length,
     observation: observations.length,
   }
   const qualityWarnings = buildQualityWarnings(cases, mappingSummary)
@@ -2856,6 +2971,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     drug_exposure:         drugs,
     measurement:           measurements,
     procedure_occurrence:  procedures,
+    device_exposure:       devices_,
     observation:           observations,
   }
 }

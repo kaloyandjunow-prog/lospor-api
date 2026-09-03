@@ -779,7 +779,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "airwayDevice",
-    exportName: "observation.value_as_string (LOSPOR:AIRWAY_DEVICE)",
+    exportName: "observation.value_as_string (LOSPOR:AIRWAY_DEVICE) + device_exposure.device_concept_id",
+    // The device also leaves as a device_exposure row carrying its Device-domain concept, which is the CDM table for a thing that was in the patient. Both are emitted on purpose: the observation preserves the exact option the anaesthetist chose, and the device_exposure row is what a concept-set search can actually find.
     meaning: "Airway device used. One row per device; the legacy single-device column and the current device list are merged and de-duplicated, so a case written across that change exports each device once.",
     type: "string",
     allowedValues: "FACE_MASK | OPA | NPA | LMA | ORAL_ETT | NASAL_ETT | DOUBLE_LUMEN_TUBE | ENDOBRONCHIAL_TUBE | SURGICAL_AIRWAY",
@@ -831,7 +832,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "airwayTools",
-    exportName: "observation.value_as_string (LOSPOR:AIRWAY_TOOL)",
+    exportName: "observation.value_as_string (LOSPOR:AIRWAY_TOOL) + device_exposure.device_concept_id",
+    // The device also leaves as a device_exposure row carrying its Device-domain concept, which is the CDM table for a thing that was in the patient. Both are emitted on purpose: the observation preserves the exact option the anaesthetist chose, and the device_exposure row is what a concept-set search can actually find.
     meaning: "Instruments and techniques used to secure the airway. One row per tool.",
     type: "string",
     allowedValues: "VIDEO_LARY | DIRECT_LARY | FOB | BOUGIE | STYLET | AWAKE | RETROGRADE | SUPRAGLOTTIC",

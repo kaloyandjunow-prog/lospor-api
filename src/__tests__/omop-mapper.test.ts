@@ -35,6 +35,9 @@ describe("mapCasesToOmop", () => {
       observation_period: 1,
       visit_occurrence: 1,
       condition_occurrence: 2,
+      // Airway devices and laryngoscopy tools, which had exact Device-domain
+      // concepts and no table to put them in until now.
+      device_exposure: 4,
       // Six: two preop (diazepam, premedication) + fentanyl + the propofol
       // infusion + the sevoflurane agent + the fluid administration. The last
       // three used to be one, two, or none of these.
@@ -1719,5 +1722,61 @@ describe("ventilation, the airway tools, and vascular access", () => {
     expect(siteConcept("ART_CAROTID")).toBe(4311043)
     expect(siteConcept("PICC_BASILIC")).toBe(4322380)
     expect(siteConcept("CVK_AXILLARY")).toBe(4050424)
+  })
+})
+
+describe("devices, which had concepts and nowhere to put them", () => {
+  const withIntraop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    Object.assign(c.intraop, patch)
+    return mapCasesToOmop([c as never])
+  }
+  const dev = (b: ReturnType<typeof mapCasesToOmop>, src: string) =>
+    b.device_exposure.find(r => r.device_source_value === src)
+
+  it("emits the device alongside the act of placing it, not instead of it", () => {
+    // Both are true and they answer different questions: a cohort of patients
+    // intubated wants the procedure, a cohort of cases using a
+    // videolaryngoscope wants the device.
+    const b = withIntraop({ airwayDevices: ["ORAL_ETT"], airwayTools: ["VIDEO_LARY"] })
+
+    expect(dev(b, "AIRWAY_DEVICE:ORAL_ETT")?.device_concept_id).toBe(4097216)
+    expect(dev(b, "AIRWAY_TOOL:VIDEO_LARY")?.device_concept_id).toBe(40492457)
+    expect(b.procedure_occurrence.some(r =>
+      r.procedure_source_value === "AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL")).toBe(true)
+  })
+
+  it("codes the devices that are instruments and leaves the techniques alone", () => {
+    const b = withIntraop({
+      airwayDevices: ["LMA", "OPA", "NPA", "ENDOBRONCHIAL_TUBE", "FACE_MASK"],
+      airwayTools: ["BOUGIE", "DIRECT_LARY", "FOB", "AWAKE", "RETROGRADE"],
+    })
+
+    expect(dev(b, "AIRWAY_DEVICE:LMA")?.device_concept_id).toBe(4106029)
+    expect(dev(b, "AIRWAY_DEVICE:OPA")?.device_concept_id).toBe(4139134)
+    expect(dev(b, "AIRWAY_DEVICE:NPA")?.device_concept_id).toBe(4266238)
+    expect(dev(b, "AIRWAY_DEVICE:ENDOBRONCHIAL_TUBE")?.device_concept_id).toBe(4161796)
+    expect(dev(b, "AIRWAY_TOOL:BOUGIE")?.device_concept_id).toBe(4094381)
+    expect(dev(b, "AIRWAY_TOOL:FOB")?.device_concept_id).toBe(4220610)
+
+    // A face mask has no device concept, and "awake" and "retrograde" are
+    // techniques rather than instruments. Each still gets a row -- the device
+    // was used -- carrying 0 rather than a borrowed neighbour.
+    expect(dev(b, "AIRWAY_DEVICE:FACE_MASK")?.device_concept_id).toBe(0)
+    expect(dev(b, "AIRWAY_TOOL:AWAKE")?.device_concept_id).toBe(0)
+    expect(dev(b, "AIRWAY_TOOL:RETROGRADE")?.device_concept_id).toBe(0)
+  })
+
+  it("codes cuffed and uncuffed as the registered answers they are", () => {
+    // Unusually, both halves are codeable: LOINC registers these as the
+    // answers to question 40771868, so this is not the Yes/No qualifier
+    // pattern used for the history questions.
+    const cuffed = withIntraop({ oralCuffed: true }).observation
+      .find(r => r.observation_source_value === "LOSPOR:ORAL_TUBE_CUFFED")
+    const uncuffed = withIntraop({ oralCuffed: false }).observation
+      .find(r => r.observation_source_value === "LOSPOR:ORAL_TUBE_CUFFED")
+
+    expect(cuffed).toMatchObject({ observation_concept_id: 40771868, value_as_concept_id: 36311248 })
+    expect(uncuffed).toMatchObject({ observation_concept_id: 40771868, value_as_concept_id: 36311029 })
   })
 })

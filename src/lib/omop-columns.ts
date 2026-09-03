@@ -64,6 +64,15 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     "modifier_concept_id", "modifier_source_value",
     "procedure_source_value", "visit_occurrence_id",
   ],
+  // A device the patient had placed. Separate from the airway act in
+  // procedure_occurrence on purpose: placing a tube is something done to the
+  // patient, the tube is a thing that was in them, and a cohort asking "which
+  // cases used a videolaryngoscope" wants this table rather than that one.
+  device_exposure: [
+    "device_exposure_id", "person_id", "device_concept_id",
+    "device_exposure_start_date", "device_exposure_end_date",
+    "device_type_concept_id", "device_source_value", "visit_occurrence_id",
+  ],
   observation: [
     "observation_id", "person_id", "observation_concept_id", "observation_date",
     "observation_type_concept_id", "value_as_number", "value_as_string",
