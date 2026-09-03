@@ -214,6 +214,45 @@ async function importFilteredLosporConcepts(): Promise<{ count: number; sourceCo
     ICD10PCS: new Set(pcs.map(p => p.code)),
   }
 
+  // UCUM units the mapper writes into unit_concept_id, by concept_id rather
+  // than code: there is no LabLoinc/Icd10Code/Atc table of units to read this
+  // set from the way the other vocabularies do, since these are the fixed,
+  // small handful of units the export ever emits (vitals, labs, BMI, the two
+  // airway distances). Filtered mode had no branch for UCUM at all until this
+  // was added, so every unit_concept_id the mapper carried was 0 in the local
+  // OmopConcept table even after the mapper itself started sending the real
+  // id -- the concept existed in the download and nowhere else. Keep this in
+  // sync with UCUM_UNIT_CONCEPT_IDS in src/lib/omop-mapper.ts by hand; there
+  // is no shared source because one file is Prisma-only and the other is not.
+  const requiredUcumConceptIds = new Set([
+    8582,  // cm
+    8876,  // mm[Hg]
+    8541,  // /min
+    8554,  // %
+    586323, // Cel
+    8753,  // mmol/L
+    9529,  // kg
+    9531,  // kg/m2
+    8636,  // g/L
+    8734,  // 10*12/L
+    9444,  // 10*9/L
+    8583,  // fL
+    8564,  // pg
+    8555,  // s
+    44777663, // mg{FEU}/L
+    8985,  // [iU]/mL
+    8749,  // umol/L
+    720870, // mL/min/(173.10*-2.m2)
+    8645,  // [U]/L
+    8725,  // ng/L
+    8845,  // pg/mL
+    8748,  // ug/L
+    9040,  // 10*-3.[iU]/L
+    8729,  // pmol/L
+    8751,  // mg/L
+    8752,  // mm/h
+  ])
+
   const conceptFile = filePath("CONCEPT.csv")
   if (!conceptFile) throw new Error("CONCEPT.csv not found")
 
@@ -227,7 +266,8 @@ async function importFilteredLosporConcepts(): Promise<{ count: number; sourceCo
         (c.vocabularyId === "ICD10" && requiredCodes.ICD10.has(c.conceptCode)) ||
         (c.vocabularyId === "ICD10CM" && requiredCodes.ICD10CM.has(c.conceptCode)) ||
         (c.vocabularyId === "ATC" && requiredCodes.ATC.has(c.conceptCode)) ||
-        (c.vocabularyId === "ICD10PCS" && requiredCodes.ICD10PCS.has(c.conceptCode))
+        (c.vocabularyId === "ICD10PCS" && requiredCodes.ICD10PCS.has(c.conceptCode)) ||
+        (c.vocabularyId === "UCUM" && requiredUcumConceptIds.has(c.conceptId))
       ))
     if (concepts.length === 0) return
     for (const concept of concepts) sourceConceptIds.add(concept.conceptId)

@@ -103,6 +103,12 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         atcCode: "B05BB01", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
       },
       {
+        type: "fluid_end",
+        timestamp: new Date("2026-06-01T08:55:00Z"),
+        label: "Ringer lactate", value: null, unit: null, fluidId: "fl-1",
+        metadataJson: {},
+      },
+      {
         type: "gas_change",
         timestamp: new Date("2026-06-01T08:30:00Z"),
         label: null,

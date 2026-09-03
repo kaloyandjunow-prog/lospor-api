@@ -531,25 +531,62 @@ const MALLAMPATI_NOT_ASSESSABLE_CONCEPT_ID = 4309852
 
 // ─── LOINC / OMOP vital concept map ──────────────────────────────────────────
 
-const VITAL_CONCEPTS: Record<string, { concept_id: number; loinc: string; unit: string }> = {
-  systolic:    { concept_id: 3004249, loinc: "8480-6",  unit: "mmHg" },
-  diastolic:   { concept_id: 3012888, loinc: "8462-4",  unit: "mmHg" },
-  heartRate:   { concept_id: 3027018, loinc: "8867-4",  unit: "/min" },
-  spO2:        { concept_id: 3016502, loinc: "59408-5", unit: "%" },
-  etco2:       { concept_id: 3020892, loinc: "19889-5", unit: "mmHg" },
-  temp:        { concept_id: 3020891, loinc: "8310-5",  unit: "Cel" },
+// unitConceptId is UCUM, verified against the same local vocabulary snapshot
+// as every other concept in this file: mm[Hg] 8876, /min 8541, % 8554,
+// Cel 586323, mmol/L 8753, cm 8582, kg 9529. These rows carried a written
+// unit and a 0 in unit_concept_id at every site that read them -- a tool
+// that trusts the coded column over the string, which is the point of
+// having one, saw an unlabelled number.
+const VITAL_CONCEPTS: Record<string, { concept_id: number; loinc: string; unit: string; unitConceptId: number }> = {
+  systolic:    { concept_id: 3004249, loinc: "8480-6",  unit: "mmHg", unitConceptId: 8876 },
+  diastolic:   { concept_id: 3012888, loinc: "8462-4",  unit: "mmHg", unitConceptId: 8876 },
+  heartRate:   { concept_id: 3027018, loinc: "8867-4",  unit: "/min", unitConceptId: 8541 },
+  spO2:        { concept_id: 3016502, loinc: "59408-5", unit: "%", unitConceptId: 8554 },
+  etco2:       { concept_id: 3020892, loinc: "19889-5", unit: "mmHg", unitConceptId: 8876 },
+  temp:        { concept_id: 3020891, loinc: "8310-5",  unit: "Cel", unitConceptId: 586323 },
   // 3004501, not 0. This row carried the right LOINC code and then threw the
   // concept away, so every intraoperative glucose exported unmapped while
   // sitting next to a code that identifies it exactly.
-  bgl:         { concept_id: 3004501, loinc: "2345-7",  unit: "mmol/L" },
-  respiratoryRate: { concept_id: 3024171, loinc: "9279-1", unit: "/min" },
+  bgl:         { concept_id: 3004501, loinc: "2345-7",  unit: "mmol/L", unitConceptId: 8753 },
+  respiratoryRate: { concept_id: 3024171, loinc: "9279-1", unit: "/min", unitConceptId: 8541 },
   // Height and weight are required before a case can reach the intraoperative
   // form, so every case has them — and until they were added here the export
   // silently dropped both, while the data dictionary documented them. Weight in
   // particular is how every dose on the chart was calculated; without it a
   // reviewer cannot check a dose or study dosing at all.
-  heightCm:    { concept_id: 3036277, loinc: "8302-2",  unit: "cm" },
-  weightKg:    { concept_id: 3025315, loinc: "29463-7", unit: "kg" },
+  heightCm:    { concept_id: 3036277, loinc: "8302-2",  unit: "cm", unitConceptId: 8582 },
+  weightKg:    { concept_id: 3025315, loinc: "29463-7", unit: "kg", unitConceptId: 9529 },
+}
+
+// Canonical lab unit string -> UCUM unit concept, covering every distinct
+// unit string the 66-test lab library uses (lospor-core/src/labs.ts). Verified
+// individually against the same local vocabulary snapshot as every other
+// concept in this file. INR and pH carry "" -- genuinely unitless ratios and
+// logarithms, the same reasoning as the 0-10 pain scales -- and are left out
+// so the lookup's ?? 0 fallback is the honest answer for them, not an
+// omission.
+const LAB_UNIT_CONCEPTS: Record<string, number> = {
+  "g/L": 8636,
+  "%": 8554,
+  "×10¹²/L": 8734,
+  "×10⁹/L": 9444,
+  "fL": 8583,
+  "pg": 8564,
+  "s": 8555,
+  "mg/L FEU": 44777663,
+  "IU/mL": 8985,
+  "mmol/L": 8753,
+  "μmol/L": 8749,
+  "mL/min/1.73m²": 720870,
+  "U/L": 8645,
+  "ng/L": 8725,
+  "pg/mL": 8845,
+  "μg/L": 8748,
+  "mmHg": 8876,
+  "mIU/L": 9040,
+  "pmol/L": 8729,
+  "mg/L": 8751,
+  "mm/h": 8752,
 }
 
 // ─── Airway examination concepts ─────────────────────────────────────────────
@@ -1739,7 +1776,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           measurement_type_concept_id: 32817,
           value_as_number:           val ?? null,
           value_as_concept_id:       val == null ? UNOBTAINABLE_CONCEPT_ID : null,
-          unit_concept_id:           0,
+          unit_concept_id:           cfg.unitConceptId,
           unit_source_value:         cfg.unit,
           measurement_source_value:  `LOINC:${cfg.loinc}`,
           // Vitals carry no source text and no laboratory reference range.
@@ -1770,7 +1807,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           measurement_type_concept_id: 32817,
           value_as_number:             lab.valueNum,
           value_as_concept_id: null,
-          unit_concept_id:             0,
+          unit_concept_id:             lab.unitCanon ? LAB_UNIT_CONCEPTS[lab.unitCanon] ?? 0 : 0,
           unit_source_value:           lab.unitCanon ?? null,
           measurement_source_value:    labSource,
           // The value as the lab reported it. For a numeric result this is the
@@ -2028,7 +2065,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           measurement_type_concept_id: 32817,
           value_as_number:             preop.bmi,
           value_as_concept_id:         0,
-          unit_concept_id:             0,
+          // 9531, UCUM kg/m2.
+          unit_concept_id:             9531,
           unit_source_value:           "kg/m2",
           range_low:                   null,
           range_high:                  null,
@@ -2479,10 +2517,18 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // state and inventing an end would manufacture a duration nobody recorded.
       const ordered = [...drugEvents].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
       const infusionEnd = new Map<string, Date>()
+      // fluid_start/fluid_end pair by fluidId exactly the way infusions pair by
+      // infId -- the app already emits fluid_end with that key
+      // (lospor-core/src/intraop-engine.ts) when a fluid is stopped. This map
+      // was missing entirely, so every fluid drug_exposure row exported with
+      // no end date regardless of whether the fluid was actually stopped: in
+      // the CDM, a null end date reads as "still running".
+      const fluidEnd = new Map<string, Date>()
       const agentEnd = new Map<number, Date>()
       let openAgentIndex: number | null = null
       ordered.forEach((ev, index) => {
         if (ev.type === "infusion_stop" && ev.infId) infusionEnd.set(ev.infId, ev.timestamp)
+        if (ev.type === "fluid_end" && ev.fluidId) fluidEnd.set(ev.fluidId, ev.timestamp)
         if (ev.type === "agent_start") openAgentIndex = index
         if (ev.type === "agent_stop" && openAgentIndex != null) {
           agentEnd.set(openAgentIndex, ev.timestamp)
@@ -2491,6 +2537,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       })
       const endFor = (ev: typeof drugEvents[number], index: number): string | null => {
         if (ev.type === "infusion_start") return ev.infId ? isoDate(infusionEnd.get(ev.infId)) : null
+        if (ev.type === "fluid_start") return ev.fluidId ? isoDate(fluidEnd.get(ev.fluidId)) : null
         if (ev.type === "agent_start") return isoDate(agentEnd.get(index))
         return null
       }
@@ -2518,7 +2565,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               measurement_type_concept_id: 32817,
               value_as_number:           val,
               value_as_concept_id: null,
-              unit_concept_id:           0,
+              unit_concept_id:           key === "bgl" ? (ev.bglUnitCanon ? (LAB_UNIT_CONCEPTS[ev.bglUnitCanon] ?? cfg.unitConceptId) : cfg.unitConceptId) : cfg.unitConceptId,
               unit_source_value:         key === "bgl" ? ev.bglUnitCanon ?? cfg.unit : cfg.unit,
               measurement_source_value:  `LOINC:${loincOverride ?? cfg.loinc}`,
               // Vitals carry no source text and no laboratory reference range.
@@ -2681,7 +2728,11 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               measurement_type_concept_id: 32817,
               value_as_number: ev.calculationWeightKg,
               value_as_concept_id: null,
-              unit_concept_id: 0,
+              // 9529, UCUM kg. The measurement concept stays 0 -- no vocabulary
+              // codes "the weight a dose was calculated from" as distinct from
+              // body weight itself -- but the value is still genuinely
+              // kilograms, so the unit is coded regardless.
+              unit_concept_id: 9529,
               unit_source_value: "kg",
               measurement_source_value: "LOSPOR:DOSE_CALCULATION_WEIGHT_KG",
               // Vitals carry no source text and no laboratory reference range.
@@ -2867,7 +2918,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const [key, val, unobtainable] of postopVitals) {
         if (val == null && !unobtainable) continue
         const cfg = VITAL_CONCEPTS[key]
-        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val ?? null, value_as_concept_id: val == null ? UNOBTAINABLE_CONCEPT_ID : null, unit_concept_id: 0, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
+        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val ?? null, value_as_concept_id: val == null ? UNOBTAINABLE_CONCEPT_ID : null, unit_concept_id: cfg.unitConceptId, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
       }
       // Aldrete subscores and their total: 0-2 each, 0-10 summed. A discharge
       // threshold is a numeric comparison, so these have to be numbers.

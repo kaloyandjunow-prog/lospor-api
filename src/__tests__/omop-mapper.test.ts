@@ -178,7 +178,7 @@ describe("mapCasesToOmop", () => {
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
       expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 3 }),
-      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 8 }),
+      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 9 }),
       expect.objectContaining({ code: "INSTITUTION_LINKAGE", severity: "info", count: 1 }),
       expect.objectContaining({ code: "REDACTED_FREE_TEXT_PRESENT", severity: "warning", count: 1 }),
     ]))
@@ -582,6 +582,32 @@ describe("fluids are exported as the events they were, not only as totals", () =
     expect(fluid, "fixture must contain the fluid event").toBeDefined()
     expect(fluid!.dose_value).toBe(500)
     expect(fluid!.drug_exposure_start_date).toBe("2026-06-01")
+  })
+
+  it("closes a fluid at its fluid_end event, the same way an infusion closes at infusion_stop", () => {
+    // fluid_start/fluid_end pair by fluidId exactly the way infusion_start/
+    // infusion_stop pair by infId -- the app already emits fluid_end with
+    // that key, but the mapper's pairing logic had no branch for it, so
+    // every fluid drug_exposure row exported with a start and no end, which
+    // in the CDM reads as "still infusing" no matter how the case actually
+    // went.
+    const bundle = mapCasesToOmop([completeCase() as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const fluid = bundle.drug_exposure.find(row => /Ringer/.test(String(row.drug_source_value)))
+    expect(fluid!.drug_exposure_end_date).toBe("2026-06-01")
+  })
+
+  it("leaves an unstopped fluid open rather than inventing an end", () => {
+    const c = completeCase() as never as { events: { type: string }[] }
+    c.events = c.events.filter(ev => ev.type !== "fluid_end")
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const fluid = bundle.drug_exposure.find(row => /Ringer/.test(String(row.drug_source_value)))
+    expect(fluid!.drug_exposure_end_date).toBeNull()
   })
 
   it("still reports the case totals alongside", () => {
