@@ -860,8 +860,9 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "oralTubeSize",
-    exportName: "observation.value_as_number (LOSPOR:ORAL_TUBE_SIZE)",
-    meaning: "Oral endotracheal tube internal diameter, offered in half sizes.",
+    exportName: "measurement.value_as_number (LOSPOR:ORAL_TUBE_SIZE)",
+    meaning: "Oral endotracheal tube internal diameter, offered in half sizes, "
+      + "as LOINC 21491186 (Endotracheal tube Diameter), a Measurement-domain concept -- the same concept covers every tube whose diameter is recorded, and which tube it was stays in measurement_source_value. A size that will not parse as a number emits no row rather than a zero, since a tube of size zero does not exist.",
     unit: "mm",
     type: "float",
     allowedValues: "2–10",
@@ -880,8 +881,9 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "nasalTubeSize",
-    exportName: "observation.value_as_number (LOSPOR:NASAL_TUBE_SIZE)",
-    meaning: "Nasal endotracheal tube internal diameter, offered in half sizes.",
+    exportName: "measurement.value_as_number (LOSPOR:NASAL_TUBE_SIZE)",
+    meaning: "Nasal endotracheal tube internal diameter, offered in half sizes, "
+      + "as LOINC 21491186 (Endotracheal tube Diameter), a Measurement-domain concept -- the same concept covers every tube whose diameter is recorded, and which tube it was stays in measurement_source_value. A size that will not parse as a number emits no row rather than a zero, since a tube of size zero does not exist.",
     unit: "mm",
     type: "float",
     allowedValues: "2–10",
@@ -942,7 +944,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "tubeSize",
-    exportName: "observation.value_as_number (LOSPOR:TUBE_SIZE_LEGACY)",
+    exportName: "measurement.value_as_number (LOSPOR:TUBE_SIZE_LEGACY)",
     meaning: "Airway device size from before per-device columns existed, shared by LMA and oral/nasal ETT. Exported under its own name because which device it describes cannot be recovered; it is the only size older rows carry.",
     type: "float",
     missingnessRule: "No row = not a legacy row, or size not recorded",

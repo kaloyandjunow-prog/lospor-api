@@ -45,10 +45,10 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 40,
+      measurement: 41,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 50,
+      observation: 49,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -696,7 +696,10 @@ describe("airway management", () => {
     expect(cormack[0].measurement_concept_id).toBe(37398987)
     expect(cormack[0].value_as_concept_id).toBe(4221760)
     expect(cormack[0].value_source_value).toBe("IIa")
-    expect(obs(bundle, "LOSPOR:ORAL_TUBE_SIZE")[0]?.value_as_number).toBe(7.5)
+    // Tube sizes moved to measurement with concept 21491186 (Endotracheal
+    // tube Diameter), a Measurement-domain LOINC concept.
+    expect(bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:ORAL_TUBE_SIZE"))
+      .toMatchObject({ measurement_concept_id: 21491186, value_as_number: 7.5, unit_concept_id: 8588 })
     expect(obs(bundle, "LOSPOR:ORAL_TUBE_CUFFED")[0]?.value_as_string).toBe("true")
     // PEEP moved to measurement with concept 3022875 (the ventilator setting,
     // not the measured airway pressure), which is a Measurement-domain concept.
@@ -1657,5 +1660,64 @@ describe("the numbers an anaesthetic chart records, coded", () => {
     // measurement beside the inspired oxygen it is computed alongside.
     const fiAir = bundle().measurement.find(r => r.measurement_source_value === "LOSPOR:FIAIR_PERCENT")
     if (fiAir) expect(fiAir.measurement_concept_id).toBe(0)
+  })
+})
+
+describe("ventilation, the airway tools, and vascular access", () => {
+  const withIntraop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    Object.assign(c.intraop, patch)
+    return mapCasesToOmop([c as never])
+  }
+  const obsIn = (b: ReturnType<typeof mapCasesToOmop>, s: string) =>
+    b.observation.find(r => r.observation_source_value === s)
+
+  it("codes the ventilation flags without asserting a route or modality", () => {
+    const b = withIntraop({ ippv: true, jetVentilation: true, ventilationModes: ["VCV"] })
+
+    // Unqualified concepts. The narrower ones -- "via endotracheal tube",
+    // "high frequency" -- would each claim something these plain flags do not
+    // record.
+    expect(obsIn(b, "LOSPOR:IPPV")).toMatchObject({
+      observation_concept_id: 607086, value_as_concept_id: 4188539,
+    })
+    expect(obsIn(b, "LOSPOR:JET_VENTILATION")).toMatchObject({
+      observation_concept_id: 4168475, value_as_concept_id: 4188539,
+    })
+    // The mode names have no value concepts, so the question is coded and the
+    // answer stays text.
+    expect(obsIn(b, "LOSPOR:VENTILATION_MODE")).toMatchObject({
+      observation_concept_id: 3004921, value_as_string: "VCV",
+    })
+  })
+
+  it("codes fibreoptic intubation, not diagnostic bronchoscopy", () => {
+    // 604177 (Flexible bronchoscopy) is the tempting match and is a diagnostic
+    // procedure; this field sits among the airway tools.
+    expect(obsIn(withIntraop({ fob: true }), "LOSPOR:FIBREOPTIC_BRONCHOSCOPY"))
+      .toMatchObject({ observation_concept_id: 4337615, value_as_concept_id: 4188539 })
+  })
+
+  it("codes each vascular access site as the distinct procedure it is", () => {
+    const siteConcept = (site: string) => {
+      const b = withIntraop({ vascularAccessRows: [{ site, siteLabel: site, preexisting: false }] })
+      return b.procedure_occurrence.find(r => String(r.procedure_source_value).startsWith("VASCULAR_ACCESS:"))
+        ?.procedure_concept_id
+    }
+
+    // A radial arterial line and an internal jugular central line are
+    // different procedures and used to share concept 0.
+    expect(siteConcept("ART_RADIAL")).toBe(4051187)
+    expect(siteConcept("ART_ULNAR")).toBe(4052409)
+    expect(siteConcept("CVK_IJV")).toBe(4051188)
+    expect(siteConcept("CVK_SUBCLAVIAN")).toBe(4052415)
+    expect(siteConcept("VEN_PERIPHERAL")).toBe(4049832)
+
+    // Carotid has no arterial concept in SNOMED and the PICC veins are not
+    // separately named, so each inherits a truthful parent rather than
+    // borrowing a neighbouring site's id.
+    expect(siteConcept("ART_CAROTID")).toBe(4311043)
+    expect(siteConcept("PICC_BASILIC")).toBe(4322380)
+    expect(siteConcept("CVK_AXILLARY")).toBe(4050424)
   })
 })

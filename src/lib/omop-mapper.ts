@@ -357,6 +357,65 @@ export function techniqueConceptFor(code: string): number {
  * guessing them would be indistinguishable, in the export, from having chosen
  * them.
  */
+/**
+ * Vascular access sites, coded per site.
+ *
+ * SNOMED has an "<artery> cannula insertion" and a "Central venous cannula
+ * insertion via <vein>" family that mirrors this form's tree almost exactly,
+ * so nearly every site the anaesthetist can pick has an exact concept. The two
+ * parents are the backstop for the ones that do not: carotid has no arterial
+ * concept at all, and the PICC subdivisions (basilic, cephalic, brachial) are
+ * not separately named, so each inherits the truthful parent rather than
+ * borrowing a neighbouring site's concept -- a radial line and an ulnar line
+ * are different procedures and must not share an id.
+ */
+const VASCULAR_ACCESS_CONCEPTS: Record<string, number> = {
+  ARTERIAL:       4311043,
+  ART_RADIAL:     4051187,
+  ART_ULNAR:      4052409,
+  ART_BRACHIAL:   4052408,
+  ART_AXILLARY:   4049830,
+  ART_FEMORAL:    4050420,
+  // ART_CAROTID has no concept: SNOMED names temporal, subclavian, axillary,
+  // brachial, radial, ulnar, femoral, tibial, dorsalis pedis, umbilical and
+  // hepatic arteries, and not the carotid. It inherits ARTERIAL.
+
+  VEN_PERIPHERAL: 4049832,
+  VEN_CENTRAL:    4052413,
+  CVK:            4052413,
+  CVK_IJV:        4051188,
+  CVK_EJV:        4052414,
+  CVK_SUBCLAVIAN: 4052415,
+  CVK_AXILLARY:   4050424,
+  CVK_FEMORAL:    4052416,
+  PICC:           4322380,
+}
+
+/** Every vascular-access node's parent, so an unmapped site inherits a true
+ *  ancestor rather than nothing. */
+const VASCULAR_ACCESS_PARENT: Record<string, string> = {
+  ART_RADIAL: "ARTERIAL", ART_ULNAR: "ARTERIAL", ART_BRACHIAL: "ARTERIAL",
+  ART_AXILLARY: "ARTERIAL", ART_CAROTID: "ARTERIAL", ART_FEMORAL: "ARTERIAL",
+  VEN_PERIPHERAL: "VENOUS", VEN_CENTRAL: "VENOUS",
+  PICC: "VEN_CENTRAL", CVK: "VEN_CENTRAL",
+  PICC_BRACHIAL: "PICC", PICC_BASILIC: "PICC", PICC_CEPHALIC: "PICC",
+  CVK_AXILLARY: "CVK", CVK_IJV: "CVK", CVK_EJV: "CVK",
+  CVK_SUBCLAVIAN: "CVK", CVK_FEMORAL: "CVK",
+}
+
+/** The nearest vascular-access concept at or above this site, or 0. */
+export function vascularAccessConceptFor(site: string | null | undefined): number {
+  let node = site ?? undefined
+  const seen = new Set<string>()
+  while (node && !seen.has(node)) {
+    const concept = VASCULAR_ACCESS_CONCEPTS[node]
+    if (concept) return concept
+    seen.add(node)
+    node = VASCULAR_ACCESS_PARENT[node]
+  }
+  return 0
+}
+
 const AIRWAY_ACT_CONCEPTS: Record<string, number> = {
   TRACHEAL_INTUBATION_ORAL:       4335481,
   // Same name, two ids -- 40431308 is the same concept, deprecated
@@ -379,6 +438,20 @@ const AIRWAY_ACT_CONCEPTS: Record<string, number> = {
   // elective for it, the same reasoning as the sciatic approach and ESP's
   // ultrasound guidance -- state what is known, not what is likely.
   SURGICAL_AIRWAY: 4068680,
+}
+
+/**
+ * A stored size as a number, or nothing.
+ *
+ * Tube sizes are stored as text because a half size is written "7.5" and some
+ * older rows carry a unit or a stray space. A value that will not parse yields
+ * null rather than 0: a tube of size zero does not exist, and inventing one
+ * would be worse than the row being absent.
+ */
+function numOrNull(value: unknown): number | null {
+  if (value == null || value === "") return null
+  const n = typeof value === "number" ? value : parseFloat(String(value))
+  return Number.isFinite(n) ? n : null
 }
 
 function isoDate(d: Date | string | null | undefined): string | null {
@@ -2170,27 +2243,48 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // intraoperative record: an absent grade means no direct laryngoscopy.
       emitAirwayGrade("cormackLehane", ia.cormackLehane, startDate, false)
       for (const tool of strList(ia.airwayTools)) sourceObservation("LOSPOR:AIRWAY_TOOL", tool)
-      sourceObservation("LOSPOR:FIBREOPTIC_BRONCHOSCOPY", ia.fob)
+      // 4337615, Orotracheal fiberoptic intubation. This field sits in the
+      // airway-tools section, so it means fibreoptic intubation rather than
+      // 604177 (Flexible bronchoscopy), which is a diagnostic procedure. The
+      // oral route is asserted rather than recorded -- the form has a single
+      // flag and does not say which route the scope took -- so this is a
+      // product decision of the same kind as the sciatic block approach, and
+      // 4337617 is the nasal counterpart if the form ever distinguishes them.
+      sourceObservation("LOSPOR:FIBREOPTIC_BRONCHOSCOPY", ia.fob, startDate, null, 4337615,
+        ia.fob ? YES_CONCEPT_ID : NO_CONCEPT_ID)
 
       // Sizes are recorded per device. The legacy tubeSize/cuffed pair is the
       // only size older rows carry, so it is exported under its own code
       // rather than being guessed onto one of the per-device ones.
       sourceObservation("LOSPOR:LMA_SIZE", ia.lmaSize)
-      sourceObservation("LOSPOR:ORAL_TUBE_SIZE", ia.oralTubeSize)
+      // 21491186, Endotracheal tube Diameter -- a Measurement-domain LOINC
+      // concept, so the sizes move out of observation. The same concept covers
+      // every tube whose diameter is recorded in millimetres; which tube it
+      // was stays in measurement_source_value.
+      sourceMeasurement("LOSPOR:ORAL_TUBE_SIZE", numOrNull(ia.oralTubeSize), 21491186, 8588, "mm")
       sourceObservation("LOSPOR:ORAL_TUBE_CUFFED", ia.oralCuffed)
-      sourceObservation("LOSPOR:NASAL_TUBE_SIZE", ia.nasalTubeSize)
+      sourceMeasurement("LOSPOR:NASAL_TUBE_SIZE", numOrNull(ia.nasalTubeSize), 21491186, 8588, "mm")
       sourceObservation("LOSPOR:NASAL_TUBE_CUFFED", ia.nasalCuffed)
       sourceObservation("LOSPOR:DLT_TYPE", ia.dltType)
       sourceObservation("LOSPOR:DLT_SIDE", ia.dltSide)
       sourceObservation("LOSPOR:DLT_SIZE", ia.dltSize)
       sourceObservation("LOSPOR:ENDOBRONCHIAL_TUBE_SIZE", ia.endobronchialSize)
-      sourceObservation("LOSPOR:TUBE_SIZE_LEGACY", ia.tubeSize)
+      sourceMeasurement("LOSPOR:TUBE_SIZE_LEGACY", numOrNull(ia.tubeSize), 21491186, 8588, "mm")
       sourceObservation("LOSPOR:TUBE_CUFFED_LEGACY", ia.cuffed)
 
       // ── Ventilation ──────────────────────────────────────────────────────
-      for (const mode of strList(ia.ventilationModes)) sourceObservation("LOSPOR:VENTILATION_MODE", mode)
-      sourceObservation("LOSPOR:IPPV", ia.ippv)
-      sourceObservation("LOSPOR:JET_VENTILATION", ia.jetVentilation)
+      // 3004921, Ventilation mode Ventilator. The mode names themselves --
+      // VCV, PCV, SIMV+PSV -- have no value concepts, so the mode stays in
+      // value_as_string while the row gains a real question concept.
+      for (const mode of strList(ia.ventilationModes)) {
+        sourceObservation("LOSPOR:VENTILATION_MODE", mode, startDate, null, 3004921)
+      }
+      // Unqualified in both cases: the fields are plain flags, and the
+      // narrower concepts assert a route or a modality neither records.
+      sourceObservation("LOSPOR:IPPV", ia.ippv, startDate, null, 607086,
+        ia.ippv ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      sourceObservation("LOSPOR:JET_VENTILATION", ia.jetVentilation, startDate, null, 4168475,
+        ia.jetVentilation ? YES_CONCEPT_ID : NO_CONCEPT_ID)
       // 3022875, the ventilator *setting*, which is what an anaesthetist
       // charts -- not 3016226, the measured airway pressure.
       sourceMeasurement("LOSPOR:PEEP_CMH2O", ia.peepCmH2O, 3022875, 44777590, "cm[H2O]")
@@ -2500,7 +2594,11 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const line of c.intraop.vascularAccessRows ?? []) {
         procedures.push({
           procedure_occurrence_id: nextId(), person_id: personId,
-          procedure_concept_id: line.standardConceptId ?? 0,
+          // The site is coded from the catalogue when relational-sync has not
+          // already resolved one, so a radial arterial line and an internal
+          // jugular central line stop sharing concept 0. The exact site the
+          // anaesthetist chose stays in the source value either way.
+          procedure_concept_id: line.standardConceptId ?? vascularAccessConceptFor(line.site),
           procedure_date: startDate,
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,
