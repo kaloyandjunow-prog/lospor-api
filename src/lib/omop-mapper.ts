@@ -196,6 +196,13 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // cases; this is true of all of them. The exact term, CIEL's "Monitored
   // anesthesia care", is not in this vocabulary.
   SEDATION: 4219502,
+  // Not 4303995 (Local anesthesia), which looked like the obvious umbrella and
+  // is verified, against CONCEPT_ANCESTOR, as the parent of the entire nerve
+  // block family too -- using it here would give a plain wound infiltration
+  // the same lineage as a spinal or a TAP block, the same shape of problem as
+  // REGIONAL. This names what the node actually means: infiltrating the wound
+  // for a case done under local alone.
+  LOCAL: 4124873,
   // The block hierarchy. SNOMED has a "Local anesthetic nerve block in
   // <region>" family that mirrors this part of the tree almost exactly, so four
   // nodes cover roughly forty leaves truthfully, and each leaf can be refined
@@ -330,7 +337,22 @@ export function techniqueConceptFor(code: string): number {
  * them.
  */
 const AIRWAY_ACT_CONCEPTS: Record<string, number> = {
-  TRACHEAL_INTUBATION_ORAL: 4335481,
+  TRACHEAL_INTUBATION_ORAL:       4335481,
+  // Same name, two ids -- 40431308 is the same concept, deprecated
+  // (invalid_reason D); 4314149 is the live one.
+  SUPRAGLOTTIC_AIRWAY_PLACEMENT:  4314149,
+  // Not "Nasal intubation awake" or "Blind nasal intubation", both of which
+  // assert a technique or patient state the form does not record.
+  TRACHEAL_INTUBATION_NASAL:      4337616,
+  DOUBLE_LUMEN_TUBE_PLACEMENT:    37116698,
+  // The deliberate placement this form records, not 4134538 (Unintended
+  // endobronchial intubation), which is the complication of an ordinary
+  // single-lumen tube slipping too far, a different fact entirely.
+  ENDOBRONCHIAL_TUBE_PLACEMENT:   4335585,
+  // SURGICAL_AIRWAY is not yet decided: a surgical airway in an anaesthesia
+  // record almost always means an emergency cricothyroidotomy rather than an
+  // elective tracheostomy, and that distinction needs checking before being
+  // asserted.
 }
 
 function isoDate(d: Date | string | null | undefined): string | null {

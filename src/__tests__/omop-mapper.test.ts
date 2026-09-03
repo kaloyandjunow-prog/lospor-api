@@ -1218,16 +1218,52 @@ describe("what anaesthetic was given", () => {
     expect(techRow("NOT_A_REAL_NODE")?.procedure_concept_id).toBe(0)
   })
 
-  it("codes an oral intubation, and only that airway act so far", () => {
+  it("codes an oral intubation and an LMA insertion as the different procedures they are", () => {
     const rows = proc(withTechniques(["GENERAL"], ["ORAL_ETT", "LMA"]))
     const oral = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL")
     const lma = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:SUPRAGLOTTIC_AIRWAY_PLACEMENT")
 
     expect(oral?.procedure_concept_id).toBe(4335481)
-    // Undecided rather than unmapped-by-oversight: a supraglottic airway is a
-    // different procedure with a different concept, and guessing it would look
-    // exactly like having chosen it.
-    expect(lma?.procedure_concept_id).toBe(0)
+    expect(lma?.procedure_concept_id).toBe(4314149)
+  })
+
+  it("codes the nasal, double-lumen and endobronchial airway acts", () => {
+    const rows = proc(withTechniques(["GENERAL"], ["NASAL_ETT", "DOUBLE_LUMEN_TUBE", "ENDOBRONCHIAL_TUBE"]))
+    const nasal = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_NASAL")
+    const dlt = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:DOUBLE_LUMEN_TUBE_PLACEMENT")
+    const endo = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:ENDOBRONCHIAL_TUBE_PLACEMENT")
+
+    expect(nasal?.procedure_concept_id).toBe(4337616)
+    expect(dlt?.procedure_concept_id).toBe(37116698)
+    // 4335585, the deliberate placement, not 4134538 (Unintended endobronchial
+    // intubation), which is the complication of an ordinary tube slipping too
+    // far -- a different fact from choosing to place one.
+    expect(endo?.procedure_concept_id).toBe(4335585)
+  })
+
+  it("leaves the surgical airway act at 0, undecided rather than unmapped by oversight", () => {
+    const rows = proc(withTechniques(["GENERAL"], ["SURGICAL_AIRWAY"]))
+    const surgical = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:SURGICAL_AIRWAY")
+
+    // A surgical airway in an anaesthesia record almost always means an
+    // emergency cricothyroidotomy rather than an elective tracheostomy, and
+    // that distinction needs checking before being asserted.
+    expect(surgical?.procedure_concept_id).toBe(0)
+  })
+})
+
+describe("local infiltration", () => {
+  it("is not coded as the umbrella that is also the ancestor of every nerve block", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = ["LOCAL"]
+    const row = mapCasesToOmop([c as never]).procedure_occurrence
+      .find(r => r.procedure_source_value === "ANAESTHESIA_TECHNIQUE:LOCAL")
+
+    // 4303995 (Local anesthesia) looked like the obvious choice and is verified,
+    // against CONCEPT_ANCESTOR, as the parent of the entire nerve block family
+    // too. Using it would give a plain wound infiltration the same lineage as a
+    // spinal or a TAP block.
+    expect(row?.procedure_concept_id).toBe(4124873)
   })
 })
 
