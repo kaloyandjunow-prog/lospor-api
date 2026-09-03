@@ -535,6 +535,12 @@ const COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS = new Set([
   37397447, // CICO (can't intubate can't oxygenate)
   4231838,  // Accidental extubation (Inadvertent tracheal extubation)
   35625730, // Awareness under anaesthesia (Accidental awareness under general anesthesia)
+  4134556,  // Delayed emergence (Delayed recovery from general anesthesia)
+  4162381,  // Failed block / Regional block failure (Failed regional anesthesia)
+  441207,   // Drug reaction (Adverse reaction to drug)
+  4162376,  // Drug error (Medication error)
+  4154707,  // Serotonin syndrome
+  4010901,  // Massive haemorrhage / Unexpected major haemorrhage (Massive hemorrhage)
 ])
 
 // Rarer still: a curated complication concept whose own domain is Procedure

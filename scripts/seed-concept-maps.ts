@@ -115,6 +115,84 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   { value: "Awareness under anaesthesia", conceptId: 35625730, label: "Accidental awareness under general anesthesia" },
   { value: "Cerebrovascular accident / stroke", conceptId: 381316, label: "Cerebrovascular accident" },
   { value: "Peripheral nerve injury", conceptId: 4248551, label: "Injury of peripheral nerve" },
+
+  // Batch 4 -- everything else in the catalogue that has a real concept.
+  // Gaps (left SOURCE_ONLY, no standard concept found after lexical +
+  // semantic search): High spinal, Anaphylactoid reaction, Latex reaction,
+  // LAST, Residual neuromuscular blockade, Blood loss >1L, ETT displacement,
+  // Circuit disconnection, Gas supply failure, Monitoring failure, Equipment
+  // malfunction, Tourniquet complication. "Adrenal crisis"/"Coagulopathy"/
+  // "Pneumoperitoneum complication" were removed from the schema instead of
+  // researched, per product decision.
+
+  // Neurological, remaining.
+  { value: "Total spinal", conceptId: 4172551, label: "Total spinal blockade" },
+  // Observation-domain -- see COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS.
+  { value: "Delayed emergence", conceptId: 4134556, label: "Delayed recovery from general anesthesia" },
+  { value: "Seizure", conceptId: 377091, label: "Seizure" },
+  // Observation-domain. Shares its concept with Regional block failure below
+  // -- the same clinical event, named from two different curatorial angles.
+  { value: "Failed block", conceptId: 4162381, label: "Failed regional anesthesia" },
+
+  // Metabolic / Temperature -- all ten found. SNOMED's own spelling is
+  // American throughout this category (Hypoglycemia, not Hypoglycaemia,
+  // etc.); the source value keeps LOSPOR's British spelling regardless.
+  { value: "Hypothermia", conceptId: 435371, label: "Hypothermia" },
+  { value: "Hyperthermia", conceptId: 37162916, label: "Hyperthermia" },
+  { value: "Malignant hyperthermia", conceptId: 440285, label: "Malignant hyperthermia" },
+  { value: "Hypoglycaemia", conceptId: 24609, label: "Hypoglycemia" },
+  { value: "Hyperglycaemia", conceptId: 4214376, label: "Hyperglycemia" },
+  { value: "Hyponatraemia", conceptId: 4232311, label: "Hyponatremia" },
+  { value: "Hypernatraemia", conceptId: 36674250, label: "Hypernatremia" },
+  { value: "Hypokalaemia", conceptId: 437833, label: "Hypokalemia" },
+  { value: "Hyperkalaemia", conceptId: 434610, label: "Hyperkalemia" },
+  { value: "Hypocalcaemia", conceptId: 435510, label: "Hypocalcemia" },
+
+  // Drug / Pharmacological.
+  { value: "Anaphylaxis / allergic reaction", conceptId: 441202, label: "Anaphylaxis" },
+  // Observation-domain.
+  { value: "Drug reaction", conceptId: 441207, label: "Adverse reaction to drug" },
+  // Observation-domain.
+  { value: "Drug error", conceptId: 4162376, label: "Medication error" },
+  // SNOMED's own vocabulary calls this poisoning, not overdose -- the same
+  // clinical event, its own terminology choice, same as Hypercarbia/
+  // Hypercapnia above.
+  { value: "Drug overdose", conceptId: 438028, label: "Poisoning by drug AND/OR medicinal substance" },
+  // Observation-domain, despite the Disorder concept class.
+  { value: "Serotonin syndrome", conceptId: 4154707, label: "Serotonin syndrome" },
+
+  // Haematological.
+  // Observation-domain. Shares its concept with Unexpected major
+  // haemorrhage below.
+  { value: "Massive haemorrhage", conceptId: 4010901, label: "Massive hemorrhage" },
+  { value: "DIC (disseminated intravascular coagulation)", conceptId: 436093, label: "Disseminated intravascular coagulation" },
+  { value: "Haemolytic transfusion reaction", conceptId: 4218193, label: "Hemolytic transfusion reaction" },
+  { value: "Febrile non-haemolytic transfusion reaction", conceptId: 763017, label: "Febrile transfusion reaction without hemolysis" },
+  { value: "TRALI (transfusion-related acute lung injury)", conceptId: 37116369, label: "Acute lung injury during and following administration of blood product" },
+  { value: "TACO (transfusion-associated circulatory overload)", conceptId: 4261830, label: "Transfusion reaction due to excess volume" },
+
+  // Equipment / Technical -- the worst-covered category. SNOMED models
+  // device malfunction as incident/safety reporting, not as a clinical
+  // finding, so most of this category has nothing to map to.
+  { value: "IV line failure / extravasation", conceptId: 4153362, label: "Extravasation injury" },
+  // Shares its concept with CVK failure below -- SNOMED has one generic
+  // vascular-device-complication concept, not separate arterial/CVC ones.
+  { value: "Arterial line failure", conceptId: 43021245, label: "Complication associated with vascular device" },
+  { value: "CVK failure", conceptId: 43021245, label: "Complication associated with vascular device" },
+  // Observation-domain. Shares its concept with Failed block above.
+  { value: "Regional block failure", conceptId: 4162381, label: "Failed regional anesthesia" },
+
+  // Surgical.
+  // Observation-domain. Shares its concept with Massive haemorrhage above.
+  { value: "Unexpected major haemorrhage", conceptId: 4010901, label: "Massive hemorrhage" },
+  { value: "Injury to major vessel", conceptId: 192763, label: "Injury of blood vessel" },
+  { value: "Injury to organ", conceptId: 193631, label: "Injury of internal organ" },
+  { value: "Positioning injury", conceptId: 4250614, label: "Perioperative positioning injury" },
+  { value: "Compartment syndrome", conceptId: 134734, label: "Compartment syndrome" },
+  // SNOMED has no distinct "gas embolism" concept (CO2, the usual
+  // laparoscopic culprit, included); nearest honest match is the air
+  // embolism concept already curated for the Cardiovascular category.
+  { value: "Venous gas embolism", conceptId: 4173338, label: "Venous air embolism" },
 ]
 
 const KNOWN_VITALS = [
