@@ -38,7 +38,10 @@ describe("pediatric OMOP source preservation", () => {
     expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.measurement_concept_id).toBe(3037051)
     expect(observations.get("LOSPOR:PAED_SCORE")?.value_as_number).toBe(7)
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS")?.value_as_number).toBe(14)
-    expect(observations.get("LOSPOR:BODY_SURFACE_AREA_M2")?.value_as_number).toBe(0.35)
+    // Moved to measurement with concept 3005424, whose domain is Measurement.
+    expect(measurements.get("LOSPOR:BODY_SURFACE_AREA_M2")).toMatchObject({
+      measurement_concept_id: 3005424, value_as_number: 0.35,
+    })
     // "14 DAYS" is a rendering, not a quantity: 14 alone would be meaningless
     // without its unit, and the normalised age above is the numeric form.
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_number).toBeNull()

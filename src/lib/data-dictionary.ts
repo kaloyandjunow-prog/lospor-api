@@ -988,8 +988,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "peepCmH2O",
-    exportName: "observation.value_as_number (LOSPOR:PEEP_CMH2O)",
-    meaning: "Positive end-expiratory pressure",
+    exportName: "measurement.value_as_number (LOSPOR:PEEP_CMH2O)",
+    meaning: "Positive end-expiratory pressure, as LOINC 3022875 (Positive "
+      + "end expiratory pressure setting Ventilator) -- the ventilator setting "
+      + "an anaesthetist charts, not 3016226, the measured airway pressure. "
+      + "Measurement domain.",
     unit: "cmH2O",
     type: "float",
     missingnessRule: "No row = not recorded",
@@ -1032,8 +1035,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "urineMl",
-    exportName: "observation.value_as_number (LOSPOR:URINE_OUTPUT_ML)",
-    meaning: "Urine output during the procedure",
+    exportName: "measurement.value_as_number (LOSPOR:URINE_OUTPUT_ML)",
+    meaning: "Urine output during the procedure, as LOINC 3014315 (Urine "
+      + "output), unqualified -- not the 1-hour or 8-hour variants, which "
+      + "assert a collection window this does not record. Measurement domain. "
+      + "A recorded zero is exported as zero and a figure that was never "
+      + "recorded emits no row at all.",
     unit: "mL",
     type: "integer",
     allowedValues: "0–20000",
@@ -1115,8 +1122,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.fgfLitersPerMin",
-    exportName: "measurement.value_as_number (LOSPOR:FGF_L_PER_MIN)",
-    meaning: "Fresh gas flow rate",
+    exportName: "observation.value_as_number (LOSPOR:FGF_L_PER_MIN)",
+    meaning: "Fresh gas flow rate, as SNOMED 4108006 (Fresh gas flow). In "
+      + "observation rather than measurement because that is the concept's own "
+      + "OMOP domain, even though it reads as a number beside the inspired "
+      + "oxygen measurement recorded from the same gas event.",
     unit: "L/min",
     type: "float",
     allowedValues: "0–100",
@@ -1147,8 +1157,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.agentPercent",
-    exportName: "observation.value_as_number (LOSPOR:VOLATILE_AGENT_PERCENT)",
-    meaning: "Volatile anaesthetic agent concentration",
+    exportName: "measurement.value_as_number (LOSPOR:VOLATILE_AGENT_PERCENT)",
+    meaning: "Volatile anaesthetic agent concentration, as SNOMED 4354275 "
+      + "(Inspired anesthetic agent concentration) -- the dial setting, which "
+      + "is what this records, rather than 4107998 (End tidal), a different "
+      + "measured quantity, or the unqualified 4353943. Measurement domain.",
     unit: "%",
     type: "float",
     missingnessRule: "NULL = no volatile agent used or not recorded",
@@ -1420,8 +1433,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.fiN2OPercent",
-    exportName: "measurement.value_as_number (LOSPOR:FIN2O_PERCENT)",
-    meaning: "Inspired nitrous oxide fraction of the fresh gas mixture",
+    exportName: "observation.value_as_number (LOSPOR:FIN2O_PERCENT)",
+    meaning: "Inspired nitrous oxide fraction of the fresh gas mixture, as "
+      + "SNOMED 4354273 (Inspired nitrous oxide concentration). Observation "
+      + "domain, unlike the inspired oxygen recorded from the same event, "
+      + "which is a Measurement-domain LOINC concept -- the split follows the "
+      + "vocabulary, not this export.",
     unit: "%",
     type: "float",
     allowedValues: "0–100",
@@ -1496,8 +1513,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "bodySurfaceAreaM2",
-    exportName: "observation.value_as_number (LOSPOR:BODY_SURFACE_AREA_M2)",
-    meaning: "Body surface area, used where a dose is prescribed per square metre rather than per kilogram",
+    exportName: "measurement.value_as_number (LOSPOR:BODY_SURFACE_AREA_M2)",
+    meaning: "Body surface area, used where a dose is prescribed per square "
+      + "metre rather than per kilogram, as LOINC 3005424 (Body surface area) "
+      + "in square metres (unit 8617). In measurement rather than observation "
+      + "because that is the concept's own OMOP domain.",
     unit: "m2",
     type: "float",
     allowedValues: "0.01–5",

@@ -45,10 +45,10 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 39,
+      measurement: 40,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 51,
+      observation: 50,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -698,7 +698,10 @@ describe("airway management", () => {
     expect(cormack[0].value_source_value).toBe("IIa")
     expect(obs(bundle, "LOSPOR:ORAL_TUBE_SIZE")[0]?.value_as_number).toBe(7.5)
     expect(obs(bundle, "LOSPOR:ORAL_TUBE_CUFFED")[0]?.value_as_string).toBe("true")
-    expect(obs(bundle, "LOSPOR:PEEP_CMH2O")[0]?.value_as_number).toBe(5)
+    // PEEP moved to measurement with concept 3022875 (the ventilator setting,
+    // not the measured airway pressure), which is a Measurement-domain concept.
+    expect(bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:PEEP_CMH2O"))
+      .toMatchObject({ measurement_concept_id: 3022875, value_as_number: 5 })
     expect(obs(bundle, "LOSPOR:AIRWAY_TOOL").map(o => o.value_as_string).sort())
       .toEqual(["BOUGIE", "VIDEO_LARY"])
     expect(obs(bundle, "LOSPOR:VENTILATION_MODE")[0]?.value_as_string).toBe("VCV")
@@ -1605,5 +1608,54 @@ describe("telling apart a home medication, a premedication and an intraop drug",
     // this is the actual fix, since drug_type_concept_id alone cannot separate
     // the last two.
     expect(new Set(rows.map(r => r.drug_source_value)).size).toBe(3)
+  })
+})
+
+describe("the numbers an anaesthetic chart records, coded", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never])
+  const meas = (source: string) => bundle().measurement
+    .find(r => r.measurement_source_value === source)
+  const obs = (source: string) => bundle().observation
+    .find(r => r.observation_source_value === source)
+
+  it("codes the two that were hardcoded zeros beside their own LOINC code", () => {
+    // Both carried the right LOINC code and then threw the concept away. The
+    // glucose row said concept 0 in the vitals table itself; the inspired
+    // oxygen was emitted as a bare source string. Neither was a vocabulary
+    // gap -- the concepts existed the whole time.
+    expect(bundle().measurement.find(r => r.measurement_source_value === "LOINC:2345-7")
+      ?.measurement_concept_id).toBe(3004501)
+    expect(meas("LOINC:3150-0")?.measurement_concept_id).toBe(3020716)
+  })
+
+  it("puts each quantity in the table its concept's domain names", () => {
+    // Which table a value belongs in is the vocabulary's decision. Fresh gas
+    // flow and inspired nitrous oxide are Observation-domain concepts and the
+    // rest are Measurement-domain, even though all of them read as ordinary
+    // numbers on the same chart.
+    expect(meas("LOSPOR:URINE_OUTPUT_ML")?.measurement_concept_id).toBe(3014315)
+    // Body surface area is a paediatric field and is asserted against the
+    // paediatric fixture in pediatric-omop.test.ts instead.
+    expect(meas("LOSPOR:PEEP_CMH2O")?.measurement_concept_id).toBe(3022875)
+    expect(meas("LOSPOR:VOLATILE_AGENT_PERCENT")?.measurement_concept_id).toBe(4354275)
+
+    expect(obs("LOSPOR:FGF_L_PER_MIN")?.observation_concept_id).toBe(4108006)
+    expect(obs("LOSPOR:FIN2O_PERCENT")?.observation_concept_id).toBe(4354273)
+    expect(obs("LOSPOR:ANAESTHESIA_DURATION_MIN")?.observation_concept_id).toBe(1176109)
+  })
+
+  it("carries a real unit rather than leaving unit_concept_id at 0", () => {
+    // A number with no unit concept is only half a measurement: 400 of what.
+    expect(meas("LOSPOR:URINE_OUTPUT_ML")?.unit_concept_id).toBe(8587)
+    expect(meas("LOSPOR:PEEP_CMH2O")?.unit_concept_id).toBe(44777590)
+    expect(meas("LOSPOR:VOLATILE_AGENT_PERCENT")?.unit_concept_id).toBe(8554)
+  })
+
+  it("leaves inspired air uncoded, because the vocabulary names only oxygen and nitrous oxide", () => {
+    // A real gap, not an oversight: SNOMED has inspired oxygen and inspired
+    // nitrous oxide concepts and no inspired-air equivalent. It sits in
+    // measurement beside the inspired oxygen it is computed alongside.
+    const fiAir = bundle().measurement.find(r => r.measurement_source_value === "LOSPOR:FIAIR_PERCENT")
+    if (fiAir) expect(fiAir.measurement_concept_id).toBe(0)
   })
 })

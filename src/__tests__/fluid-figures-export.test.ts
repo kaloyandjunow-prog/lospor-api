@@ -34,6 +34,20 @@ function observation(bundle: ReturnType<typeof mapCasesToOmop>, source: string) 
   return bundle.observation.filter(row => row.observation_source_value === source)
 }
 
+// Urine output is a Measurement-domain concept (3014315) and so lives in
+// MEASUREMENT, while the other fluid figures have no concept and stay
+// observations. The three-state guarantee is identical either way, so these
+// tests look the value up wherever its concept says it belongs rather than
+// assuming one table.
+function measurement(bundle: ReturnType<typeof mapCasesToOmop>, source: string) {
+  return bundle.measurement.filter(row => row.measurement_source_value === source)
+}
+
+const rowsFor = (bundle: ReturnType<typeof mapCasesToOmop>, source: string) =>
+  source === "LOSPOR:URINE_OUTPUT_ML"
+    ? measurement(bundle, source).map(r => ({ value_as_number: r.value_as_number }))
+    : observation(bundle, source).map(r => ({ value_as_number: r.value_as_number }))
+
 describe("fluid figures reach the OMOP export", () => {
   it("emits blood loss as its own observation", () => {
     // Guards the wiring itself: blood loss was added to the record, the
@@ -46,11 +60,14 @@ describe("fluid figures reach the OMOP export", () => {
     expect(rows[0].value_as_string).toBe("250")
   })
 
-  it("emits urine output as its own observation", () => {
-    const rows = observation(exportWithIntraop({ urineMl: 400 }), "LOSPOR:URINE_OUTPUT_ML")
+  it("emits urine output as its own measurement", () => {
+    // Moved from observation once it gained concept 3014315, whose domain is
+    // Measurement. The row still has to exist and still has to carry 400.
+    const rows = measurement(exportWithIntraop({ urineMl: 400 }), "LOSPOR:URINE_OUTPUT_ML")
 
     expect(rows).toHaveLength(1)
     expect(rows[0].value_as_number).toBe(400)
+    expect(rows[0].measurement_concept_id).toBe(3014315)
   })
 
   it.each([
@@ -58,7 +75,7 @@ describe("fluid figures reach the OMOP export", () => {
     ["LOSPOR:URINE_OUTPUT_ML", "urineMl"],
     ["LOSPOR:CRYSTALLOIDS_ML", "crystalloidsMl"],
   ])("%s carries a recorded zero rather than dropping it", (source, field) => {
-    const rows = observation(exportWithIntraop({ [field]: 0 }), source)
+    const rows = rowsFor(exportWithIntraop({ [field]: 0 }), source)
 
     expect(rows).toHaveLength(1)
     expect(rows[0].value_as_number).toBe(0)
@@ -69,14 +86,14 @@ describe("fluid figures reach the OMOP export", () => {
     ["LOSPOR:URINE_OUTPUT_ML", "urineMl"],
     ["LOSPOR:CRYSTALLOIDS_ML", "crystalloidsMl"],
   ])("%s emits nothing when the figure was never recorded", (source, field) => {
-    expect(observation(exportWithIntraop({ [field]: null }), source)).toEqual([])
+    expect(rowsFor(exportWithIntraop({ [field]: null }), source)).toEqual([])
   })
 
   it("keeps a recorded zero and a blank apart in the same export", () => {
     const bundle = exportWithIntraop({ bloodLossMl: 0, urineMl: null })
 
     expect(observation(bundle, "LOSPOR:BLOOD_LOSS_ML")).toHaveLength(1)
-    expect(observation(bundle, "LOSPOR:URINE_OUTPUT_ML")).toEqual([])
+    expect(measurement(bundle, "LOSPOR:URINE_OUTPUT_ML")).toEqual([])
   })
 })
 

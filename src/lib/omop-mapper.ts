@@ -416,7 +416,10 @@ const VITAL_CONCEPTS: Record<string, { concept_id: number; loinc: string; unit: 
   spO2:        { concept_id: 3016502, loinc: "59408-5", unit: "%" },
   etco2:       { concept_id: 3020892, loinc: "19889-5", unit: "mmHg" },
   temp:        { concept_id: 3020891, loinc: "8310-5",  unit: "Cel" },
-  bgl:         { concept_id: 0,       loinc: "2345-7",  unit: "mmol/L" },
+  // 3004501, not 0. This row carried the right LOINC code and then threw the
+  // concept away, so every intraoperative glucose exported unmapped while
+  // sitting next to a code that identifies it exactly.
+  bgl:         { concept_id: 3004501, loinc: "2345-7",  unit: "mmol/L" },
   respiratoryRate: { concept_id: 3024171, loinc: "9279-1", unit: "/min" },
   // Height and weight are required before a case can reach the intraoperative
   // form, so every case has them — and until they were added here the export
@@ -1388,6 +1391,44 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     }
 
     /**
+     * A plain numeric measurement with a concept and a unit.
+     *
+     * For the quantities whose concept turns out to live in the Measurement
+     * domain rather than Observation. Which table a value belongs in is the
+     * vocabulary's decision, not a stylistic one -- a Measurement-domain
+     * concept sitting in OBSERVATION is a CDM violation the OHDSI
+     * data-quality checks flag, even when the value reads as an ordinary
+     * number on the anaesthetic chart either way.
+     */
+    const sourceMeasurement = (
+      source: string,
+      value: number | null | undefined,
+      conceptId: number,
+      unitConceptId: number,
+      unitSourceValue: string | null,
+      date = startDate,
+    ) => {
+      if (value == null) return
+      measurements.push({
+        measurement_id:              nextId(),
+        person_id:                   personId,
+        measurement_concept_id:      conceptId,
+        measurement_date:            date,
+        measurement_datetime:        date,
+        measurement_type_concept_id: 32817,
+        value_as_number:             value,
+        value_as_concept_id:         null,
+        unit_concept_id:             unitConceptId,
+        unit_source_value:           unitSourceValue,
+        measurement_source_value:    source,
+        value_source_value:          null,
+        range_low:                   null,
+        range_high:                  null,
+        visit_occurrence_id:         visitId,
+      })
+    }
+
+    /**
      * A graded airway scale as a measurement: the concept is the scale, the
      * grade is the coded answer, and the original grade text stays in
      * value_source_value so the Cook subdivision of Cormack-Lehane II is not
@@ -1440,7 +1481,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         sourceObservation("LOSPOR:AGE_AT_PROCEDURE_EXACT", `${preop.ageValue} ${preop.ageUnit}`, vitDate)
       }
       sourceObservation("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS", preop.ageApproxDays, vitDate)
-      sourceObservation("LOSPOR:BODY_SURFACE_AREA_M2", preop.bodySurfaceAreaM2, vitDate)
+      // 3005424, Body surface area -- a Measurement-domain concept, so it
+      // moves out of observation.
+      sourceMeasurement("LOSPOR:BODY_SURFACE_AREA_M2", preop.bodySurfaceAreaM2, 3005424, 8617, "m2", vitDate)
       // Age as a measurement rather than an untyped observation, because it is
       // a quantity with a standard concept and a unit.
       //
@@ -2093,7 +2136,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     }
 
     if (c.intraop) {
-      sourceObservation("LOSPOR:ANAESTHESIA_DURATION_MIN", c.intraop.durationMinutes)
+      // 1176109, Anesthesia duration, which is an Observation-domain concept,
+      // so unlike the other numbers in this batch it stays where it already is.
+      sourceObservation("LOSPOR:ANAESTHESIA_DURATION_MIN", c.intraop.durationMinutes, startDate,
+        c.intraop.durationMinutes, 1176109)
 
       // ── Airway management ────────────────────────────────────────────────
       //
@@ -2145,7 +2191,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const mode of strList(ia.ventilationModes)) sourceObservation("LOSPOR:VENTILATION_MODE", mode)
       sourceObservation("LOSPOR:IPPV", ia.ippv)
       sourceObservation("LOSPOR:JET_VENTILATION", ia.jetVentilation)
-      sourceObservation("LOSPOR:PEEP_CMH2O", ia.peepCmH2O)
+      // 3022875, the ventilator *setting*, which is what an anaesthetist
+      // charts -- not 3016226, the measured airway pressure.
+      sourceMeasurement("LOSPOR:PEEP_CMH2O", ia.peepCmH2O, 3022875, 44777590, "cm[H2O]")
 
       // ── Airway acts -> PROCEDURE_OCCURRENCE ──────────────────────────────
       //
@@ -2256,26 +2304,53 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           }
         }
         if (ev.type === "agent_start" && ev.agentPercent != null) {
-          sourceObservation("LOSPOR:VOLATILE_AGENT_PERCENT", ev.agentPercent, isoDate(ev.timestamp))
+          // 4354275, Inspired anesthetic agent concentration -- the dial
+          // setting, which is what this records. Not 4107998 (End tidal), a
+          // different measured quantity, and not the unqualified 4353943.
+          // Measurement domain, so it moves out of observation.
+          measurements.push({
+            measurement_id:              nextId(),
+            person_id:                   personId,
+            measurement_concept_id:      4354275,
+            measurement_date:            isoDate(ev.timestamp),
+            measurement_datetime:        ev.timestamp.toISOString(),
+            measurement_type_concept_id: 32817,
+            value_as_number:             ev.agentPercent,
+            value_as_concept_id:         null,
+            unit_concept_id:             8554,
+            unit_source_value:           "%",
+            measurement_source_value:    "LOSPOR:VOLATILE_AGENT_PERCENT",
+            value_source_value:          null,
+            range_low:                   null,
+            range_high:                  null,
+            visit_occurrence_id:         visitId,
+          })
         }
         if (ev.type === "gas_start" || ev.type === "gas_change") {
-          const gasValues: [string, number | null | undefined, string][] = [
-            ["LOSPOR:FGF_L_PER_MIN", ev.fgfLitersPerMin, "L/min"],
-            ["LOINC:3150-0", ev.fio2Percent, "%"],
-            ["LOSPOR:FIAIR_PERCENT", ev.fiAirPercent, "%"],
-            ["LOSPOR:FIN2O_PERCENT", ev.fiN2OPercent, "%"],
+          // Split by the concept's own OMOP domain rather than emitted
+          // uniformly as measurements. Fresh gas flow and inspired nitrous
+          // oxide are Observation-domain concepts; putting them in MEASUREMENT
+          // would be a CDM violation the OHDSI data-quality checks flag, even
+          // though all four read as numbers on the same anaesthetic chart.
+          //
+          // FIAIR has no concept at all: SNOMED names inspired oxygen and
+          // inspired nitrous oxide and stops there, so inspired air stays a
+          // LOSPOR source value at 0.
+          const gasMeasurements: [string, number | null | undefined, string, number][] = [
+            ["LOINC:3150-0", ev.fio2Percent, "%", 3020716],
+            ["LOSPOR:FIAIR_PERCENT", ev.fiAirPercent, "%", 0],
           ]
-          for (const [source, val, unit] of gasValues) {
+          for (const [source, val, unit, conceptId] of gasMeasurements) {
             if (val == null) continue
             measurements.push({
               measurement_id: nextId(), person_id: personId,
-              measurement_concept_id: 0,
+              measurement_concept_id: conceptId,
               measurement_date: isoDate(ev.timestamp),
               measurement_datetime: ev.timestamp.toISOString(),
               measurement_type_concept_id: 32817,
               value_as_number: val,
               value_as_concept_id: null,
-              unit_concept_id: 0,
+              unit_concept_id: conceptId ? 8554 : 0,
               unit_source_value: unit,
               measurement_source_value: source,
               // Vitals carry no source text and no laboratory reference range.
@@ -2285,6 +2360,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               visit_occurrence_id: visitId,
             })
           }
+          sourceObservation("LOSPOR:FGF_L_PER_MIN", ev.fgfLitersPerMin, isoDate(ev.timestamp),
+            ev.fgfLitersPerMin, 4108006)
+          sourceObservation("LOSPOR:FIN2O_PERCENT", ev.fiN2OPercent, isoDate(ev.timestamp),
+            ev.fiN2OPercent, 4354273)
           sourceObservation("LOSPOR:CARRIER_GAS", ev.carrierGas, isoDate(ev.timestamp))
         }
         // fluid_start joins the administration types: the volume and category
@@ -2444,7 +2523,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:CRYSTALLOIDS_ML", c.intraop.crystalloidsMl, endDate)
       sourceObservation("LOSPOR:COLLOIDS_ML", c.intraop.colloidsMl, endDate)
       sourceObservation("LOSPOR:BLOOD_PRODUCTS_ML", c.intraop.bloodMl, endDate)
-      sourceObservation("LOSPOR:URINE_OUTPUT_ML", c.intraop.urineMl, endDate)
+      // 3014315, unqualified. Not the 1-hour or 8-hour variants, which assert
+      // a collection window this records nothing about -- what is stored is a
+      // case total.
+      sourceMeasurement("LOSPOR:URINE_OUTPUT_ML", c.intraop.urineMl, 3014315, 8587, "mL", endDate)
       sourceObservation("LOSPOR:BLOOD_LOSS_ML", c.intraop.bloodLossMl, endDate)
     }
 
