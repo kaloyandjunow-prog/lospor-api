@@ -522,9 +522,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "neckMobility",
-    exportName: "observation.value_as_string (LOSPOR:NECK_MOBILITY)",
-    meaning: "Cervical spine mobility on examination",
-    type: "string",
+    exportName: "measurement.value_as_concept_id (LOSPOR:NECK_MOBILITY)",
+    meaning: "Cervical spine mobility on examination, as SNOMED 4039256 (Active " +
+      "neck movements) with the range found in value_as_concept_id: FULL 4124732 " +
+      "(normal range), LIMITED 4119643 (decreased range), FIXED 4124734 (no " +
+      "movement). An airway that could not be assessed carries 618772 " +
+      "(Unobtainable), the same qualifier the airway distances use. SNOMED also " +
+      "has an increased-range concept, which this form has no state for.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "neckMobility",
     versionIntroduced: "3.8.0",

@@ -197,9 +197,27 @@ const VITAL_CONCEPTS: Record<string, { concept_id: number; loinc: string; unit: 
 // what an anaesthesia register exists to study, so these carry their standard
 // concepts now. The LOSPOR source values are kept alongside: they are what the
 // data dictionary documents and what already-exported datasets were keyed by.
-const AIRWAY_MEASUREMENTS: Record<string, { concept_id: number; unit: string | null; source: string }> = {
-  mouthOpeningCm: { concept_id: 4303387, unit: "cm", source: "LOSPOR:MOUTH_OPENING_CM" },
-  thyromental:    { concept_id: 4142891, unit: "cm", source: "LOSPOR:THYROMENTAL_DISTANCE_CM" },
+const AIRWAY_MEASUREMENTS: Record<string, {
+  concept_id: number; unit: string | null; unitConceptId: number; source: string
+}> = {
+  // Interincisor distance is precisely what "mouth opening in cm" measures.
+  // The unit is coded as well as written: UCUM centimetre, so a tool reading
+  // unit_concept_id finds one rather than the 0 these carried while the unit
+  // sat in a string beside it.
+  mouthOpeningCm: { concept_id: 4303387, unit: "cm", unitConceptId: 8582, source: "LOSPOR:MOUTH_OPENING_CM" },
+  thyromental:    { concept_id: 4142891, unit: "cm", unitConceptId: 8582, source: "LOSPOR:THYROMENTAL_DISTANCE_CM" },
+}
+
+/**
+ * Neck mobility, one concept per range the form offers.
+ *
+ * SNOMED also has 4124733 (Increased range of cervical spine movement), which
+ * this form has no state for — noted so it is not mistaken for an omission.
+ */
+const NECK_MOBILITY_CONCEPTS: Record<string, number> = {
+  FULL:   4124732,
+  LIMITED: 4119643,
+  FIXED:  4124734,
 }
 
 /**
@@ -1554,7 +1572,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           measurement_type_concept_id: 32817,
           value_as_number:             val ?? null,
           value_as_concept_id:         val == null ? UNOBTAINABLE_CONCEPT_ID : null,
-          unit_concept_id:             0,
+          unit_concept_id:             cfg.unitConceptId,
           unit_source_value:           cfg.unit,
           measurement_source_value:    cfg.source,
           value_source_value:          null,
@@ -1563,18 +1581,65 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           visit_occurrence_id:         visitId,
         })
       }
-      sourceObservation("LOSPOR:NECK_MOBILITY", preop.neckMobility, preopDate)
+      // Neck mobility as a graded scale, like the other airway grades: the
+      // examination is the question and the range found is the coded answer.
+      // SNOMED's cervical-movement values are an exact fit for the three the
+      // form offers, and an unassessable airway takes the same Unobtainable
+      // qualifier the distances above use rather than the string it carried.
+      if (preop.neckMobility != null || airwayNotAssessable) {
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      4039256,
+          measurement_date:            preopDate,
+          measurement_datetime:        preopDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             null,
+          value_as_concept_id: preop.neckMobility == null
+            ? UNOBTAINABLE_CONCEPT_ID
+            : NECK_MOBILITY_CONCEPTS[preop.neckMobility] ?? 0,
+          unit_concept_id:             0,
+          unit_source_value:           null,
+          measurement_source_value:    "LOSPOR:NECK_MOBILITY",
+          value_source_value:          preop.neckMobility ?? null,
+          range_low:                   null,
+          range_high:                  null,
+          visit_occurrence_id:         visitId,
+        })
+      }
+      // The upper lip bite test has no concept in any vocabulary here. Two
+      // searches, lexical and semantic, returned nothing above 0.75 and the
+      // best of those was "Functional tests in the oral cavity" — a French
+      // procedure code for something else. It stays a source value.
       sourceObservation("LOSPOR:UPPER_LIP_BITE_TEST", preop.upperLipBiteTest, preopDate)
       if (airwayNotAssessable) {
-        // Neck mobility and the upper lip bite test have no standard concept
-        // assigned here, so their unassessability is carried the same way their
-        // values are — as a LOSPOR source value.
-        sourceObservation("LOSPOR:NECK_MOBILITY", "unobtainable", preopDate)
+        // The upper lip bite test has no standard concept, so its
+        // unassessability is carried the way its values are — as a source
+        // value. Neck mobility no longer needs this: it carries the
+        // Unobtainable qualifier in its own row above.
         sourceObservation("LOSPOR:UPPER_LIP_BITE_TEST", "unobtainable", preopDate)
       }
       sourceObservation("LOSPOR:RETROGNATHIA", preop.retrognathia, preopDate, null, 4142490,
         preop.retrognathia ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // Also deliberately uncoded. Every plausible match is HPO, a phenotype
+      // vocabulary for dysmorphology, and none of it is in the vocabulary this
+      // product ships; the one SNOMED near-miss is macrodontia, which is a
+      // different finding. Prominent incisors as an airway predictor simply do
+      // not exist as a concept.
       sourceObservation("LOSPOR:PROMINENT_INCISORS", preop.prominentIncisors, preopDate)
+      // Deliberately uncoded, and this is the record of why rather than an
+      // omission waiting to be tidied up.
+      //
+      // The vocabulary has nothing for facial hair as a clinical finding. What
+      // it has is anatomy — "Structure of beard hair" — which would say
+      // "beard hair structure: present" and be looked for by nobody. The
+      // tempting bridge is "Failed mask ventilation", which is standard and
+      // real and would be flatly false: that is an outcome, and a beard is a
+      // predictor of one.
+      //
+      // A beard is recorded here for exactly one reason, mask seal, and the
+      // conclusion it feeds — whether difficulty is anticipated — is the thing
+      // worth coding. This stays a source value beneath it.
       sourceObservation("LOSPOR:FACIAL_HAIR", preop.facialHair, preopDate)
       sourceObservation("LOSPOR:DIFFICULT_AIRWAY_NOTES", preop.difficultAirwayNotes, preopDate)
     }

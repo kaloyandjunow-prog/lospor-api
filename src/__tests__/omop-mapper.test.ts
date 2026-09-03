@@ -45,10 +45,10 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 34,
+      measurement: 35,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 56,
+      observation: 55,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -845,7 +845,11 @@ describe("clinical data that used to never leave", () => {
     expect(airway("LOSPOR:MOUTH_OPENING_CM")[0]?.measurement_concept_id).toBe(4303387)
     expect(airway("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.value_as_number).toBe(6.5)
     expect(airway("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.measurement_concept_id).toBe(4142891)
-    expect(obs("LOSPOR:NECK_MOBILITY")[0]?.value_as_string).toBe("FULL")
+    // Neck mobility is a graded scale now, so it is a measurement carrying the
+    // range as a coded answer rather than an observation carrying the word.
+    const neck = bundle().measurement.filter(r => r.measurement_source_value === "LOSPOR:NECK_MOBILITY")
+    expect(neck).toHaveLength(1)
+    expect(neck[0]).toMatchObject({ measurement_concept_id: 4039256, value_as_concept_id: 4124732, value_source_value: "FULL" })
     expect(obs("LOSPOR:UPPER_LIP_BITE_TEST")[0]?.value_as_string).toBe("CLASS_I")
     expect(obs("LOSPOR:RETROGNATHIA")[0]?.value_as_string).toBe("false")
     expect(obs("LOSPOR:PROMINENT_INCISORS")[0]?.value_as_string).toBe("true")
