@@ -232,6 +232,25 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // decision rather than a derived fact -- the iliohypogastric half
   // (4332577) is not coded. Same shape of gap as BLOCK_SCIATIC's approach.
   BLOCK_ILIOINGUINAL: 4333290,
+
+  // PECS I has no concept literally named for it. 37017575 is not a
+  // stand-in: the vocabulary's own ancestry has it as the direct parent of
+  // PECS II, one level up, which mirrors the clinical relationship exactly --
+  // PECS I targets the interpectoral plane, and PECS II is that block
+  // extended to the serratus plane.
+  BLOCK_PECS1:    37017575,
+  BLOCK_PECS2:    37397715,
+  BLOCK_SERRATUS: 37018762,
+  // The only ESP concept in this vocabulary, and it names ultrasound
+  // guidance, which the form does not record. ESP is essentially always
+  // performed under ultrasound in current practice -- it is not a landmark
+  // technique -- so this is very unlikely to be false, but it is still an
+  // asserted detail rather than one read from the record.
+  BLOCK_ESP: 37311663,
+  // Unqualified, matching the form's node exactly. The vocabulary also has
+  // thoracic (37116923) and lumbar (37116948) paravertebral concepts, neither
+  // used here because the form does not ask which level.
+  BLOCK_PARAVERTEBRAL: 4205280,
   // SNOMED splits the sciatic block by approach and has no unqualified
   // concept; the form does not record which approach was used, so this is
   // stated as one specific approach by product decision rather than derived

@@ -1380,3 +1380,33 @@ describe("the brachial plexus family, complete, and intercostal", () => {
     expect(techRow("BLOCK_ILIOINGUINAL")?.procedure_concept_id).toBe(4333290)
   })
 })
+
+describe("the chest wall plane blocks", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes PECS I at pectoral compartment nerve block, the vocabulary's own parent of PECS II", () => {
+    // No concept is literally named PECS I. 37017575 is not a stand-in: the
+    // vocabulary's own ancestry has it as PECS II's direct parent, which
+    // mirrors the clinical relationship -- PECS I targets the interpectoral
+    // plane, PECS II extends that to the serratus plane.
+    expect(techRow("BLOCK_PECS1")?.procedure_concept_id).toBe(37017575)
+    expect(techRow("BLOCK_PECS2")?.procedure_concept_id).toBe(37397715)
+  })
+
+  it("codes serratus and erector spinae plane blocks", () => {
+    expect(techRow("BLOCK_SERRATUS")?.procedure_concept_id).toBe(37018762)
+    // The only ESP concept in this vocabulary names ultrasound guidance, which
+    // the form does not record. Coded anyway: ESP is not a landmark technique
+    // in current practice, so this is very unlikely to be false.
+    expect(techRow("BLOCK_ESP")?.procedure_concept_id).toBe(37311663)
+  })
+
+  it("codes paravertebral without asserting a spinal level the form does not ask for", () => {
+    expect(techRow("BLOCK_PARAVERTEBRAL")?.procedure_concept_id).toBe(4205280)
+  })
+})
