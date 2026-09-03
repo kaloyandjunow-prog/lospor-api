@@ -195,11 +195,23 @@ async function importFilteredLosporConcepts(): Promise<{ count: number; sourceCo
     prisma.icd10Code.findMany({ select: { code: true } }),
     prisma.atc.findMany({ select: { code: true } }),
   ])
+  // Procedures come from a static catalogue file rather than a table, so they
+  // are read the same way seed-concept-maps.ts reads them. Without this the
+  // filter skipped ICD10PCS entirely and every planned procedure resolved to
+  // nothing -- not because the vocabulary was missing from the download, but
+  // because nothing here asked for it.
+  const pcs = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "pcs.json"), "utf8"),
+  ) as { code: string }[]
   const requiredCodes = {
     LOINC: new Set([...labs.map(l => l.loincCode), ...VITAL_LOINC_CODES]),
     ICD10: new Set(icd.map(c => c.code)),
     ICD10CM: new Set(icd.map(c => c.code)),
     ATC: new Set(atc.map(c => c.code)),
+    // ICD10PCS is a standard vocabulary for procedures in OMOP, unlike ICD10
+    // for conditions, so these concepts are the export's destination rather
+    // than a source needing a Maps to hop.
+    ICD10PCS: new Set(pcs.map(p => p.code)),
   }
 
   const conceptFile = filePath("CONCEPT.csv")
@@ -214,7 +226,8 @@ async function importFilteredLosporConcepts(): Promise<{ count: number; sourceCo
         (c.vocabularyId === "LOINC" && requiredCodes.LOINC.has(c.conceptCode)) ||
         (c.vocabularyId === "ICD10" && requiredCodes.ICD10.has(c.conceptCode)) ||
         (c.vocabularyId === "ICD10CM" && requiredCodes.ICD10CM.has(c.conceptCode)) ||
-        (c.vocabularyId === "ATC" && requiredCodes.ATC.has(c.conceptCode))
+        (c.vocabularyId === "ATC" && requiredCodes.ATC.has(c.conceptCode)) ||
+        (c.vocabularyId === "ICD10PCS" && requiredCodes.ICD10PCS.has(c.conceptCode))
       ))
     if (concepts.length === 0) return
     for (const concept of concepts) sourceConceptIds.add(concept.conceptId)
