@@ -82,20 +82,31 @@ describe("mapCasesToOmop", () => {
         // and stays null until a real OMOP source concept is resolved.
         drug_source_concept_id: null,
         dose_value: 5,
+        // 32865, Patient self-report: this is what the patient takes at home,
+        // not something charted as administered here.
+        drug_type_concept_id: 32865,
       }),
       expect.objectContaining({
         // Resolved when the event was written, like preop medications always
         // were. This was 0 while the ATC sat unused in the same row.
         drug_concept_id: 1154029,
-        drug_source_value: "ATC:N01AH01 - Fentanyl",
+        // INTRAOP: is what tells this apart from the same drug given as a
+        // premedication, since both now carry the same drug_type_concept_id.
+        drug_source_value: "INTRAOP:ATC:N01AH01 - Fentanyl",
         drug_source_concept_id: null,
         dose_value: 50,
         route_source_value: "IV",
+        // 32818, EHR administration record: charted as given during the case.
+        drug_type_concept_id: 32818,
       }),
       expect.objectContaining({
-        drug_source_value: "Midazolam 2 mg PO",
+        // PREMED:, not INTRAOP:, even though this fixture row has no ATC code
+        // to prefix -- the tag is what marks the phase regardless of whether a
+        // concept was ever resolved.
+        drug_source_value: "PREMED:Midazolam 2 mg PO",
         dose_value: 2,
         route_source_value: "PO",
+        drug_type_concept_id: 32818,
       }),
     ]))
     expect(bundle.measurement).toEqual(expect.arrayContaining([
@@ -1550,5 +1561,49 @@ describe("postop recovery: Aldrete total, PONV, disposition, paediatric pain", (
     expect(fpsRRow).toMatchObject({ observation_concept_id: 40760807, value_as_number: 4 })
     // NRS has no reviewed concept, the same as the adult NRS branch.
     expect(nrsRow?.observation_concept_id).toBe(0)
+  })
+})
+
+describe("telling apart a home medication, a premedication and an intraop drug", () => {
+  it("gives the same drug three different rows when given in three different contexts", () => {
+    // The exact regression this closes: before today all three collapsed to
+    // drug_type_concept_id 32817 and a bare "ATC:CODE - Name" source value, so
+    // a researcher could not tell a patient's home midazolam from a
+    // premedication dose from an intraop bolus of the same drug -- the rows
+    // were textually identical.
+    const c = completeCase() as unknown as {
+      preop: Record<string, unknown>
+      intraop: Record<string, unknown>
+      events: Record<string, unknown>[]
+    }
+    c.preop.medications = [{
+      kind: "CURRENT", nameRaw: "Midazolam", inn: "midazolam", atcCode: "N05CD08",
+      dose: "5 mg", route: "PO", sourceVocabulary: "ATC", sourceCode: "N05CD08",
+      standardConceptId: 19069898, mappingStatus: "MAPPED", ordinal: 0,
+    }]
+    c.intraop.premedicationRows = [{
+      phase: "morning", nameRaw: "Midazolam", inn: "midazolam", atcCode: "N05CD08",
+      standardConceptId: 19069898, mappingStatus: "MAPPED", dose: "2 mg", route: "IV", ordinal: 0,
+    }]
+    c.events = [{
+      type: "drug", timestamp: c.intraop.startTime, atcCode: "N05CD08",
+      standardConceptId: 19069898, mappingStatus: "MAPPED",
+      metadataJson: { dose: "1", name: "Midazolam" },
+    }]
+
+    const bundle = mapCasesToOmop([c as never])
+    const rows = bundle.drug_exposure.filter(r => r.drug_concept_id === 19069898)
+
+    expect(rows).toHaveLength(3)
+    const bySource = new Map(rows.map(r => [r.drug_source_value, r]))
+
+    expect(bySource.get("ATC:N05CD08 - Midazolam")).toMatchObject({ drug_type_concept_id: 32865 })
+    expect(bySource.get("PREMED:ATC:N05CD08 - Midazolam")).toMatchObject({ drug_type_concept_id: 32818 })
+    expect(bySource.get("INTRAOP:ATC:N05CD08 - Midazolam")).toMatchObject({ drug_type_concept_id: 32818 })
+
+    // The three source values are distinct even though the concept is not --
+    // this is the actual fix, since drug_type_concept_id alone cannot separate
+    // the last two.
+    expect(new Set(rows.map(r => r.drug_source_value)).size).toBe(3)
   })
 })

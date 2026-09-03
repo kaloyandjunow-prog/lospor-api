@@ -2073,7 +2073,13 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         drug_exposure_start_date: isoDate(c.createdAt),
         // A single administration, not an interval: no end to record.
         drug_exposure_end_date: null,
-        drug_type_concept_id: 32817,
+        // 32865, Patient self-report. This row is not a witnessed
+        // administration -- it is what the patient (or an old chart) told the
+        // assessor they take at home, which nobody here watched happen. That is
+        // also what separates this row from a premedication or an intraop dose
+        // sharing the same drug_concept_id: those are 32818, EHR administration
+        // record, in the two sites below.
+        drug_type_concept_id: 32865,
         drug_source_value: sourceValue("MEDICATION", med.sourceVocabulary, med.sourceCode, med.nameRaw),
         // The ATC/INN text is already carried by drug_source_value above. No
         // OMOP *source* concept is resolved for it today, so this stays null
@@ -2302,14 +2308,23 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           drug_concept_id:            ev.standardConceptId ?? 0,
           drug_exposure_start_date:   isoDate(ev.timestamp),
           drug_exposure_end_date:     endFor(ev, index),
-          drug_type_concept_id:       32817,
+          // 32818, EHR administration record: this was charted as given, not
+          // reported by the patient and not merely prescribed. Same type as
+          // premedication below, for the same reason -- both are witnessed
+          // administrations -- and different from the preop medication list
+          // above, which is self-report. INTRAOP: in the source value is what
+          // actually tells this row apart from a premedication of the same
+          // drug, since drug_type_concept_id alone cannot: OMOP's Type Concept
+          // vocabulary encodes provenance, not clinical phase, and has nothing
+          // for "premedication" versus "intraoperative".
+          drug_type_concept_id:       32818,
           // The ATC moves into the source value, where source codes belong. It
           // was previously the only place the code appeared, so dropping it
           // from the concept id column without doing this would lose the one
           // identifier an unmapped intraoperative drug still had.
           drug_source_value:          ev.atcCode
-            ? `ATC:${ev.atcCode} - ${(meta.name as string | undefined) ?? ev.label ?? ""}`.trimEnd()
-            : (meta.name as string | undefined) ?? ev.label ?? null,
+            ? `INTRAOP:ATC:${ev.atcCode} - ${(meta.name as string | undefined) ?? ev.label ?? ""}`.trimEnd()
+            : `INTRAOP:${(meta.name as string | undefined) ?? ev.label ?? "unknown"}`,
           drug_source_concept_id:     null,
           dose_value:                 dose,
           dose_unit_source_value:     ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
@@ -2380,12 +2395,20 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           drug_exposure_start_date: startDate,
           // A single administration, not an interval: no end to record.
           drug_exposure_end_date: null,
-          drug_type_concept_id: 32817,
+          // 32818, EHR administration record -- see the intraop site for why
+          // this is the same type as an intraop dose and not the preop
+          // medication list, and why PREMED: below, not this column, is what
+          // actually separates the two.
+          drug_type_concept_id: 32818,
           // Same correction as the other two drug sites: the ATC is source text
           // and belongs in the source value, not in a numeric concept column.
-          // Only prefixed when there is a code to carry, so rows without one
-          // read exactly as they did before.
-          drug_source_value: prem.atcCode ? `ATC:${prem.atcCode} - ${prem.nameRaw}` : prem.nameRaw,
+          // PREMED: is what tells this row apart from an intraop dose of the
+          // same drug once both share drug_type_concept_id 32818 -- without it,
+          // midazolam given at induction and midazolam given as premedication
+          // would be the same string.
+          drug_source_value: prem.atcCode
+            ? `PREMED:ATC:${prem.atcCode} - ${prem.nameRaw}`
+            : `PREMED:${prem.nameRaw}`,
           drug_source_concept_id: null,
           dose_value: dose,
           dose_unit_source_value: prem.dose,

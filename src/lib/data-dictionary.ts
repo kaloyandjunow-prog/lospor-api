@@ -443,6 +443,22 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.0.0",
   },
   {
+    name: "medications",
+    exportName: "drug_exposure.drug_concept_id (via ATC→OMOP map)",
+    meaning: "A medication the patient reported taking at home, coded where "
+      + "an ATC code resolves one. drug_type_concept_id is 32865, Patient "
+      + "self-report -- this is what was told to the assessor, not something "
+      + "witnessed being given, which is what separates it from the same drug "
+      + "recorded as a premedication or an intraop dose (both 32818, EHR "
+      + "administration record; see event.atcCode). An allergy is not "
+      + "included here: Medication.kind ALLERGY is the opposite claim and is "
+      + "exported as an observation instead, so it can never be read as a dose.",
+    type: "concept_id",
+    missingnessRule: "No row = no current medications recorded",
+    sourceTable: "PreoperativeRecord", sourceColumn: "medications",
+    versionIntroduced: "3.0.0",
+  },
+  {
     name: "smoking",
     exportName: "observation.value_as_concept_id (LOSPOR:SMOKING)",
     meaning: "Whether the patient currently smokes, as LOINC 43054909 (Tobacco "
@@ -1152,7 +1168,20 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "event.atcCode",
     exportName: "drug_exposure.drug_concept_id (via ATC→OMOP map)",
-    meaning: "ATC code of the administered drug",
+    meaning: "ATC code of the administered drug, resolved at write time from "
+      + "either the event itself or, for the fluid and volatile-agent surfaces "
+      + "that carry no code of their own, a name lookup against the "
+      + "intraoperative catalogue -- the same lookup a vocabulary re-seed can "
+      + "re-run to bring an older row forward. drug_type_concept_id is "
+      + "32818 (EHR administration record), and drug_source_value is prefixed "
+      + "INTRAOP:. Both exist to distinguish this row from the same drug given "
+      + "as a premedication (also 32818, prefixed PREMED: instead) or reported "
+      + "as a home medication (32865, Patient self-report, no phase prefix): "
+      + "OMOP's Type Concept vocabulary encodes where the data came from, not "
+      + "which phase of anaesthetic care it happened in, so nothing about "
+      + "drug_type_concept_id alone would tell a premedication apart from an "
+      + "intraop dose of the same drug -- before this, they were the same "
+      + "concept id, the same type, and the same source-value string.",
     unit: "ATC",
     type: "string",
     missingnessRule: "NULL = ATC code not available",
@@ -1416,6 +1445,22 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     type: "string",
     missingnessRule: "No row = no premedication recorded for that phase",
     sourceTable: "IntraoperativeRecord", sourceColumn: "premedicationEvening / premedicationMorning",
+    versionIntroduced: "4.0.0",
+  },
+  {
+    name: "premedicationRows",
+    exportName: "drug_exposure.drug_concept_id (via ATC→OMOP map)",
+    meaning: "The premedication drug itself, as an administration -- the phase "
+      + "entry above records when, this records what and gives it a coded "
+      + "concept where an ATC code resolves one. drug_type_concept_id is "
+      + "32818 (EHR administration record), the same as an intraop dose,  "
+      + "because both are witnessed administrations rather than a patient's "
+      + "self-reported history; drug_source_value carries a PREMED: prefix so "
+      + "the two remain distinguishable despite sharing a type -- see "
+      + "event.atcCode for why drug_type_concept_id alone cannot do that job.",
+    type: "concept_id",
+    missingnessRule: "No row = no premedication drug recorded for that phase",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "premedicationRows",
     versionIntroduced: "4.0.0",
   },
   {

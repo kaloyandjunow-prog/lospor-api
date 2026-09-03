@@ -180,8 +180,12 @@ describe("intraoperative drug concepts", () => {
     expect(drugRow("Sevoflurane")?.drug_concept_id).toBe(19039298)
     expect(drugRow("Mannitol")?.drug_concept_id).toBe(994058)
     // The source code travels alongside the concept, so an unmapped row is
-    // still identifiable and a mapped one is still checkable.
-    expect(drugRow("Sevoflurane")?.drug_source_value).toBe("ATC:N01AB08 - Sevoflurane")
+    // still identifiable and a mapped one is still checkable. INTRAOP: is what
+    // tells this row apart from the same drug given as a premedication --
+    // drug_type_concept_id alone cannot, since both are 32818 (EHR
+    // administration record); the vocabulary has nothing for clinical phase.
+    expect(drugRow("Sevoflurane")?.drug_source_value).toBe("INTRAOP:ATC:N01AB08 - Sevoflurane")
+    expect(drugRow("Sevoflurane")?.drug_type_concept_id).toBe(32818)
     // None of the three exports as the old unconditional zero. The preop
     // medication rows in the same bundle are left alone: they were never the
     // broken half.
