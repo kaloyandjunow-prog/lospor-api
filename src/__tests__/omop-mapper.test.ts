@@ -1196,20 +1196,27 @@ describe("what anaesthetic was given", () => {
     // SNOMED has a "Local anesthetic nerve block in <region>" family that
     // mirrors this part of the tree almost exactly, so four nodes cover roughly
     // forty leaves and each leaf can be refined later without touching a stored
-    // value. TAP, femoral, interscalene and every other upper-limb leaf were
-    // examples of this until their own concepts were mapped; rectus sheath and
-    // popliteal are still inherited -- the latter for the same approach
-    // ambiguity as BLOCK_SCIATIC, undecided on purpose.
+    // value. TAP, femoral, interscalene and every other named leaf were
+    // examples of this until their own concepts were mapped; rectus sheath is
+    // one of the three confirmed vocabulary gaps and stays inherited for good.
     expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
-    expect(techRow("BLOCK_POPLITEAL")?.procedure_concept_id).toBe(4333960)
   })
 
-  it("leaves a technique with no coded ancestor at 0 rather than guessing", () => {
-    // REGIONAL is mappable — 4100052 is correct and verified — and is held back
-    // deliberately. Mapping the root would make every undecided node beneath it
-    // inherit "Regional anesthesia" and read as finished, and concept 0 is what
-    // currently says nobody has decided this one yet.
-    expect(techRow("REGIONAL")?.procedure_concept_id).toBe(0)
+  it("codes popliteal the same way and for the same reason as sciatic", () => {
+    // A popliteal block is a sciatic block performed at the popliteal fossa
+    // and has no procedure concept of its own -- only the same four
+    // approach-qualified sciatic concepts. Lateral approach, by product
+    // decision, matching BLOCK_SCIATIC.
+    expect(techRow("BLOCK_POPLITEAL")?.procedure_concept_id).toBe(4215528)
+  })
+
+  it("codes REGIONAL now the tree beneath it is finished", () => {
+    // Held back until every node below it had been looked at, so mapping it
+    // would not silently mark undecided work as done. Three nodes remain at 0
+    // -- BLOCK_QL, BLOCK_RECTUS, BLOCK_SUB_TENONS -- and all three are confirmed
+    // gaps in the vocabulary itself rather than undecided work, so REGIONAL no
+    // longer hides anything by going in.
+    expect(techRow("REGIONAL")?.procedure_concept_id).toBe(4100052)
     // OTHER is the free-text escape at the top of the tree and will never carry
     // a concept: whatever it means is in the source value.
     expect(techRow("OTHER")?.procedure_concept_id).toBe(0)
@@ -1465,5 +1472,26 @@ describe("the last upper-limb block leaves", () => {
     expect(techRow("BLOCK_ELBOW")?.procedure_concept_id).toBe(4332446)
     // No concept is literally named "Bier block"; IVRA is the technical name.
     expect(techRow("BLOCK_BIER")?.procedure_concept_id).toBe(4117443)
+  })
+})
+
+describe("the three confirmed vocabulary gaps stay 0, even under a mapped REGIONAL", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("leaves quadratus lumborum, rectus sheath and sub-Tenon's inherited from their region, not from REGIONAL", () => {
+    // These three have no procedure concept anywhere in this vocabulary --
+    // only anatomy and, for QL, a syndrome. They inherit their nearer region
+    // ancestor (trunk, or the peripheral umbrella for sub-Tenon's), which is
+    // still the coarser but true statement, and never fall all the way back to
+    // the newly-mapped REGIONAL, because a nearer ancestor already resolves
+    // them.
+    expect(techRow("BLOCK_QL")?.procedure_concept_id).toBe(4125199)
+    expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
+    expect(techRow("BLOCK_SUB_TENONS")?.procedure_concept_id).toBe(4140397)
   })
 })

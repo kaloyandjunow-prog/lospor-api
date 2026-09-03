@@ -275,7 +275,12 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // stated as one specific approach by product decision rather than derived
   // from the record. If the approach is ever added to the form, this should
   // be revisited to read from it instead of asserting lateral for every case.
-  BLOCK_SCIATIC: 4215528,
+  BLOCK_SCIATIC:   4215528,
+  // A popliteal block is a sciatic block performed at the popliteal fossa; it
+  // has no procedure concept of its own, only the same four SNOMED
+  // approach-qualified sciatic concepts. Coded the same way and for the same
+  // reason as BLOCK_SCIATIC, by product decision.
+  BLOCK_POPLITEAL: 4215528,
 
   // The neuraxial family. "Neuraxial nerve block" rather than the older
   // "Central block anesthesia" (4055889), which is the same idea in the
@@ -303,12 +308,16 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   BLOCK_PERIBULBAR:  4123785,
   BLOCK_RETROBULBAR: 4123784,
   BLOCK_TOPICAL_EYE: 4335044,
-  // REGIONAL is deliberately absent. 4100052 (Regional anesthesia) is correct
-  // and verified, and mapping it would make every unmapped node below it -- the
-  // head and neck blocks, the ophthalmic ones, NEURAXIAL, DPE -- silently
-  // inherit it. They would read as done. Concept 0 is what currently says
-  // "nobody has decided this yet", and it is worth more than a coarse truth
-  // until the tree beneath is finished. It goes in last, as a backstop.
+  // REGIONAL was held back until every node beneath it had been looked at, so
+  // mapping it would not silently mark undecided work as done. That is now
+  // true except for three confirmed gaps in the vocabulary itself, not in this
+  // work: BLOCK_QL (quadratus lumborum) and BLOCK_RECTUS (rectus sheath) have
+  // no procedure concept anywhere here, only anatomy and, for QL, a syndrome;
+  // BLOCK_SUB_TENONS has nothing at all -- the only matches for "tenon" are
+  // drug names and orbital inflammation. All three inherit REGIONAL now,
+  // honestly: there is nothing more specific to find, and "Regional
+  // anesthesia" is true of each of them.
+  REGIONAL: 4100052,
 }
 
 /** Every technique node's parent, derived from the catalogue rather than kept
