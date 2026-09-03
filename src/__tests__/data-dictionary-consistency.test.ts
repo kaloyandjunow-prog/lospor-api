@@ -151,7 +151,7 @@ const LAB_ANALYTE_CODES = new Set(["LOINC:2345-7", "LOINC:718-7"])
 
 const VALUE_NAMESPACES = [
   "ATC:", "ICD10:", "LAB:", "LOSPOR_PROCEDURE:",
-  "ANAESTHESIA_TECHNIQUE:", "VASCULAR_ACCESS:",
+  "ANAESTHESIA_TECHNIQUE:", "VASCULAR_ACCESS:", "LOSPOR_COMPLICATION:",
 ]
 
 function emittedVariables(): Map<string, string> {

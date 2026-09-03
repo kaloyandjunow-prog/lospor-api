@@ -76,6 +76,25 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   // intraop complication log, and it is what was asked for.
   { value: "Myocardial ischaemia", conceptId: 37108686, label: "Myocardial ischemia during surgery" },
   { value: "Myocardial infarction", conceptId: 4329847, label: "Myocardial infarction" },
+
+  // Batch 2 of 9 -- Cardiovascular items 11-14 (of 14) + Respiratory items 1-6
+  // (of 12).
+  { value: "Cardiac arrest", conceptId: 321042, label: "Cardiac arrest" },
+  { value: "Venous air embolism", conceptId: 4173338, label: "Venous air embolism" },
+  { value: "Pulmonary embolism", conceptId: 440417, label: "Pulmonary embolism" },
+  // No single "ST changes" concept exists; intraop ST-segment charting is
+  // usually non-specific (could be elevation, depression, or a T-wave
+  // change), so the nonspecific finding is the more honest match than
+  // committing to "ST segment elevation" alone.
+  { value: "ST changes", conceptId: 4327859, label: "Nonspecific ST-T abnormality on electrocardiogram" },
+  { value: "Hypoxia / desaturation", conceptId: 4306572, label: "Hypoxia" },
+  { value: "Laryngospasm", conceptId: 437904, label: "Laryngeal spasm" },
+  { value: "Bronchospasm", conceptId: 256717, label: "Bronchospasm" },
+  { value: "Aspiration", conceptId: 4239038, label: "Pulmonary aspiration" },
+  // Observation-domain, not Condition -- see
+  // COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS in omop-mapper.ts.
+  { value: "Difficult intubation", conceptId: 37397718, label: "Difficult intubation" },
+  { value: "Failed intubation", conceptId: 37154260, label: "Failed intubation of trachea" },
 ]
 
 const KNOWN_VITALS = [
