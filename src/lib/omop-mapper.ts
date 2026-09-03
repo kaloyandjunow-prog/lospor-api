@@ -487,6 +487,16 @@ const AIRWAY_ACT_CONCEPTS: Record<string, number> = {
  * null rather than 0: a tube of size zero does not exist, and inventing one
  * would be worse than the row being absent.
  */
+// Same pattern relational-sync.ts already uses to split a free-text
+// premedication entry into dose and route. There is no structured unit column
+// on Medication or PremedicationAdministration -- dose is one field, "5 mg" --
+// so dose_unit_source_value was carrying the whole string, including the
+// number the researcher can already read out of dose_value.
+const DOSE_UNIT_RE = /\d+(?:\.\d+)?\s*(mcg|mg|g|ml|mL|iu|IU|units?|tabs?|puffs?)/i
+function doseUnitOf(dose: string | null | undefined): string | null {
+  return dose?.match(DOSE_UNIT_RE)?.[1] ?? null
+}
+
 function numOrNull(value: unknown): number | null {
   if (value == null || value === "") return null
   const n = typeof value === "number" ? value : parseFloat(String(value))
@@ -2298,7 +2308,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         // rather than being filled with something that is not a concept id.
         drug_source_concept_id: null,
         dose_value: dose,
-        dose_unit_source_value: med.dose,
+        dose_unit_source_value: doseUnitOf(med.dose),
         route_source_value: med.route,
         visit_occurrence_id: visitId,
       })
@@ -2709,7 +2719,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
             : `PREMED:${prem.nameRaw}`,
           drug_source_concept_id: null,
           dose_value: dose,
-          dose_unit_source_value: prem.dose,
+          dose_unit_source_value: doseUnitOf(prem.dose),
           route_source_value: prem.route,
           visit_occurrence_id: visitId,
         })

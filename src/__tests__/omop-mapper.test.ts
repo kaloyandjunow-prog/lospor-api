@@ -1924,3 +1924,36 @@ describe("fluid and premedication administration as procedure facts", () => {
     expect(bundle.drug_exposure.some(r => String(r.drug_source_value).startsWith("PREMED:"))).toBe(true)
   })
 })
+
+describe("dose_unit_source_value carries the unit, not the whole dose string", () => {
+  // There is no structured unit column on Medication or
+  // PremedicationAdministration -- dose is one free-text field, "5 mg" -- so
+  // this used to put the whole string where a researcher expects "mg" alone,
+  // duplicating the number already readable from dose_value.
+  it("isolates the unit for a preop medication", () => {
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.medications = [{
+      kind: "CURRENT", nameRaw: "Diazepam", dose: "5 mg", route: "PO",
+      sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905,
+      mappingStatus: "MAPPED", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => r.drug_source_value === "ATC:N05BA01 - Diazepam")
+
+    expect(row?.dose_value).toBe(5)
+    expect(row?.dose_unit_source_value).toBe("mg")
+  })
+
+  it("isolates the unit for a premedication dose", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.premedicationRows = [{
+      phase: "morning", nameRaw: "Test premed", dose: "2.5 mL", route: "IV",
+      atcCode: null, standardConceptId: null, mappingStatus: "SOURCE_ONLY", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => String(r.drug_source_value).includes("Test premed"))
+
+    expect(row?.dose_value).toBe(2.5)
+    expect(row?.dose_unit_source_value).toBe("mL")
+  })
+})
