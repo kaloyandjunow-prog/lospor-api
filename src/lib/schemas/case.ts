@@ -99,6 +99,7 @@ export const preopSchema = z.object({
   familyAnesthesiaDetails:  z.string().max(500).nullable().optional(),
   unexplainedAnaesthesiaComplications: z.boolean().nullable().optional(),
   malignantHyperthermiaHistory:        z.boolean().nullable().optional(),
+  anticipatedDifficultAirway:          z.boolean().nullable().optional(),
   dentalProsthetics:        z.boolean().nullable().optional(),
   looseTeeth:               z.boolean().nullable().optional(),
   smoking:                  z.boolean().nullable().optional(),

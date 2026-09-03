@@ -1002,6 +1002,9 @@ model PreoperativeAssessment {
   // above but answering for the patient rather than their relatives.
   unexplainedAnaesthesiaComplications Boolean?
   malignantHyperthermiaHistory        Boolean?
+  // The anaesthetist's overall airway judgement, so prediction can be paired
+  // against the cormackLehane grade actually found at laryngoscopy.
+  anticipatedDifficultAirway          Boolean?
   dentalProsthetics        Boolean?
   looseTeeth               Boolean?
   smoking                  Boolean?

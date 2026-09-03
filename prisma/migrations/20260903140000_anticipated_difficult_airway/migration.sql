@@ -1,0 +1,25 @@
+-- What the anaesthetist expected the airway to be.
+--
+-- The register already stores every individual airway predictor -- Mallampati,
+-- thyromental distance, mouth opening, neck mobility, upper lip bite test,
+-- retrognathia, prominent incisors, facial hair -- and it stores the
+-- Cormack-Lehane grade actually found at laryngoscopy. Nothing stored what the
+-- clinician expected before induction, so prediction could never be paired
+-- against outcome, which is one of the main things an anaesthesia register
+-- exists to do. Without this column the unanticipated difficult airway --
+-- predicted easy, found grade III or IV -- is not findable, and that is the
+-- dangerous case worth studying.
+--
+-- Deliberately a recorded judgement rather than a value derived from the
+-- predictors. The anaesthetist's overall impression outperforms any single
+-- bedside test, so deriving it would both discard the judgement and make it
+-- impossible to ask afterwards whether the clinician was right.
+--
+-- Nullable with no default, matching 20260816160000_tristate_clinical_questions:
+-- NULL means no judgement was recorded, false means the airway was assessed and
+-- expected to be straightforward. A default of false would make every existing
+-- row assert a prediction of "easy" that nobody made, and those rows are
+-- exactly the ones a prediction-versus-outcome study would read.
+--
+-- Existing rows are left NULL for that reason.
+ALTER TABLE "PreoperativeAssessment" ADD COLUMN "anticipatedDifficultAirway" BOOLEAN;
