@@ -179,7 +179,35 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // Trunk rather than abdomen. TAP and rectus sheath are abdominal, but ESP,
   // serratus, PECS, paravertebral and intercostal are thoracic, and this node
   // holds both.
-  BLOCK_TRUNK: 4125199,
+  BLOCK_TRUNK:     4125199,
+  BLOCK_HEAD_NECK: 4125198,
+
+  // The neuraxial family. "Neuraxial nerve block" rather than the older
+  // "Central block anesthesia" (4055889), which is the same idea in the
+  // phrasing the specialty has moved away from, and not the anatomically exact
+  // "block around spinal cord meninges" (4122638), which would exclude a caudal
+  // epidural.
+  NEURAXIAL: 4228322,
+  // Its own concept rather than either half. A combined spinal-epidural is not
+  // a spinal with an epidural noted beside it, and the vocabulary agrees.
+  CSE:       4335024,
+  // An exact hit, by name, for a technique that only entered obstetric practice
+  // in the last decade.
+  DPE:       37159083,
+
+  // The eye blocks are coded per leaf rather than at their parent. The obvious
+  // umbrella, 4123783 (Ocular infiltration of local anesthetic), is true of
+  // three of the four and flatly false of the fourth: nothing is infiltrated in
+  // a topical anaesthetic. Each leaf has an exact concept, so there is nothing
+  // to gain by generalising and a misstatement to lose.
+  //
+  // BLOCK_SUB_TENONS has no concept in any vocabulary here -- the only matches
+  // for "tenon" are drug names and orbital inflammation -- so it inherits the
+  // peripheral umbrella like any other unmapped node. That is a real gap in the
+  // vocabulary rather than a search that gave up.
+  BLOCK_PERIBULBAR:  4123785,
+  BLOCK_RETROBULBAR: 4123784,
+  BLOCK_TOPICAL_EYE: 4335044,
   // REGIONAL is deliberately absent. 4100052 (Regional anesthesia) is correct
   // and verified, and mapping it would make every unmapped node below it -- the
   // head and neck blocks, the ophthalmic ones, NEURAXIAL, DPE -- silently

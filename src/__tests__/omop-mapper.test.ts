@@ -1207,11 +1207,10 @@ describe("what anaesthetic was given", () => {
     // deliberately. Mapping the root would make every undecided node beneath it
     // inherit "Regional anesthesia" and read as finished, and concept 0 is what
     // currently says nobody has decided this one yet.
-    expect(techRow("DPE")?.procedure_concept_id).toBe(0)
-    // A scalp block, by contrast, is not 0: its region is undecided but
-    // PERIPHERAL above it is coded, and a scalp block genuinely is a local
-    // anaesthetic nerve block. Inheritance is meant to reach here.
-    expect(techRow("BLOCK_SCALP")?.procedure_concept_id).toBe(4140397)
+    expect(techRow("REGIONAL")?.procedure_concept_id).toBe(0)
+    // OTHER is the free-text escape at the top of the tree and will never carry
+    // a concept: whatever it means is in the source value.
+    expect(techRow("OTHER")?.procedure_concept_id).toBe(0)
     // Nor does an unrecognised code reach for something plausible.
     expect(techRow("NOT_A_REAL_NODE")?.procedure_concept_id).toBe(0)
   })
@@ -1226,5 +1225,46 @@ describe("what anaesthetic was given", () => {
     // different procedure with a different concept, and guessing it would look
     // exactly like having chosen it.
     expect(lma?.procedure_concept_id).toBe(0)
+  })
+})
+
+describe("the rest of the technique tree", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes the neuraxial family, each as itself", () => {
+    // A combined spinal-epidural is not a spinal with an epidural noted beside
+    // it, and a dural puncture epidural is not an ordinary one. Both have their
+    // own concept, which is why neither was folded into a neighbour earlier.
+    expect(techRow("NEURAXIAL")?.procedure_concept_id).toBe(4228322)
+    expect(techRow("CSE")?.procedure_concept_id).toBe(4335024)
+    expect(techRow("DPE")?.procedure_concept_id).toBe(37159083)
+    expect(techRow("CSE_LUMBAR")?.procedure_concept_id).toBe(4335024)
+  })
+
+  it("codes head and neck blocks at their own region", () => {
+    // They inherited the peripheral umbrella until now, which was true but
+    // coarser than the vocabulary allows.
+    expect(techRow("BLOCK_HEAD_NECK")?.procedure_concept_id).toBe(4125198)
+    expect(techRow("BLOCK_SCALP")?.procedure_concept_id).toBe(4125198)
+  })
+
+  it("codes the eye blocks one by one rather than under a false umbrella", () => {
+    // 4123783 (Ocular infiltration of local anesthetic) is the tempting parent
+    // and is flatly false for the topical case, where nothing is infiltrated.
+    expect(techRow("BLOCK_PERIBULBAR")?.procedure_concept_id).toBe(4123785)
+    expect(techRow("BLOCK_RETROBULBAR")?.procedure_concept_id).toBe(4123784)
+    expect(techRow("BLOCK_TOPICAL_EYE")?.procedure_concept_id).toBe(4335044)
+  })
+
+  it("leaves sub-Tenon's on the peripheral umbrella, because nothing better exists", () => {
+    // A real vocabulary gap, not a search that gave up: the only matches for
+    // "tenon" anywhere in CONCEPT.csv are drug names and orbital inflammation.
+    // A widely used technique with no concept.
+    expect(techRow("BLOCK_SUB_TENONS")?.procedure_concept_id).toBe(4140397)
   })
 })
