@@ -956,3 +956,31 @@ describe("mapping summary provenance", () => {
     expect(rejected.source_only_rows).toBe(unmapped.source_only_rows)
   })
 })
+
+describe("one source answer is one row", () => {
+  // A source concept with both a Maps to and a Maps to value describes one
+  // fact, and the OHDSI convention puts both halves in a single row. Emitting
+  // them as two made one latex-allergic patient count twice under
+  // observation_concept_id 43530807 — the same double-count that keeps urgency
+  // off procedure_occurrence, reproduced one field later.
+  const latexRows = (latexAllergy: boolean | null) => {
+    const base = completeCase() as Record<string, unknown>
+    const preop = { ...(base.preop as Record<string, unknown>), latexAllergy }
+    return mapCasesToOmop([{ ...base, preop } as never]).observation
+      .filter(row => row.observation_concept_id === 43530807)
+  }
+
+  it("counts a latex-allergic patient once, not twice", () => {
+    expect(latexRows(true)).toHaveLength(1)
+    expect(latexRows(true)[0].value_as_concept_id).toBe(4188539)
+  })
+
+  it("keeps the denial, which is a safety check rather than an absence", () => {
+    expect(latexRows(false)).toHaveLength(1)
+    expect(latexRows(false)[0].value_as_concept_id).toBe(4188540)
+  })
+
+  it("says nothing at all when the question was never asked", () => {
+    expect(latexRows(null)).toHaveLength(0)
+  })
+})

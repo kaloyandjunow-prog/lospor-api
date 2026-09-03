@@ -1378,27 +1378,32 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // denial and an unasked question stays absent.
       sourceObservation("LOSPOR:SUBSTANCE_ABUSE", preop.substanceAbuse, preopDate, null, 4234597,
         preop.substanceAbuse ? YES_CONCEPT_ID : NO_CONCEPT_ID)
-      // Latex allergy in two rows, because one cannot say both things.
+      // One row, answered Yes or No.
       //
-      // The first is the answer, including a denial: "latex allergy: no" is a
-      // documented safety check a theatre acts on, not an absence, and it has
-      // to stay distinguishable from a question nobody asked.
+      // The question concept comes from the non-standard "Allergy to latex"
+      // (604826) through its Maps to. That source concept also has a Maps to
+      // value — the RxNorm ingredient — and the OHDSI convention is to put both
+      // halves in one row: the target concept in the question, the value
+      // concept in the answer. An earlier attempt here emitted them as two
+      // rows, which is not what the pair means and made one latex-allergic
+      // patient count twice under observation_concept_id 43530807.
       //
-      // The second is the allergy itself, in the shape OMOP models allergies —
-      // the non-standard "Allergy to latex" (604826) carries both a Maps to
-      // (Allergic disposition) and a Maps to value (the RxNorm ingredient), so
-      // the question says that a disposition exists and the value says to what.
-      // Emitted only when the answer is yes, since there is no allergy to
-      // describe otherwise.
-      //
-      // Together they let a tool find the allergen without losing the denial.
+      // The allergen is therefore in the source value rather than coded, which
+      // is the cost of answering Yes or No instead. It is worth paying: a
+      // denial is a documented safety check a theatre acts on, and coding the
+      // substance in the answer would leave "latex allergy: no" with nothing to
+      // say and no way to tell it from a question nobody asked.
       sourceObservation("LOSPOR:LATEX_ALLERGY", preop.latexAllergy, preopDate, null, 43530807,
         preop.latexAllergy ? YES_CONCEPT_ID : NO_CONCEPT_ID)
-      if (preop.latexAllergy) {
-        sourceObservation("LOSPOR:LATEX_ALLERGY_SUBSTANCE", "latex", preopDate, null,
-          43530807, 42903913)
-      }
-      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate, null, 4294884)
+      // "Complication of anesthesia" rather than malignant hyperthermia, which
+      // is what this used to carry. The question is the broader one a
+      // pre-assessment asks — it catches suxamethonium apnoea, a family
+      // pattern of difficult intubation, severe PONV — and coding all of that
+      // as an MH history would put a specific and frightening claim on records
+      // where the family reported something else. The detail beside it carries
+      // what was actually reported.
+      sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate, null, 764557,
+        preop.familyAnesthesiaProblems ? YES_CONCEPT_ID : NO_CONCEPT_ID)
       sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_DETAILS", preop.familyAnesthesiaDetails, preopDate)
       sourceObservation("LOSPOR:DENTAL_PROSTHETICS", preop.dentalProsthetics, preopDate)
       sourceObservation("LOSPOR:LOOSE_TEETH", preop.looseTeeth, preopDate)

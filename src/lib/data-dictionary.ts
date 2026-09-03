@@ -366,14 +366,13 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "latexAllergy",
     exportName: "observation.value_as_concept_id (LOSPOR:LATEX_ALLERGY)",
-    meaning: "Latex allergy, as SNOMED 43530807 (Allergic disposition) answered "
-      + "with 4188539 (Yes) or 4188540 (No). A yes emits a second row, "
-      + "LOSPOR:LATEX_ALLERGY_SUBSTANCE, carrying the same question concept "
-      + "with RxNorm 42903913 (latex) as the value — the shape OMOP models an "
-      + "allergy in, where the question states that a disposition exists and "
-      + "the value states to what. Two rows because one cannot say both: the "
-      + "denial is a documented safety check a theatre acts on, and the "
-      + "allergen has to stay machine-readable.",
+    meaning: "Latex allergy, as SNOMED 43530807 (Allergic disposition) " +
+      "answered with 4188539 (Yes) or 4188540 (No). One row: the source concept " +
+      "604826 (Allergy to latex) carries a Maps to and a Maps to value, and the " +
+      "OHDSI convention puts both halves in a single row rather than two. The " +
+      "allergen is in the source value rather than coded, because the answer " +
+      "column carries Yes or No -- a denial is a documented safety check and " +
+      "has to stay distinguishable from a question nobody asked.",
     type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "latexAllergy",
@@ -381,9 +380,15 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "familyAnesthesiaProblems",
-    exportName: "observation.value_as_string (LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS)",
-    meaning: "Family history of anaesthetic problems, such as malignant hyperthermia or suxamethonium apnoea",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS)",
+    meaning: "Family history of anaesthetic problems, such as malignant "
+      + "hyperthermia or suxamethonium apnoea, as SNOMED 764557 (Family history "
+      + "of complication of anesthesia) answered with 4188539 (Yes) or 4188540 "
+      + "(No). Deliberately the broad concept: this replaces a family-history-of"
+      + "-malignant-hyperthermia concept, which is narrower than the question "
+      + "and would have coded a reported apnoea or difficult intubation as an MH "
+      + "history. familyAnesthesiaDetails carries what was actually reported.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "familyAnesthesiaProblems",
     versionIntroduced: "3.8.0",
