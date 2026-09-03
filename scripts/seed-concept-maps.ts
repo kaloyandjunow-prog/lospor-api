@@ -6,6 +6,7 @@
  * mapping. Without Athena imported, rows remain explicit SOURCE_ONLY maps.
  */
 import "dotenv/config"
+import { INTRAOP_DRUG_CODE_ENTRIES } from "@lospor/core/catalog"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
@@ -378,6 +379,48 @@ async function main() {
       sourceCode: code.code,
       sourceLabelEn: code.name,
     }, atcStandards.get(code.code)))
+  }
+
+  // Intraoperative drugs, infusions, fluids and volatile agents. These are the
+  // substances the register produces from its own buttons, and the one drug
+  // source it never seeded: the ATC block above walks the Atc table, which
+  // exists only where an Athena CONCEPT.csv has been imported, and the raw-name
+  // fallback vocabulary had no rows at all. Both gaps are filled here from the
+  // catalog itself, so the mapping of what is given during a case is reviewable
+  // as a whole list rather than one discovered row at a time.
+  const atcCodes = new Set(atc.map(code => code.code))
+  const catalogAtc = INTRAOP_DRUG_CODE_ENTRIES
+    .filter((entry): entry is { name: string; atcCode: string } => !!entry.atcCode)
+    .filter(entry => !atcCodes.has(entry.atcCode))
+  const catalogAtcStandards = await resolveStandardMap("ATC", catalogAtc.map(e => e.atcCode), athenaVersion)
+  for (const entry of catalogAtc) {
+    seeds.push(withStandard({
+      domain: "drug",
+      sourceVocabulary: "ATC",
+      sourceCode: entry.atcCode,
+      sourceLabelEn: entry.name,
+    }, catalogAtcStandards.get(entry.atcCode)))
+  }
+
+  // The raw-name fallback. `resolveDrugConcept` reaches for this only when an
+  // event carries no ATC code, so these rows can never override a coded drug —
+  // which is what keeps one substance on one concept. They are seeded without
+  // a concept because a drug name is not evidence of one; what they add is a
+  // row to look at, so an unmapped intraoperative drug is a visible backlog
+  // item rather than a silent absence.
+  for (const entry of INTRAOP_DRUG_CODE_ENTRIES) {
+    seeds.push({
+      domain: "drug",
+      sourceVocabulary: "LOSPOR_DRUG_RAW",
+      sourceCode: entry.name,
+      sourceLabelEn: entry.name,
+      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+      mappingMethod: "source-code-preserved",
+      reviewed: false,
+      mappingNotes: entry.atcCode
+        ? `Catalog drug; normally resolved through ATC ${entry.atcCode}. This row applies only to an event recorded without a code.`
+        : "Catalog drug with no WHO ATC code. Left unmapped deliberately rather than coded to an approximate substance.",
+    })
   }
 
   const drugs = await prisma.drug.findMany({

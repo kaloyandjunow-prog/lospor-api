@@ -1,7 +1,7 @@
 import "dotenv/config"
 import { PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
-import { resolveDrugConcept } from "../src/lib/relational-sync"
+import { DRUG_EXPOSURE_EVENT_TYPES, resolveDrugExposureConcepts } from "../src/lib/relational-sync"
 
 /**
  * Re-resolve the standard concept on stored intraoperative drug events.
@@ -38,29 +38,44 @@ type Change = {
 }
 
 async function collectChanges(): Promise<Change[]> {
-  // Active drug events only. Superseded rows are history: rewriting them would
-  // change what an earlier export is expected to have contained.
+  // Every kind of event the export turns into a drug_exposure row, not just
+  // boluses: an infusion, a fluid and a volatile agent are administrations too,
+  // and were never resolved at all.
+  //
+  // Active rows only. Superseded rows are history: rewriting them would change
+  // what an earlier export is expected to have contained.
   const events = await prisma.caseEvent.findMany({
-    where: { type: "drug", status: "active" },
+    where: { type: { in: [...DRUG_EXPOSURE_EVENT_TYPES] }, status: "active" },
     select: {
-      id: true, caseId: true, label: true, atcCode: true, inn: true,
+      id: true, caseId: true, type: true, label: true, atcCode: true, inn: true,
       standardConceptId: true, mappingStatus: true,
     },
   })
 
   const changes: Change[] = []
   for (const event of events) {
-    const resolved = await resolveDrugConcept(prisma, event.atcCode, event.inn, event.label)
-    const sameConcept = (resolved.standardConceptId ?? null) === (event.standardConceptId ?? null)
-    const sameStatus = resolved.mappingStatus === event.mappingStatus
-    if (sameConcept && sameStatus) continue
+    // Resolving through the same helper the write paths use means a historic
+    // row lands on exactly the concept it would have got had it been recorded
+    // today, including the catalog name lookup for rows stored before the ATC
+    // codes existed.
+    const candidate: Record<string, unknown> = {
+      type: event.type, label: event.label, atcCode: event.atcCode, inn: event.inn,
+    }
+    await resolveDrugExposureConcepts(prisma, [candidate])
+    const standardConceptId = (candidate.standardConceptId as number | null | undefined) ?? null
+    const mappingStatus = String(candidate.mappingStatus ?? event.mappingStatus)
+    const atcCode = (candidate.atcCode as string | null | undefined) ?? null
+    const sameConcept = standardConceptId === (event.standardConceptId ?? null)
+    const sameStatus = mappingStatus === String(event.mappingStatus)
+    const sameAtc = atcCode === (event.atcCode ?? null)
+    if (sameConcept && sameStatus && sameAtc) continue
     changes.push({
       eventId: event.id,
       caseId: event.caseId,
       label: event.label,
-      atcCode: event.atcCode,
+      atcCode,
       from: { standardConceptId: event.standardConceptId, mappingStatus: String(event.mappingStatus) },
-      to: { standardConceptId: resolved.standardConceptId, mappingStatus: resolved.mappingStatus },
+      to: { standardConceptId, mappingStatus },
     })
   }
   return changes
@@ -102,20 +117,24 @@ async function main() {
   }
 
   // Grouped updates: every event resolving to the same concept is one
-  // statement rather than one per row.
-  const byTarget = new Map<string, { ids: string[]; to: Change["to"] }>()
+  // statement rather than one per row. The ATC is part of the key because a
+  // row that had none until the catalog supplied one must have it written
+  // too — it is what the export shows as the drug's source value, and what a
+  // future re-resolution reads before falling back to the name.
+  const byTarget = new Map<string, { ids: string[]; to: Change["to"]; atcCode: string | null }>()
   for (const change of changes) {
-    const key = `${change.to.standardConceptId ?? "none"}|${change.to.mappingStatus}`
+    const key = `${change.to.standardConceptId ?? "none"}|${change.to.mappingStatus}|${change.atcCode ?? "none"}`
     const entry = byTarget.get(key)
     if (entry) entry.ids.push(change.eventId)
-    else byTarget.set(key, { ids: [change.eventId], to: change.to })
+    else byTarget.set(key, { ids: [change.eventId], to: change.to, atcCode: change.atcCode })
   }
 
   let written = 0
-  for (const [, { ids, to }] of byTarget) {
+  for (const [, { ids, to, atcCode }] of byTarget) {
     const result = await prisma.caseEvent.updateMany({
       where: { id: { in: ids } },
       data: {
+        atcCode,
         standardConceptId: to.standardConceptId,
         mappingStatus: to.mappingStatus as never,
       },

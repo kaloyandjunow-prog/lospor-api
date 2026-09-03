@@ -1,3 +1,4 @@
+import { intraopAtcCode } from "@lospor/core/catalog"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
@@ -110,6 +111,60 @@ export async function resolveDrugConcept(
     ? concept(concepts, "drug", "ATC", atcCode)
     : concept(concepts, "drug", inn ? "INN" : "LOSPOR_DRUG_RAW", inn ?? label)
   return { standardConceptId: mapped.standardConceptId, mappingStatus: mapped.mappingStatus }
+}
+
+/**
+ * The event kinds the OMOP export turns into drug_exposure rows.
+ *
+ * All four are administrations of a substance to a patient, so all four need a
+ * concept. Only `drug` was ever resolved, which is why a sevoflurane
+ * maintenance and a litre of Hartmann's exported unmapped even after the bolus
+ * beside them stopped doing so.
+ */
+export const DRUG_EXPOSURE_EVENT_TYPES = [
+  "drug",
+  "infusion_start",
+  "fluid_start",
+  "agent_start",
+] as const
+
+type MutableEvent = Record<string, unknown>
+
+const asString = (value: unknown): string | null => typeof value === "string" && value ? value : null
+
+/**
+ * Resolve and stamp the standard concept on every drug-exposure event in a
+ * batch, in place.
+ *
+ * Written once and called from all three write paths — the single-event POST,
+ * the whole-log PUT, and the case PATCH that reconciles a client's timetable —
+ * because a drug recorded through one of them and the same drug recorded
+ * through another must not end up mapped differently. The concept is stored on
+ * the row rather than looked up at export time, so exporting a case twice
+ * produces the same file.
+ *
+ * When the event carries no ATC code the catalog is asked for one by name.
+ * That is a lookup, not a guess: an unrecognised name yields nothing and the
+ * row stays uncoded. A code found this way is written onto the event as well,
+ * so the export's drug_source_value carries it and a later re-resolution can
+ * use it directly.
+ */
+export async function resolveDrugExposureConcepts(db: Db, events: MutableEvent[]): Promise<void> {
+  const kinds = new Set<string>(DRUG_EXPOSURE_EVENT_TYPES)
+  for (const event of events) {
+    if (!event || !kinds.has(String(event.type))) continue
+    // The event schema is deliberately permissive, so these arrive as unknown.
+    // Narrow rather than assert: a non-string here would resolve against a
+    // nonsense key and quietly return no concept.
+    const label = asString(event.name) ?? asString(event.label)
+    const atcCode = asString(event.atcCode) ?? intraopAtcCode(label) ?? null
+    const resolved = await resolveDrugConcept(db, atcCode, asString(event.inn), label)
+    Object.assign(event, {
+      ...(atcCode && !asString(event.atcCode) ? { atcCode } : {}),
+      standardConceptId: resolved.standardConceptId,
+      mappingStatus: resolved.mappingStatus,
+    })
+  }
 }
 
 // LabLoinc cache (loaded once per process, tiny table)

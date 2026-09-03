@@ -6,7 +6,7 @@ import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinic
 import { logAudit } from "@/lib/audit"
 import { addEvent, reconcileFullLog, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
-import { resolveDrugConcept } from "@/lib/relational-sync"
+import { resolveDrugExposureConcepts } from "@/lib/relational-sync"
 import { corsHeaders } from "@/lib/cors"
 import {
   CaseWriteError,
@@ -106,22 +106,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // so every drug given during a case exported as unmapped even when its ATC
   // was known. Resolved through the same helper the medication path uses, so
   // the same drug cannot map differently depending on which screen recorded it.
-  if (event.type === "drug") {
-    // The event schema is deliberately permissive, so these arrive as unknown.
-    // Narrow rather than assert: a non-string here would resolve against a
-    // nonsense key and quietly return no concept.
-    const asString = (value: unknown) => typeof value === "string" ? value : null
-    const resolved = await resolveDrugConcept(
-      prisma,
-      asString(event.atcCode),
-      asString(event.inn),
-      asString(event.name) ?? asString(event.label),
-    )
-    Object.assign(event, {
-      standardConceptId: resolved.standardConceptId,
-      mappingStatus: resolved.mappingStatus,
-    })
-  }
+  await resolveDrugExposureConcepts(prisma, [event as Record<string, unknown>])
 
   const source = clinicalEventSource(user)
   try {
@@ -226,6 +211,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const piiError = piiForEvent(event)
     if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
   }
+  // Same resolution the single-event POST does. Reconciling a whole log used
+  // to skip it entirely, so whether a drug arrived with a concept depended on
+  // which of the two endpoints the client happened to use to send it.
+  // Read-only, and outside the case lock for the same reason POST's is.
+  await resolveDrugExposureConcepts(prisma, log as unknown as Record<string, unknown>[])
 
   try {
     const result = await withLockedCaseTransaction(id, async tx => {
