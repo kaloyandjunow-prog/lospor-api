@@ -998,6 +998,10 @@ model PreoperativeAssessment {
   currentMedications       String?
   familyAnesthesiaProblems Boolean?
   familyAnesthesiaDetails  String?
+  // The patient's own anaesthetic history, asked alongside the family history
+  // above but answering for the patient rather than their relatives.
+  unexplainedAnaesthesiaComplications Boolean?
+  malignantHyperthermiaHistory        Boolean?
   dentalProsthetics        Boolean?
   looseTeeth               Boolean?
   smoking                  Boolean?

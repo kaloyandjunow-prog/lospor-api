@@ -203,6 +203,33 @@ const AIRWAY_MEASUREMENTS: Record<string, { concept_id: number; unit: string | n
 }
 
 /**
+ * The eight ABO and Rh(D) combinations, as SNOMED states them.
+ *
+ * A blood group is one fact rather than two: "A positive" is what is written on
+ * a crossmatch label and what a transfusion query asks for. Splitting it into a
+ * group observation and a rhesus observation would make the two findable only
+ * by joining them back together.
+ */
+const BLOOD_GROUP_CONCEPTS: Record<string, number> = {
+  "A|POSITIVE":  4082948,
+  "A|NEGATIVE":  4080397,
+  "B|POSITIVE":  4175555,
+  "B|NEGATIVE":  4080398,
+  "AB|POSITIVE": 4080396,
+  "AB|NEGATIVE": 4082949,
+  "O|POSITIVE":  4080395,
+  "O|NEGATIVE":  4082947,
+}
+
+function bloodGroupConceptFor(
+  group: string | null | undefined,
+  rhesus: string | null | undefined,
+): number {
+  if (!group || !rhesus) return 0
+  return BLOOD_GROUP_CONCEPTS[`${group}|${rhesus}`] ?? 0
+}
+
+/**
  * A clinical yes and no, as SNOMED Qualifier Values.
  *
  * The same concept class the procedure urgency modifier uses. These say only
@@ -1347,7 +1374,21 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // absence of one. sourceObservation already skips null and writes false,
       // so an answered "no" finally reaches the export as a finding rather than
       // being rounded off to silence.
-      sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", preop.difficultAirwayHistory, preopDate)
+      // The finding as the question, answered Yes or No.
+      //
+      // The vocabulary's own shape for a history is a pair — "History of
+      // difficult intubation" (4175851) maps to "History of event" with this
+      // concept as the value — and it is not used here, deliberately. That pair
+      // can only say a difficult intubation happened; a documented "no known
+      // difficult airway" would have to be expressed by the absence of a row,
+      // which is indistinguishable from never having asked.
+      //
+      // For this field that distinction is the point. A previous difficult
+      // intubation outweighs every bedside test, so an anaesthetist who asked
+      // and was told no has recorded something another anaesthetist will rely
+      // on, and it has to survive the export as a finding rather than a gap.
+      sourceObservation("LOSPOR:DIFFICULT_AIRWAY_HISTORY", preop.difficultAirwayHistory, preopDate, null, 37397718,
+        preop.difficultAirwayHistory ? YES_CONCEPT_ID : NO_CONCEPT_ID)
       // Mallampati is a graded scale: the grade is the answer, so it goes in
       // value_as_concept_id rather than being flattened to text. SNOMED has a
       // dedicated concept for a score that could not be assessed, which is more
@@ -1432,9 +1473,58 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
 
       // Body mass index is stored, not derived at export time, because the
       // height and weight it was computed from may since have been corrected.
-      sourceObservation("LOSPOR:BMI", preop.bmi, preopDate)
-      sourceObservation("LOSPOR:BLOOD_TYPE", preop.bloodType, preopDate)
-      sourceObservation("LOSPOR:RH_FACTOR", preop.rhFactor, preopDate)
+      // Body mass index as a measurement rather than an observation, because it
+      // is a quantity with a standard concept and a unit. Stored rather than
+      // recomputed at export time, since the height and weight it came from may
+      // since have been corrected.
+      if (preop.bmi != null) {
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      4245997,
+          measurement_date:            preopDate,
+          measurement_datetime:        preopDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             preop.bmi,
+          value_as_concept_id:         0,
+          unit_concept_id:             0,
+          unit_source_value:           "kg/m2",
+          range_low:                   null,
+          range_high:                  null,
+          value_source_value:          String(preop.bmi),
+          measurement_source_value:    "LOSPOR:BMI",
+          visit_occurrence_id:         visitId,
+        })
+      }
+
+      // ABO and Rh as one fact, which is how a blood group is read and how a
+      // crossmatch query wants it. Two rows would say "group A" and "Rh
+      // positive" as separate findings, and SNOMED has a concept for each of
+      // the eight combinations, so there is no reason to split them.
+      const bloodGroupConcept = bloodGroupConceptFor(preop.bloodType, preop.rhFactor)
+      if (preop.bloodType || preop.rhFactor) {
+        const groupText = `${preop.bloodType ?? "?"}${
+          preop.rhFactor === "POSITIVE" ? "+" : preop.rhFactor === "NEGATIVE" ? "-" : "?"}`
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      3003694,
+          measurement_date:            preopDate,
+          measurement_datetime:        preopDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             null,
+          // 0 when only one half was recorded: "A, Rh unknown" is not one of
+          // the eight, and guessing the other half would invent a crossmatch.
+          value_as_concept_id:         bloodGroupConcept,
+          unit_concept_id:             0,
+          unit_source_value:           null,
+          range_low:                   null,
+          range_high:                  null,
+          value_source_value:          groupText,
+          measurement_source_value:    "LOSPOR:BLOOD_GROUP",
+          visit_occurrence_id:         visitId,
+        })
+      }
       sourceObservation("LOSPOR:GUTA_SCORE", preop.gutaScore, preopDate)
 
       // ── The airway examination ───────────────────────────────────────────
@@ -1482,7 +1572,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         sourceObservation("LOSPOR:NECK_MOBILITY", "unobtainable", preopDate)
         sourceObservation("LOSPOR:UPPER_LIP_BITE_TEST", "unobtainable", preopDate)
       }
-      sourceObservation("LOSPOR:RETROGNATHIA", preop.retrognathia, preopDate)
+      sourceObservation("LOSPOR:RETROGNATHIA", preop.retrognathia, preopDate, null, 4142490,
+        preop.retrognathia ? YES_CONCEPT_ID : NO_CONCEPT_ID)
       sourceObservation("LOSPOR:PROMINENT_INCISORS", preop.prominentIncisors, preopDate)
       sourceObservation("LOSPOR:FACIAL_HAIR", preop.facialHair, preopDate)
       sourceObservation("LOSPOR:DIFFICULT_AIRWAY_NOTES", preop.difficultAirwayNotes, preopDate)

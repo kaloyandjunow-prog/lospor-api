@@ -43,10 +43,12 @@ describe("mapCasesToOmop", () => {
       // opening, thyromental distance and the Cormack-Lehane grade moved from
       // unmapped LOSPOR observations to measurements carrying their SNOMED
       // concepts. The same facts, in the table that makes them poolable.
-      measurement: 32,
+      // Two more, three fewer observations: BMI moved to measurement, and the
+      // blood group is one row instead of a type row and a rhesus row.
+      measurement: 34,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 59,
+      observation: 56,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -806,10 +808,29 @@ describe("clinical data that used to never leave", () => {
     expect(obs("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")[0]?.value_as_string).toBe("true")
     expect(obs("LOSPOR:DENTAL_PROSTHETICS")[0]?.value_as_string).toBe("false")
     expect(obs("LOSPOR:HEART_ARRHYTHMIA")[0]?.value_as_string).toBe("false")
-    expect(obs("LOSPOR:BMI")[0]?.value_as_number).toBe(24.2)
-    expect(obs("LOSPOR:BLOOD_TYPE")[0]?.value_as_string).toBe("A")
-    expect(obs("LOSPOR:RH_FACTOR")[0]?.value_as_string).toBe("POSITIVE")
     expect(obs("LOSPOR:GUTA_SCORE")[0]?.value_as_number).toBe(2)
+  })
+
+  it("measures body mass index rather than observing it", () => {
+    // A quantity with a standard concept and a unit belongs in measurement.
+    const bmi = bundle().measurement.filter(row => row.measurement_source_value === "LOSPOR:BMI")
+
+    expect(bmi).toHaveLength(1)
+    expect(bmi[0]).toMatchObject({ measurement_concept_id: 4245997, value_as_number: 24.2 })
+  })
+
+  it("writes a blood group as one fact rather than two", () => {
+    // "A positive" is what a crossmatch label says and what a transfusion query
+    // asks for. As separate group and rhesus rows it is findable only by
+    // joining them back together.
+    const group = bundle().measurement.filter(row => row.measurement_source_value === "LOSPOR:BLOOD_GROUP")
+
+    expect(group).toHaveLength(1)
+    expect(group[0]).toMatchObject({
+      measurement_concept_id: 3003694,
+      value_as_concept_id: 4082948,
+      value_source_value: "A+",
+    })
   })
 
   it("exports the airway examination separately from the airway history", () => {

@@ -290,10 +290,18 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "difficultAirwayHistory",
-    exportName: "observation.value_as_string (LOSPOR:DIFFICULT_AIRWAY_HISTORY)",
-    meaning: "History of difficult airway",
-    type: "boolean",
-    missingnessRule: "NULL = not recorded",
+    exportName: "observation.value_as_concept_id (LOSPOR:DIFFICULT_AIRWAY_HISTORY)",
+    meaning: "History of difficult airway, as SNOMED 37397718 (Difficult "
+      + "intubation) answered with 4188539 (Yes) or 4188540 (No). The "
+      + "vocabulary's own history shape — question 1340204 (History of event) "
+      + "with this concept as the value — is deliberately not used: it can only "
+      + "state that a difficult intubation happened, and a documented 'no known "
+      + "difficult airway' would then be expressed by an absent row, which "
+      + "cannot be told apart from never having asked. A previous difficult "
+      + "intubation outweighs every bedside test, so the denial is itself a "
+      + "finding another anaesthetist relies on.",
+    type: "concept_id",
+    missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "difficultAirwayHistory",
     versionIntroduced: "3.0.0",
   },
@@ -451,7 +459,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "bmi",
-    exportName: "observation.value_as_number (LOSPOR:BMI)",
+    exportName: "measurement.value_as_number (LOSPOR:BMI)",
     meaning: "Body mass index as stored, not recomputed at export time, because the height and weight it came from may since have been corrected.",
     type: "float",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
@@ -460,18 +468,27 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "bloodType",
-    exportName: "observation.value_as_string (LOSPOR:BLOOD_TYPE)",
-    meaning: "ABO blood group",
-    type: "string",
+    exportName: "measurement.value_as_concept_id (LOSPOR:BLOOD_GROUP)",
+    meaning: "ABO group and rhesus together, as LOINC 3003694 (ABO and Rh group "
+      + "[Type] in Blood) with one of the eight SNOMED combinations in "
+      + "value_as_concept_id — 4082948 A+, 4080397 A-, 4175555 B+, 4080398 B-, "
+      + "4080396 AB+, 4082949 AB-, 4080395 O+, 4082947 O-. One row because a "
+      + "blood group is one fact: 'A positive' is what a crossmatch label says "
+      + "and what a transfusion query asks for. value_as_concept_id is 0 when "
+      + "only one half was recorded, since 'A, rhesus unknown' is not one of the "
+      + "eight and guessing the other half would invent a crossmatch. "
+      + "value_source_value carries the group as written.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "bloodType",
     versionIntroduced: "3.8.0",
   },
   {
     name: "rhFactor",
-    exportName: "observation.value_as_string (LOSPOR:RH_FACTOR)",
-    meaning: "Rhesus factor",
-    type: "string",
+    exportName: "measurement.value_as_concept_id (LOSPOR:BLOOD_GROUP)",
+    meaning: "The rhesus half of the blood group. Exported in the same row as "
+      + "bloodType rather than separately — see that entry for the concepts.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "rhFactor",
     versionIntroduced: "3.8.0",
@@ -523,9 +540,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "retrognathia",
-    exportName: "observation.value_as_string (LOSPOR:RETROGNATHIA)",
-    meaning: "Retrognathia on examination",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:RETROGNATHIA)",
+    meaning: "Retrognathia on examination, as SNOMED 4142490 (Mandibular "
+      + "retrognathism) answered with 4188539 (Yes) or 4188540 (No).",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "retrognathia",
     versionIntroduced: "3.8.0",
