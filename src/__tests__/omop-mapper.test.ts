@@ -1192,11 +1192,26 @@ describe("what anaesthetic was given", () => {
       .toBe("ANAESTHESIA_TECHNIQUE:SPINAL_SINGLE_LUMBAR")
   })
 
+  it("codes the block regions, so most of the peripheral tree inherits something true", () => {
+    // SNOMED has a "Local anesthetic nerve block in <region>" family that
+    // mirrors this part of the tree almost exactly, so four nodes cover roughly
+    // forty leaves and each leaf can be refined later without touching a stored
+    // value.
+    expect(techRow("BLOCK_TAP")?.procedure_concept_id).toBe(4125199)
+    expect(techRow("BLOCK_INTERSCALENE")?.procedure_concept_id).toBe(4332443)
+    expect(techRow("BLOCK_FEMORAL")?.procedure_concept_id).toBe(4333960)
+  })
+
   it("leaves a technique with no coded ancestor at 0 rather than guessing", () => {
-    // A peripheral block is not a spinal and not a general. SNOMED has a
-    // "Local anesthetic <named> nerve block" family for these and they are not
-    // mapped yet; 0 says so, where borrowing REGIONAL's parent would not.
-    expect(techRow("BLOCK_TAP")?.procedure_concept_id).toBe(0)
+    // REGIONAL is mappable — 4100052 is correct and verified — and is held back
+    // deliberately. Mapping the root would make every undecided node beneath it
+    // inherit "Regional anesthesia" and read as finished, and concept 0 is what
+    // currently says nobody has decided this one yet.
+    expect(techRow("DPE")?.procedure_concept_id).toBe(0)
+    // A scalp block, by contrast, is not 0: its region is undecided but
+    // PERIPHERAL above it is coded, and a scalp block genuinely is a local
+    // anaesthetic nerve block. Inheritance is meant to reach here.
+    expect(techRow("BLOCK_SCALP")?.procedure_concept_id).toBe(4140397)
     // Nor does an unrecognised code reach for something plausible.
     expect(techRow("NOT_A_REAL_NODE")?.procedure_concept_id).toBe(0)
   })

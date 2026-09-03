@@ -350,8 +350,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "coded one takes its nearest coded ancestor -- SPINAL_SINGLE_LUMBAR is "
       + "coded as spinal anaesthesia -- and the exact node stays in "
       + "procedure_source_value, so nothing is flattened away. A node with no "
-      + "coded ancestor is 0: the peripheral blocks are not mapped yet, and 0 "
-      + "says so where borrowing a parent concept would not. There is no plain "
+      + "coded ancestor is 0. The block regions are coded from the matching "
+      + "SNOMED family -- 4140397 (Local anesthetic nerve block), 4332443 "
+      + "(upper limb), 4333960 (lower limb), 4125199 (trunk) -- so most named "
+      + "blocks inherit something true. REGIONAL itself is deliberately not "
+      + "coded, though 4100052 is correct: mapping the root would make every "
+      + "undecided node beneath it inherit Regional anesthesia and read as "
+      + "finished, and 0 is what says nobody has decided yet. It goes in last, "
+      + "as a backstop. There is no plain "
       + "General anesthesia concept in this vocabulary; the ones that exist are "
       + "CIEL, MeSH, SUS and NDFRT, which do not ship here.",
     type: "string",

@@ -169,6 +169,23 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // cases; this is true of all of them. The exact term, CIEL's "Monitored
   // anesthesia care", is not in this vocabulary.
   SEDATION: 4219502,
+  // The block hierarchy. SNOMED has a "Local anesthetic nerve block in
+  // <region>" family that mirrors this part of the tree almost exactly, so four
+  // nodes cover roughly forty leaves truthfully, and each leaf can be refined
+  // later without touching a stored value.
+  PERIPHERAL:  4140397,
+  BLOCK_UPPER: 4332443,
+  BLOCK_LOWER: 4333960,
+  // Trunk rather than abdomen. TAP and rectus sheath are abdominal, but ESP,
+  // serratus, PECS, paravertebral and intercostal are thoracic, and this node
+  // holds both.
+  BLOCK_TRUNK: 4125199,
+  // REGIONAL is deliberately absent. 4100052 (Regional anesthesia) is correct
+  // and verified, and mapping it would make every unmapped node below it -- the
+  // head and neck blocks, the ophthalmic ones, NEURAXIAL, DPE -- silently
+  // inherit it. They would read as done. Concept 0 is what currently says
+  // "nobody has decided this yet", and it is worth more than a coarse truth
+  // until the tree beneath is finished. It goes in last, as a backstop.
 }
 
 /** Every technique node's parent, derived from the catalogue rather than kept
