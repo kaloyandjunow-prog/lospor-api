@@ -9,6 +9,9 @@ describe("pediatric OMOP source preservation", () => {
     const observations = new Map(
       bundle.observation.map(row => [row.observation_source_value, row]),
     )
+    const measurements = new Map(
+      bundle.measurement.map(row => [row.measurement_source_value, row]),
+    )
 
     expect(bundle.metadata.source_version).toBe("3.8.0")
     expect(bundle.metadata.schema_version).toBe("3.6.0")
@@ -21,7 +24,6 @@ describe("pediatric OMOP source preservation", () => {
       .toBe("14")
     expect(observations.get("LOSPOR:POVOC_SCORE")?.value_as_string).toBe("2")
     expect(observations.get("LOSPOR:COLDS_SCORE")?.value_as_string).toBe("8")
-    expect(observations.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.value_as_string).toBe("3")
     expect(observations.get("LOSPOR:PAED_SCORE")?.value_as_string).toBe("7")
 
     // The paediatric scores are the ones most likely to be analysed as numbers
@@ -29,7 +31,11 @@ describe("pediatric OMOP source preservation", () => {
     expect(observations.get("LOSPOR:POVOC_SCORE")?.value_as_number).toBe(2)
     expect(observations.get("LOSPOR:POVOC_RISK_PERCENT")?.value_as_number).toBe(30)
     expect(observations.get("LOSPOR:COLDS_SCORE")?.value_as_number).toBe(8)
-    expect(observations.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.value_as_number).toBe(3)
+    // FLACC moved to measurement.value_as_number (3037051, a real SNOMED
+    // concept), the same way RCRI, STOP-BANG and the Aldrete total did — it is
+    // no longer a LOSPOR-only observation at concept 0.
+    expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.value_as_number).toBe(3)
+    expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.measurement_concept_id).toBe(3037051)
     expect(observations.get("LOSPOR:PAED_SCORE")?.value_as_number).toBe(7)
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS")?.value_as_number).toBe(14)
     expect(observations.get("LOSPOR:BODY_SURFACE_AREA_M2")?.value_as_number).toBe(0.35)
@@ -43,7 +49,6 @@ describe("pediatric OMOP source preservation", () => {
       "LOSPOR:AGE_AT_PROCEDURE_EXACT",
       "LOSPOR:POVOC_SCORE",
       "LOSPOR:COLDS_SCORE",
-      "LOSPOR:PEDIATRIC_PAIN_FLACC_0_10",
       "LOSPOR:PAED_SCORE",
     ]) {
       expect(observations.get(source)?.observation_concept_id).toBe(0)

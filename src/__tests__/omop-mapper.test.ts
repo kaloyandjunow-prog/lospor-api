@@ -45,10 +45,10 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 38,
+      measurement: 39,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 52,
+      observation: 51,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -142,7 +142,6 @@ describe("mapCasesToOmop", () => {
     // without casting the whole column back from text.
     expect(bundle.observation).toEqual(expect.arrayContaining([
       expect.objectContaining({ observation_source_value: "LOSPOR:APFEL", value_as_number: 1 }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_TOTAL", value_as_number: 10 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_ACTIVITY", value_as_number: 2 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CRYSTALLOIDS_ML", value_as_number: 500 }),
       // A zero total is a recorded zero, not a missing value: it has to survive
@@ -1493,5 +1492,63 @@ describe("the three confirmed vocabulary gaps stay 0, even under a mapped REGION
     expect(techRow("BLOCK_QL")?.procedure_concept_id).toBe(4125199)
     expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
     expect(techRow("BLOCK_SUB_TENONS")?.procedure_concept_id).toBe(4140397)
+  })
+})
+
+describe("postop recovery: Aldrete total, PONV, disposition, paediatric pain", () => {
+  const withPostop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { postop: Record<string, unknown> }
+    Object.assign(c.postop, patch)
+    return c as never
+  }
+
+  it("carries the Aldrete total as a measurement, and leaves its subscores uncoded", () => {
+    const bundle = mapCasesToOmop([completeCase() as never])
+    const total = bundle.measurement.find(r => r.measurement_source_value === "LOSPOR:ALDRETE_TOTAL")
+    const activity = bundle.observation.find(r => r.observation_source_value === "LOSPOR:ALDRETE_ACTIVITY")
+
+    expect(total).toMatchObject({ measurement_concept_id: 40488911, value_as_number: 10 })
+    // The five subscores have no concept in this vocabulary -- only the total
+    // is a scored entity in SNOMED, the same shape as RCRI's criteria.
+    expect(activity?.observation_concept_id).toBe(0)
+  })
+
+  it("codes PONV as a condition that occurred, not an observation about one", () => {
+    const withPonv = mapCasesToOmop([withPostop({ ponv: true })])
+    const row = withPonv.condition_occurrence.find(r => r.condition_source_value === "LOSPOR:PONV")
+
+    expect(row?.condition_concept_id).toBe(4032472)
+
+    // Recorded only when present, the same rule as every other "no row = not
+    // present" field in this file.
+    const withoutPonv = mapCasesToOmop([withPostop({ ponv: false })])
+    expect(withoutPonv.condition_occurrence.some(r => r.condition_source_value === "LOSPOR:PONV")).toBe(false)
+  })
+
+  it("codes ward and ICU disposition, and leaves PACU uncoded", () => {
+    const dispRow = (disposition: string) => mapCasesToOmop([withPostop({ disposition })])
+      .observation.find(r => r.observation_source_value === "LOSPOR:DISPOSITION")
+
+    expect(dispRow("WARD")?.observation_concept_id).toBe(4142136)
+    expect(dispRow("ICU")?.observation_concept_id).toBe(4138933)
+    // "Post Anesthesia Care Unit" (45880582) exists but is a Meas Value/Answer
+    // concept, not a fact for observation_concept_id, and nothing else names
+    // remaining in recovery as an event -- a real vocabulary gap.
+    expect(dispRow("PACU")?.observation_concept_id).toBe(0)
+  })
+
+  it("codes FLACC as a measurement and FPS-R as an observation, matching where SNOMED puts each", () => {
+    const flacc = mapCasesToOmop([withPostop({ pediatricPainScale: "FLACC", pediatricPainScore: 3 })])
+    const fpsR = mapCasesToOmop([withPostop({ pediatricPainScale: "FPS_R", pediatricPainScore: 4 })])
+    const nrs = mapCasesToOmop([withPostop({ pediatricPainScale: "NRS", pediatricPainScore: 5 })])
+
+    const flaccRow = flacc.measurement.find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")
+    const fpsRRow = fpsR.observation.find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_PAIN_FPS_R_0_10")
+    const nrsRow = nrs.observation.find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_PAIN_NRS_0_10")
+
+    expect(flaccRow).toMatchObject({ measurement_concept_id: 3037051, value_as_number: 3 })
+    expect(fpsRRow).toMatchObject({ observation_concept_id: 40760807, value_as_number: 4 })
+    // NRS has no reviewed concept, the same as the adult NRS branch.
+    expect(nrsRow?.observation_concept_id).toBe(0)
   })
 })

@@ -2479,14 +2479,68 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       }
       // Aldrete subscores and their total: 0-2 each, 0-10 summed. A discharge
       // threshold is a numeric comparison, so these have to be numbers.
+      //
+      // The five subscores have no concept in this vocabulary -- only the
+      // total is a scored entity in SNOMED, the same shape as RCRI's
+      // criteria. They stay observations at concept 0.
       sourceObservation("LOSPOR:ALDRETE_ACTIVITY", c.postop.aldreteActivity, postDate)
       sourceObservation("LOSPOR:ALDRETE_RESPIRATION", c.postop.aldreteRespiration, postDate)
       sourceObservation("LOSPOR:ALDRETE_CIRCULATION", c.postop.aldreteCirculation, postDate)
       sourceObservation("LOSPOR:ALDRETE_CONSCIOUSNESS", c.postop.aldreteConsciousness, postDate)
       sourceObservation("LOSPOR:ALDRETE_SPO2", c.postop.aldreteSpO2, postDate)
-      sourceObservation("LOSPOR:ALDRETE_TOTAL", c.postop.aldreteTotal, postDate)
+      // The total, unlike its subscores, is a scored entity in SNOMED, so it
+      // moves to measurement.value_as_number the same way RCRI and STOP-BANG
+      // did -- an OMOP measurement, not a LOSPOR-only observation.
+      if (c.postop.aldreteTotal != null) {
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      40488911,
+          measurement_date:            postDate,
+          measurement_datetime:        postDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             c.postop.aldreteTotal,
+          value_as_concept_id:         null,
+          unit_concept_id:             0,
+          unit_source_value:           null,
+          measurement_source_value:    "LOSPOR:ALDRETE_TOTAL",
+          value_source_value:          String(c.postop.aldreteTotal),
+          range_low:                   null,
+          range_high:                  null,
+          visit_occurrence_id:         visitId,
+        })
+      }
       if (c.postop.pediatricPainScore != null && c.postop.pediatricPainScale) {
-        sourceObservation(`LOSPOR:PEDIATRIC_PAIN_${c.postop.pediatricPainScale}_0_10`, c.postop.pediatricPainScore, postDate)
+        const scale = c.postop.pediatricPainScale
+        const scoreSource = `LOSPOR:PEDIATRIC_PAIN_${scale}_0_10`
+        if (scale === "FLACC") {
+          // FLACC is a Measurement-domain concept in SNOMED, unlike FPS-R
+          // below, which the vocabulary itself puts in Observation -- that
+          // split is the vocabulary's own choice, not an inconsistency here.
+          measurements.push({
+            measurement_id:              nextId(),
+            person_id:                   personId,
+            measurement_concept_id:      3037051,
+            measurement_date:            postDate,
+            measurement_datetime:        postDate,
+            measurement_type_concept_id: 32817,
+            value_as_number:             c.postop.pediatricPainScore,
+            value_as_concept_id:         null,
+            unit_concept_id:             0,
+            unit_source_value:           null,
+            measurement_source_value:    scoreSource,
+            value_source_value:          String(c.postop.pediatricPainScore),
+            range_low:                   null,
+            range_high:                  null,
+            visit_occurrence_id:         visitId,
+          })
+        } else if (scale === "FPS_R") {
+          sourceObservation(scoreSource, c.postop.pediatricPainScore, postDate, c.postop.pediatricPainScore, 40760807)
+        } else {
+          // NRS has no reviewed concept, the same as the adult NRS branch
+          // below -- stays a source-only observation at concept 0.
+          sourceObservation(scoreSource, c.postop.pediatricPainScore, postDate)
+        }
       } else if (c.postop.painScoreNRS != null) {
         observations.push({
           observation_id: nextId(), person_id: personId,
@@ -2506,9 +2560,32 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         })
       }
       sourceObservation("LOSPOR:PAED_SCORE", c.postop.paedScore, postDate)
+      // A condition that occurred, not an observation about one -- the same
+      // domain routing already used for comorbidities and diagnoses.
       // Recorded only when present, and as a fact rather than a count.
-      if (c.postop.ponv) sourceObservation("LOSPOR:PONV", true, postDate)
-      sourceObservation("LOSPOR:DISPOSITION", c.postop.disposition, postDate)
+      if (c.postop.ponv) {
+        conditions.push({
+          condition_occurrence_id:    nextId(),
+          person_id:                  personId,
+          condition_concept_id:       4032472,
+          condition_start_date:       postDate ?? startDate,
+          condition_type_concept_id:  32817,
+          condition_source_value:     "LOSPOR:PONV",
+          visit_occurrence_id:        visitId,
+        })
+      }
+      // Each value is its own fact rather than an answer to one reusable
+      // question -- "Discharge to ward" and "Admission to intensive care
+      // unit" are different SNOMED concepts with no shared question concept
+      // between them, unlike a yes/no field. PACU has no concept in this
+      // vocabulary: the nearest match, "Post Anesthesia Care Unit" (45880582),
+      // is a Meas Value/Answer concept, not a fact that belongs in
+      // observation_concept_id, and nothing else names remaining in recovery
+      // as an event.
+      const dispositionConcept = c.postop.disposition === "WARD" ? 4142136
+        : c.postop.disposition === "ICU" ? 4138933
+        : 0
+      sourceObservation("LOSPOR:DISPOSITION", c.postop.disposition, postDate, null, dispositionConcept)
     }
   }
 

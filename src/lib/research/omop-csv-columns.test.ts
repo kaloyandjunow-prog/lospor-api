@@ -108,17 +108,17 @@ describe("OMOP export CSV columns", () => {
     }
   })
 
-  it("carries the Aldrete total into value_as_number as a number", () => {
-    const row = bundle.observation.find(
-      item => item.observation_source_value === "LOSPOR:ALDRETE_TOTAL",
+  it("carries the Aldrete total into measurement.value_as_number as a number", () => {
+    // Moved out of observation into measurement: 40488911 (Modified Aldrete
+    // score) is a real SNOMED concept, the same shape as RCRI and STOP-BANG.
+    const row = bundle.measurement.find(
+      item => item.measurement_source_value === "LOSPOR:ALDRETE_TOTAL",
     )
     expect(row).toBeDefined()
-    const cells = csvCellsFor("observation", row as unknown as Record<string, unknown>)
+    const cells = csvCellsFor("measurement", row as unknown as Record<string, unknown>)
     // The fixture records a fully recovered patient: Aldrete 10 of 10.
     expect(cells.get("value_as_number")).toBe("10")
     expect(Number(cells.get("value_as_number"))).toBe(10)
-    // The text form stays, so anything already reading value_as_string is unbroken.
-    expect(cells.get("value_as_string")).toBe("10")
   })
 
   it("carries the other scored observations as numbers too", () => {

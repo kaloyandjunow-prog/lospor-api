@@ -1295,8 +1295,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   // ── Postop ────────────────────────────────────────────────────────────────────
   {
     name: "aldreteTotal",
-    exportName: "observation.value_as_number (LOSPOR:ALDRETE_TOTAL)",
-    meaning: "Total modified Aldrete recovery score",
+    exportName: "measurement.value_as_number (LOSPOR:ALDRETE_TOTAL)",
+    meaning: "Total modified Aldrete recovery score, as SNOMED 40488911 "
+      + "(Modified Aldrete score). The five subscores it sums have no concept "
+      + "of their own in this vocabulary -- only the total is a scored entity "
+      + "in SNOMED, the same shape as RCRI's criteria -- so they stay "
+      + "LOSPOR-only observations at concept 0.",
     type: "integer",
     allowedValues: "0–10",
     missingnessRule: "NULL = not all subscores recorded",
@@ -1501,8 +1505,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "pediatricPainScore.FLACC",
-    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_PAIN_FLACC_0_10)",
-    meaning: "Paediatric pain score on the FLACC scale. Face, Legs, Activity, Cry, Consolability — observed by staff, for a child too young or unwell to self-report",
+    exportName: "measurement.value_as_number (LOSPOR:PEDIATRIC_PAIN_FLACC_0_10)",
+    meaning: "Paediatric pain score on the FLACC scale, as SNOMED 3037051 "
+      + "(FLACC pain assessment panel). Face, Legs, Activity, Cry, "
+      + "Consolability — observed by staff, for a child too young or unwell to "
+      + "self-report. In measurement rather than observation, because SNOMED "
+      + "puts this concept in the Measurement domain -- FPS-R below stays in "
+      + "observation because the vocabulary puts that one there instead; the "
+      + "split is the vocabulary's own choice.",
     type: "integer",
     allowedValues: "0–10",
     missingnessRule: "No row = no pain score recorded on this scale for this case",
@@ -1513,7 +1523,9 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "pediatricPainScore.FPS_R",
     exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_PAIN_FPS_R_0_10)",
-    meaning: "Paediatric pain score on the FPS-R scale. Faces Pain Scale-Revised — the child chooses a face, so it is self-reported",
+    meaning: "Paediatric pain score on the FPS-R scale, as SNOMED 40760807 "
+      + "(Pain severity FPS-R). Faces Pain Scale-Revised — the child chooses a "
+      + "face, so it is self-reported.",
     type: "integer",
     allowedValues: "0–10",
     missingnessRule: "No row = no pain score recorded on this scale for this case",
@@ -1562,19 +1574,32 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "ponv",
-    exportName: "observation.value_as_string (LOSPOR:PONV)",
-    meaning: "Post-operative nausea and vomiting present in PACU",
+    exportName: "condition_occurrence.condition_concept_id (LOSPOR:PONV)",
+    meaning: "Post-operative nausea and vomiting present in PACU, as SNOMED "
+      + "4032472 (Postoperative nausea and vomiting). Moved from an "
+      + "observation into condition_occurrence: this is a condition that "
+      + "occurred, not an observation about one, the same domain routing "
+      + "already used for comorbidities and diagnoses.",
     type: "boolean",
-    missingnessRule: "NULL = not assessed",
+    missingnessRule: "No row = not recorded or not present -- only a positive finding is exported, the same rule as every other 'recorded only when present' field",
     sourceTable: "PostoperativeRecord", sourceColumn: "ponv",
     versionIntroduced: "3.0.0",
   },
   {
     name: "disposition",
-    exportName: "observation.value_as_string (LOSPOR:DISPOSITION)",
-    meaning: "Patient destination after PACU",
+    exportName: "observation.observation_concept_id (LOSPOR:DISPOSITION)",
+    meaning: "Patient destination after PACU: WARD codes to SNOMED 4142136 "
+      + "(Discharge to ward), ICU to 4138933 (Admission to intensive care "
+      + "unit). Each is its own fact rather than an answer to one shared "
+      + "question concept -- the two are different SNOMED concepts with "
+      + "nothing standard linking them the way Yes/No links an answer to a "
+      + "question. PACU has no concept in this vocabulary: the nearest match, "
+      + "'Post Anesthesia Care Unit' (45880582), is a Meas Value/Answer "
+      + "concept rather than a fact that belongs in observation_concept_id, "
+      + "and nothing else names remaining in recovery as an event, so it stays "
+      + "at 0.",
     type: "enum",
-    allowedValues: "'WARD'|'ICU'|'HOME'|'STEP_DOWN'|'OTHER'",
+    allowedValues: "'WARD'|'PACU'|'ICU'",
     missingnessRule: "NULL = not recorded",
     sourceTable: "PostoperativeRecord", sourceColumn: "disposition",
     versionIntroduced: "3.0.0",
