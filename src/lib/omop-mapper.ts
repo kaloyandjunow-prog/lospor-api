@@ -1377,9 +1377,39 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       }
       // The risk scores are counts of risk factors: they are summed, banded and
       // thresholded, so they belong in value_as_number.
-      sourceObservation("LOSPOR:RCRI", preop.rcriScore, preopDate)
+      // Two of the five scores have a concept of their own, so they leave as
+      // measurements a tool can find. SNOMED models each as a single scale with
+      // no decomposition — there is no concept for "RCRI criterion 2" — which
+      // is why the criteria themselves are exported as the ordinary conditions
+      // they are, and reconstructing the score means looking for those.
+      for (const [key, concept, value] of [
+        ["LOSPOR:RCRI", 40488922, preop.rcriScore],
+        ["LOSPOR:STOP_BANG", 46286812, preop.stopBangScore],
+      ] as const) {
+        if (value == null) continue
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      concept,
+          measurement_date:            preopDate,
+          measurement_datetime:        preopDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             value,
+          value_as_concept_id:         0,
+          unit_concept_id:             0,
+          unit_source_value:           null,
+          range_low:                   null,
+          range_high:                  null,
+          value_source_value:          String(value),
+          measurement_source_value:    key,
+          visit_occurrence_id:         visitId,
+        })
+      }
+      // Apfel, POVOC and COLDS have no concept in any vocabulary here — the
+      // near matches are all postoperative vomiting itself, which is the
+      // outcome these predict rather than the prediction. They stay source
+      // values, and their components are the route to making them poolable.
       sourceObservation("LOSPOR:APFEL", preop.apfelScore, preopDate)
-      sourceObservation("LOSPOR:STOP_BANG", preop.stopBangScore, preopDate)
       // Recorded for yes and for no, but not when nobody asked.
       //
       // This used to emit only on true, and that was right at the time: the

@@ -45,10 +45,10 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 35,
+      measurement: 37,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 55,
+      observation: 53,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -141,9 +141,7 @@ describe("mapCasesToOmop", () => {
     // researcher could not average an Aldrete total or threshold an RCRI
     // without casting the whole column back from text.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:RCRI", value_as_number: 0, value_as_string: "0" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:APFEL", value_as_number: 1 }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:STOP_BANG", value_as_number: 1 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:AGE_YEARS", value_as_number: 14 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_TOTAL", value_as_number: 10 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_ACTIVITY", value_as_number: 2 }),
@@ -1007,5 +1005,29 @@ describe("one source answer is one row", () => {
 
   it("says nothing at all when the question was never asked", () => {
     expect(latexRows(null)).toHaveLength(0)
+  })
+})
+
+describe("the risk scores that have a concept", () => {
+  // SNOMED models each score as a single scale with no decomposition — there
+  // is no concept for "RCRI criterion 2" — so the criteria are exported as the
+  // ordinary conditions they are, and reconstructing a score means looking for
+  // those rather than for score components.
+  const scored = (source: string) => mapCasesToOmop([completeCase() as never])
+    .measurement.filter(row => row.measurement_source_value === source)
+
+  it("writes RCRI and STOP-BANG as measurements a tool can find", () => {
+    expect(scored("LOSPOR:RCRI")[0]).toMatchObject({ measurement_concept_id: 40488922, value_as_number: 0 })
+    expect(scored("LOSPOR:STOP_BANG")[0]).toMatchObject({ measurement_concept_id: 46286812, value_as_number: 1 })
+  })
+
+  it("leaves Apfel where no concept exists, rather than borrowing a wrong one", () => {
+    // Every near match is postoperative vomiting itself, which is the outcome
+    // these scores predict and not the prediction.
+    const apfel = mapCasesToOmop([completeCase() as never])
+      .observation.filter(row => row.observation_source_value === "LOSPOR:APFEL")
+
+    expect(apfel).toHaveLength(1)
+    expect(apfel[0].observation_concept_id).toBe(0)
   })
 })

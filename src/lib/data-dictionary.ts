@@ -212,7 +212,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "rcriScore",
-    exportName: "observation.value_as_number (LOSPOR:RCRI)",
+    exportName: "measurement.value_as_number (LOSPOR:RCRI)",
     meaning: "Revised Cardiac Risk Index score",
     type: "integer",
     allowedValues: "0–6",
@@ -234,7 +234,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "stopBangScore",
-    exportName: "observation.value_as_number (LOSPOR:STOP_BANG)",
+    exportName: "measurement.value_as_number (LOSPOR:STOP_BANG)",
     meaning: "STOP-BANG obstructive sleep apnoea screening score",
     type: "integer",
     allowedValues: "0–8",
