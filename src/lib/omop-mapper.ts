@@ -1374,13 +1374,30 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // perioperative risk.
       sourceObservation("LOSPOR:SMOKING", preop.smoking, preopDate, null, 43054909,
         preop.smoking ? YES_CONCEPT_ID : NO_CONCEPT_ID)
-      // "Harmful pattern of substance use", which says substance rather than
-      // drugs and so covers alcohol — the question a clinician is actually
-      // answering here. Reached from the deprecated SNOMED "Drug abuse"
-      // (436954) through its Maps to; that one is invalid_reason D and cannot
-      // carry a concept_id itself.
-      sourceObservation("LOSPOR:SUBSTANCE_ABUSE", preop.substanceAbuse, preopDate, null, 1448779)
-      sourceObservation("LOSPOR:LATEX_ALLERGY", preop.latexAllergy, preopDate, null, 4032362)
+      // Answered Yes or No rather than asserted, so a denial is recorded as a
+      // denial and an unasked question stays absent.
+      sourceObservation("LOSPOR:SUBSTANCE_ABUSE", preop.substanceAbuse, preopDate, null, 4234597,
+        preop.substanceAbuse ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // Latex allergy in two rows, because one cannot say both things.
+      //
+      // The first is the answer, including a denial: "latex allergy: no" is a
+      // documented safety check a theatre acts on, not an absence, and it has
+      // to stay distinguishable from a question nobody asked.
+      //
+      // The second is the allergy itself, in the shape OMOP models allergies —
+      // the non-standard "Allergy to latex" (604826) carries both a Maps to
+      // (Allergic disposition) and a Maps to value (the RxNorm ingredient), so
+      // the question says that a disposition exists and the value says to what.
+      // Emitted only when the answer is yes, since there is no allergy to
+      // describe otherwise.
+      //
+      // Together they let a tool find the allergen without losing the denial.
+      sourceObservation("LOSPOR:LATEX_ALLERGY", preop.latexAllergy, preopDate, null, 43530807,
+        preop.latexAllergy ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      if (preop.latexAllergy) {
+        sourceObservation("LOSPOR:LATEX_ALLERGY_SUBSTANCE", "latex", preopDate, null,
+          43530807, 42903913)
+      }
       sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS", preop.familyAnesthesiaProblems, preopDate, null, 4294884)
       sourceObservation("LOSPOR:FAMILY_ANAESTHESIA_DETAILS", preop.familyAnesthesiaDetails, preopDate)
       sourceObservation("LOSPOR:DENTAL_PROSTHETICS", preop.dentalProsthetics, preopDate)

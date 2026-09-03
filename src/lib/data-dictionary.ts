@@ -350,18 +350,31 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "substanceAbuse",
-    exportName: "observation.value_as_string (LOSPOR:SUBSTANCE_ABUSE)",
-    meaning: "Whether the patient reports substance misuse",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:SUBSTANCE_ABUSE)",
+    meaning: "Whether the patient reports substance misuse, as SNOMED 4234597 "
+      + "(Misuses drugs) answered with 4188539 (Yes) or 4188540 (No). Answered "
+      + "rather than asserted as a condition, so a denial is recorded as a "
+      + "denial: a condition row can only say yes, and would lose both the "
+      + "denial and its difference from an unasked question. The concept is "
+      + "drug-specific while the question a clinician answers may include "
+      + "alcohol, so read it as the nearest available rather than exact.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "substanceAbuse",
     versionIntroduced: "3.8.0",
   },
   {
     name: "latexAllergy",
-    exportName: "observation.value_as_string (LOSPOR:LATEX_ALLERGY)",
-    meaning: "Latex allergy",
-    type: "boolean",
+    exportName: "observation.value_as_concept_id (LOSPOR:LATEX_ALLERGY)",
+    meaning: "Latex allergy, as SNOMED 43530807 (Allergic disposition) answered "
+      + "with 4188539 (Yes) or 4188540 (No). A yes emits a second row, "
+      + "LOSPOR:LATEX_ALLERGY_SUBSTANCE, carrying the same question concept "
+      + "with RxNorm 42903913 (latex) as the value — the shape OMOP models an "
+      + "allergy in, where the question states that a disposition exists and "
+      + "the value states to what. Two rows because one cannot say both: the "
+      + "denial is a documented safety check a theatre acts on, and the "
+      + "allergen has to stay machine-readable.",
+    type: "concept_id",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "latexAllergy",
     versionIntroduced: "3.8.0",
