@@ -95,6 +95,26 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   // COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS in omop-mapper.ts.
   { value: "Difficult intubation", conceptId: 37397718, label: "Difficult intubation" },
   { value: "Failed intubation", conceptId: 37154260, label: "Failed intubation of trachea" },
+
+  // Batch 3 of 9 -- remaining Respiratory (6 of 12) + first Neurological
+  // items. "Raised intracranial pressure" and "Spinal cord ischaemia" were
+  // removed from the catalogue entirely rather than mapped.
+  { value: "CICO (can't intubate can't oxygenate)", conceptId: 37397447, label: "Cannot intubate cannot ventilate" },
+  { value: "Accidental extubation", conceptId: 4231838, label: "Inadvertent tracheal extubation" },
+  // Procedure-domain, not Condition -- see
+  // COMPLICATION_PROCEDURE_DOMAIN_CONCEPTS in omop-mapper.ts.
+  { value: "Endobronchial intubation", conceptId: 4335585, label: "Endobronchial intubation" },
+  { value: "Pneumothorax", conceptId: 253796, label: "Pneumothorax" },
+  { value: "Tension pneumothorax", conceptId: 4050881, label: "Tension pneumothorax" },
+  // SNOMED's own spelling of the same thing.
+  { value: "Hypercarbia", conceptId: 4105765, label: "Hypercapnia" },
+  // Observation-domain -- see COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS. The
+  // "accidental" framing is deliberate: AAGA (accidental awareness during
+  // general anaesthesia) is the actual clinical/medico-legal term, and every
+  // real complication logged under this label is the accidental kind.
+  { value: "Awareness under anaesthesia", conceptId: 35625730, label: "Accidental awareness under general anesthesia" },
+  { value: "Cerebrovascular accident / stroke", conceptId: 381316, label: "Cerebrovascular accident" },
+  { value: "Peripheral nerve injury", conceptId: 4248551, label: "Injury of peripheral nerve" },
 ]
 
 const KNOWN_VITALS = [

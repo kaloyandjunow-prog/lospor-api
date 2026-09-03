@@ -532,6 +532,17 @@ const UNOBTAINABLE_CONCEPT_ID = 618772
 const COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS = new Set([
   37397718, // Difficult intubation
   37154260, // Failed intubation of trachea
+  37397447, // CICO (can't intubate can't oxygenate)
+  4231838,  // Accidental extubation (Inadvertent tracheal extubation)
+  35625730, // Awareness under anaesthesia (Accidental awareness under general anesthesia)
+])
+
+// Rarer still: a curated complication concept whose own domain is Procedure
+// -- "Endobronchial intubation" is something that was done (a tube placed too
+// far), not a diagnosed disorder or an assessment finding. Kept separate from
+// the Observation set above because it routes to a third table.
+const COMPLICATION_PROCEDURE_DOMAIN_CONCEPTS = new Set([
+  4335585, // Endobronchial intubation
 ])
 
 // The airway examination has its own SNOMED concept for the same idea, and it
@@ -2919,6 +2930,25 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           observation_source_value: sourceValue("LOSPOR_COMPLICATION", comp.sourceVocabulary, comp.sourceCode, comp.label),
           visit_occurrence_id: visitId,
         })
+      } else if (comp.standardConceptId != null && COMPLICATION_PROCEDURE_DOMAIN_CONCEPTS.has(comp.standardConceptId)) {
+        // "Endobronchial intubation" is a Procedure-domain SNOMED concept --
+        // something that was done to the patient, not a disorder found or an
+        // assessment made -- so it reaches PROCEDURE_OCCURRENCE rather than
+        // either of the other two tables.
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      comp.standardConceptId,
+          procedure_date:            compDate,
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    sourceValue("LOSPOR_COMPLICATION", comp.sourceVocabulary, comp.sourceCode, comp.label),
+          visit_occurrence_id:       visitId,
+        })
+        if (comp.note) {
+          sourceObservation(`LOSPOR:${comp.section.toUpperCase()}_COMPLICATION_NOTE`, `${comp.label}; ${comp.note}`, compDate)
+        }
       } else if (comp.standardConceptId != null) {
         // Every other curated complication concept is a Condition-domain
         // SNOMED finding -- the catalogue names arrhythmias, infarctions,

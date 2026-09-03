@@ -476,6 +476,26 @@ describe("curated mappings reach the export", () => {
     expect(comp!.condition_concept_id).toBe(4166237)
   })
 
+  it("routes a Procedure-domain complication to procedure_occurrence, not condition_occurrence", () => {
+    // "Endobronchial intubation" is something that was done to the patient,
+    // not a diagnosed disorder -- a third domain among curated complications,
+    // alongside the Condition default and the Observation-domain findings
+    // (Difficult intubation, CICO, ...).
+    const c = completeCase({
+      complications: [{
+        section: "intraop", label: "Endobronchial intubation", note: null,
+        timestamp: new Date("2026-06-01T08:45:00Z"), source: "relational-sync", ordinal: 0,
+        sourceVocabulary: "LOSPOR_COMPLICATION", sourceCode: "Endobronchial intubation",
+        standardConceptId: 4335585, mappingStatus: "MAPPED",
+      }],
+    })
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const proc = bundle.procedure_occurrence.find(row => /LOSPOR_COMPLICATION/.test(String(row.procedure_source_value)))
+    expect(proc, "fixture must contain the complication procedure row").toBeDefined()
+    expect(proc!.procedure_concept_id).toBe(4335585)
+    expect(bundle.condition_occurrence.some(row => /LOSPOR_COMPLICATION/.test(String(row.condition_source_value)))).toBe(false)
+  })
+
   it("uses the reviewed concept for a case selection", () => {
     const bundle = mapCasesToOmop([completeCase() as never], options as never)
     const sel = bundle.observation.find(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")
