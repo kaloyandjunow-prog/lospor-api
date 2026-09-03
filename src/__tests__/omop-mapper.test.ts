@@ -1170,7 +1170,7 @@ describe("what anaesthetic was given", () => {
   it("codes the four techniques that have a concept", () => {
     // Until now every anaesthetic in the register exported at concept 0, so the
     // register could not say, in any coded form, what anaesthetic was given.
-    expect(techRow("GENERAL")?.procedure_concept_id).toBe(4171773)
+    expect(techRow("GENERAL")?.procedure_concept_id).toBe(4174669)
     expect(techRow("SPINAL")?.procedure_concept_id).toBe(4332593)
     expect(techRow("EPIDURAL")?.procedure_concept_id).toBe(4078199)
     expect(techRow("SEDATION")?.procedure_concept_id).toBe(4219502)
@@ -1291,6 +1291,31 @@ describe("how a general anaesthetic was maintained", () => {
     // running a volatile is not TIVA, and it is not inhalation-only either.
     // The parent is the right answer rather than a fallback, and this test is
     // here so nobody later "corrects" it to one of the other two.
+    expect(techRow("GENERAL_BALANCED")?.procedure_concept_id).toBe(4171773)
+  })
+})
+
+describe("a general-anaesthetic cohort catches every maintenance route", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes GENERAL as the true parent of all three maintenance routes", () => {
+    // 4171773 (Operative general anesthesia) looked like the right node and is
+    // not: it is a sibling of GENERAL_INHALATION and GENERAL_TIVA under this
+    // concept, not their ancestor. An ATLAS cohort built on 4171773 +
+    // descendants would have missed every inhalational and every TIVA case --
+    // the opposite of what a "general anaesthetic" filter should return.
+    // 4174669 is verified, against CONCEPT_ANCESTOR, as the true parent of all
+    // three, and its descendant set stops at general anaesthesia: sedation
+    // sits elsewhere, under 4249997, so this does not also sweep in sedation
+    // cases.
+    expect(techRow("GENERAL")?.procedure_concept_id).toBe(4174669)
+    expect(techRow("GENERAL_INHALATION")?.procedure_concept_id).toBe(4118897)
+    expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4086418)
     expect(techRow("GENERAL_BALANCED")?.procedure_concept_id).toBe(4171773)
   })
 })

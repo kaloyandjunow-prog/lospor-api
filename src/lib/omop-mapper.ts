@@ -161,7 +161,16 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // vocabulary. The ones that exist are CIEL, MeSH, SUS and NDFRT, none of
   // which ship here, so this is the umbrella available to us — and it says what
   // is meant: general anaesthesia for an operation.
-  GENERAL:  4171773,
+  // "Administration of general anesthetic" rather than "Operative general
+  // anesthesia" (4171773). The two look interchangeable and are not: 4171773 is
+  // a sibling of GENERAL_INHALATION and GENERAL_TIVA under this concept, not
+  // their ancestor, so a cohort built on 4171773 + descendants would miss every
+  // inhalational and every TIVA case -- the opposite of what a "general
+  // anaesthetic" filter should do. 4174669 is the true parent of all three,
+  // verified against CONCEPT_ANCESTOR, and its descendant set stops at general
+  // anaesthesia: sedation sits elsewhere, under 4249997, so this does not widen
+  // into sedation cases.
+  GENERAL:  4174669,
   // The three children split on what maintained the anaesthetic, which is the
   // axis research asks about: volatile only, intravenous only, or both.
   GENERAL_INHALATION: 4118897,
