@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { AIRWAY_ACTS, mapCasesToOmop } from "@/lib/omop-mapper"
 
 import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
+import { pediatricCaseFixture } from "./fixtures/pediatric-case"
 
 describe("mapCasesToOmop", () => {
   it("exports finalized relational rows into OMOP CDM tables", () => {
@@ -48,10 +49,10 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 41,
+      measurement: 42,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 49,
+      observation: 48,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -162,17 +163,18 @@ describe("mapCasesToOmop", () => {
       // as 0 rather than being dropped as falsy.
       expect.objectContaining({ observation_source_value: "LOSPOR:COLLOIDS_ML", value_as_number: 0, value_as_string: "0" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ANAESTHESIA_DURATION_MIN", value_as_number: 60 }),
-      expect.objectContaining({ observation_source_value: "LOINC:72514-3", value_as_number: 2 }),
     ]))
     // A boolean is a fact, not a quantity: "true" in value_as_number would be
     // indistinguishable from a score of 1.
     expect(bundle.observation).toEqual(expect.arrayContaining([
       expect.objectContaining({ observation_source_value: "LOSPOR:DIFFICULT_AIRWAY_HISTORY", value_as_string: "true", value_as_number: null }),
     ]))
-    // The NRS pain score used to be emitted under concept 3020891 — body
+    // The NRS pain score was once emitted under concept 3020891 — body
     // temperature, copied from the vital map — which would have put a pain
-    // score of 2 into any OHDSI temperature query.
-    expect(bundle.observation.find(row => row.observation_source_value === "LOINC:72514-3")?.observation_concept_id).toBe(0)
+    // score of 2 into any OHDSI temperature query. Correcting that left it at
+    // 0; it now carries 43055141, its own scale, as a measurement.
+    expect(bundle.measurement.find(row => row.measurement_source_value === "LOINC:72514-3"))
+      .toMatchObject({ measurement_concept_id: 43055141, value_as_number: 2 })
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
       expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 3 }),
@@ -1564,12 +1566,14 @@ describe("postop recovery: Aldrete total, PONV, disposition, paediatric pain", (
 
     const flaccRow = flacc.measurement.find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")
     const fpsRRow = fpsR.observation.find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_PAIN_FPS_R_0_10")
-    const nrsRow = nrs.observation.find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_PAIN_NRS_0_10")
+    const nrsRow = nrs.measurement.find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_NRS_0_10")
 
     expect(flaccRow).toMatchObject({ measurement_concept_id: 3037051, value_as_number: 3 })
     expect(fpsRRow).toMatchObject({ observation_concept_id: 40760807, value_as_number: 4 })
-    // NRS has no reviewed concept, the same as the adult NRS branch.
-    expect(nrsRow?.observation_concept_id).toBe(0)
+    // NRS now carries 43055141, the same concept as the adult NRS -- it is the
+    // same 0-10 scale, and the concept was simply absent from the vocabulary
+    // bundle when this branch was written.
+    expect(nrsRow?.measurement_concept_id).toBe(43055141)
   })
 })
 
@@ -1759,10 +1763,10 @@ describe("devices, which had concepts and nowhere to put them", () => {
     expect(dev(b, "AIRWAY_TOOL:BOUGIE")?.device_concept_id).toBe(4094381)
     expect(dev(b, "AIRWAY_TOOL:FOB")?.device_concept_id).toBe(4220610)
 
-    // A face mask has no device concept, and "awake" and "retrograde" are
-    // techniques rather than instruments. Each still gets a row -- the device
-    // was used -- carrying 0 rather than a borrowed neighbour.
-    expect(dev(b, "AIRWAY_DEVICE:FACE_MASK")?.device_concept_id).toBe(0)
+    expect(dev(b, "AIRWAY_DEVICE:FACE_MASK")?.device_concept_id).toBe(4126216)
+    // "Awake" and "retrograde" are techniques rather than instruments, so they
+    // have no device concept. Each still gets a row -- the technique was used
+    // -- carrying 0 rather than a borrowed neighbour.
     expect(dev(b, "AIRWAY_TOOL:AWAKE")?.device_concept_id).toBe(0)
     expect(dev(b, "AIRWAY_TOOL:RETROGRADE")?.device_concept_id).toBe(0)
   })
@@ -1778,5 +1782,47 @@ describe("devices, which had concepts and nowhere to put them", () => {
 
     expect(cuffed).toMatchObject({ observation_concept_id: 40771868, value_as_concept_id: 36311248 })
     expect(uncuffed).toMatchObject({ observation_concept_id: 40771868, value_as_concept_id: 36311029 })
+  })
+})
+
+describe("the last concepts the vocabulary bundle was missing", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never])
+
+  it("codes the NRS pain score, adult and paediatric, as the same scale", () => {
+    // Left at 0 with a comment saying no reviewed mapping existed. That was
+    // true of the bundle shipping at the time and is not any more -- 43055141
+    // is standard, Measurement-domain, and exactly this 0-10 scale.
+    expect(bundle().measurement.find(r => r.measurement_source_value === "LOINC:72514-3"))
+      .toMatchObject({ measurement_concept_id: 43055141 })
+
+    const c = completeCase() as unknown as { postop: Record<string, unknown> }
+    c.postop.pediatricPainScale = "NRS"
+    c.postop.pediatricPainScore = 4
+    expect(mapCasesToOmop([c as never]).measurement
+      .find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_NRS_0_10"))
+      .toMatchObject({ measurement_concept_id: 43055141, value_as_number: 4 })
+  })
+
+  it("codes the face mask, leaving the surgical airway as the only uncoded device", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.airwayDevices = ["FACE_MASK", "SURGICAL_AIRWAY"]
+    const devices = mapCasesToOmop([c as never]).device_exposure
+
+    expect(devices.find(d => d.device_source_value === "AIRWAY_DEVICE:FACE_MASK")?.device_concept_id)
+      .toBe(4126216)
+    // No device concept: the vocabulary names the cricothyroidotomy procedure
+    // and its cannula separately, and which was used is not recorded.
+    expect(devices.find(d => d.device_source_value === "AIRWAY_DEVICE:SURGICAL_AIRWAY")?.device_concept_id)
+      .toBe(0)
+  })
+
+  it("codes the fasting question while keeping the interval detail in the value", () => {
+    const pediatric = mapCasesToOmop([pediatricCaseFixture() as never]).observation
+      .find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")
+
+    expect(pediatric?.observation_concept_id).toBe(3031632)
+    // No vocabulary models a per-interval fasting assessment, so the JSON
+    // stays as the value rather than being flattened away.
+    expect(pediatric?.value_as_string).toContain("{")
   })
 })

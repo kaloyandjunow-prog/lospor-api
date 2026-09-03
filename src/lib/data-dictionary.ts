@@ -1604,7 +1604,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "pediatricPainScore.NRS",
-    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_PAIN_NRS_0_10)",
+    exportName: "measurement.value_as_number (LOSPOR:PEDIATRIC_PAIN_NRS_0_10)",
     meaning: "Paediatric pain score on the NRS scale. Numeric Rating Scale — the child states a number, so it is self-reported",
     type: "integer",
     allowedValues: "0–10",
@@ -1615,7 +1615,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "pediatricFasting",
-    exportName: "observation.value_as_string (LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    exportName: "observation.observation_concept_id (LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
     meaning: "The recorded fasting assessment for a child, as a JSON object of the fasting intervals entered",
     type: "json",
     missingnessRule: "No row = no fasting assessment was recorded",
@@ -1633,8 +1633,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "painScoreNRS",
-    exportName: "observation.value_as_number (LOINC:72514-3)",
-    meaning: "Numeric Rating Scale pain score at PACU discharge",
+    exportName: "measurement.value_as_number (LOINC:72514-3)",
+    meaning: "Numeric Rating Scale pain score at PACU discharge, as LOINC "
+      + "43055141 (Pain severity - 0-10 verbal numeric rating [Score] - "
+      + "Reported). Previously exported at concept 0 with a note that no "
+      + "reviewed mapping existed, which was true of the vocabulary bundle "
+      + "shipping at the time; the concept is standard and Measurement-domain, "
+      + "so the row moved out of observation. pediatricPainScore.NRS carries "
+      + "the same concept -- it is the same scale.",
     type: "integer",
     allowedValues: "0–10",
     missingnessRule: "NULL = not assessed",

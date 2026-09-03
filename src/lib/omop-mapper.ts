@@ -157,7 +157,7 @@ export const AIRWAY_ACTS: Record<string, string | null> = {
  * which was used is not recorded, so it stays 0 rather than guessing.
  */
 export const AIRWAY_DEVICE_CONCEPTS: Record<string, number> = {
-  FACE_MASK:          0,
+  FACE_MASK:          4126216,
   OPA:                4139134,
   NPA:                4266238,
   LMA:                4106029,
@@ -1691,10 +1691,15 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:POVOC_SCORE", preop.povocScore, vitDate)
       sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocRiskPercent, vitDate)
       sourceObservation("LOSPOR:COLDS_SCORE", preop.coldsScore, vitDate)
+      // 3031632, Fasting status - Reported: the question is coded, and the
+      // JSON detail of which intervals were fasted stays in the value, since
+      // no vocabulary models a per-interval fasting assessment.
       sourceObservation(
         "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT",
         preop.pediatricFasting == null ? null : JSON.stringify(preop.pediatricFasting),
         vitDate,
+        null,
+        3031632,
       )
       // One flag can qualify more than one reading: a blood pressure that could
       // not be obtained is neither a systolic nor a diastolic, so both rows
@@ -2856,25 +2861,22 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         } else {
           // NRS has no reviewed concept, the same as the adult NRS branch
           // below -- stays a source-only observation at concept 0.
-          sourceObservation(scoreSource, c.postop.pediatricPainScore, postDate)
+          // The same 0-10 verbal numeric rating as the adult NRS below, so the
+          // same concept. It was left uncoded when 43055141 was not in the
+          // vocabulary bundle this product shipped with.
+          sourceMeasurement(scoreSource, c.postop.pediatricPainScore, 43055141, 0, null, postDate)
         }
       } else if (c.postop.painScoreNRS != null) {
-        observations.push({
-          observation_id: nextId(), person_id: personId,
-          // Was 3020891 — the standard concept for body temperature, copied
-          // from the vital map. A pain score loaded under that concept would
-          // have appeared in any OHDSI temperature query as a value of 2 or 3.
-          // LOSPOR has no reviewed mapping for the NRS pain concept, so this
-          // follows the file's rule: emit 0 and carry the source LOINC code.
-          observation_concept_id: 0,
-          observation_date: postDate,
-          observation_type_concept_id: 32817,
-          value_as_number: c.postop.painScoreNRS,
-          value_as_string: String(c.postop.painScoreNRS),
-          value_as_concept_id: 0,
-          observation_source_value: "LOINC:72514-3",
-          visit_occurrence_id: visitId,
-        })
+        // 43055141, Pain severity - 0-10 verbal numeric rating [Score].
+        //
+        // This was 3020891 once -- the concept for body temperature, copied
+        // from the vital map -- which would have made a pain score of 3 show
+        // up in any OHDSI temperature query. Correcting that left it at 0,
+        // with a comment saying LOSPOR had no reviewed mapping for the NRS
+        // concept. That was true of the vocabulary bundle shipping at the
+        // time and is no longer: the concept is standard, Measurement-domain,
+        // and exactly this scale, so the row moves to measurement.
+        sourceMeasurement("LOINC:72514-3", c.postop.painScoreNRS, 43055141, 0, null, postDate)
       }
       sourceObservation("LOSPOR:PAED_SCORE", c.postop.paedScore, postDate)
       // A condition that occurred, not an observation about one -- the same
