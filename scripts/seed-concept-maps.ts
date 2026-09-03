@@ -15,6 +15,41 @@ import path from "path"
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
 const SOURCE_VERSION = "local-bilingual-map-v2"
 
+// Patient position, from lospor-core/src/catalog/position.ts. Every option
+// category defaults to SOURCE_ONLY below -- there is no vocabulary of
+// positions to resolve against automatically, the way ATC or ICD10PCS codes
+// are. These are curated by hand, one at a time, against the local Athena
+// snapshot, the same way every other concept in this project is.
+//
+// LEFT_LATERAL/RIGHT_LATERAL are deliberately absent: SNOMED has no "lateral
+// position" finding distinct from "lateral decubitus position", so mapping
+// them here would collapse two separate buttons in the picker onto the same
+// code as LATERAL_DECUBITUS_LEFT/RIGHT. Left SOURCE_ONLY pending a decision
+// on whether that collapse is correct or whether the two buttons should be
+// merged in the picker instead.
+const CURATED_POSITIONS: { value: string; conceptId: number; label: string }[] = [
+  { value: "SUPINE", conceptId: 4221822, label: "Supine body position" },
+  { value: "PRONE", conceptId: 4050473, label: "Prone body position" },
+  { value: "TRENDELENBURG", conceptId: 4142024, label: "Trendelenburg position" },
+  // "Reverse Trendelenburg" has no concept of that name in Observation domain
+  // -- the name match (423413008) is a Procedure. "Inverse Trendelenburg
+  // position" is SNOMED's Observation-domain finding for the same posture.
+  { value: "REVERSE_TRENDELENBURG", conceptId: 4132147, label: "Inverse Trendelenburg position" },
+  { value: "FOWLER", conceptId: 4147052, label: "Fowler's position" },
+  { value: "BEACH_CHAIR", conceptId: 4202146, label: "Beach chair position" },
+  { value: "LLOYD_DAVIES", conceptId: 4220311, label: "Lloyd Davis position" },
+  { value: "SITTING", conceptId: 4142787, label: "Sitting position" },
+  { value: "JACKKNIFE", conceptId: 40486534, label: "Jackknife surgical position" },
+  { value: "KNEE_CHEST", conceptId: 4051496, label: "Knee-chest position" },
+  { value: "LATERAL_DECUBITUS_LEFT", conceptId: 4010960, label: "Left lateral decubitus position" },
+  { value: "LATERAL_DECUBITUS_RIGHT", conceptId: 4009274, label: "Right lateral decubitus position" },
+  // GYNECOLOGICAL's own description is "Legs in stirrups" -- exactly what
+  // Lithotomy position is. LLOYD_DAVIES keeps its own exact concept above
+  // rather than sharing this one, since Lloyd Davis is a distinct modified
+  // lithotomy SNOMED already names separately.
+  { value: "GYNECOLOGICAL", conceptId: 4031023, label: "Lithotomy position" },
+]
+
 const KNOWN_VITALS = [
   { code: "8480-6", label: "Systolic blood pressure", conceptId: 3004249 },
   { code: "8462-4", label: "Diastolic blood pressure", conceptId: 3012888 },
@@ -467,28 +502,38 @@ async function main() {
     }, pcsStandards.get(proc.code)))
   }
 
+  const curatedPositions = new Map(CURATED_POSITIONS.map(p => [p.value, p]))
+
   const options = await prisma.optionLibrary.findMany({ where: { active: true } })
   for (const option of options) {
-    seeds.push({
-      domain: "observation",
-      sourceVocabulary: "LOSPOR_OPTION",
-      sourceCode: `${option.category}:${option.value}`,
-      sourceLabelEn: option.labelEn,
-      sourceLabelBg: option.labelBg,
-      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
-      mappingMethod: "source-code-preserved",
-      reviewed: false,
-    })
-    seeds.push({
-      domain: "observation",
-      sourceVocabulary: "LOSPOR_OPTION",
-      sourceCode: `${option.category.toLowerCase()}:${option.value}`,
-      sourceLabelEn: option.labelEn,
-      sourceLabelBg: option.labelBg,
-      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
-      mappingMethod: "source-code-preserved",
-      reviewed: false,
-    })
+    const curated = option.category.toLowerCase() === "position"
+      ? curatedPositions.get(option.value)
+      : undefined
+    for (const code of [`${option.category}:${option.value}`, `${option.category.toLowerCase()}:${option.value}`]) {
+      seeds.push(curated ? {
+        domain: "observation",
+        sourceVocabulary: "LOSPOR_OPTION",
+        sourceCode: code,
+        sourceLabelEn: option.labelEn,
+        sourceLabelBg: option.labelBg,
+        standardVocabulary: "SNOMED",
+        standardConceptId: curated.conceptId,
+        standardLabel: curated.label,
+        mappingStatus: ConceptMappingStatus.MAPPED,
+        mappingMethod: "manually-curated",
+        mappingConfidence: 1,
+        reviewed: true,
+      } : {
+        domain: "observation",
+        sourceVocabulary: "LOSPOR_OPTION",
+        sourceCode: code,
+        sourceLabelEn: option.labelEn,
+        sourceLabelBg: option.labelBg,
+        mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+        mappingMethod: "source-code-preserved",
+        reviewed: false,
+      })
+    }
   }
 
   count += await createManyConcepts(seeds)
