@@ -2274,7 +2274,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         )
         continue
       }
-      const dose = med.dose ? parseFloat(med.dose) || null : null
+      // Not `parseFloat(med.dose) || null`: that turns a recorded dose of 0
+      // into "not recorded", the same class of bug the fluid figures below
+      // were tested against and this line was not.
+      const dose = numOrNull(med.dose)
       drugs.push({
         drug_exposure_id: nextId(),
         person_id: personId,
@@ -2589,7 +2592,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         const doseSource = ev.type === "infusion_start" ? ev.rate
           : ev.type === "fluid_start" ? ev.volume
             : meta.dose
-        const dose = doseSource != null ? parseFloat(String(doseSource)) || null : null
+        // Not `parseFloat(...) || null`: a genuinely zero rate or volume --
+        // an infusion charted as running at 0 mL/h while paused -- must
+        // survive as 0, not collapse into the same row as no dose recorded.
+        const dose = numOrNull(doseSource)
         drugs.push({
           drug_exposure_id:           nextId(),
           person_id:                  personId,
@@ -2680,7 +2686,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
 
       for (const prem of c.intraop.premedicationRows ?? []) {
         trackMapping(prem.mappingStatus)
-        const dose = prem.dose ? parseFloat(prem.dose) || null : null
+        const dose = numOrNull(prem.dose)
         drugs.push({
           drug_exposure_id: nextId(), person_id: personId,
           drug_concept_id: prem.standardConceptId ?? 0,

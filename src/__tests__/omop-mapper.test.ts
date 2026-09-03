@@ -1826,3 +1826,50 @@ describe("the last concepts the vocabulary bundle was missing", () => {
     expect(pediatric?.value_as_string).toContain("{")
   })
 })
+
+describe("a recorded dose of zero survives, the same way a recorded volume of zero does", () => {
+  // parseFloat(x) || null turns 0 into null, because 0 is falsy in JS. A
+  // zero-rate infusion charted while paused, a genuinely zero-dose entry, or a
+  // premedication dose of 0 all used to export identically to "no dose was
+  // ever recorded" -- the same failure fluid-figures-export.test.ts already
+  // guards crystalloidsMl/urineMl/bloodLossMl against, on a line that guard
+  // never reached.
+
+  it("keeps a zero preop medication dose", () => {
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.medications = [{
+      kind: "CURRENT", nameRaw: "Diazepam", dose: "0", route: "PO",
+      sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905,
+      mappingStatus: "MAPPED", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => r.drug_source_value === "ATC:N05BA01 - Diazepam")
+
+    expect(row?.dose_value).toBe(0)
+  })
+
+  it("keeps a zero intraop drug/infusion/fluid dose", () => {
+    const c = completeCase() as unknown as { events: Record<string, unknown>[] }
+    c.events = [{
+      type: "fluid_start", timestamp: (completeCase() as never as { intraop: { startTime: Date } }).intraop.startTime,
+      volume: 0, fluidId: "fl-zero", fluidCategory: "CRYSTALLOID",
+      metadataJson: { name: "Test fluid" }, atcCode: null,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => String(r.drug_source_value).includes("Test fluid"))
+
+    expect(row?.dose_value).toBe(0)
+  })
+
+  it("keeps a zero premedication dose", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.premedicationRows = [{
+      phase: "morning", nameRaw: "Test premed", dose: "0", route: "PO",
+      atcCode: null, standardConceptId: null, mappingStatus: "SOURCE_ONLY", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => String(r.drug_source_value).includes("Test premed"))
+
+    expect(row?.dose_value).toBe(0)
+  })
+})
