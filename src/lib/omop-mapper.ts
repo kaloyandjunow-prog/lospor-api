@@ -89,6 +89,8 @@ import { createHash } from "node:crypto"
 import { DICTIONARY_VERSION } from "@/lib/data-dictionary"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import { deriveQualityStatus } from "@lospor/core/omop"
+import { TECHNIQUE_TREE } from "@lospor/core/catalog"
+import type { TreeNode } from "@lospor/core/catalog"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -140,6 +142,74 @@ export const AIRWAY_ACTS: Record<string, string | null> = {
   DOUBLE_LUMEN_TUBE:  "DOUBLE_LUMEN_TUBE_PLACEMENT",
   ENDOBRONCHIAL_TUBE: "ENDOBRONCHIAL_TUBE_PLACEMENT",
   SURGICAL_AIRWAY:    "SURGICAL_AIRWAY",
+}
+
+// ─── What anaesthetic was given ──────────────────────────────────────────────
+//
+// The technique tree is about a hundred nodes deep — GENERAL to GENERAL_TIVA,
+// SPINAL to SPINAL_SINGLE to SPINAL_SINGLE_LUMBAR — and the vocabulary is not
+// that granular in the same shape. So a concept is attached at the level where
+// one honestly exists, and any node below it inherits from its nearest mapped
+// ancestor: SPINAL_SINGLE_LUMBAR exports as spinal anaesthesia.
+//
+// Nothing is lost by that. procedure_source_value still carries the exact node
+// the anaesthetist chose, so "single shot, lumbar" survives as recorded rather
+// than being flattened away or coded as something SNOMED does not actually say.
+// Filling in a deeper node later is one line here and changes no stored data.
+const TECHNIQUE_CONCEPTS: Record<string, number> = {
+  // There is no plain "General anesthesia" procedure concept in this
+  // vocabulary. The ones that exist are CIEL, MeSH, SUS and NDFRT, none of
+  // which ship here, so this is the umbrella available to us — and it says what
+  // is meant: general anaesthesia for an operation.
+  GENERAL:  4171773,
+  SPINAL:   4332593,
+  EPIDURAL: 4078199,
+  // Not "Conscious sedation", which asserts the patient stayed rousable. MAC
+  // covers a range that reaches deep sedation, so that would be false for some
+  // cases; this is true of all of them. The exact term, CIEL's "Monitored
+  // anesthesia care", is not in this vocabulary.
+  SEDATION: 4219502,
+}
+
+/** Every technique node's parent, derived from the catalogue rather than kept
+ *  in step with it by hand. */
+const TECHNIQUE_PARENT: Record<string, string> = (() => {
+  const parents: Record<string, string> = {}
+  const walk = (nodes: readonly TreeNode[], parent: string | null) => {
+    for (const node of nodes) {
+      if (parent) parents[node.v] = parent
+      if (node.children) walk(node.children, node.v)
+    }
+  }
+  walk(TECHNIQUE_TREE, null)
+  return parents
+})()
+
+/** The nearest concept at or above this node, or 0 when nothing above it has
+ *  one either. */
+export function techniqueConceptFor(code: string): number {
+  let node: string | undefined = code
+  const seen = new Set<string>()
+  while (node && !seen.has(node)) {
+    const concept = TECHNIQUE_CONCEPTS[node]
+    if (concept) return concept
+    seen.add(node)
+    node = TECHNIQUE_PARENT[node]
+  }
+  return 0
+}
+
+/**
+ * The airway act each device implies, coded.
+ *
+ * Only the oral tube is decided so far. The rest stay at 0 deliberately rather
+ * than being filled with the nearest-looking concept: a supraglottic airway and
+ * a double-lumen tube are different procedures with different concepts, and
+ * guessing them would be indistinguishable, in the export, from having chosen
+ * them.
+ */
+const AIRWAY_ACT_CONCEPTS: Record<string, number> = {
+  TRACHEAL_INTUBATION_ORAL: 4335481,
 }
 
 function isoDate(d: Date | string | null | undefined): string | null {
@@ -1914,7 +1984,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         procedures.push({
           procedure_occurrence_id:   nextId(),
           person_id:                 personId,
-          procedure_concept_id:      0,
+          procedure_concept_id:      AIRWAY_ACT_CONCEPTS[act] ?? 0,
           procedure_date:            startDate,
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,
@@ -1929,7 +1999,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         procedures.push({
           procedure_occurrence_id:    nextId(),
           person_id:                 personId,
-          procedure_concept_id:      0,
+          // Coded at the level the vocabulary supports; the node the
+          // anaesthetist actually chose stays in the source value.
+          procedure_concept_id:      techniqueConceptFor(tech),
           procedure_date:            startDate,
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,

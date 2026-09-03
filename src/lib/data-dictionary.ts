@@ -341,8 +341,19 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     // The dictionary named an observation code that has never been emitted, so
     // a researcher filtering observations for LOSPOR:ANAESTHESIA_TECHNIQUE got
     // nothing back and would have read that as "no technique recorded".
-    exportName: "procedure_occurrence.procedure_source_value",
-    meaning: "Anaesthesia techniques used (multi-select), one procedure row per technique, each source value prefixed ANAESTHESIA_TECHNIQUE:",
+    exportName: "procedure_occurrence.procedure_concept_id",
+    meaning: "Anaesthesia techniques used (multi-select), one procedure row per "
+      + "technique, each source value prefixed ANAESTHESIA_TECHNIQUE:. Coded as "
+      + "SNOMED: 4171773 (Operative general anesthesia), 4332593 (Spinal "
+      + "anesthesia), 4078199 (Epidural anesthesia), 4219502 (Sedation). "
+      + "The technique tree is deeper than the vocabulary, so a node below a "
+      + "coded one takes its nearest coded ancestor -- SPINAL_SINGLE_LUMBAR is "
+      + "coded as spinal anaesthesia -- and the exact node stays in "
+      + "procedure_source_value, so nothing is flattened away. A node with no "
+      + "coded ancestor is 0: the peripheral blocks are not mapped yet, and 0 "
+      + "says so where borrowing a parent concept would not. There is no plain "
+      + "General anesthesia concept in this vocabulary; the ones that exist are "
+      + "CIEL, MeSH, SUS and NDFRT, which do not ship here.",
     type: "string",
     allowedValues: "ANAESTHESIA_TECHNIQUE:<technique>",
     missingnessRule: "No row = no technique recorded",
@@ -680,8 +691,17 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "airwayManagementProcedure",
-    exportName: "procedure_occurrence.procedure_source_value (AIRWAY_MANAGEMENT:<act>)",
-    meaning: "The act of placing an airway device, derived from the devices recorded. A device is a state of the patient; placing it is something done to them, and only the second belongs in a procedure count. Devices that are applied rather than instrumented — face mask, oral and nasal airways — produce no row.",
+    exportName: "procedure_occurrence.procedure_concept_id (AIRWAY_MANAGEMENT:<act>)",
+    meaning: "The act of placing an airway device, derived from the devices "
+      + "recorded. A device is a state of the patient; placing it is something "
+      + "done to them, and only the second belongs in a procedure count. "
+      + "Devices that are applied rather than instrumented — face mask, oral "
+      + "and nasal airways — produce no row. TRACHEAL_INTUBATION_ORAL is coded "
+      + "as SNOMED 4335481 (Orotracheal intubation); the other five acts are 0 "
+      + "pending a decision, deliberately rather than by oversight, since a "
+      + "supraglottic airway and a double-lumen tube are different procedures "
+      + "with different concepts and a guess would be indistinguishable from a "
+      + "choice.",
     type: "string",
     allowedValues: "SUPRAGLOTTIC_AIRWAY_PLACEMENT | TRACHEAL_INTUBATION_ORAL | TRACHEAL_INTUBATION_NASAL | DOUBLE_LUMEN_TUBE_PLACEMENT | ENDOBRONCHIAL_TUBE_PLACEMENT | SURGICAL_AIRWAY",
     missingnessRule: "No row = no instrumented airway recorded",

@@ -1153,3 +1153,63 @@ describe("the rows that were saying the same thing twice", () => {
     expect(obs("LOSPOR:CLINICAL_MODE")).toHaveLength(0)
   })
 })
+
+describe("what anaesthetic was given", () => {
+  const proc = (c: unknown) => mapCasesToOmop([c as never]).procedure_occurrence
+  const withTechniques = (techniques: string[], devices: string[] = []) => {
+    const c = completeCase() as unknown as {
+      intraop: Record<string, unknown>
+    }
+    c.intraop.techniques = techniques
+    if (devices.length) c.intraop.airwayDevices = devices
+    return c
+  }
+  const techRow = (code: string) => proc(withTechniques([code]))
+    .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+
+  it("codes the four techniques that have a concept", () => {
+    // Until now every anaesthetic in the register exported at concept 0, so the
+    // register could not say, in any coded form, what anaesthetic was given.
+    expect(techRow("GENERAL")?.procedure_concept_id).toBe(4171773)
+    expect(techRow("SPINAL")?.procedure_concept_id).toBe(4332593)
+    expect(techRow("EPIDURAL")?.procedure_concept_id).toBe(4078199)
+    expect(techRow("SEDATION")?.procedure_concept_id).toBe(4219502)
+  })
+
+  it("gives a node below a coded one its nearest coded ancestor", () => {
+    // The tree is deeper than the vocabulary. A lumbar single-shot spinal is a
+    // spinal anaesthetic, and coding it as one is true; inventing a concept for
+    // the exact node would not be.
+    expect(techRow("SPINAL_SINGLE_LUMBAR")?.procedure_concept_id).toBe(4332593)
+    expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4171773)
+    expect(techRow("EPIDURAL_CAUDAL")?.procedure_concept_id).toBe(4078199)
+  })
+
+  it("keeps the exact node the anaesthetist chose", () => {
+    // The whole point of coding at the ancestor: nothing is flattened away.
+    // "Single shot, lumbar" is still readable off the row.
+    expect(techRow("SPINAL_SINGLE_LUMBAR")?.procedure_source_value)
+      .toBe("ANAESTHESIA_TECHNIQUE:SPINAL_SINGLE_LUMBAR")
+  })
+
+  it("leaves a technique with no coded ancestor at 0 rather than guessing", () => {
+    // A peripheral block is not a spinal and not a general. SNOMED has a
+    // "Local anesthetic <named> nerve block" family for these and they are not
+    // mapped yet; 0 says so, where borrowing REGIONAL's parent would not.
+    expect(techRow("BLOCK_TAP")?.procedure_concept_id).toBe(0)
+    // Nor does an unrecognised code reach for something plausible.
+    expect(techRow("NOT_A_REAL_NODE")?.procedure_concept_id).toBe(0)
+  })
+
+  it("codes an oral intubation, and only that airway act so far", () => {
+    const rows = proc(withTechniques(["GENERAL"], ["ORAL_ETT", "LMA"]))
+    const oral = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL")
+    const lma = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:SUPRAGLOTTIC_AIRWAY_PLACEMENT")
+
+    expect(oral?.procedure_concept_id).toBe(4335481)
+    // Undecided rather than unmapped-by-oversight: a supraglottic airway is a
+    // different procedure with a different concept, and guessing it would look
+    // exactly like having chosen it.
+    expect(lma?.procedure_concept_id).toBe(0)
+  })
+})
