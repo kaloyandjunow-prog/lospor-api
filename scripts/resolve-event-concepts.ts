@@ -21,6 +21,21 @@ import { DRUG_EXPOSURE_EVENT_TYPES, resolveDrugExposureConcepts } from "../src/l
  *
  *   npm run resolve:event-concepts            # what would change
  *   npm run resolve:event-concepts -- --apply # change it
+ *
+ * Finalized cases are never touched, by design, not by omission. A database
+ * trigger already refuses any write to a finalized case's children, and this
+ * script does not attempt to work around it: a case's children stop changing
+ * the moment it is finalized, full stop, including for a coding correction
+ * that only improves the record's accuracy. The alternative -- carving out an
+ * exception for "this write only touches coding metadata" -- is a door that,
+ * once opened for one schema change, gets reopened for the next one, and the
+ * one after that, until "finalized" no longer means what it says. So the
+ * finalized cases already on this database when this feature shipped keep
+ * whatever concept their drugs had on the day they were finalized, forever,
+ * the same as every future schema or vocabulary change will have to accept
+ * for the cases finalized before *it* shipped. Only a case that has not yet
+ * been finalized can still benefit from a re-resolution -- which is not
+ * rewriting history, since it has none yet.
  */
 
 const adapter = new PrismaPg({
@@ -37,18 +52,35 @@ type Change = {
   to: { standardConceptId: number | null; mappingStatus: string }
 }
 
-async function collectChanges(): Promise<Change[]> {
+async function collectChanges(): Promise<{ changes: Change[]; skippedFinalized: number }> {
   // Every kind of event the export turns into a drug_exposure row, not just
   // boluses: an infusion, a fluid and a volatile agent are administrations too,
   // and were never resolved at all.
   //
   // Active rows only. Superseded rows are history: rewriting them would change
   // what an earlier export is expected to have contained.
+  //
+  // Finalized cases are excluded from the query itself, not filtered out after
+  // the database has already refused the write. A finalized case's children
+  // never change once it is complete -- see the file header -- so this is not
+  // an optimisation, it is where the policy actually lives.
   const events = await prisma.caseEvent.findMany({
-    where: { type: { in: [...DRUG_EXPOSURE_EVENT_TYPES] }, status: "active" },
+    where: {
+      type: { in: [...DRUG_EXPOSURE_EVENT_TYPES] },
+      status: "active",
+      case: { status: { not: "COMPLETE" } },
+    },
     select: {
       id: true, caseId: true, type: true, label: true, atcCode: true, inn: true,
       standardConceptId: true, mappingStatus: true,
+    },
+  })
+
+  const skippedFinalized = await prisma.caseEvent.count({
+    where: {
+      type: { in: [...DRUG_EXPOSURE_EVENT_TYPES] },
+      status: "active",
+      case: { status: "COMPLETE" },
     },
   })
 
@@ -78,15 +110,22 @@ async function collectChanges(): Promise<Change[]> {
       to: { standardConceptId, mappingStatus },
     })
   }
-  return changes
+  return { changes, skippedFinalized }
 }
 
 async function main() {
   const apply = process.argv.includes("--apply")
-  const changes = await collectChanges()
+  const { changes, skippedFinalized } = await collectChanges()
+
+  if (skippedFinalized > 0) {
+    console.log(
+      `${skippedFinalized} event(s) on finalized cases are not eligible and were not examined -- `
+      + "a finalized case's children do not change, on principle, not because a database write happened to fail.\n",
+    )
+  }
 
   if (changes.length === 0) {
-    console.log("Every active drug event already matches the current vocabulary. Nothing to do.")
+    console.log("Every active, non-finalized drug event already matches the current vocabulary. Nothing to do.")
     return
   }
 
