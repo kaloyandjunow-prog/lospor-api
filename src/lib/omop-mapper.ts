@@ -209,6 +209,26 @@ const TECHNIQUE_CONCEPTS: Record<string, number> = {
   BLOCK_TRUNK:     4125199,
   BLOCK_HEAD_NECK: 4125198,
 
+  // The first named leaves, refining their region umbrellas.
+  //
+  // The core SNOMED concept rather than the UK national extension
+  // (44808433, same procedure, code 830001000000106): 44783705 is portable
+  // and matches the naming convention of every other block mapped here.
+  BLOCK_TAP:      44783705,
+  BLOCK_FEMORAL:  4336456,
+  // No "adductor canal block" procedure concept exists in any vocabulary here
+  // -- only anatomy and a syndrome. This is not an approximation of
+  // convenience: the adductor canal block is a saphenous nerve block done at
+  // that level, and the saphenous nerve is what it anaesthetises.
+  BLOCK_ADDUCTOR: 4333280,
+  BLOCK_INTERSCALENE: 4333843,
+  // SNOMED splits the sciatic block by approach and has no unqualified
+  // concept; the form does not record which approach was used, so this is
+  // stated as one specific approach by product decision rather than derived
+  // from the record. If the approach is ever added to the form, this should
+  // be revisited to read from it instead of asserting lateral for every case.
+  BLOCK_SCIATIC: 4215528,
+
   // The neuraxial family. "Neuraxial nerve block" rather than the older
   // "Central block anesthesia" (4055889), which is the same idea in the
   // phrasing the specialty has moved away from, and not the anatomically exact

@@ -1196,10 +1196,12 @@ describe("what anaesthetic was given", () => {
     // SNOMED has a "Local anesthetic nerve block in <region>" family that
     // mirrors this part of the tree almost exactly, so four nodes cover roughly
     // forty leaves and each leaf can be refined later without touching a stored
-    // value.
-    expect(techRow("BLOCK_TAP")?.procedure_concept_id).toBe(4125199)
-    expect(techRow("BLOCK_INTERSCALENE")?.procedure_concept_id).toBe(4332443)
-    expect(techRow("BLOCK_FEMORAL")?.procedure_concept_id).toBe(4333960)
+    // value. TAP, femoral and interscalene were examples of this until their
+    // own leaves were mapped; rectus sheath, supraclavicular and popliteal are
+    // still inherited.
+    expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
+    expect(techRow("BLOCK_SUPRACLAVICULAR")?.procedure_concept_id).toBe(4332443)
+    expect(techRow("BLOCK_POPLITEAL")?.procedure_concept_id).toBe(4333960)
   })
 
   it("leaves a technique with no coded ancestor at 0 rather than guessing", () => {
@@ -1317,5 +1319,35 @@ describe("a general-anaesthetic cohort catches every maintenance route", () => {
     expect(techRow("GENERAL_INHALATION")?.procedure_concept_id).toBe(4118897)
     expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4086418)
     expect(techRow("GENERAL_BALANCED")?.procedure_concept_id).toBe(4171773)
+  })
+})
+
+describe("the first named block leaves", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes the four unqualified leaves exactly", () => {
+    expect(techRow("BLOCK_TAP")?.procedure_concept_id).toBe(44783705)
+    expect(techRow("BLOCK_FEMORAL")?.procedure_concept_id).toBe(4336456)
+    expect(techRow("BLOCK_INTERSCALENE")?.procedure_concept_id).toBe(4333843)
+  })
+
+  it("codes the adductor canal block as the saphenous nerve block it is", () => {
+    // No "adductor canal block" procedure concept exists anywhere in this
+    // vocabulary -- only anatomy and a syndrome. This is the procedure-level
+    // fact, not a stand-in: the saphenous nerve is what the block anaesthetises.
+    expect(techRow("BLOCK_ADDUCTOR")?.procedure_concept_id).toBe(4333280)
+  })
+
+  it("states the sciatic block as one specific approach, by product decision", () => {
+    // SNOMED splits this block by approach and has no unqualified concept. The
+    // form does not record which approach was used, so 4215528 (lateral) is
+    // asserted for every case rather than read from the record. If the form
+    // gains an approach field, this is the line to revisit.
+    expect(techRow("BLOCK_SCIATIC")?.procedure_concept_id).toBe(4215528)
   })
 })
