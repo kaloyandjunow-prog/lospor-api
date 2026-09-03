@@ -143,11 +143,11 @@ describe("OMOP export CSV columns", () => {
 
   it("leaves a genuinely textual observation without a number", () => {
     const row = bundle.observation.find(
-      item => item.observation_source_value === "LOSPOR:CLINICAL_MODE",
+      item => item.observation_source_value === "LOSPOR:DIFFICULT_AIRWAY_NOTES",
     )
     expect(row).toBeDefined()
     const cells = csvCellsFor("observation", row as unknown as Record<string, unknown>)
     expect(cells.get("value_as_number")).toBe("")
-    expect(cells.get("value_as_string")).toBe("ADULT")
+    expect(cells.get("value_as_string")).toBe("Grade III view at previous laparotomy")
   })
 })

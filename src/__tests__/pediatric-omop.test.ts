@@ -14,7 +14,6 @@ describe("pediatric OMOP source preservation", () => {
     expect(bundle.metadata.schema_version).toBe("3.6.0")
     expect(bundle.person[0].year_of_birth).toBe(2026)
 
-    expect(observations.get("LOSPOR:CLINICAL_MODE")?.value_as_string).toBe("PEDIATRIC")
     expect(observations.get("LOSPOR:CLINICAL_RULES_VERSION")?.value_as_string)
       .toBe("2026.08.04-release.1")
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_string).toBe("14 DAYS")
@@ -37,12 +36,10 @@ describe("pediatric OMOP source preservation", () => {
     // "14 DAYS" is a rendering, not a quantity: 14 alone would be meaningless
     // without its unit, and the normalised age above is the numeric form.
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_number).toBeNull()
-    expect(observations.get("LOSPOR:CLINICAL_MODE")?.value_as_number).toBeNull()
     // A fasting assessment is a JSON blob; there is no number to lift out.
     expect(observations.get("LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")?.value_as_number).toBeNull()
 
     for (const source of [
-      "LOSPOR:CLINICAL_MODE",
       "LOSPOR:AGE_AT_PROCEDURE_EXACT",
       "LOSPOR:POVOC_SCORE",
       "LOSPOR:COLDS_SCORE",

@@ -45,10 +45,10 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 37,
+      measurement: 38,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 5,
-      observation: 55,
+      observation: 52,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -142,7 +142,6 @@ describe("mapCasesToOmop", () => {
     // without casting the whole column back from text.
     expect(bundle.observation).toEqual(expect.arrayContaining([
       expect.objectContaining({ observation_source_value: "LOSPOR:APFEL", value_as_number: 1 }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:AGE_YEARS", value_as_number: 14 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_TOTAL", value_as_number: 10 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_ACTIVITY", value_as_number: 2 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CRYSTALLOIDS_ML", value_as_number: 500 }),
@@ -155,7 +154,6 @@ describe("mapCasesToOmop", () => {
     // A boolean is a fact, not a quantity: "true" in value_as_number would be
     // indistinguishable from a score of 1.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:EMERGENCY_SURGERY", value_as_string: "false", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DIFFICULT_AIRWAY_HISTORY", value_as_string: "true", value_as_number: null }),
     ]))
     // The NRS pain score used to be emitted under concept 3020891 — body
@@ -1116,5 +1114,42 @@ describe("the airway examination findings that gained a concept", () => {
 
     expect(mapCasesToOmop([c as never]).observation
       .filter(row => row.observation_source_value === "LOSPOR:FACIAL_HAIR")[0].observation_concept_id).toBe(0)
+  })
+})
+
+describe("the rows that were saying the same thing twice", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never])
+  const obs = (source: string) => bundle().observation
+    .filter(row => row.observation_source_value === source)
+
+  it("carries age as a measurement with a concept and a unit", () => {
+    // OMOP tooling normally derives age from person.year_of_birth and a visit
+    // date. This register coarsens the birth year deliberately, so the recorded
+    // age is the more precise of the two and is worth its own row.
+    const age = bundle().measurement
+      .filter(row => row.measurement_source_value === "LOSPOR:AGE_YEARS")
+
+    expect(age).toHaveLength(1)
+    expect(age[0]).toMatchObject({
+      measurement_concept_id: 4314456,
+      value_as_number: 14,
+      unit_concept_id: 9448,
+      unit_source_value: "a",
+    })
+    expect(obs("LOSPOR:AGE_YEARS")).toHaveLength(0)
+  })
+
+  it("states surgical urgency once, on the procedure", () => {
+    // It used to be here as well, at concept 0, so a query that counted both
+    // counted every emergency case twice.
+    expect(obs("LOSPOR:EMERGENCY_SURGERY")).toHaveLength(0)
+    expect(bundle().procedure_occurrence.some(row => row.modifier_concept_id !== 0)).toBe(true)
+  })
+
+  it("does not export clinical mode", () => {
+    // Provenance about how this product computed a case, not a fact about the
+    // patient — and the fact a researcher would reach for it for is age, which
+    // answers the same question exactly rather than approximately.
+    expect(obs("LOSPOR:CLINICAL_MODE")).toHaveLength(0)
   })
 })

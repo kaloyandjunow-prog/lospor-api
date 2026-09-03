@@ -81,8 +81,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   // ── Preop demographics ────────────────────────────────────────────────────────
   {
     name: "ageYears",
-    exportName: "observation.value_as_number (LOSPOR:AGE_YEARS)",
-    meaning: "Patient age at time of anaesthesia, in whole years",
+    exportName: "measurement.value_as_number (LOSPOR:AGE_YEARS)",
+    meaning: "Patient age at time of anaesthesia, in whole years, as SNOMED "
+      + "4314456 (Current chronological age) in UCUM years (unit 9448). OMOP "
+      + "tooling normally derives age from person.year_of_birth and a visit "
+      + "date; this register coarsens the birth year deliberately, so the "
+      + "recorded age is the more precise of the two.",
     unit: "years",
     type: "integer",
     allowedValues: "0–149",
@@ -245,14 +249,17 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "emergencySurgery",
-    exportName: "observation.value_as_string (LOSPOR:EMERGENCY_SURGERY)",
-    meaning: "Whether the procedure was performed as an emergency. Urgency is "
-      + "also carried on the operation itself as "
+    exportName: "procedure_occurrence.modifier_concept_id",
+    meaning: "Whether the procedure was performed as an emergency. Carried "
+      + "only on the operation itself, as "
       + "procedure_occurrence.modifier_concept_id, using SNOMED Qualifier "
       + "Values: 4093606 (Emergency) against 4013731 (Elective). A qualifier on "
       + "the operation rather than a second procedure, so one operation still "
       + "counts as one. The two are one toggle in the form and cannot both be "
-      + "true; a case recorded before the field existed carries modifier 0.",
+      + "true; a case recorded before the field existed carries modifier 0. "
+      + "There used to be a LOSPOR:EMERGENCY_SURGERY observation carrying the "
+      + "same fact at concept 0; it was removed, because a query counting both "
+      + "counted every emergency case twice.",
     type: "boolean",
     missingnessRule: "NULL = not recorded",
     sourceTable: "PreoperativeRecord", sourceColumn: "emergencySurgery",
@@ -1281,16 +1288,6 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     type: "string",
     missingnessRule: "No row = that modality was not selected",
     sourceTable: "CaseSelection", sourceColumn: "value",
-    versionIntroduced: "4.0.0",
-  },
-  {
-    name: "clinicalMode",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_MODE)",
-    meaning: "Whether the case was documented in adult or paediatric mode, which decides the dosing ruleset applied",
-    type: "enum",
-    allowedValues: "ADULT | PEDIATRIC",
-    missingnessRule: "Always present; defaults to ADULT",
-    sourceTable: "Case", sourceColumn: "clinicalMode",
     versionIntroduced: "4.0.0",
   },
   {

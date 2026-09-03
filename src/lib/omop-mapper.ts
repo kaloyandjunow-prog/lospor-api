@@ -1184,7 +1184,12 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       })
     }
 
-    sourceObservation("LOSPOR:CLINICAL_MODE", c.clinicalMode ?? "ADULT")
+    // Clinical mode is not exported. It is provenance about how this product
+    // computed a case -- which ruleset drove the calculators -- rather than a
+    // fact about the patient, and the fact a researcher would want it for is
+    // age, which leaves as its own measurement below. A row saying
+    // "clinical_mode = PEDIATRIC" at concept 0 adds a second, weaker way to ask
+    // a question age already answers exactly.
     sourceObservation("LOSPOR:CLINICAL_RULES_VERSION", c.clinicalRulesVersion)
 
     const preop = c.preop
@@ -1197,12 +1202,39 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       }
       sourceObservation("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS", preop.ageApproxDays, vitDate)
       sourceObservation("LOSPOR:BODY_SURFACE_AREA_M2", preop.bodySurfaceAreaM2, vitDate)
-      // Age is also folded into person.year_of_birth, but most analyses want it
-      // directly rather than deriving it from a date.
-      sourceObservation("LOSPOR:AGE_YEARS", preop.ageYears, vitDate)
-      // Emergency also appears as the conventional "E" suffix on the ASA class
-      // below; this is the same fact as a value a cohort can be filtered on.
-      sourceObservation("LOSPOR:EMERGENCY_SURGERY", preop.emergencySurgery, vitDate)
+      // Age as a measurement rather than an untyped observation, because it is
+      // a quantity with a standard concept and a unit.
+      //
+      // OMOP tooling normally derives age from person.year_of_birth and a visit
+      // date, and would here too -- but this register deliberately coarsens the
+      // birth year, so the recorded age is the more precise of the two and is
+      // worth carrying in its own right.
+      if (preop.ageYears != null) {
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      4314456,
+          measurement_date:            vitDate,
+          measurement_datetime:        vitDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             preop.ageYears,
+          value_as_concept_id:         null,
+          unit_concept_id:             9448,
+          unit_source_value:           "a",
+          measurement_source_value:    "LOSPOR:AGE_YEARS",
+          value_source_value:          String(preop.ageYears),
+          range_low:                   null,
+          range_high:                  null,
+          visit_occurrence_id:         visitId,
+        })
+      }
+      // Urgency is not emitted here. It is a modifier on the planned procedure
+      // -- 4093606 Emergency or 4013731 Elective -- which is where a statement
+      // about how an operation was performed belongs. This used to emit the
+      // same fact a second time as an observation at concept 0, so a query that
+      // counted both would have counted every emergency case twice. It also
+      // still appears as the conventional "E" suffix on the ASA class below,
+      // which is a display convention rather than a second row.
       // An RCRI criterion, and the one that is not a patient condition — the
       // other four are ordinary diagnoses and reach condition_occurrence as
       // themselves. RCRI defines this by operation type (intraperitoneal,
