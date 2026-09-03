@@ -25,9 +25,10 @@ describe("mapCasesToOmop", () => {
       excluded_case_count: 2,
       app_git_commit: "abc123",
       data_quality_status: "WARNING",
-      // Five mapped rows, not four: the second planned procedure the export
-      // used to discard is now counted like the rest.
-      mapping_summary: { mapped_rows: 5, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 3, unmapped_rows: 1 },
+      // Six mapped rows, not five: the fixture's PONV complication is now
+      // tracked by mapping_summary at all, which it never was before
+      // complications called trackMapping.
+      mapping_summary: { mapped_rows: 6, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 3, unmapped_rows: 1 },
     }))
     expect(bundle.metadata.table_counts).toEqual({
       // PERSON and OBSERVATION_PERIOD are the OMOP root tables — without them
@@ -35,7 +36,11 @@ describe("mapCasesToOmop", () => {
       person: 1,
       observation_period: 1,
       visit_occurrence: 1,
-      condition_occurrence: 2,
+      // Three, not two: a complication with a resolved concept now reaches
+      // CONDITION_OCCURRENCE like a comorbidity or a diagnosis does, instead
+      // of sitting in OBSERVATION with a Condition-domain concept id in a
+      // column that implies a different domain.
+      condition_occurrence: 3,
       // Airway devices and laryngoscopy tools, which had exact Device-domain
       // concepts and no table to put them in until now.
       device_exposure: 4,
@@ -148,7 +153,10 @@ describe("mapCasesToOmop", () => {
       expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg", value_as_number: null }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION", value_as_string: "PONV; treated", value_as_number: null }),
+      // The complication itself now reaches CONDITION_OCCURRENCE (asserted in
+      // "curated mappings reach the export" below); the free-text note that
+      // CONDITION_OCCURRENCE has no column for stays here as a companion.
+      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION_NOTE", value_as_string: "PONV; treated", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DISPOSITION", value_as_string: "WARD", value_as_number: null }),
     ]))
     // Every score, on the other hand, has to arrive as a number. Until 3.7.0
@@ -458,10 +466,14 @@ describe("curated mappings reach the export", () => {
   })
 
   it("uses the reviewed concept for a complication", () => {
+    // A mapped complication is a Condition-domain SNOMED finding, so it
+    // reaches CONDITION_OCCURRENCE now, not OBSERVATION -- domain governs
+    // table, the same rule every other curated concept in this export
+    // follows.
     const bundle = mapCasesToOmop([completeCase() as never], options as never)
-    const comp = bundle.observation.find(row => /COMPLICATION/.test(String(row.observation_source_value)))
+    const comp = bundle.condition_occurrence.find(row => /LOSPOR_COMPLICATION/.test(String(row.condition_source_value)))
     expect(comp, "fixture must contain a complication row").toBeDefined()
-    expect(comp!.observation_concept_id).toBe(4166237)
+    expect(comp!.condition_concept_id).toBe(4166237)
   })
 
   it("uses the reviewed concept for a case selection", () => {

@@ -7,6 +7,7 @@
  */
 import "dotenv/config"
 import { INTRAOP_DRUG_CODE_ENTRIES } from "@lospor/core/catalog"
+import { ALL_COMPLICATIONS } from "@lospor/core/complications"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
@@ -21,12 +22,10 @@ const SOURCE_VERSION = "local-bilingual-map-v2"
 // are. These are curated by hand, one at a time, against the local Athena
 // snapshot, the same way every other concept in this project is.
 //
-// LEFT_LATERAL/RIGHT_LATERAL are deliberately absent: SNOMED has no "lateral
-// position" finding distinct from "lateral decubitus position", so mapping
-// them here would collapse two separate buttons in the picker onto the same
-// code as LATERAL_DECUBITUS_LEFT/RIGHT. Left SOURCE_ONLY pending a decision
-// on whether that collapse is correct or whether the two buttons should be
-// merged in the picker instead.
+// LEFT_LATERAL/RIGHT_LATERAL share their concept with LATERAL_DECUBITUS_LEFT/
+// RIGHT on purpose: SNOMED has no "lateral position" finding distinct from
+// "lateral decubitus position", and the product decision was to collapse the
+// two picker buttons onto the same code rather than leave them unmapped.
 const CURATED_POSITIONS: { value: string; conceptId: number; label: string }[] = [
   { value: "SUPINE", conceptId: 4221822, label: "Supine body position" },
   { value: "PRONE", conceptId: 4050473, label: "Prone body position" },
@@ -43,11 +42,40 @@ const CURATED_POSITIONS: { value: string; conceptId: number; label: string }[] =
   { value: "KNEE_CHEST", conceptId: 4051496, label: "Knee-chest position" },
   { value: "LATERAL_DECUBITUS_LEFT", conceptId: 4010960, label: "Left lateral decubitus position" },
   { value: "LATERAL_DECUBITUS_RIGHT", conceptId: 4009274, label: "Right lateral decubitus position" },
+  { value: "LEFT_LATERAL", conceptId: 4010960, label: "Left lateral decubitus position" },
+  { value: "RIGHT_LATERAL", conceptId: 4009274, label: "Right lateral decubitus position" },
   // GYNECOLOGICAL's own description is "Legs in stirrups" -- exactly what
   // Lithotomy position is. LLOYD_DAVIES keeps its own exact concept above
   // rather than sharing this one, since Lloyd Davis is a distinct modified
   // lithotomy SNOMED already names separately.
   { value: "GYNECOLOGICAL", conceptId: 4031023, label: "Lithotomy position" },
+]
+
+// Intraoperative/postop complications, from lospor-core/src/complications.ts
+// (ALL_COMPLICATIONS, 81 items across 8 categories). LOSPOR_COMPLICATION had
+// zero ConceptMap rows at all before this -- the resolver in relational-sync.ts
+// (`concept(concepts, "observation", "LOSPOR_COMPLICATION", label)`) has
+// existed since CaseComplication carried source columns, but nothing ever
+// seeded a row for it to find, so every complication resolved to unmapped
+// regardless of how well-known the finding was. Curated in batches of 10,
+// verified against the local Athena snapshot the same way every other concept
+// in this project is; sourceCode is the catalogue label itself, matching what
+// relational-sync.ts looks up.
+//
+// Batch 1 of 9 -- Cardiovascular, items 1-10 of 14.
+const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }[] = [
+  { value: "Hypotension", conceptId: 317002, label: "Low blood pressure" },
+  { value: "Hypertension", conceptId: 316866, label: "Hypertensive disorder" },
+  { value: "Bradycardia", conceptId: 4169095, label: "Bradycardia" },
+  { value: "Tachycardia", conceptId: 444070, label: "Tachycardia" },
+  { value: "Atrial fibrillation", conceptId: 313217, label: "Atrial fibrillation" },
+  { value: "Supraventricular arrhythmia", conceptId: 4248028, label: "Supraventricular arrhythmia" },
+  { value: "Ventricular tachycardia", conceptId: 4103295, label: "Ventricular tachycardia" },
+  { value: "Ventricular fibrillation", conceptId: 437894, label: "Ventricular fibrillation" },
+  // "during surgery" variant, not the generic disorder: more precise for an
+  // intraop complication log, and it is what was asked for.
+  { value: "Myocardial ischaemia", conceptId: 37108686, label: "Myocardial ischemia during surgery" },
+  { value: "Myocardial infarction", conceptId: 4329847, label: "Myocardial infarction" },
 ]
 
 const KNOWN_VITALS = [
@@ -534,6 +562,32 @@ async function main() {
         reviewed: false,
       })
     }
+  }
+
+  const curatedComplications = new Map(CURATED_COMPLICATIONS.map(x => [x.value, x]))
+  for (const label of ALL_COMPLICATIONS) {
+    const curated = curatedComplications.get(label)
+    seeds.push(curated ? {
+      domain: "observation",
+      sourceVocabulary: "LOSPOR_COMPLICATION",
+      sourceCode: label,
+      sourceLabelEn: label,
+      standardVocabulary: "SNOMED",
+      standardConceptId: curated.conceptId,
+      standardLabel: curated.label,
+      mappingStatus: ConceptMappingStatus.MAPPED,
+      mappingMethod: "manually-curated",
+      mappingConfidence: 1,
+      reviewed: true,
+    } : {
+      domain: "observation",
+      sourceVocabulary: "LOSPOR_COMPLICATION",
+      sourceCode: label,
+      sourceLabelEn: label,
+      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+      mappingMethod: "source-code-preserved",
+      reviewed: false,
+    })
   }
 
   count += await createManyConcepts(seeds)

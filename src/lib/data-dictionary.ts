@@ -1434,11 +1434,20 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "postop.complication",
     exportName: "observation.value_as_string (LOSPOR:POSTOP_COMPLICATION)",
-    meaning: "A complication recorded against the postoperative period, with its note where one was written",
+    meaning: "A complication recorded against the postoperative period, with its note where one was written. Emitted here only when the complication has no reviewed OMOP concept yet; a curated one reaches condition_occurrence instead (condition_source_value carries LOSPOR_COMPLICATION:<item>).",
     type: "string",
     missingnessRule: "No row = no complication recorded for this case; absence is not evidence none occurred",
     sourceTable: "Complication", sourceColumn: "label",
     versionIntroduced: "4.0.0",
+  },
+  {
+    name: "postop.complication.note",
+    exportName: "observation.value_as_string (LOSPOR:POSTOP_COMPLICATION_NOTE)",
+    meaning: "The free-text note on a complication that DOES have a reviewed OMOP concept. condition_occurrence has no column for it, so it stays a companion observation alongside the coded condition row, redacted the same way every other free-text field in this export is.",
+    type: "string",
+    missingnessRule: "No row = either no complication was recorded, or the recorded complication carried no note",
+    sourceTable: "Complication", sourceColumn: "note",
+    versionIntroduced: "4.3.0",
   },
   {
     name: "event.fiAirPercent",
