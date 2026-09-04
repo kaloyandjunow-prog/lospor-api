@@ -159,6 +159,11 @@ export const CASE_SELECT = {
       malignantHyperthermiaHistory: true, unexplainedAnaesthesiaComplications: true,
       currentMedications: true, rcriScore: true, apfelScore: true, stopBangScore: true,
       povocScore: true, povocRiskPercent: true, coldsScore: true, pediatricFasting: true,
+      // The COLDS factors, for the same reason as the risk factors above: the
+      // score alone does not say whether a child was postponed for a two-week
+      // coryza or for the airway the operation needed.
+      coldsApplicable: true, coldsCurrentSymptoms: true, coldsOnset: true,
+      coldsLungDisease: true, coldsAirwayDevice: true, coldsSurgery: true,
       difficultAirwayHistory: true, mallampati: true, labResults: true,
       labRows: {
         select: {

@@ -1207,6 +1207,12 @@ type CaseRow = {
     povocScore?: number | null
     povocRiskPercent?: number | null
     coldsScore?: number | null
+    coldsApplicable?: boolean | null
+    coldsCurrentSymptoms?: string | null
+    coldsOnset?: string | null
+    coldsLungDisease?: string | null
+    coldsAirwayDevice?: string | null
+    coldsSurgery?: string | null
     difficultAirwayHistory: boolean | null
     mallampati: string | null
     // Attempted-but-not-obtained. One flag can qualify several readings: the
@@ -1947,6 +1953,28 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:POVOC_SCORE", preop.povocScore, vitDate)
       sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocRiskPercent, vitDate)
       sourceObservation("LOSPOR:COLDS_SCORE", preop.coldsScore, vitDate)
+
+      // The five COLDS factors, and the gate that says the score applies.
+      //
+      // Same fault as the four adult risk scores had until this release: the
+      // total exported and the factors did not, so a COLDS of 4 never said
+      // whether it was the two-week-old coryza or the tracheal tube. COLDS
+      // decides whether a child with a runny nose is postponed, which makes
+      // the factors the part worth pooling across cases.
+      //
+      // The five are nullable strings, so an absent one is genuinely absent.
+      // coldsApplicable is not -- it is Boolean (false), so a false
+      // means "either not applicable or nobody looked", and exporting it would
+      // assert the first. Only a true is emitted, and it means the assessment
+      // was made.
+      if (preop.coldsApplicable) {
+        sourceObservation("LOSPOR:COLDS_APPLICABLE", true, vitDate, null, 0, YES_CONCEPT_ID)
+      }
+      sourceObservation("LOSPOR:COLDS_CURRENT_SYMPTOMS", preop.coldsCurrentSymptoms, vitDate)
+      sourceObservation("LOSPOR:COLDS_ONSET", preop.coldsOnset, vitDate)
+      sourceObservation("LOSPOR:COLDS_LUNG_DISEASE", preop.coldsLungDisease, vitDate)
+      sourceObservation("LOSPOR:COLDS_AIRWAY_DEVICE", preop.coldsAirwayDevice, vitDate)
+      sourceObservation("LOSPOR:COLDS_SURGERY", preop.coldsSurgery, vitDate)
       // 3031632, Fasting status - Reported: the question is coded, and the
       // JSON detail of which intervals were fasted stays in the value, since
       // no vocabulary models a per-interval fasting assessment.
