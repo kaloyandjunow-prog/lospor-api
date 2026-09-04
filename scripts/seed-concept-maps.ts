@@ -225,6 +225,20 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   // No volume-banded finding exists in SNOMED (no ">1L" threshold concept);
   // nearest honest match is the plain intraoperative bleeding event.
   { value: "Blood loss >1L", conceptId: 4308716, label: "Intraoperative hemorrhage" },
+
+  // The last two, mapped to a deliberately generic umbrella rather than left
+  // unmapped -- explicit approximations, not confident matches. Neither
+  // SNOMED concept says what the LOSPOR label says; each is the closest
+  // honest parent that exists.
+  // Not "Total spinal blockade" (4172551, already curated) -- that names a
+  // more severe, distinct clinical state (complete blockade including
+  // cranial nerves) and reusing it here would overstate a high but partial
+  // block as the full one.
+  { value: "High spinal", conceptId: 4142195, label: "Complication of anesthesia" },
+  // A tourniquet is a surgical adjunct, not an anaesthetic one, so the
+  // surgical-complication umbrella fits better than the anaesthesia one used
+  // for High spinal above.
+  { value: "Tourniquet complication", conceptId: 434547, label: "Complication of surgical procedure" },
 ]
 
 const KNOWN_VITALS = [
