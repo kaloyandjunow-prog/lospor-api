@@ -1478,7 +1478,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "monitoring",
     exportName: "observation.value_as_string (LOSPOR:INTRAOP_MONITORING)",
-    meaning: "One row per monitoring modality selected for the case, from the institution's option library",
+    meaning: "One row per monitoring modality selected for the case, from the institution's option library. This is the default table for a curated modality's own OMOP domain; a handful route elsewhere by the same 'domain governs table' rule complications follow -- ECG, TEE and nasogastric tube are Procedure-domain concepts and reach procedure_occurrence (procedure_source_value carries the same LOSPOR:INTRAOP_MONITORING code) and cerebral oximetry (NIRS) is Measurement-domain and reaches measurement (measurement_source_value). A modality with no reviewed concept still lands in observation with observation_concept_id 0.",
     type: "string",
     missingnessRule: "No row = that modality was not selected",
     sourceTable: "CaseSelection", sourceColumn: "value",

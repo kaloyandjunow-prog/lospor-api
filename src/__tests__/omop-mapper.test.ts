@@ -58,9 +58,14 @@ describe("mapCasesToOmop", () => {
       // measurement too -- 3004921 is Measurement-domain, the same "domain
       // governs table" fix as BSA/PEEP/urine output.
       measurement: 43,
-      // Two planned procedures + anaesthesia technique + vascular access.
-      procedure_occurrence: 6,
-      observation: 47,
+      // Two planned procedures + anaesthesia technique + vascular access,
+      // plus one more: the fixture's ECG monitoring selection now resolves
+      // to 4187078 (Electrocardiographic monitoring), a Procedure-domain
+      // concept, so it routes to procedure_occurrence instead of
+      // observation -- the same per-concept domain routing complications
+      // already use.
+      procedure_occurrence: 7,
+      observation: 46,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -159,7 +164,10 @@ describe("mapCasesToOmop", () => {
     expect(bundle.observation).toEqual(expect.arrayContaining([
       expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg", value_as_number: null }),
+      // The fixture's monitoring selection (ECG) is no longer here: its
+      // curated concept is Procedure-domain, so it now reaches
+      // PROCEDURE_OCCURRENCE instead (asserted in "uses the reviewed concept
+      // for a case selection" below).
       // The complication itself now reaches CONDITION_OCCURRENCE (asserted in
       // "curated mappings reach the export" below); the free-text note that
       // CONDITION_OCCURRENCE has no column for stays here as a companion.
@@ -636,17 +644,41 @@ describe("curated mappings reach the export", () => {
     expect(bundle.condition_occurrence.some(row => /LOSPOR_COMPLICATION/.test(String(row.condition_source_value)))).toBe(false)
   })
 
-  it("uses the reviewed concept for a case selection", () => {
+  it("uses the reviewed concept for a case selection, routed by the concept's own domain", () => {
+    // ECG's curated concept (4187078, Electrocardiographic monitoring) is
+    // Procedure-domain -- "domain governs table" applies to c.selections
+    // exactly as it does to complications, so a monitoring selection with a
+    // Procedure-domain concept reaches procedure_occurrence, not observation.
     const bundle = mapCasesToOmop([completeCase() as never], options as never)
-    const sel = bundle.observation.find(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")
+    const sel = bundle.procedure_occurrence.find(row => row.procedure_source_value === "LOSPOR:INTRAOP_MONITORING")
     expect(sel, "fixture must contain a monitoring selection").toBeDefined()
-    expect(sel!.observation_concept_id).toBe(4145586)
+    expect(sel!.procedure_concept_id).toBe(4187078)
+    expect(bundle.observation.some(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")).toBe(false)
+  })
+
+  it("routes a Measurement-domain selection to measurement, not observation", () => {
+    // NIRS/cerebral oximetry (37206739) is a Measurement-domain SNOMED
+    // concept -- the third domain a case selection can resolve to, alongside
+    // the Observation default and the Procedure-domain concepts above.
+    const c = completeCase({
+      selections: [{
+        section: "intraop", category: "monitoring", value: "nirsMonitor", ordinal: 0,
+        sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_NIRS",
+        standardConceptId: 37206739, mappingStatus: "MAPPED",
+      }],
+    })
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const sel = bundle.measurement.find(row => row.measurement_source_value === "LOSPOR:INTRAOP_MONITORING")
+    expect(sel, "fixture must contain the NIRS selection").toBeDefined()
+    expect(sel!.measurement_concept_id).toBe(37206739)
+    expect(sel!.value_source_value).toBe("nirsMonitor")
   })
 
   it("still emits 0 when nothing was reviewed, rather than inventing one", () => {
     // The rule this file already follows: an unmapped row keeps its source
     // value and claims no concept. Fixing the three above must not turn into
-    // guessing for the rest.
+    // guessing for the rest. A null standardConceptId matches neither domain
+    // set, so it falls through to the Observation default, same as before.
     const c = completeCase() as never as { selections: { standardConceptId: number | null }[] }
     c.selections[0].standardConceptId = null
     const bundle = mapCasesToOmop([c as never], options as never)

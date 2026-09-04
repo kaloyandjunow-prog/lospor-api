@@ -51,6 +51,41 @@ const CURATED_POSITIONS: { value: string; conceptId: number; label: string }[] =
   { value: "GYNECOLOGICAL", conceptId: 4031023, label: "Lithotomy position" },
 ]
 
+// Intraop monitoring modalities, from lospor-core/src/catalog/monitoring.ts
+// (MONITORING). Each field is a boolean flag ("was this modality used"),
+// stored as a LOSPOR_OPTION selection the same way position is. Verified
+// individually against the local Athena snapshot.
+//
+// Gaps (left SOURCE_ONLY, no standard concept found after lexical + semantic
+// search): etco2Monitor (capnography -- surprising, given how standard it
+// is; only device/adaptor concepts exist, nothing for the monitoring act
+// itself), bis (Bispectral index), entropyMonitor (Entropy/pEEG) -- BIS and
+// Entropy are proprietary depth-of-anaesthesia metrics and SNOMED has
+// nothing that names either specifically, only a generic "anesthesia depth
+// monitor" device concept that would be no more honest than leaving these
+// uncoded.
+const CURATED_MONITORING: { value: string; conceptId: number; label: string }[] = [
+  { value: "ecg", conceptId: 4187078, label: "Electrocardiographic monitoring" },
+  { value: "spO2Monitor", conceptId: 4155650, label: "Pulse oximetry monitoring" },
+  { value: "nbpMonitor", conceptId: 4064646, label: "Arterial pressure monitoring, non-invasive method" },
+  { value: "tempMonitor", conceptId: 4045951, label: "Monitoring of patient temperature" },
+  { value: "invasiveBP", conceptId: 4301474, label: "Arterial pressure monitoring, invasive method" },
+  { value: "cvpMonitor", conceptId: 4313586, label: "Central venous pressure monitoring" },
+  { value: "paCatheter", conceptId: 4076945, label: "Pulmonary artery pressure monitoring" },
+  { value: "tee", conceptId: 4019824, label: "Transesophageal echocardiography" },
+  { value: "nirsMonitor", conceptId: 37206739, label: "Near-infrared spectroscopy" },
+  // Generic, not qualified to SSEP or MEP specifically -- the checkbox
+  // itself covers both ("Somatosensory / motor evoked potentials"), and
+  // SNOMED has no single concept naming that exact combination.
+  { value: "evokedPotentials", conceptId: 4154582, label: "Evoked potentials monitoring" },
+  { value: "tofMonitor", conceptId: 4152647, label: "Neuromuscular blockade monitoring" },
+  // Matches the field's own catalogue label ("Urine output") better than a
+  // generic urinary-catheterization concept would: this flag is about
+  // monitoring output, not the act of placing the catheter.
+  { value: "urinaryCatheter", conceptId: 44813911, label: "Intraoperative fluid balance monitoring" },
+  { value: "stomachTube", conceptId: 4227418, label: "Insertion of nasogastric tube" },
+]
+
 // Intraoperative/postop complications, from lospor-core/src/complications.ts
 // (ALL_COMPLICATIONS, 81 items across 8 categories). LOSPOR_COMPLICATION had
 // zero ConceptMap rows at all before this -- the resolver in relational-sync.ts
@@ -693,13 +728,14 @@ async function main() {
     }, pcsStandards.get(proc.code)))
   }
 
-  const curatedPositions = new Map(CURATED_POSITIONS.map(p => [p.value, p]))
+  const curatedByCategory = new Map<string, Map<string, { conceptId: number; label: string }>>([
+    ["position", new Map(CURATED_POSITIONS.map(p => [p.value, p]))],
+    ["monitoring", new Map(CURATED_MONITORING.map(p => [p.value, p]))],
+  ])
 
   const options = await prisma.optionLibrary.findMany({ where: { active: true } })
   for (const option of options) {
-    const curated = option.category.toLowerCase() === "position"
-      ? curatedPositions.get(option.value)
-      : undefined
+    const curated = curatedByCategory.get(option.category.toLowerCase())?.get(option.value)
     for (const code of [`${option.category}:${option.value}`, `${option.category.toLowerCase()}:${option.value}`]) {
       seeds.push(curated ? {
         domain: "observation",

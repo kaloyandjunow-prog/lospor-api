@@ -574,6 +574,21 @@ const COMPLICATION_PROCEDURE_DOMAIN_CONCEPTS = new Set([
   4335585, // Endobronchial intubation
 ])
 
+// c.selections spans every LOSPOR_OPTION category (position, monitoring, ...).
+// Position's curated concepts all happen to be Observation-domain, but
+// monitoring's are not: a monitoring modality is frequently the SNOMED
+// procedure of performing that monitoring, not a finding about the patient.
+// Verified individually while curating; kept in sync by hand with
+// scripts/seed-concept-maps.ts's CURATED_MONITORING.
+const SELECTION_PROCEDURE_DOMAIN_CONCEPTS = new Set([
+  4187078, // ECG (Electrocardiographic monitoring)
+  4019824, // TEE (Transesophageal echocardiography)
+  4227418, // Nasogastric tube (Insertion of nasogastric tube)
+])
+const SELECTION_MEASUREMENT_DOMAIN_CONCEPTS = new Set([
+  37206739, // Cerebral oximetry / NIRS (Near-infrared spectroscopy)
+])
+
 // The airway examination has its own SNOMED concept for the same idea, and it
 // is more specific than the generic qualifier: the score itself is what could
 // not be assessed, not a measurement that returned nothing.
@@ -3140,21 +3155,59 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     for (const sel of c.selections ?? []) {
       // A selected option from the institution's option library — a label, not
       // a quantity, even when the label happens to read as a number.
-      observations.push({
-        observation_id: nextId(), person_id: personId,
-        // The option library's reviewed concept when there is one. CaseSelection
-        // has carried standardConceptId all along; the export simply never
-        // asked for it, so a mapped monitoring line still claimed to map to
-        // nothing.
-        observation_concept_id: sel.standardConceptId ?? 0,
-        observation_date: startDate,
-        observation_type_concept_id: 32817,
-        value_as_number: null,
-        value_as_string: sel.value,
-        value_as_concept_id: 0,
-        observation_source_value: `LOSPOR:${sel.section.toUpperCase()}_${sel.category.toUpperCase()}`,
-        visit_occurrence_id: visitId,
-      })
+      const sourceValue = `LOSPOR:${sel.section.toUpperCase()}_${sel.category.toUpperCase()}`
+      // The option library's reviewed concept when there is one. CaseSelection
+      // has carried standardConceptId all along; the export simply never
+      // asked for it, so a mapped monitoring line still claimed to map to
+      // nothing. Most curated categories (position) resolve to Observation
+      // concepts, but a monitoring modality is often the SNOMED procedure of
+      // performing that monitoring, or a Measurement-domain LOINC concept --
+      // "domain governs table" applies here exactly as it does to
+      // complications, so this routes per-concept rather than assuming
+      // Observation for every category.
+      if (sel.standardConceptId != null && SELECTION_PROCEDURE_DOMAIN_CONCEPTS.has(sel.standardConceptId)) {
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      sel.standardConceptId,
+          procedure_date:            startDate,
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    sourceValue,
+          visit_occurrence_id:       visitId,
+        })
+      } else if (sel.standardConceptId != null && SELECTION_MEASUREMENT_DOMAIN_CONCEPTS.has(sel.standardConceptId)) {
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      sel.standardConceptId,
+          measurement_date:            startDate,
+          measurement_datetime:        startDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             null,
+          value_as_concept_id:         0,
+          unit_concept_id:             0,
+          unit_source_value:           null,
+          measurement_source_value:    sourceValue,
+          value_source_value:          sel.value,
+          range_low:                   null,
+          range_high:                  null,
+          visit_occurrence_id:         visitId,
+        })
+      } else {
+        observations.push({
+          observation_id: nextId(), person_id: personId,
+          observation_concept_id: sel.standardConceptId ?? 0,
+          observation_date: startDate,
+          observation_type_concept_id: 32817,
+          value_as_number: null,
+          value_as_string: sel.value,
+          value_as_concept_id: 0,
+          observation_source_value: sourceValue,
+          visit_occurrence_id: visitId,
+        })
+      }
     }
 
     for (const comp of c.complications ?? []) {

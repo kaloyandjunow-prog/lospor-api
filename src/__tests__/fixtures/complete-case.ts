@@ -22,7 +22,7 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
     finalizations: [{ id: "finalization-1" }],
     updatedAt: new Date("2026-06-01T09:01:00Z"),
     finalizedAt: new Date("2026-06-01T09:01:00Z"),
-    selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0, sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_ECG", standardConceptId: 4145586, mappingStatus: "MAPPED" }],
+    selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0, sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_ECG", standardConceptId: 4187078, mappingStatus: "MAPPED" }],
     complications: [{ section: "postop", label: "PONV", note: "treated", timestamp: endTime, source: "relational-sync", ordinal: 0, sourceVocabulary: "LOSPOR_COMPLICATION", sourceCode: "PONV", standardConceptId: 4166237, mappingStatus: "MAPPED" }],
     events: [
       {

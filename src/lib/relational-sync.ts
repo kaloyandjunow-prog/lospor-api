@@ -612,8 +612,6 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       tempMonitor: it.tempMonitor,
       invasiveBP: it.invasiveBP,
       cvpMonitor: it.cvpMonitor,
-      bglMonitor: it.bglMonitor,
-      bloodGasMonitor: it.bloodGasMonitor,
       neuroMonitor: it.neuroMonitor,
       paCatheter: it.paCatheter,
       tee: it.tee,
