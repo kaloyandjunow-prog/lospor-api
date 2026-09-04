@@ -373,3 +373,71 @@ describe("the dictionary names a real place for every value to come from", () =>
     expect(unknown.sort(), "sourceColumn is not a field on that model").toEqual([])
   })
 })
+
+/**
+ * The dictionary must not tell a researcher to discard a real distinction.
+ *
+ * A reading that was attempted and could not be obtained carries 618772 on the
+ * measurement row; one nobody recorded carries nothing. Six preoperative
+ * entries used to say "NULL = not recorded or marked unobtainable", which is
+ * the opposite of what the export does, and four recovery entries said only
+ * "NULL = not measured".
+ *
+ * That reads as an instruction to exclude every blank as missing data — and
+ * unobtainable readings cluster in shocked, arrhythmic and peripherally
+ * shut-down patients, so following it drops the sickest cases and leaves a
+ * cohort that looks healthier than it was. Nothing about the resulting analysis
+ * would look wrong.
+ */
+describe("a measurement that could not be obtained is documented as such", () => {
+  /**
+   * Table and column, not column alone.
+   *
+   * The intraoperative timetable also has heartRate and spO2, on CaseEvent, and
+   * those carry no unobtainable flag -- a vital charted during a case is either
+   * recorded at that minute or not. Matching on the column name alone pulled
+   * them in and demanded an explanation that would have been untrue.
+   */
+  const FLAGGED = [
+    ["PreoperativeAssessment", "bpSystolic"],
+    ["PreoperativeAssessment", "bpDiastolic"],
+    ["PreoperativeAssessment", "heartRate"],
+    ["PreoperativeAssessment", "spO2"],
+    ["PreoperativeAssessment", "temperature"],
+    ["PreoperativeAssessment", "respiratoryRate"],
+    ["PostoperativeRecord", "recoveryBpSystolic"],
+    ["PostoperativeRecord", "recoveryBpDiastolic"],
+    ["PostoperativeRecord", "recoveryHeartRate"],
+    ["PostoperativeRecord", "recoverySpO2"],
+    ["PostoperativeRecord", "temperatureCelsius"],
+  ] as const
+  const isFlagged = (entry: DictionaryEntry) =>
+    FLAGGED.some(([table, column]) => entry.sourceTable === table && entry.sourceColumn === column)
+
+  it("names the qualifier on every measurement that can carry it", () => {
+    const silent = DATA_DICTIONARY
+      .filter(isFlagged)
+      .filter(entry => !entry.missingnessRule?.includes("618772"))
+      .map(entry => entry.name)
+
+    expect(silent.sort(), "blank could mean unobtainable, and the rule does not say so").toEqual([])
+  })
+
+  it("covers every flagged measurement, so the list above cannot rot", () => {
+    // If a column is renamed or a new flagged vital is added, this fails rather
+    // than the check above quietly testing nothing.
+    const missing = FLAGGED
+      .filter(([table, column]) => !DATA_DICTIONARY.some(
+        entry => entry.sourceTable === table && entry.sourceColumn === column))
+      .map(([table, column]) => `${table}.${column}`)
+    expect(missing).toEqual([])
+  })
+
+  it("never says the two are indistinguishable", () => {
+    const conflating = DATA_DICTIONARY
+      .filter(entry => /not recorded or marked unobtainable/i.test(entry.missingnessRule ?? ""))
+      .map(entry => entry.name)
+
+    expect(conflating, "the export separates these; the dictionary must not pool them").toEqual([])
+  })
+})
