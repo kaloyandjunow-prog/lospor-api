@@ -2439,3 +2439,53 @@ describe("why a case has no airway device of its own", () => {
       r => r.observation_source_value === "LOSPOR:AIRWAY_NOT_APPLICABLE")).toBe(false)
   })
 })
+
+describe("a line the patient arrived with, and a line placed on top of it", () => {
+  it("keeps both, and only credits this team with the one they placed", () => {
+    // The common ward-to-theatre case: the patient comes down with a
+    // peripheral cannula already in, and the anaesthetist puts in an arterial
+    // line. Both are real and both must survive; only one is work done here.
+    const c = completeCase() as unknown as {
+      intraop: { vascularAccessRows: Record<string, unknown>[] }
+    }
+    c.intraop.vascularAccessRows = [
+      {
+        site: "VEN_PERIPHERAL", siteLabel: "Peripheral IV", size: "18", sizeUnit: "G",
+        depthCm: null, lumens: null, preexisting: true, ordinal: 0,
+        sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "VEN_PERIPHERAL",
+        standardConceptId: 4133183, mappingStatus: "MAPPED",
+      },
+      {
+        site: "ART_RADIAL", siteLabel: "Radial", size: "20", sizeUnit: "G",
+        depthCm: null, lumens: null, preexisting: false, ordinal: 1,
+        sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "ART_RADIAL",
+        standardConceptId: 4311043, mappingStatus: "MAPPED",
+      },
+    ]
+    const bundle = mapCasesToOmop([c as never])
+
+    // The line they placed is a procedure. The one that was already there is
+    // not, and must not be counted as work done in this theatre.
+    const procedures = bundle.procedure_occurrence
+      .filter(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(procedures).toHaveLength(1)
+    expect(procedures[0].procedure_concept_id).toBe(4311043)
+
+    // The pre-existing one still reaches the export, as a history.
+    const history = bundle.observation.find(row =>
+      String(row.observation_source_value).includes("Peripheral IV")
+      && row.observation_concept_id === 1340204)
+    expect(history, "the line the patient arrived with must still be recorded").toBeDefined()
+    expect(history!.value_as_concept_id).toBe(4133183)
+
+    // And the per-line flag still answers the question for both of them,
+    // including the negative the history row cannot state.
+    const flags = bundle.observation
+      .filter(row => row.observation_source_value === "LOSPOR:VASCULAR_ACCESS_PREEXISTING")
+      .map(row => row.value_as_string)
+    expect(flags).toEqual(expect.arrayContaining([
+      "Peripheral IV=true",
+      "Radial=false",
+    ]))
+  })
+})
