@@ -68,7 +68,7 @@ describe("mapCasesToOmop", () => {
       // of a procedure this team performed. One row moved between the two
       // tables rather than being added or lost.
       procedure_occurrence: 6,
-      observation: 47,
+      observation: 48,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -375,6 +375,40 @@ describe("allergies are not drug administrations", () => {
     const recorded = [...bundle.observation, ...bundle.condition_occurrence]
       .some(row => /Penicillin/i.test(JSON.stringify(row)))
     expect(recorded).toBe(true)
+  })
+
+  /**
+   * The allergen rows above can only ever describe a patient who has an
+   * allergy. A patient asked and found to have none produces no allergen rows,
+   * no detail text, and -- before the flag was exported -- nothing at all, so
+   * the export could not tell a documented "no known allergies" from a
+   * question nobody put. The column is Boolean? for exactly that reason, and a
+   * recorded No is the answer a theatre acts on when choosing a relaxant.
+   */
+  it("exports a recorded 'no known allergies' as an answer, not as silence", () => {
+    const c = completeCase() as never as { preop: { allergies: boolean | null; medications: unknown[] } }
+    c.preop.allergies = false
+    c.preop.medications = []
+
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const row = bundle.observation.find(r => r.observation_source_value === "LOSPOR:ALLERGY_PRESENT")
+
+    expect(row).toBeDefined()
+    // "History of allergies, reported", answered No. Asserting the value as
+    // well as the row's existence: emitting the question with an empty answer
+    // would pass a presence check while saying nothing.
+    expect(row?.observation_concept_id).toBe(3013237)
+    expect(row?.value_as_concept_id).toBe(4188540) // No
+  })
+
+  it("says nothing when the allergy question was never recorded", () => {
+    // The other half, and the reason a plain Boolean would have been wrong:
+    // null must stay absent rather than exporting as a No.
+    const c = completeCase() as never as { preop: { allergies: boolean | null } }
+    c.preop.allergies = null
+
+    const bundle = mapCasesToOmop([c as never], options as never)
+    expect(bundle.observation.some(r => r.observation_source_value === "LOSPOR:ALLERGY_PRESENT")).toBe(false)
   })
 })
 

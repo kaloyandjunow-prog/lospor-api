@@ -2279,9 +2279,24 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceObservation("LOSPOR:HEART_ARRHYTHMIA", preop.heartArrhythmia, preopDate, null, 44784217,
         preop.heartArrhythmia ? YES_CONCEPT_ID : NO_CONCEPT_ID)
 
-      // The allergy flag already reaches DRUG_ALLERGY observations per
-      // substance, but the free-text detail carries allergens that were never
-      // resolved to a drug -- redacted upstream like every other note.
+      // "History of allergies, reported", which is the question a
+      // pre-assessment actually asks, and it takes a Yes or a No.
+      //
+      // Named allergens do leave, one DRUG_ALLERGY observation per substance
+      // off the medication list. What that cannot carry is the negative: a
+      // patient asked and found to have no allergies produces no allergen
+      // rows and no detail text, so without this the export cannot tell a
+      // documented "no known allergies" from a question nobody put. The column
+      // is Boolean? precisely so a recorded No is a real answer, and it is the
+      // answer a theatre acts on when choosing a relaxant.
+      //
+      // Not 43530807, which the latex flag below already uses: a researcher
+      // counting that concept would otherwise count a latex-allergic patient
+      // twice and have only the source value to separate them.
+      sourceObservation("LOSPOR:ALLERGY_PRESENT", preop.allergies, preopDate, null, 3013237,
+        preop.allergies ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      // The free-text detail carries allergens that were never resolved to a
+      // drug -- redacted upstream like every other note.
       sourceObservation("LOSPOR:ALLERGY_DETAILS", preop.allergyDetails, preopDate)
 
       // Body mass index is stored, not derived at export time, because the
