@@ -1957,9 +1957,12 @@ describe("ventilation, the airway tools, and vascular access", () => {
     })
   })
 
-  it("codes every ventilation mode that has a concept, and leaves PAV a source value only", () => {
+  it("codes every ventilation mode remaining in the schema", () => {
+    // PAV and Volume Guarantee (VG) are no longer selectable at all -- both
+    // were removed from the schema entirely, having no concept anywhere in
+    // this vocabulary even under semantic search.
     const b = withIntraop({
-      ventilationModes: ["A/C", "PSV", "BiPAP", "CPAP", "SIMV+PSV", "PAV", "VCV", "PCV", "PRVC", "APRV", "HFOV", "VG"],
+      ventilationModes: ["A/C", "PSV", "BiPAP", "CPAP", "SIMV+PSV", "VCV", "PCV", "PRVC", "APRV", "HFOV"],
     })
     const byMode = (mode: string) => b.measurement.find(r => r.measurement_source_value === "LOSPOR:VENTILATION_MODE" && r.value_source_value === mode)
     expect(byMode("A/C")!.value_as_concept_id).toBe(4055375)
@@ -1971,14 +1974,7 @@ describe("ventilation, the airway tools, and vascular access", () => {
     expect(byMode("PCV")!.value_as_concept_id).toBe(37151337)
     expect(byMode("APRV")!.value_as_concept_id).toBe(4072515)
     expect(byMode("HFOV")!.value_as_concept_id).toBe(4074666)
-    // PRVC and VG deliberately share a concept -- no vocabulary here
-    // distinguishes the two vendor names for the same mechanism.
     expect(byMode("PRVC")!.value_as_concept_id).toBe(37152411)
-    expect(byMode("VG")!.value_as_concept_id).toBe(37152411)
-    // PAV has no concept anywhere in this vocabulary; the row still exists
-    // (the mode was recorded) but carries 0, not a guess.
-    expect(byMode("PAV")!.value_as_concept_id).toBe(0)
-    expect(byMode("PAV")!.value_source_value).toBe("PAV")
   })
 
   it("codes fibreoptic intubation, not diagnostic bronchoscopy", () => {

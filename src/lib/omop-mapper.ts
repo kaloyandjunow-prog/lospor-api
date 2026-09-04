@@ -431,11 +431,9 @@ const VASCULAR_ACCESS_CONCEPTS: Record<string, number> = {
 }
 
 // Ventilation mode answers to LOINC 20124-4 (Ventilation mode Ventilator).
-// PAV has no concept in any vocabulary here -- even semantic search over the
-// full concept space came back empty -- and stays a source value only.
-// PRVC and VG share a concept: no vocabulary here distinguishes the two
-// vendor names for the same dual-control (volume-targeted pressure-control)
-// mechanism.
+// PAV and Volume Guarantee (VG) had no concept in any vocabulary here -- even
+// semantic search over the full concept space came back empty -- and were
+// removed from the schema entirely rather than left uncoded.
 const VENTILATION_MODE_CONCEPTS: Record<string, number> = {
   "A/C":      4055375, // Assisted controlled mandatory ventilation
   "PSV":      37154096, // Pressure support ventilation
@@ -449,7 +447,6 @@ const VENTILATION_MODE_CONCEPTS: Record<string, number> = {
   "PRVC":     37152411, // Assist control ventilation, volume-targeted pressure-control inflation-type
   "APRV":     4072515, // Airway pressure release ventilation
   "HFOV":     4074666, // High frequency oscillatory ventilation
-  "VG":       37152411, // Same concept as PRVC -- see note above
 }
 
 /** Every vascular-access node's parent, so an unmapped site inherits a true
