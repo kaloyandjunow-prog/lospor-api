@@ -1017,6 +1017,23 @@ describe("airway management", () => {
     expect(byLabel("Extubated")).toMatchObject({ procedure_concept_id: 4148972, procedure_datetime: "2026-06-01T08:58:00.000Z" })
     expect(byLabel("Airway exchange")).toMatchObject({ procedure_concept_id: 4216776, procedure_datetime: "2026-06-01T08:30:00.000Z" })
   })
+
+  it("emits Incision, Tourniquet on and Tourniquet off as their own new procedures", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:10:00Z"), label: "Incision", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:12:00Z"), label: "Tourniquet on", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:50:00Z"), label: "Tourniquet off", value: null, unit: null, metadataJson: {} },
+    ]
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const byLabel = (label: string) => bundle.procedure_occurrence.find(p => p.procedure_source_value === `INTRAOP_EVENT:${label}`)
+    expect(byLabel("Incision")).toMatchObject({ procedure_concept_id: 4214428, procedure_datetime: "2026-06-01T08:10:00.000Z" })
+    expect(byLabel("Tourniquet on")).toMatchObject({ procedure_concept_id: 4049036, procedure_datetime: "2026-06-01T08:12:00.000Z" })
+    expect(byLabel("Tourniquet off")).toMatchObject({ procedure_concept_id: 4084008, procedure_datetime: "2026-06-01T08:50:00.000Z" })
+  })
 })
 
 describe("AIRWAY_ACTS", () => {

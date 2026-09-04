@@ -2557,15 +2557,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // (removing a tube is a distinct procedure from placing one, the same
       // reasoning as Spinal removed). All four are new rows, timestamped
       // from the marker itself.
-      const AIRWAY_MILESTONE_CONCEPTS: Record<string, number> = {
-        "Induction":       4082850, // Induction of general anesthesia
-        "Mask vent":       37157165, // Positive pressure ventilation via bag and mask
-        "Extubated":       4148972, // Extubation of trachea
-        "Airway exchange": 4216776, // Airway exchange catheter procedure
-      }
-      for (const [label, conceptId] of Object.entries(AIRWAY_MILESTONE_CONCEPTS)) {
+      const emitMilestoneProcedure = (label: string, conceptId: number) => {
         const ts = clinicalEventTimestamp(label)
-        if (!ts) continue
+        if (!ts) return
         procedures.push({
           procedure_occurrence_id:   nextId(),
           person_id:                 personId,
@@ -2579,6 +2573,24 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           visit_occurrence_id:       visitId,
         })
       }
+      const AIRWAY_MILESTONE_CONCEPTS: Record<string, number> = {
+        "Induction":       4082850, // Induction of general anesthesia
+        "Mask vent":       37157165, // Positive pressure ventilation via bag and mask
+        "Extubated":       4148972, // Extubation of trachea
+        "Airway exchange": 4216776, // Airway exchange catheter procedure
+      }
+      for (const [label, conceptId] of Object.entries(AIRWAY_MILESTONE_CONCEPTS)) emitMilestoneProcedure(label, conceptId)
+
+      // Surgical milestones. "Positioned", "Procedure started" and
+      // "Procedure ended" have no concept -- SNOMED has nothing for
+      // "positioning complete" or a generic operation start/end distinct
+      // from Incision/Closure -- and stay unmapped.
+      const SURGICAL_MILESTONE_CONCEPTS: Record<string, number> = {
+        "Incision":       4214428, // Incision of skin
+        "Tourniquet on":  4049036, // Application of tourniquet
+        "Tourniquet off": 4084008, // Tourniquet cuff deflation
+      }
+      for (const [label, conceptId] of Object.entries(SURGICAL_MILESTONE_CONCEPTS)) emitMilestoneProcedure(label, conceptId)
 
       // A technique's placement is sometimes also logged as its own
       // intraop timeline marker ("Spinal in", "Epidural in") -- the same
