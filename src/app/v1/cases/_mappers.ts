@@ -324,7 +324,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     "lmaSize","oralTubeSize","oralCuffed","nasalTubeSize","nasalCuffed",
     "dltType","dltSide","dltSize","endobronchialSize",
     "volatileAgent",
-    "plexusBlock","cvkSite","arterialLineSite",
+
     "ecg","urinaryCatheter","stomachTube","spO2Monitor","invasiveBP","cvpMonitor",
     "bglMonitor","bloodGasMonitor","neuroMonitor","nbpMonitor","etco2Monitor",
     "tempMonitor","paCatheter","tee","bis","entropyMonitor","nirsMonitor",
@@ -503,9 +503,6 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
       ? (intraop.ventilationModes as string[]).includes("Jet")
       : (intraop.jetVentilation ?? false),
     volatileAgent:   safeEnum(intraop.volatileAgent,   ["SEVOFLURANE","DESFLURANE","ISOFLURANE"] as const),
-    plexusBlock:     safeEnum(intraop.plexusBlock, ["AXILLARY","INTERSCALENE","SUPRACLAVICULAR","INFRACLAVICULAR","FEMORAL","SCIATIC","POPLITEAL","TAP","ERECTOR_SPINAE"] as const),
-    cvkSite:         safeEnum(intraop.cvkSite, ["INTERNAL_JUGULAR","EXTERNAL_JUGULAR","SUBCLAVIAN","FEMORAL"] as const),
-    arterialLineSite:safeEnum(intraop.arterialLineSite, ["RADIAL","DORSALIS_PEDIS","FEMORAL","BRACHIAL"] as const),
     ecg:              intraop.ecg              ?? false,
     urinaryCatheter:  intraop.urinaryCatheter  ?? false,
     stomachTube:      intraop.stomachTube      ?? false,

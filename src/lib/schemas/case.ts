@@ -230,9 +230,6 @@ export const intraopSchema = z.object({
 
   volatileAgent:   z.enum(["SEVOFLURANE", "DESFLURANE", "ISOFLURANE"]).nullable().optional(),
 
-  plexusBlock:      z.enum(["AXILLARY", "INTERSCALENE", "SUPRACLAVICULAR", "INFRACLAVICULAR", "FEMORAL", "SCIATIC", "POPLITEAL", "TAP", "ERECTOR_SPINAE"]).nullable().optional(),
-  cvkSite:          z.enum(["INTERNAL_JUGULAR", "EXTERNAL_JUGULAR", "SUBCLAVIAN", "FEMORAL"]).nullable().optional(),
-  arterialLineSite: z.enum(["RADIAL", "DORSALIS_PEDIS", "FEMORAL", "BRACHIAL"]).nullable().optional(),
 
   ecg: z.boolean().optional(), urinaryCatheter: z.boolean().optional(), stomachTube: z.boolean().optional(),
   spO2Monitor: z.boolean().optional(), invasiveBP: z.boolean().optional(), cvpMonitor: z.boolean().optional(),

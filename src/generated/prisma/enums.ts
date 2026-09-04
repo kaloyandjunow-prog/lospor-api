@@ -338,41 +338,6 @@ export const VolatileAgent = {
 export type VolatileAgent = (typeof VolatileAgent)[keyof typeof VolatileAgent]
 
 
-export const CVKSite = {
-  INTERNAL_JUGULAR: 'INTERNAL_JUGULAR',
-  EXTERNAL_JUGULAR: 'EXTERNAL_JUGULAR',
-  SUBCLAVIAN: 'SUBCLAVIAN',
-  FEMORAL: 'FEMORAL'
-} as const
-
-export type CVKSite = (typeof CVKSite)[keyof typeof CVKSite]
-
-
-export const ArterialLineSite = {
-  RADIAL: 'RADIAL',
-  DORSALIS_PEDIS: 'DORSALIS_PEDIS',
-  FEMORAL: 'FEMORAL',
-  BRACHIAL: 'BRACHIAL'
-} as const
-
-export type ArterialLineSite = (typeof ArterialLineSite)[keyof typeof ArterialLineSite]
-
-
-export const PlexusBlock = {
-  AXILLARY: 'AXILLARY',
-  INTERSCALENE: 'INTERSCALENE',
-  SUPRACLAVICULAR: 'SUPRACLAVICULAR',
-  INFRACLAVICULAR: 'INFRACLAVICULAR',
-  FEMORAL: 'FEMORAL',
-  SCIATIC: 'SCIATIC',
-  POPLITEAL: 'POPLITEAL',
-  TAP: 'TAP',
-  ERECTOR_SPINAE: 'ERECTOR_SPINAE'
-} as const
-
-export type PlexusBlock = (typeof PlexusBlock)[keyof typeof PlexusBlock]
-
-
 export const Disposition = {
   WARD: 'WARD',
   PACU: 'PACU',

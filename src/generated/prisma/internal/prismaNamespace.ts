@@ -5802,9 +5802,6 @@ export const IntraoperativeRecordScalarFieldEnum = {
   dltSize: 'dltSize',
   endobronchialSize: 'endobronchialSize',
   volatileAgent: 'volatileAgent',
-  plexusBlock: 'plexusBlock',
-  cvkSite: 'cvkSite',
-  arterialLineSite: 'arterialLineSite',
   ecg: 'ecg',
   urinaryCatheter: 'urinaryCatheter',
   stomachTube: 'stomachTube',
@@ -6791,48 +6788,6 @@ export type EnumVolatileAgentFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
  * Reference to a field of type 'VolatileAgent[]'
  */
 export type ListEnumVolatileAgentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VolatileAgent[]'>
-    
-
-
-/**
- * Reference to a field of type 'PlexusBlock'
- */
-export type EnumPlexusBlockFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlexusBlock'>
-    
-
-
-/**
- * Reference to a field of type 'PlexusBlock[]'
- */
-export type ListEnumPlexusBlockFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlexusBlock[]'>
-    
-
-
-/**
- * Reference to a field of type 'CVKSite'
- */
-export type EnumCVKSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CVKSite'>
-    
-
-
-/**
- * Reference to a field of type 'CVKSite[]'
- */
-export type ListEnumCVKSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CVKSite[]'>
-    
-
-
-/**
- * Reference to a field of type 'ArterialLineSite'
- */
-export type EnumArterialLineSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ArterialLineSite'>
-    
-
-
-/**
- * Reference to a field of type 'ArterialLineSite[]'
- */
-export type ListEnumArterialLineSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ArterialLineSite[]'>
     
 
 

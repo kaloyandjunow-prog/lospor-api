@@ -91,9 +91,6 @@ export type IntraoperativeRecordMinAggregateOutputType = {
   dltSize: number | null
   endobronchialSize: number | null
   volatileAgent: $Enums.VolatileAgent | null
-  plexusBlock: $Enums.PlexusBlock | null
-  cvkSite: $Enums.CVKSite | null
-  arterialLineSite: $Enums.ArterialLineSite | null
   ecg: boolean | null
   urinaryCatheter: boolean | null
   stomachTube: boolean | null
@@ -158,9 +155,6 @@ export type IntraoperativeRecordMaxAggregateOutputType = {
   dltSize: number | null
   endobronchialSize: number | null
   volatileAgent: $Enums.VolatileAgent | null
-  plexusBlock: $Enums.PlexusBlock | null
-  cvkSite: $Enums.CVKSite | null
-  arterialLineSite: $Enums.ArterialLineSite | null
   ecg: boolean | null
   urinaryCatheter: boolean | null
   stomachTube: boolean | null
@@ -230,9 +224,6 @@ export type IntraoperativeRecordCountAggregateOutputType = {
   dltSize: number
   endobronchialSize: number
   volatileAgent: number
-  plexusBlock: number
-  cvkSite: number
-  arterialLineSite: number
   ecg: number
   urinaryCatheter: number
   stomachTube: number
@@ -338,9 +329,6 @@ export type IntraoperativeRecordMinAggregateInputType = {
   dltSize?: true
   endobronchialSize?: true
   volatileAgent?: true
-  plexusBlock?: true
-  cvkSite?: true
-  arterialLineSite?: true
   ecg?: true
   urinaryCatheter?: true
   stomachTube?: true
@@ -405,9 +393,6 @@ export type IntraoperativeRecordMaxAggregateInputType = {
   dltSize?: true
   endobronchialSize?: true
   volatileAgent?: true
-  plexusBlock?: true
-  cvkSite?: true
-  arterialLineSite?: true
   ecg?: true
   urinaryCatheter?: true
   stomachTube?: true
@@ -477,9 +462,6 @@ export type IntraoperativeRecordCountAggregateInputType = {
   dltSize?: true
   endobronchialSize?: true
   volatileAgent?: true
-  plexusBlock?: true
-  cvkSite?: true
-  arterialLineSite?: true
   ecg?: true
   urinaryCatheter?: true
   stomachTube?: true
@@ -641,9 +623,6 @@ export type IntraoperativeRecordGroupByOutputType = {
   dltSize: number | null
   endobronchialSize: number | null
   volatileAgent: $Enums.VolatileAgent | null
-  plexusBlock: $Enums.PlexusBlock | null
-  cvkSite: $Enums.CVKSite | null
-  arterialLineSite: $Enums.ArterialLineSite | null
   ecg: boolean
   urinaryCatheter: boolean
   stomachTube: boolean
@@ -741,9 +720,6 @@ export type IntraoperativeRecordWhereInput = {
   dltSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   endobronchialSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   volatileAgent?: Prisma.EnumVolatileAgentNullableFilter<"IntraoperativeRecord"> | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.EnumPlexusBlockNullableFilter<"IntraoperativeRecord"> | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.EnumCVKSiteNullableFilter<"IntraoperativeRecord"> | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.EnumArterialLineSiteNullableFilter<"IntraoperativeRecord"> | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   urinaryCatheter?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   stomachTube?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
@@ -822,9 +798,6 @@ export type IntraoperativeRecordOrderByWithRelationInput = {
   dltSize?: Prisma.SortOrderInput | Prisma.SortOrder
   endobronchialSize?: Prisma.SortOrderInput | Prisma.SortOrder
   volatileAgent?: Prisma.SortOrderInput | Prisma.SortOrder
-  plexusBlock?: Prisma.SortOrderInput | Prisma.SortOrder
-  cvkSite?: Prisma.SortOrderInput | Prisma.SortOrder
-  arterialLineSite?: Prisma.SortOrderInput | Prisma.SortOrder
   ecg?: Prisma.SortOrder
   urinaryCatheter?: Prisma.SortOrder
   stomachTube?: Prisma.SortOrder
@@ -906,9 +879,6 @@ export type IntraoperativeRecordWhereUniqueInput = Prisma.AtLeast<{
   dltSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   endobronchialSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   volatileAgent?: Prisma.EnumVolatileAgentNullableFilter<"IntraoperativeRecord"> | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.EnumPlexusBlockNullableFilter<"IntraoperativeRecord"> | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.EnumCVKSiteNullableFilter<"IntraoperativeRecord"> | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.EnumArterialLineSiteNullableFilter<"IntraoperativeRecord"> | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   urinaryCatheter?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   stomachTube?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
@@ -987,9 +957,6 @@ export type IntraoperativeRecordOrderByWithAggregationInput = {
   dltSize?: Prisma.SortOrderInput | Prisma.SortOrder
   endobronchialSize?: Prisma.SortOrderInput | Prisma.SortOrder
   volatileAgent?: Prisma.SortOrderInput | Prisma.SortOrder
-  plexusBlock?: Prisma.SortOrderInput | Prisma.SortOrder
-  cvkSite?: Prisma.SortOrderInput | Prisma.SortOrder
-  arterialLineSite?: Prisma.SortOrderInput | Prisma.SortOrder
   ecg?: Prisma.SortOrder
   urinaryCatheter?: Prisma.SortOrder
   stomachTube?: Prisma.SortOrder
@@ -1072,9 +1039,6 @@ export type IntraoperativeRecordScalarWhereWithAggregatesInput = {
   dltSize?: Prisma.FloatNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   endobronchialSize?: Prisma.FloatNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   volatileAgent?: Prisma.EnumVolatileAgentNullableWithAggregatesFilter<"IntraoperativeRecord"> | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.EnumPlexusBlockNullableWithAggregatesFilter<"IntraoperativeRecord"> | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.EnumCVKSiteNullableWithAggregatesFilter<"IntraoperativeRecord"> | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.EnumArterialLineSiteNullableWithAggregatesFilter<"IntraoperativeRecord"> | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   urinaryCatheter?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   stomachTube?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
@@ -1148,9 +1112,6 @@ export type IntraoperativeRecordCreateInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -1229,9 +1190,6 @@ export type IntraoperativeRecordUncheckedCreateInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -1308,9 +1266,6 @@ export type IntraoperativeRecordUpdateInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1389,9 +1344,6 @@ export type IntraoperativeRecordUncheckedUpdateInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1469,9 +1421,6 @@ export type IntraoperativeRecordCreateManyInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -1545,9 +1494,6 @@ export type IntraoperativeRecordUpdateManyMutationInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1622,9 +1568,6 @@ export type IntraoperativeRecordUncheckedUpdateManyInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1704,9 +1647,6 @@ export type IntraoperativeRecordCountOrderByAggregateInput = {
   dltSize?: Prisma.SortOrder
   endobronchialSize?: Prisma.SortOrder
   volatileAgent?: Prisma.SortOrder
-  plexusBlock?: Prisma.SortOrder
-  cvkSite?: Prisma.SortOrder
-  arterialLineSite?: Prisma.SortOrder
   ecg?: Prisma.SortOrder
   urinaryCatheter?: Prisma.SortOrder
   stomachTube?: Prisma.SortOrder
@@ -1793,9 +1733,6 @@ export type IntraoperativeRecordMaxOrderByAggregateInput = {
   dltSize?: Prisma.SortOrder
   endobronchialSize?: Prisma.SortOrder
   volatileAgent?: Prisma.SortOrder
-  plexusBlock?: Prisma.SortOrder
-  cvkSite?: Prisma.SortOrder
-  arterialLineSite?: Prisma.SortOrder
   ecg?: Prisma.SortOrder
   urinaryCatheter?: Prisma.SortOrder
   stomachTube?: Prisma.SortOrder
@@ -1860,9 +1797,6 @@ export type IntraoperativeRecordMinOrderByAggregateInput = {
   dltSize?: Prisma.SortOrder
   endobronchialSize?: Prisma.SortOrder
   volatileAgent?: Prisma.SortOrder
-  plexusBlock?: Prisma.SortOrder
-  cvkSite?: Prisma.SortOrder
-  arterialLineSite?: Prisma.SortOrder
   ecg?: Prisma.SortOrder
   urinaryCatheter?: Prisma.SortOrder
   stomachTube?: Prisma.SortOrder
@@ -1958,18 +1892,6 @@ export type NullableEnumVolatileAgentFieldUpdateOperationsInput = {
   set?: $Enums.VolatileAgent | null
 }
 
-export type NullableEnumPlexusBlockFieldUpdateOperationsInput = {
-  set?: $Enums.PlexusBlock | null
-}
-
-export type NullableEnumCVKSiteFieldUpdateOperationsInput = {
-  set?: $Enums.CVKSite | null
-}
-
-export type NullableEnumArterialLineSiteFieldUpdateOperationsInput = {
-  set?: $Enums.ArterialLineSite | null
-}
-
 export type IntraoperativeRecordCreateNestedOneWithoutLabRowsInput = {
   create?: Prisma.XOR<Prisma.IntraoperativeRecordCreateWithoutLabRowsInput, Prisma.IntraoperativeRecordUncheckedCreateWithoutLabRowsInput>
   connectOrCreate?: Prisma.IntraoperativeRecordCreateOrConnectWithoutLabRowsInput
@@ -2049,9 +1971,6 @@ export type IntraoperativeRecordCreateWithoutCaseInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -2128,9 +2047,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutCaseInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -2223,9 +2139,6 @@ export type IntraoperativeRecordUpdateWithoutCaseInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2302,9 +2215,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutCaseInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2381,9 +2291,6 @@ export type IntraoperativeRecordCreateWithoutLabRowsInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -2461,9 +2368,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutLabRowsInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -2555,9 +2459,6 @@ export type IntraoperativeRecordUpdateWithoutLabRowsInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2635,9 +2536,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutLabRowsInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2713,9 +2611,6 @@ export type IntraoperativeRecordCreateWithoutVascularAccessRowsInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -2793,9 +2688,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutVascularAccessRowsInput = 
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -2887,9 +2779,6 @@ export type IntraoperativeRecordUpdateWithoutVascularAccessRowsInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2967,9 +2856,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutVascularAccessRowsInput = 
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3045,9 +2931,6 @@ export type IntraoperativeRecordCreateWithoutPremedicationRowsInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -3125,9 +3008,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutPremedicationRowsInput = {
   dltSize?: number | null
   endobronchialSize?: number | null
   volatileAgent?: $Enums.VolatileAgent | null
-  plexusBlock?: $Enums.PlexusBlock | null
-  cvkSite?: $Enums.CVKSite | null
-  arterialLineSite?: $Enums.ArterialLineSite | null
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -3219,9 +3099,6 @@ export type IntraoperativeRecordUpdateWithoutPremedicationRowsInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3299,9 +3176,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutPremedicationRowsInput = {
   dltSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   endobronchialSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   volatileAgent?: Prisma.NullableEnumVolatileAgentFieldUpdateOperationsInput | $Enums.VolatileAgent | null
-  plexusBlock?: Prisma.NullableEnumPlexusBlockFieldUpdateOperationsInput | $Enums.PlexusBlock | null
-  cvkSite?: Prisma.NullableEnumCVKSiteFieldUpdateOperationsInput | $Enums.CVKSite | null
-  arterialLineSite?: Prisma.NullableEnumArterialLineSiteFieldUpdateOperationsInput | $Enums.ArterialLineSite | null
   ecg?: Prisma.BoolFieldUpdateOperationsInput | boolean
   urinaryCatheter?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stomachTube?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3427,9 +3301,6 @@ export type IntraoperativeRecordSelect<ExtArgs extends runtime.Types.Extensions.
   dltSize?: boolean
   endobronchialSize?: boolean
   volatileAgent?: boolean
-  plexusBlock?: boolean
-  cvkSite?: boolean
-  arterialLineSite?: boolean
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -3509,9 +3380,6 @@ export type IntraoperativeRecordSelectCreateManyAndReturn<ExtArgs extends runtim
   dltSize?: boolean
   endobronchialSize?: boolean
   volatileAgent?: boolean
-  plexusBlock?: boolean
-  cvkSite?: boolean
-  arterialLineSite?: boolean
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -3587,9 +3455,6 @@ export type IntraoperativeRecordSelectUpdateManyAndReturn<ExtArgs extends runtim
   dltSize?: boolean
   endobronchialSize?: boolean
   volatileAgent?: boolean
-  plexusBlock?: boolean
-  cvkSite?: boolean
-  arterialLineSite?: boolean
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -3665,9 +3530,6 @@ export type IntraoperativeRecordSelectScalar = {
   dltSize?: boolean
   endobronchialSize?: boolean
   volatileAgent?: boolean
-  plexusBlock?: boolean
-  cvkSite?: boolean
-  arterialLineSite?: boolean
   ecg?: boolean
   urinaryCatheter?: boolean
   stomachTube?: boolean
@@ -3706,7 +3568,7 @@ export type IntraoperativeRecordSelectScalar = {
   syncRevision?: boolean
 }
 
-export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "plexusBlock" | "cvkSite" | "arterialLineSite" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "bglMonitor" | "bloodGasMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
+export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "bglMonitor" | "bloodGasMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
 export type IntraoperativeRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   vascularAccessRows?: boolean | Prisma.IntraoperativeRecord$vascularAccessRowsArgs<ExtArgs>
@@ -3764,10 +3626,19 @@ export type $IntraoperativeRecordPayload<ExtArgs extends runtime.Types.Extension
     dltSide: string | null
     dltSize: number | null
     endobronchialSize: number | null
+    /**
+     * LEGACY, read-only. Superseded by the agent_start events, which carry the
+     * agent with its start, end and concentration and export as drug_exposure.
+     * Kept because the printed summary and the case-detail card still display it
+     * for records written before those events existed; nothing writes it now.
+     * 
+     * plexusBlock, cvkSite and arterialLineSite sat here too and were dropped in
+     * 20260904140000: single-value enums superseded by the techniques and
+     * vascularAccesses arrays, which export properly and allow more than one.
+     * Unlike this column they had no reader anywhere -- no control wrote them,
+     * no screen showed them, nothing exported them.
+     */
     volatileAgent: $Enums.VolatileAgent | null
-    plexusBlock: $Enums.PlexusBlock | null
-    cvkSite: $Enums.CVKSite | null
-    arterialLineSite: $Enums.ArterialLineSite | null
     ecg: boolean
     urinaryCatheter: boolean
     stomachTube: boolean
@@ -4266,9 +4137,6 @@ export interface IntraoperativeRecordFieldRefs {
   readonly dltSize: Prisma.FieldRef<"IntraoperativeRecord", 'Float'>
   readonly endobronchialSize: Prisma.FieldRef<"IntraoperativeRecord", 'Float'>
   readonly volatileAgent: Prisma.FieldRef<"IntraoperativeRecord", 'VolatileAgent'>
-  readonly plexusBlock: Prisma.FieldRef<"IntraoperativeRecord", 'PlexusBlock'>
-  readonly cvkSite: Prisma.FieldRef<"IntraoperativeRecord", 'CVKSite'>
-  readonly arterialLineSite: Prisma.FieldRef<"IntraoperativeRecord", 'ArterialLineSite'>
   readonly ecg: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly urinaryCatheter: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly stomachTube: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>

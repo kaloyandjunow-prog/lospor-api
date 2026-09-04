@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { CLINICAL_NUMBER_RULES } from "@lospor/core/clinical-validation"
 import { DATA_DICTIONARY, DICTIONARY_VERSION, type DictionaryEntry } from "@/lib/data-dictionary"
@@ -296,5 +298,78 @@ describe("the dictionary names the column the value is actually written to", () 
       .map(entry => `${entry.name}: ${entry.type} in ${parseExportName(entry).column}`)
 
     expect(contradictory.sort(), "declared type and declared column disagree").toEqual([])
+  })
+})
+
+/**
+ * The dictionary's *source* side, which nothing checked until now.
+ *
+ * Every assertion above is about the export: which OMOP table a variable lands
+ * in, which column, in what form. None of them looks at where the value came
+ * from, so `sourceTable` and `sourceColumn` were free text that drifted
+ * unchallenged — 27 entries named "PreoperativeRecord", a model that has never
+ * existed, and two named "Complication" instead of "CaseComplication".
+ *
+ * That is not only a documentation fault. SECTION_BY_SOURCE_TABLE is keyed on
+ * these names, so the 24 entries that spelled the preoperative table correctly
+ * were skipped by the range check above — the check that exists because the
+ * documented height range once excluded every neonate on file.
+ */
+describe("the dictionary names a real place for every value to come from", () => {
+  const schema = readFileSync(
+    join(process.cwd(), "prisma", "schema.prisma"),
+    "utf8",
+  )
+
+  /** Model name to the set of columns it declares. */
+  const modelColumns = new Map<string, Set<string>>()
+  {
+    let current: string | null = null
+    for (const raw of schema.split(/\r?\n/)) {
+      const line = raw.trim()
+      const opened = line.match(/^model\s+(\w+)\s*\{/)
+      if (opened) { current = opened[1]; modelColumns.set(current, new Set()); continue }
+      if (line === "}") { current = null; continue }
+      if (!current || !line || line.startsWith("//") || line.startsWith("@@")) continue
+      const field = line.split(/\s+/)[0]
+      if (/^[a-z][A-Za-z0-9]*$/.test(field)) modelColumns.get(current)!.add(field)
+    }
+  }
+
+  it("reads the schema at all", () => {
+    // Guards the two assertions below: a parse that found nothing would let
+    // them pass while checking nothing, which is the failure mode of every
+    // test that reads its own source of truth.
+    expect(modelColumns.size).toBeGreaterThan(20)
+    expect(modelColumns.get("PreoperativeAssessment")?.size ?? 0).toBeGreaterThan(50)
+  })
+
+  it("names a table the schema declares", () => {
+    const unknown = DATA_DICTIONARY
+      .filter(entry => !modelColumns.has(entry.sourceTable))
+      .map(entry => `${entry.name} → ${entry.sourceTable}`)
+
+    expect([...new Set(unknown)].sort(), "sourceTable is not a model in schema.prisma").toEqual([])
+  })
+
+  it("names a column that table actually has", () => {
+    const unknown: string[] = []
+    for (const entry of DATA_DICTIONARY) {
+      const columns = modelColumns.get(entry.sourceTable)
+      // A bad table is already reported above; reporting it twice buries the
+      // column faults underneath it.
+      if (!columns) continue
+      // A variable derived from more than one column names them "a / b" --
+      // an age from its value and unit, a visit boundary from the real instant
+      // and the legacy wall clock. Each part has to exist; the joined string
+      // never will.
+      for (const column of entry.sourceColumn.split("/").map(part => part.trim())) {
+        if (!columns.has(column)) {
+          unknown.push(`${entry.name} → ${entry.sourceTable}.${column}`)
+        }
+      }
+    }
+
+    expect(unknown.sort(), "sourceColumn is not a field on that model").toEqual([])
   })
 })

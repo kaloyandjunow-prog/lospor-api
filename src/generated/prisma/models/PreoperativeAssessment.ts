@@ -5829,6 +5829,12 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     diagnosesJson: runtime.JsonValue | null
     plannedProcedure: string
     proceduresJson: runtime.JsonValue | null
+    /**
+     * LEGACY, read-only. The first diagnosis code, denormalised. The diagnoses
+     * themselves export properly through the PreopDiagnosis mirror, so nothing
+     * is lost by this not being exported; it survives because the printed
+     * summary still displays it beside the diagnosis text.
+     */
     icdCode: string | null
     teamNotes: string | null
     physicalExamReport: string | null

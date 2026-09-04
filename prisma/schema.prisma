@@ -983,6 +983,10 @@ model PreoperativeAssessment {
   diagnosesJson      Json?
   plannedProcedure   String
   proceduresJson     Json?
+  /// LEGACY, read-only. The first diagnosis code, denormalised. The diagnoses
+  /// themselves export properly through the PreopDiagnosis mirror, so nothing
+  /// is lost by this not being exported; it survives because the printed
+  /// summary still displays it beside the diagnosis text.
   icdCode            String?
   teamNotes          String?
   physicalExamReport String?
@@ -1167,10 +1171,17 @@ model IntraoperativeRecord {
   dltSize           Float?
   endobronchialSize Float?
 
+  /// LEGACY, read-only. Superseded by the agent_start events, which carry the
+  /// agent with its start, end and concentration and export as drug_exposure.
+  /// Kept because the printed summary and the case-detail card still display it
+  /// for records written before those events existed; nothing writes it now.
+  ///
+  /// plexusBlock, cvkSite and arterialLineSite sat here too and were dropped in
+  /// 20260904140000: single-value enums superseded by the techniques and
+  /// vascularAccesses arrays, which export properly and allow more than one.
+  /// Unlike this column they had no reader anywhere -- no control wrote them,
+  /// no screen showed them, nothing exported them.
   volatileAgent    VolatileAgent?
-  plexusBlock      PlexusBlock?
-  cvkSite          CVKSite?
-  arterialLineSite ArterialLineSite?
 
   ecg              Boolean @default(false)
   urinaryCatheter  Boolean @default(false)
@@ -1565,32 +1576,6 @@ enum VolatileAgent {
   SEVOFLURANE
   DESFLURANE
   ISOFLURANE
-}
-
-enum CVKSite {
-  INTERNAL_JUGULAR
-  EXTERNAL_JUGULAR
-  SUBCLAVIAN
-  FEMORAL
-}
-
-enum ArterialLineSite {
-  RADIAL
-  DORSALIS_PEDIS
-  FEMORAL
-  BRACHIAL
-}
-
-enum PlexusBlock {
-  AXILLARY
-  INTERSCALENE
-  SUPRACLAVICULAR
-  INFRACLAVICULAR
-  FEMORAL
-  SCIATIC
-  POPLITEAL
-  TAP
-  ERECTOR_SPINAE
 }
 
 enum Disposition {

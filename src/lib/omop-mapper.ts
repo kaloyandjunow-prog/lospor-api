@@ -1177,6 +1177,33 @@ type CaseRow = {
     rcriScore: number | null
     apfelScore: number | null
     stopBangScore: number | null
+    /**
+     * The factors behind each risk score.
+     *
+     * The totals exported and the factors did not, for every score alike --
+     * RCRI, Apfel, STOP-BANG and POVOC. A researcher could see an RCRI of 3
+     * and never which three, which is the wrong half to keep: for validating
+     * or recalibrating a risk model the factors are the data and the total is
+     * the derivation.
+     *
+     * All nullable, so false is an answer and null is nobody having asked.
+     */
+    rcriIschemicHeart?: boolean | null
+    rcriCHF?: boolean | null
+    rcriCVD?: boolean | null
+    rcriInsulinDM?: boolean | null
+    rcriCreatinine?: boolean | null
+    apfelPONVHistory?: boolean | null
+    apfelPostopOpioids?: boolean | null
+    stopbangSnoring?: boolean | null
+    stopbangTired?: boolean | null
+    stopbangObserved?: boolean | null
+    stopbangBP?: boolean | null
+    stopbangNeck?: boolean | null
+    povocSurgeryAtLeast30Minutes?: boolean | null
+    povocAgeAtLeast3Years?: boolean | null
+    povocStrabismusSurgery?: boolean | null
+    povocHistory?: boolean | null
     povocScore?: number | null
     povocRiskPercent?: number | null
     coldsScore?: number | null
@@ -2083,6 +2110,43 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // outcome these predict rather than the prediction. They stay source
       // values, and their components are the route to making them poolable.
       sourceObservation("LOSPOR:APFEL", preop.apfelScore, preopDate)
+
+      // The factors behind the four scores.
+      //
+      // Every total above exported and not one factor did, so a researcher
+      // could read an RCRI of 3 and never learn which three. For validating or
+      // recalibrating a risk model in a new population -- which is a register
+      // is for -- the factors are the data and the total is the derivation.
+      //
+      // Emitted as answers rather than as findings: value_as_concept_id says
+      // yes or no, so a false is a recorded negative rather than an absence.
+      // All sixteen columns are nullable, so null still means nobody asked and
+      // sourceObservation skips it.
+      //
+      // No question concept yet. Several of these are real SNOMED conditions
+      // and could carry one, but a concept per factor is sixteen individual
+      // verifications and guessing at them would be worse than a source value
+      // that is at least honest about being LOSPOR's own.
+      const riskFactor = (source: string, value: boolean | null | undefined) => {
+        if (value == null) return
+        sourceObservation(source, value, preopDate, null, 0, value ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+      }
+      riskFactor("LOSPOR:RCRI_ISCHEMIC_HEART", preop.rcriIschemicHeart)
+      riskFactor("LOSPOR:RCRI_CHF", preop.rcriCHF)
+      riskFactor("LOSPOR:RCRI_CVD", preop.rcriCVD)
+      riskFactor("LOSPOR:RCRI_INSULIN_DM", preop.rcriInsulinDM)
+      riskFactor("LOSPOR:RCRI_CREATININE", preop.rcriCreatinine)
+      riskFactor("LOSPOR:APFEL_PONV_HISTORY", preop.apfelPONVHistory)
+      riskFactor("LOSPOR:APFEL_POSTOP_OPIOIDS", preop.apfelPostopOpioids)
+      riskFactor("LOSPOR:STOPBANG_SNORING", preop.stopbangSnoring)
+      riskFactor("LOSPOR:STOPBANG_TIRED", preop.stopbangTired)
+      riskFactor("LOSPOR:STOPBANG_OBSERVED_APNOEA", preop.stopbangObserved)
+      riskFactor("LOSPOR:STOPBANG_BP", preop.stopbangBP)
+      riskFactor("LOSPOR:STOPBANG_NECK", preop.stopbangNeck)
+      riskFactor("LOSPOR:POVOC_SURGERY_30_MIN", preop.povocSurgeryAtLeast30Minutes)
+      riskFactor("LOSPOR:POVOC_AGE_3_YEARS", preop.povocAgeAtLeast3Years)
+      riskFactor("LOSPOR:POVOC_STRABISMUS", preop.povocStrabismusSurgery)
+      riskFactor("LOSPOR:POVOC_HISTORY", preop.povocHistory)
       // Recorded for yes and for no, but not when nobody asked.
       //
       // This used to emit only on true, and that was right at the time: the
