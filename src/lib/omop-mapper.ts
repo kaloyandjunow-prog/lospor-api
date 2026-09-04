@@ -2507,24 +2507,75 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // charts -- not 3016226, the measured airway pressure.
       sourceMeasurement("LOSPOR:PEEP_CMH2O", ia.peepCmH2O, 3022875, 44777590, "cm[H2O]")
 
+      // A technique/act's placement is sometimes also logged as its own
+      // intraop timeline marker -- the same procedure, witnessed twice.
+      // Rather than emit the marker as a second procedure_occurrence row
+      // (double-counting the act for any cohort built on this concept), its
+      // timestamp refines the act's own row instead, wherever exactly one
+      // matching row exists to refine.
+      const clinicalEventTimestamp = (label: string): Date | undefined =>
+        (c.events ?? []).find(e => e.type === "clinical_event" && e.label === label)?.timestamp
+
       // ── Airway acts -> PROCEDURE_OCCURRENCE ──────────────────────────────
       //
       // Derived from the devices actually recorded, so a case documents the
       // intubation it performed and not the one it might have. Devices with no
       // corresponding act -- a face mask, a nasal cannula -- produce no
       // procedure, which is correct: nothing was placed.
+      const airwayActs = devices.map(d => AIRWAY_ACTS[d]).filter((a): a is string => Boolean(a))
+      const intubatedTs = airwayActs.filter(a => a === "TRACHEAL_INTUBATION_ORAL" || a === "TRACHEAL_INTUBATION_NASAL").length === 1
+        ? clinicalEventTimestamp("Intubated") : undefined
+      const lmaInTs = airwayActs.filter(a => a === "SUPRAGLOTTIC_AIRWAY_PLACEMENT").length === 1
+        ? clinicalEventTimestamp("LMA in") : undefined
+      const dltPlacedTs = airwayActs.filter(a => a === "DOUBLE_LUMEN_TUBE_PLACEMENT").length === 1
+        ? clinicalEventTimestamp("DLT placed") : undefined
       for (const device of devices) {
         const act = AIRWAY_ACTS[device]
         if (!act) continue
+        const preciseTs = (act === "TRACHEAL_INTUBATION_ORAL" || act === "TRACHEAL_INTUBATION_NASAL") ? intubatedTs
+          : act === "SUPRAGLOTTIC_AIRWAY_PLACEMENT" ? lmaInTs
+          : act === "DOUBLE_LUMEN_TUBE_PLACEMENT" ? dltPlacedTs
+          : undefined
         procedures.push({
           procedure_occurrence_id:   nextId(),
           person_id:                 personId,
           procedure_concept_id:      AIRWAY_ACT_CONCEPTS[act] ?? 0,
-          procedure_date:            startDate,
+          procedure_date:            preciseTs ? isoDate(preciseTs) : startDate,
+          procedure_datetime:        preciseTs ? preciseTs.toISOString() : null,
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,
           modifier_source_value:     null,
           procedure_source_value:    `AIRWAY_MANAGEMENT:${act}`,
+          visit_occurrence_id:       visitId,
+        })
+      }
+
+      // Induction, Mask ventilation, Extubation and an airway-exchange-
+      // catheter exchange have no existing row anywhere else in the export
+      // to refine -- induction and mask ventilation are never coded facts
+      // today, and extubation/exchange are not the reverse of any row above
+      // (removing a tube is a distinct procedure from placing one, the same
+      // reasoning as Spinal removed). All four are new rows, timestamped
+      // from the marker itself.
+      const AIRWAY_MILESTONE_CONCEPTS: Record<string, number> = {
+        "Induction":       4082850, // Induction of general anesthesia
+        "Mask vent":       37157165, // Positive pressure ventilation via bag and mask
+        "Extubated":       4148972, // Extubation of trachea
+        "Airway exchange": 4216776, // Airway exchange catheter procedure
+      }
+      for (const [label, conceptId] of Object.entries(AIRWAY_MILESTONE_CONCEPTS)) {
+        const ts = clinicalEventTimestamp(label)
+        if (!ts) continue
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      conceptId,
+          procedure_date:            isoDate(ts),
+          procedure_datetime:        ts.toISOString(),
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    `INTRAOP_EVENT:${label}`,
           visit_occurrence_id:       visitId,
         })
       }
@@ -2535,9 +2586,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // second procedure_occurrence row (double-counting the block for any
       // cohort built on this concept), its timestamp refines the technique
       // row's own date/time instead: the technique list says a spinal was
-      // done, the timeline says exactly when.
-      const clinicalEventTimestamp = (label: string): Date | undefined =>
-        (c.events ?? []).find(e => e.type === "clinical_event" && e.label === label)?.timestamp
+      // done, the timeline says exactly when. clinicalEventTimestamp is
+      // defined above, by the airway acts.
 
       // Whether tech sits at or under the named tree node -- used to find
       // "any peripheral block" for the generic "Block done" marker, the same

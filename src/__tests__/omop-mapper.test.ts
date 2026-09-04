@@ -978,6 +978,45 @@ describe("airway management", () => {
     expect(obs(bundle, "LOSPOR:CORMACK_LEHANE")).toEqual([])
     expect(airwayProcs(bundle)).toEqual([])
   })
+
+  it("refines Intubated/LMA in/DLT placed onto their own act rows, each only when exactly one match exists", () => {
+    const base = completeCase() as unknown as { intraop: Record<string, unknown>; events: unknown[] }
+    const c = {
+      ...base,
+      intraop: { ...base.intraop, airwayDevice: null, airwayDevices: ["LMA", "DOUBLE_LUMEN_TUBE"] },
+      events: [
+        { type: "clinical_event", timestamp: new Date("2026-06-01T08:01:00Z"), label: "LMA in", value: null, unit: null, metadataJson: {} },
+        { type: "clinical_event", timestamp: new Date("2026-06-01T08:02:00Z"), label: "DLT placed", value: null, unit: null, metadataJson: {} },
+      ],
+    }
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const lma = bundle.procedure_occurrence.find(p => p.procedure_source_value === "AIRWAY_MANAGEMENT:SUPRAGLOTTIC_AIRWAY_PLACEMENT")
+    const dlt = bundle.procedure_occurrence.find(p => p.procedure_source_value === "AIRWAY_MANAGEMENT:DOUBLE_LUMEN_TUBE_PLACEMENT")
+    expect(lma!.procedure_datetime).toBe("2026-06-01T08:01:00.000Z")
+    expect(dlt!.procedure_datetime).toBe("2026-06-01T08:02:00.000Z")
+  })
+
+  it("emits Induction, Mask vent, Extubated and Airway exchange as their own new procedures", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [
+      { type: "clinical_event", timestamp: new Date("2026-06-01T07:55:00Z"), label: "Induction", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T07:56:00Z"), label: "Mask vent", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:58:00Z"), label: "Extubated", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:30:00Z"), label: "Airway exchange", value: null, unit: null, metadataJson: {} },
+    ]
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const byLabel = (label: string) => bundle.procedure_occurrence.find(p => p.procedure_source_value === `INTRAOP_EVENT:${label}`)
+    expect(byLabel("Induction")).toMatchObject({ procedure_concept_id: 4082850, procedure_datetime: "2026-06-01T07:55:00.000Z" })
+    expect(byLabel("Mask vent")).toMatchObject({ procedure_concept_id: 37157165, procedure_datetime: "2026-06-01T07:56:00.000Z" })
+    expect(byLabel("Extubated")).toMatchObject({ procedure_concept_id: 4148972, procedure_datetime: "2026-06-01T08:58:00.000Z" })
+    expect(byLabel("Airway exchange")).toMatchObject({ procedure_concept_id: 4216776, procedure_datetime: "2026-06-01T08:30:00.000Z" })
+  })
 })
 
 describe("AIRWAY_ACTS", () => {
