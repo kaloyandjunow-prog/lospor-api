@@ -24,6 +24,12 @@ export const DICTIONARY_VERSION = "4.3.0"
 
 export interface DictionaryEntry {
   name: string
+  /**
+   * Where the value lands in the export, as "table.column (SOURCE_CODE)".
+   *
+   * For an entry marked `exported: false` this describes where it *would* go
+   * and is not a claim that anything arrives -- see that field.
+   */
   exportName: string
   meaning: string
   unit?: string
@@ -33,6 +39,18 @@ export interface DictionaryEntry {
   derivationRule?: string
   sourceTable: string
   sourceColumn: string
+  /**
+   * False when the field is collected and deliberately never leaves.
+   *
+   * Silence is the wrong way to record that. A researcher who cannot find a
+   * field in the dictionary does not conclude it is withheld -- they conclude
+   * the dictionary is incomplete, go looking, and eventually ask somebody. And
+   * the hospital has no written statement of which free text stays inside it,
+   * which is the question a DPO asks first.
+   *
+   * Absent means exported, which is true of all but a handful of entries.
+   */
+  exported?: false
   versionIntroduced: string
 }
 
@@ -1647,6 +1665,46 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not recorded for this gas setting",
     sourceTable: "CaseEvent", sourceColumn: "fiN2OPercent",
     versionIntroduced: "4.0.0",
+  },
+  {
+    name: "preop.notes",
+    exportName: "(not exported)",
+    exported: false,
+    meaning: "The anaesthetist's own free-text note on the preoperative assessment. Collected, stored, shown in the app and on the printed record -- and deliberately absent from the research export. It is not in the export query's select list, so it never reaches the mapper and cannot leave by that route. Free prose is where identifiers arrive whatever the field is labelled: a name, a ward, a relative, a phone number, written in passing by somebody documenting care rather than preparing a dataset. Redaction exists for the free text that does leave -- the allergy, family-history and difficult-airway notes -- and it is heuristic. Not exporting is the stronger guarantee, and these four fields carry nothing a research question needs that the coded fields do not already carry better.",
+    type: "string",
+    missingnessRule: "Never present in the export, whether or not a clinician wrote anything. The completeness signal is tracked separately as a ClinicalFieldStatus row, which records that the field was filled in and never its content",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "notes",
+    versionIntroduced: "4.3.0",
+  },
+  {
+    name: "preop.teamNotes",
+    exportName: "(not exported)",
+    exported: false,
+    meaning: "A note to the theatre team, written during the preoperative assessment. Collected, stored, shown in the app and on the printed record -- and deliberately absent from the research export. It is not in the export query's select list, so it never reaches the mapper and cannot leave by that route. Free prose is where identifiers arrive whatever the field is labelled: a name, a ward, a relative, a phone number, written in passing by somebody documenting care rather than preparing a dataset. Redaction exists for the free text that does leave -- the allergy, family-history and difficult-airway notes -- and it is heuristic. Not exporting is the stronger guarantee, and these four fields carry nothing a research question needs that the coded fields do not already carry better.",
+    type: "string",
+    missingnessRule: "Never present in the export, whether or not a clinician wrote anything. The completeness signal is tracked separately as a ClinicalFieldStatus row, which records that the field was filled in and never its content",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "teamNotes",
+    versionIntroduced: "4.3.0",
+  },
+  {
+    name: "preop.physicalExamReport",
+    exportName: "(not exported)",
+    exported: false,
+    meaning: "The written physical examination. Collected, stored, shown in the app and on the printed record -- and deliberately absent from the research export. It is not in the export query's select list, so it never reaches the mapper and cannot leave by that route. Free prose is where identifiers arrive whatever the field is labelled: a name, a ward, a relative, a phone number, written in passing by somebody documenting care rather than preparing a dataset. Redaction exists for the free text that does leave -- the allergy, family-history and difficult-airway notes -- and it is heuristic. Not exporting is the stronger guarantee, and these four fields carry nothing a research question needs that the coded fields do not already carry better.",
+    type: "string",
+    missingnessRule: "Never present in the export, whether or not a clinician wrote anything. The completeness signal is tracked separately as a ClinicalFieldStatus row, which records that the field was filled in and never its content",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "physicalExamReport",
+    versionIntroduced: "4.3.0",
+  },
+  {
+    name: "postop.dispositionNotes",
+    exportName: "(not exported)",
+    exported: false,
+    meaning: "A free-text note on where the patient went from recovery and why. Collected, stored, shown in the app and on the printed record -- and deliberately absent from the research export. It is not in the export query's select list, so it never reaches the mapper and cannot leave by that route. Free prose is where identifiers arrive whatever the field is labelled: a name, a ward, a relative, a phone number, written in passing by somebody documenting care rather than preparing a dataset. Redaction exists for the free text that does leave -- the allergy, family-history and difficult-airway notes -- and it is heuristic. Not exporting is the stronger guarantee, and these four fields carry nothing a research question needs that the coded fields do not already carry better.",
+    type: "string",
+    missingnessRule: "Never present in the export, whether or not a clinician wrote anything. The completeness signal is tracked separately as a ClinicalFieldStatus row, which records that the field was filled in and never its content",
+    sourceTable: "PostoperativeRecord", sourceColumn: "dispositionNotes",
+    versionIntroduced: "4.3.0",
   },
   {
     name: "monitoring.ecg",

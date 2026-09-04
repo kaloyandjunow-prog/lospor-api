@@ -107,12 +107,27 @@ describe("the dictionary describes the export it ships with", () => {
     expect(unknown, "documented under a table the export does not produce").toEqual([])
   })
 
-  it("gives every entry a parseable export name", () => {
+  it("gives every exported entry a parseable export name", () => {
     const unparseable = DATA_DICTIONARY
+      .filter(entry => entry.exported !== false)
       .filter(entry => !parseExportName(entry).table)
       .map(entry => entry.name)
 
     expect(unparseable, "exportName must read as table.column").toEqual([])
+  })
+
+  it("keeps a not-exported entry out of the export-side checks entirely", () => {
+    // An entry marked exported:false is a statement that the field stays in the
+    // hospital. Every assertion in this file about tables, columns and value
+    // forms is about what arrives, so applying them to a field that never
+    // arrives would either fail or, worse, pass by accident and imply the
+    // field is in the dataset.
+    const withheld = DATA_DICTIONARY.filter(entry => entry.exported === false)
+    expect(withheld.length, "at least one field is deliberately withheld").toBeGreaterThan(0)
+    for (const entry of withheld) {
+      expect(entry.exportName, `${entry.name} must not claim an export location`).toBe("(not exported)")
+      expect(entry.missingnessRule, `${entry.name} must say it never appears`).toMatch(/never/i)
+    }
   })
 
   it("gives every entry a meaning and a missingness rule", () => {
