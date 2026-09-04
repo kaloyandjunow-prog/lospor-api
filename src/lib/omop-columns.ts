@@ -57,6 +57,10 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   ],
   procedure_occurrence: [
     "procedure_occurrence_id", "person_id", "procedure_concept_id", "procedure_date",
+    // Populated only when a procedure is also witnessed as a precise intraop
+    // timeline event (currently: the anaesthesia technique's own placement
+    // marker) -- most rows here are known only to the day and leave this null.
+    "procedure_datetime",
     "procedure_type_concept_id",
     // How the operation was performed — urgency, for now. A qualifier on the
     // operation rather than an operation of its own, which is what keeps one

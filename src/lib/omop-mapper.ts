@@ -927,6 +927,11 @@ interface OmopProcedure {
   person_id: number
   procedure_concept_id: number
   procedure_date: string | null
+  // Optional: most procedures here are known only to the day (the case's own
+  // start date). A few are also witnessed as a precise intraop timeline
+  // event -- when one exists, it refines this row's time rather than adding
+  // a second, duplicate row for the same procedure.
+  procedure_datetime?: string | null
   procedure_type_concept_id: number
   /**
    * A qualifier on the operation, not a second operation.
@@ -2512,15 +2517,30 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         })
       }
 
+      // A technique's placement is sometimes also logged as its own
+      // intraop timeline marker ("Spinal in", "Epidural in") -- the same
+      // procedure, witnessed twice. Rather than emit that marker as a
+      // second procedure_occurrence row (double-counting the block for any
+      // cohort built on this concept), its timestamp refines the technique
+      // row's own date/time instead: the technique list says a spinal was
+      // done, the timeline says exactly when.
+      const clinicalEventTimestamp = (label: string): Date | undefined =>
+        (c.events ?? []).find(e => e.type === "clinical_event" && e.label === label)?.timestamp
+
       const techs: string[] = Array.isArray(c.intraop.techniques) ? c.intraop.techniques as string[] : []
       for (const tech of techs) {
+        const techConceptId = techniqueConceptFor(tech)
+        const preciseTs = techConceptId === TECHNIQUE_CONCEPTS.SPINAL ? clinicalEventTimestamp("Spinal in")
+          : techConceptId === TECHNIQUE_CONCEPTS.EPIDURAL ? clinicalEventTimestamp("Epidural in")
+          : undefined
         procedures.push({
           procedure_occurrence_id:    nextId(),
           person_id:                 personId,
           // Coded at the level the vocabulary supports; the node the
           // anaesthetist actually chose stays in the source value.
-          procedure_concept_id:      techniqueConceptFor(tech),
-          procedure_date:            startDate,
+          procedure_concept_id:      techConceptId,
+          procedure_date:            preciseTs ? isoDate(preciseTs) : startDate,
+          procedure_datetime:        preciseTs ? preciseTs.toISOString() : null,
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,
           modifier_source_value:     null,

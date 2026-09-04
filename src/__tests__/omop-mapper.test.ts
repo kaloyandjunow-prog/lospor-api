@@ -452,6 +452,40 @@ describe("care site comes from the case, not from where its author works now", (
  * The effect was not a missing row. It was a row that said "this maps to
  * nothing", while the database held the mapping.
  */
+describe("a technique's timeline marker refines its procedure row instead of duplicating it", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("uses the Spinal in event's exact timestamp on the spinal technique's own row", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["SPINAL"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:05:00Z"),
+      label: "Spinal in", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:SPINAL/.test(String(row.procedure_source_value)))
+    expect(line, "fixture must contain the spinal technique row").toBeDefined()
+    expect(line!.procedure_concept_id).toBe(4332593)
+    expect(line!.procedure_datetime).toBe("2026-06-01T08:05:00.000Z")
+    expect(line!.procedure_date).toBe("2026-06-01")
+    // Not a second row: the marker refines this one rather than duplicating
+    // the procedure.
+    expect(bundle.procedure_occurrence.filter(row => /ANAESTHESIA_TECHNIQUE:SPINAL/.test(String(row.procedure_source_value)))).toHaveLength(1)
+  })
+
+  it("falls back to the case's own start date when no matching marker exists", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] } }
+    c.intraop.techniques = ["SPINAL"]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:SPINAL/.test(String(row.procedure_source_value)))
+    expect(line!.procedure_datetime).toBeNull()
+    expect(line!.procedure_date).toBe("2026-06-01")
+  })
+})
+
 describe("curated mappings reach the export", () => {
   const options = {
     userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
