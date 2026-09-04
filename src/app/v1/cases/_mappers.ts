@@ -320,6 +320,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
   const DIRECT = [
     "positions","techniques",
     "tubeSize","cuffed","peepCmH2O","airwayNotes","cormackLehane",
+    "presentsIntubated","airwayNotApplicable",
     "lmaSize","oralTubeSize","oralCuffed","nasalTubeSize","nasalCuffed",
     "dltType","dltSide","dltSize","endobronchialSize",
     "volatileAgent",
@@ -478,6 +479,8 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     })(),
     airwayNotes:     intraop.airwayNotes     ?? null,
     cormackLehane:   safeEnum(intraop.cormackLehane, ["I","IIa","IIb","III","IV"] as const),
+    presentsIntubated:   intraop.presentsIntubated   ?? false,
+    airwayNotApplicable: intraop.airwayNotApplicable ?? false,
     airwayDevices:   Array.isArray(intraop.airwayDevices)    ? intraop.airwayDevices    : [],
     ventilationModes:Array.isArray(intraop.ventilationModes) ? intraop.ventilationModes : [],
     dltType:         intraop.dltType         ?? null,

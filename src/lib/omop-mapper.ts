@@ -1307,6 +1307,10 @@ type CaseRow = {
     ventilationModes?: unknown
     ippv?: boolean | null
     jetVentilation?: boolean | null
+    /** Arrived with a tube somebody else placed; this team did not intubate. */
+    presentsIntubated?: boolean | null
+    /** No airway intervention at all -- regional or sedation. */
+    airwayNotApplicable?: boolean | null
     peepCmH2O?: number | null
     vascularAccessRows?: {
       site: string | null
@@ -2617,6 +2621,32 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // 3022875, the ventilator *setting*, which is what an anaesthetist
       // charts -- not 3016226, the measured airway pressure.
       sourceMeasurement("LOSPOR:PEEP_CMH2O", ia.peepCmH2O, 3022875, 44777590, "cm[H2O]")
+
+      // ── Why there is no airway device of this team's own ──────────────────
+      // Both are emitted only when asserted. False is the ordinary case, where
+      // the airway rows above already say what was done, and a row claiming
+      // "did not arrive intubated" on every case would be noise.
+      //
+      // Arrived with a tube somebody else placed. The decomposition is the
+      // vocabulary's own: SNOMED "Endotracheal tube present" (4168966) is
+      // non-standard and Athena maps it to 1340204 (History of event) with
+      // "Maps to value" 4013354 (Insertion of endotracheal tube). So the
+      // export states exactly that pair -- a history of tracheal intubation --
+      // which is the honest claim: the intubation is real and predates this
+      // team, and no procedure_occurrence row is created for an act they did
+      // not perform.
+      if (ia.presentsIntubated) {
+        sourceObservation("LOSPOR:PRESENTS_INTUBATED", true, startDate, null, 1340204, 4013354)
+      }
+      // No airway intervention at all -- a regional or sedation case where the
+      // patient kept their own airway. CDM has no way to record a procedure
+      // that did not happen (a procedure_occurrence row means it did), so the
+      // negative is an observation: 4303568 (Airway management) answered No.
+      // That is the same question-and-answer shape IPPV and jet ventilation
+      // already use above.
+      if (ia.airwayNotApplicable) {
+        sourceObservation("LOSPOR:AIRWAY_NOT_APPLICABLE", true, startDate, null, 4303568, NO_CONCEPT_ID)
+      }
 
       // A technique/act's placement is sometimes also logged as its own
       // intraop timeline marker -- the same procedure, witnessed twice.

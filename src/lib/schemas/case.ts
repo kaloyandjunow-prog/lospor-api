@@ -207,6 +207,12 @@ export const intraopSchema = z.object({
   ippv:           z.boolean().optional(),
   jetVentilation: z.boolean().optional(),
   fob:            z.boolean().optional(),
+  // Why this case has no airway device of its own. See the schema comment on
+  // IntraoperativeRecord: both were web-only React state until now, so a case
+  // that arrived intubated looked identical to one whose airway section was
+  // never filled in.
+  presentsIntubated:   z.boolean().optional(),
+  airwayNotApplicable: z.boolean().optional(),
   airwayTools:      z.array(z.unknown()).optional(),
   airwayNotes:      z.string().max(2000).nullable().optional(),
   cormackLehane:    z.enum(["I", "IIa", "IIb", "III", "IV"]).nullable().optional(),

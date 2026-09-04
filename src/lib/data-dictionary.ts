@@ -991,6 +991,34 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.8.0",
   },
   {
+    name: "presentsIntubated",
+    exportName: "observation.value_as_concept_id (LOSPOR:PRESENTS_INTUBATED)",
+    meaning: "The patient arrived with a tracheal tube already in place, put "
+      + "there by somebody else. Exported as SNOMED 1340204 (History of event) "
+      + "with value 4013354 (Insertion of endotracheal tube) -- the "
+      + "decomposition Athena itself prescribes for the non-standard "
+      + "\"Endotracheal tube present\" (4168966). No procedure_occurrence row "
+      + "is written, because this team did not perform the intubation.",
+    type: "boolean",
+    missingnessRule: "No row = the patient did not arrive intubated, or it was not recorded. Only the positive assertion is exported; the airway rows themselves describe the ordinary case",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "presentsIntubated",
+    versionIntroduced: "4.3.0",
+  },
+  {
+    name: "airwayNotApplicable",
+    exportName: "observation.value_as_concept_id (LOSPOR:AIRWAY_NOT_APPLICABLE)",
+    meaning: "No airway intervention was performed at all -- a regional or "
+      + "sedation case where the patient kept their own airway throughout. "
+      + "Exported as SNOMED 4303568 (Airway management) answered 4188540 (No). "
+      + "CDM has no way to record a procedure that did not happen, since a "
+      + "procedure_occurrence row asserts that it did, so the negative is "
+      + "carried as an observation -- the same shape ippv and jetVentilation use.",
+    type: "boolean",
+    missingnessRule: "No row = airway management was performed, or the question was not recorded. Only the positive assertion is exported",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "airwayNotApplicable",
+    versionIntroduced: "4.3.0",
+  },
+  {
     name: "peepCmH2O",
     exportName: "measurement.value_as_number (LOSPOR:PEEP_CMH2O)",
     meaning: "Positive end-expiratory pressure, as LOINC 3022875 (Positive "

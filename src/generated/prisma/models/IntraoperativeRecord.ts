@@ -77,6 +77,8 @@ export type IntraoperativeRecordMinAggregateOutputType = {
   ippv: boolean | null
   jetVentilation: boolean | null
   fob: boolean | null
+  presentsIntubated: boolean | null
+  airwayNotApplicable: boolean | null
   airwayNotes: string | null
   cormackLehane: $Enums.CormackLehane | null
   lmaSize: number | null
@@ -142,6 +144,8 @@ export type IntraoperativeRecordMaxAggregateOutputType = {
   ippv: boolean | null
   jetVentilation: boolean | null
   fob: boolean | null
+  presentsIntubated: boolean | null
+  airwayNotApplicable: boolean | null
   airwayNotes: string | null
   cormackLehane: $Enums.CormackLehane | null
   lmaSize: number | null
@@ -209,6 +213,8 @@ export type IntraoperativeRecordCountAggregateOutputType = {
   ippv: number
   jetVentilation: number
   fob: number
+  presentsIntubated: number
+  airwayNotApplicable: number
   airwayTools: number
   airwayNotes: number
   cormackLehane: number
@@ -318,6 +324,8 @@ export type IntraoperativeRecordMinAggregateInputType = {
   ippv?: true
   jetVentilation?: true
   fob?: true
+  presentsIntubated?: true
+  airwayNotApplicable?: true
   airwayNotes?: true
   cormackLehane?: true
   lmaSize?: true
@@ -383,6 +391,8 @@ export type IntraoperativeRecordMaxAggregateInputType = {
   ippv?: true
   jetVentilation?: true
   fob?: true
+  presentsIntubated?: true
+  airwayNotApplicable?: true
   airwayNotes?: true
   cormackLehane?: true
   lmaSize?: true
@@ -450,6 +460,8 @@ export type IntraoperativeRecordCountAggregateInputType = {
   ippv?: true
   jetVentilation?: true
   fob?: true
+  presentsIntubated?: true
+  airwayNotApplicable?: true
   airwayTools?: true
   airwayNotes?: true
   cormackLehane?: true
@@ -612,6 +624,8 @@ export type IntraoperativeRecordGroupByOutputType = {
   ippv: boolean
   jetVentilation: boolean
   fob: boolean
+  presentsIntubated: boolean
+  airwayNotApplicable: boolean
   airwayTools: runtime.JsonValue
   airwayNotes: string | null
   cormackLehane: $Enums.CormackLehane | null
@@ -710,6 +724,8 @@ export type IntraoperativeRecordWhereInput = {
   ippv?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   jetVentilation?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   fob?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
+  presentsIntubated?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
+  airwayNotApplicable?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   airwayTools?: Prisma.JsonFilter<"IntraoperativeRecord">
   airwayNotes?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
   cormackLehane?: Prisma.EnumCormackLehaneNullableFilter<"IntraoperativeRecord"> | $Enums.CormackLehane | null
@@ -789,6 +805,8 @@ export type IntraoperativeRecordOrderByWithRelationInput = {
   ippv?: Prisma.SortOrder
   jetVentilation?: Prisma.SortOrder
   fob?: Prisma.SortOrder
+  presentsIntubated?: Prisma.SortOrder
+  airwayNotApplicable?: Prisma.SortOrder
   airwayTools?: Prisma.SortOrder
   airwayNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   cormackLehane?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -871,6 +889,8 @@ export type IntraoperativeRecordWhereUniqueInput = Prisma.AtLeast<{
   ippv?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   jetVentilation?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   fob?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
+  presentsIntubated?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
+  airwayNotApplicable?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   airwayTools?: Prisma.JsonFilter<"IntraoperativeRecord">
   airwayNotes?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
   cormackLehane?: Prisma.EnumCormackLehaneNullableFilter<"IntraoperativeRecord"> | $Enums.CormackLehane | null
@@ -950,6 +970,8 @@ export type IntraoperativeRecordOrderByWithAggregationInput = {
   ippv?: Prisma.SortOrder
   jetVentilation?: Prisma.SortOrder
   fob?: Prisma.SortOrder
+  presentsIntubated?: Prisma.SortOrder
+  airwayNotApplicable?: Prisma.SortOrder
   airwayTools?: Prisma.SortOrder
   airwayNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   cormackLehane?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1033,6 +1055,8 @@ export type IntraoperativeRecordScalarWhereWithAggregatesInput = {
   ippv?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   jetVentilation?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   fob?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
+  presentsIntubated?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
+  airwayNotApplicable?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   airwayTools?: Prisma.JsonWithAggregatesFilter<"IntraoperativeRecord">
   airwayNotes?: Prisma.StringNullableWithAggregatesFilter<"IntraoperativeRecord"> | string | null
   cormackLehane?: Prisma.EnumCormackLehaneNullableWithAggregatesFilter<"IntraoperativeRecord"> | $Enums.CormackLehane | null
@@ -1107,6 +1131,8 @@ export type IntraoperativeRecordCreateInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -1186,6 +1212,8 @@ export type IntraoperativeRecordUncheckedCreateInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -1263,6 +1291,8 @@ export type IntraoperativeRecordUpdateInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -1342,6 +1372,8 @@ export type IntraoperativeRecordUncheckedUpdateInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -1420,6 +1452,8 @@ export type IntraoperativeRecordCreateManyInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -1494,6 +1528,8 @@ export type IntraoperativeRecordUpdateManyMutationInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -1569,6 +1605,8 @@ export type IntraoperativeRecordUncheckedUpdateManyInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -1649,6 +1687,8 @@ export type IntraoperativeRecordCountOrderByAggregateInput = {
   ippv?: Prisma.SortOrder
   jetVentilation?: Prisma.SortOrder
   fob?: Prisma.SortOrder
+  presentsIntubated?: Prisma.SortOrder
+  airwayNotApplicable?: Prisma.SortOrder
   airwayTools?: Prisma.SortOrder
   airwayNotes?: Prisma.SortOrder
   cormackLehane?: Prisma.SortOrder
@@ -1739,6 +1779,8 @@ export type IntraoperativeRecordMaxOrderByAggregateInput = {
   ippv?: Prisma.SortOrder
   jetVentilation?: Prisma.SortOrder
   fob?: Prisma.SortOrder
+  presentsIntubated?: Prisma.SortOrder
+  airwayNotApplicable?: Prisma.SortOrder
   airwayNotes?: Prisma.SortOrder
   cormackLehane?: Prisma.SortOrder
   lmaSize?: Prisma.SortOrder
@@ -1804,6 +1846,8 @@ export type IntraoperativeRecordMinOrderByAggregateInput = {
   ippv?: Prisma.SortOrder
   jetVentilation?: Prisma.SortOrder
   fob?: Prisma.SortOrder
+  presentsIntubated?: Prisma.SortOrder
+  airwayNotApplicable?: Prisma.SortOrder
   airwayNotes?: Prisma.SortOrder
   cormackLehane?: Prisma.SortOrder
   lmaSize?: Prisma.SortOrder
@@ -1988,6 +2032,8 @@ export type IntraoperativeRecordCreateWithoutCaseInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -2065,6 +2111,8 @@ export type IntraoperativeRecordUncheckedCreateWithoutCaseInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -2158,6 +2206,8 @@ export type IntraoperativeRecordUpdateWithoutCaseInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -2235,6 +2285,8 @@ export type IntraoperativeRecordUncheckedUpdateWithoutCaseInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -2312,6 +2364,8 @@ export type IntraoperativeRecordCreateWithoutLabRowsInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -2390,6 +2444,8 @@ export type IntraoperativeRecordUncheckedCreateWithoutLabRowsInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -2482,6 +2538,8 @@ export type IntraoperativeRecordUpdateWithoutLabRowsInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -2560,6 +2618,8 @@ export type IntraoperativeRecordUncheckedUpdateWithoutLabRowsInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -2636,6 +2696,8 @@ export type IntraoperativeRecordCreateWithoutVascularAccessRowsInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -2714,6 +2776,8 @@ export type IntraoperativeRecordUncheckedCreateWithoutVascularAccessRowsInput = 
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -2806,6 +2870,8 @@ export type IntraoperativeRecordUpdateWithoutVascularAccessRowsInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -2884,6 +2950,8 @@ export type IntraoperativeRecordUncheckedUpdateWithoutVascularAccessRowsInput = 
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -2960,6 +3028,8 @@ export type IntraoperativeRecordCreateWithoutPremedicationRowsInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -3038,6 +3108,8 @@ export type IntraoperativeRecordUncheckedCreateWithoutPremedicationRowsInput = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: string | null
   cormackLehane?: $Enums.CormackLehane | null
@@ -3130,6 +3202,8 @@ export type IntraoperativeRecordUpdateWithoutPremedicationRowsInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -3208,6 +3282,8 @@ export type IntraoperativeRecordUncheckedUpdateWithoutPremedicationRowsInput = {
   ippv?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jetVentilation?: Prisma.BoolFieldUpdateOperationsInput | boolean
   fob?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  presentsIntubated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  airwayNotApplicable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   airwayTools?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
@@ -3334,6 +3410,8 @@ export type IntraoperativeRecordSelect<ExtArgs extends runtime.Types.Extensions.
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: boolean
   airwayNotes?: boolean
   cormackLehane?: boolean
@@ -3414,6 +3492,8 @@ export type IntraoperativeRecordSelectCreateManyAndReturn<ExtArgs extends runtim
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: boolean
   airwayNotes?: boolean
   cormackLehane?: boolean
@@ -3490,6 +3570,8 @@ export type IntraoperativeRecordSelectUpdateManyAndReturn<ExtArgs extends runtim
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: boolean
   airwayNotes?: boolean
   cormackLehane?: boolean
@@ -3566,6 +3648,8 @@ export type IntraoperativeRecordSelectScalar = {
   ippv?: boolean
   jetVentilation?: boolean
   fob?: boolean
+  presentsIntubated?: boolean
+  airwayNotApplicable?: boolean
   airwayTools?: boolean
   airwayNotes?: boolean
   cormackLehane?: boolean
@@ -3622,7 +3706,7 @@ export type IntraoperativeRecordSelectScalar = {
   syncRevision?: boolean
 }
 
-export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "plexusBlock" | "cvkSite" | "arterialLineSite" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "bglMonitor" | "bloodGasMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
+export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "plexusBlock" | "cvkSite" | "arterialLineSite" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "bglMonitor" | "bloodGasMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
 export type IntraoperativeRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   vascularAccessRows?: boolean | Prisma.IntraoperativeRecord$vascularAccessRowsArgs<ExtArgs>
@@ -3664,6 +3748,8 @@ export type $IntraoperativeRecordPayload<ExtArgs extends runtime.Types.Extension
     ippv: boolean
     jetVentilation: boolean
     fob: boolean
+    presentsIntubated: boolean
+    airwayNotApplicable: boolean
     airwayTools: runtime.JsonValue
     airwayNotes: string | null
     cormackLehane: $Enums.CormackLehane | null
@@ -4163,6 +4249,8 @@ export interface IntraoperativeRecordFieldRefs {
   readonly ippv: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly jetVentilation: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly fob: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
+  readonly presentsIntubated: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
+  readonly airwayNotApplicable: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly airwayTools: Prisma.FieldRef<"IntraoperativeRecord", 'Json'>
   readonly airwayNotes: Prisma.FieldRef<"IntraoperativeRecord", 'String'>
   readonly cormackLehane: Prisma.FieldRef<"IntraoperativeRecord", 'CormackLehane'>

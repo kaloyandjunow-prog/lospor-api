@@ -1137,6 +1137,21 @@ model IntraoperativeRecord {
   ippv              Boolean        @default(false)
   jetVentilation    Boolean        @default(false)
   fob               Boolean        @default(false)
+
+  // Why this case has no airway device of its own. Both were checkboxes that
+  // lived only in the web form's React state: they relaxed the finalisation
+  // gate and were then discarded, so the saved record showed no airway device
+  // and no reason, and "arrived intubated from ICU" was indistinguishable from
+  // "the airway section was skipped".
+  //
+  // presentsIntubated: the patient arrived with a tracheal tube already in
+  // place, put there by somebody else. The intubation is real and belongs in
+  // the record; this team simply did not perform it.
+  // airwayNotApplicable: no airway intervention at all -- a regional or
+  // sedation case where the patient kept their own airway throughout.
+  presentsIntubated    Boolean     @default(false)
+  airwayNotApplicable  Boolean     @default(false)
+
   airwayTools       Json           @default("[]")
   airwayNotes       String?
   cormackLehane     CormackLehane?

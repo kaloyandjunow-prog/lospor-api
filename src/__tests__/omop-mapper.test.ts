@@ -2362,3 +2362,49 @@ describe("laboratory results carry the time the specimen was drawn", () => {
     expect(flag?.observation_date).toBe("2026-06-01")
   })
 })
+
+describe("why a case has no airway device of its own", () => {
+  it("states an arrival intubation as a history, not as a procedure this team did", () => {
+    // The vocabulary's own decomposition: "Endotracheal tube present" (4168966)
+    // is non-standard, and Athena maps it to 1340204 (History of event) with
+    // "Maps to value" 4013354 (Insertion of endotracheal tube). Writing a
+    // procedure_occurrence row instead would credit this team with an
+    // intubation somebody else performed.
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.presentsIntubated = true
+
+    const bundle = mapCasesToOmop([c as never])
+    const row = bundle.observation.find(r => r.observation_source_value === "LOSPOR:PRESENTS_INTUBATED")
+
+    expect(row?.observation_concept_id).toBe(1340204)
+    expect(row?.value_as_concept_id).toBe(4013354)
+    expect(bundle.procedure_occurrence.some(
+      r => r.procedure_source_value === "LOSPOR:PRESENTS_INTUBATED")).toBe(false)
+  })
+
+  it("states no airway intervention as Airway management answered No", () => {
+    // CDM cannot record a procedure that did not happen -- a
+    // procedure_occurrence row asserts that it did -- so the negative has to be
+    // an observation, the same shape ippv and jetVentilation already use.
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.airwayNotApplicable = true
+
+    const row = mapCasesToOmop([c as never]).observation
+      .find(r => r.observation_source_value === "LOSPOR:AIRWAY_NOT_APPLICABLE")
+
+    expect(row?.observation_concept_id).toBe(4303568)
+    expect(row?.value_as_concept_id).toBe(4188540)
+  })
+
+  it("says nothing at all when neither was asserted", () => {
+    // False is the ordinary case: the airway rows themselves describe what was
+    // done, and a row on every case claiming "did not arrive intubated" would
+    // be noise a researcher has to filter out.
+    const bundle = mapCasesToOmop([completeCase() as never])
+
+    expect(bundle.observation.some(
+      r => r.observation_source_value === "LOSPOR:PRESENTS_INTUBATED")).toBe(false)
+    expect(bundle.observation.some(
+      r => r.observation_source_value === "LOSPOR:AIRWAY_NOT_APPLICABLE")).toBe(false)
+  })
+})
