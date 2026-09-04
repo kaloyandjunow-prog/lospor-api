@@ -58,14 +58,17 @@ describe("mapCasesToOmop", () => {
       // measurement too -- 3004921 is Measurement-domain, the same "domain
       // governs table" fix as BSA/PEEP/urine output.
       measurement: 43,
-      // Two planned procedures + anaesthesia technique + vascular access,
-      // plus one more: the fixture's ECG monitoring selection now resolves
-      // to 4187078 (Electrocardiographic monitoring), a Procedure-domain
-      // concept, so it routes to procedure_occurrence instead of
-      // observation -- the same per-concept domain routing complications
-      // already use.
-      procedure_occurrence: 7,
-      observation: 46,
+      // Two planned procedures + anaesthesia technique, plus the fixture's ECG
+      // monitoring selection: 4187078 (Electrocardiographic monitoring) is a
+      // Procedure-domain concept, so it routes here rather than to observation,
+      // the same per-concept domain routing complications already use.
+      //
+      // The vascular line is NOT here, and that is the point: the fixture's
+      // line is pre-existing, so it is stated as a history observation instead
+      // of a procedure this team performed. One row moved between the two
+      // tables rather than being added or lost.
+      procedure_occurrence: 6,
+      observation: 47,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -93,7 +96,14 @@ describe("mapCasesToOmop", () => {
         procedure_source_value: "LOSPOR_PROCEDURE:APPY - Appendectomy",
       }),
       expect.objectContaining({ procedure_source_value: "ANAESTHESIA_TECHNIQUE:general" }),
-      expect.objectContaining({ procedure_source_value: "VASCULAR_ACCESS:Internal jugular 18G" }),
+    ]))
+    // The fixture's line is pre-existing, so it is a history observation
+    // rather than a procedure this team performed.
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        observation_source_value: "VASCULAR_ACCESS:Internal jugular 18G",
+        observation_concept_id: 1340204,
+      }),
     ]))
     expect(bundle.drug_exposure).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -606,11 +616,32 @@ describe("curated mappings reach the export", () => {
     excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
   }
 
-  it("uses the reviewed concept for a vascular access procedure", () => {
-    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+  it("uses the reviewed concept for a vascular access line placed here", () => {
+    // The fixture's line is pre-existing, so it is stated as a history rather
+    // than a procedure (asserted below). Clearing the flag makes it a line this
+    // team actually placed, which is what a procedure_occurrence row means.
+    const c = completeCase() as unknown as { intraop: { vascularAccessRows: { preexisting: boolean }[] } }
+    c.intraop.vascularAccessRows[0].preexisting = false
+    const bundle = mapCasesToOmop([c as never], options as never)
     const line = bundle.procedure_occurrence.find(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
     expect(line, "fixture must contain a vascular access row").toBeDefined()
     expect(line!.procedure_concept_id).toBe(4052341)
+  })
+
+  it("states a pre-existing line as a history, not a procedure done here", () => {
+    // The fault this fixes: the export wrote a procedure_occurrence for every
+    // line, including one already in the patient, crediting this team with an
+    // insertion somebody else performed. The comment in the mapper described
+    // that exact problem while the code went on doing it.
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+
+    expect(bundle.procedure_occurrence.some(
+      row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))).toBe(false)
+
+    const history = bundle.observation.find(row => /VASCULAR_ACCESS/.test(String(row.observation_source_value)))
+    expect(history, "a pre-existing line must still be recorded").toBeDefined()
+    expect(history!.observation_concept_id).toBe(1340204)
+    expect(history!.value_as_concept_id).toBe(4052341)
   })
 
   it("uses the reviewed concept for a complication", () => {

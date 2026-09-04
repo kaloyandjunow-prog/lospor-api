@@ -771,7 +771,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "vascularAccessPreexisting",
     exportName: "observation.value_as_string (LOSPOR:VASCULAR_ACCESS_PREEXISTING)",
-    meaning: "Whether the line was already in place, as \"<site>=<true|false>\". A pre-existing line was not placed during this case, so counting its PROCEDURE_OCCURRENCE as work done here overstates what the anaesthetist did.",
+    meaning: "Whether the line was already in place, as \"<site>=<true|false>\". A pre-existing line was not placed during this case, so it emits no PROCEDURE_OCCURRENCE row at all -- counting one would credit this team with an insertion somebody else performed. It is stated instead as an observation under the line's own VASCULAR_ACCESS source value, coded 1340204 (History of event) with the line's concept as the value. This flag is kept alongside that because it carries the negative answer too, which a history row cannot.",
     type: "boolean",
     missingnessRule: "No row = the question was not asked, or the value was not recorded",
     sourceTable: "VascularAccess", sourceColumn: "preexisting",
@@ -1001,6 +1001,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "is written, because this team did not perform the intubation.",
     type: "boolean",
     missingnessRule: "No row = the patient did not arrive intubated, or it was not recorded. Only the positive assertion is exported; the airway rows themselves describe the ordinary case",
+    derivationRule: "Independent of airwayNotApplicable and of the device and tool lists. A patient can arrive from the ICU already intubated AND have had no airway intervention here, which is both flags at once; and one who arrived with a tube may still have it exchanged, re-sited or removed, which is this team's work and appears as devices",
     sourceTable: "IntraoperativeRecord", sourceColumn: "presentsIntubated",
     versionIntroduced: "4.3.0",
   },

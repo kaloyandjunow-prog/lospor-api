@@ -3125,25 +3125,39 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           : CENTRAL_VENOUS_CONCEPTS.has(resolvedConcept) ? cvcInTs
           : resolvedConcept === 4322380 ? piccInTs
           : undefined
-        procedures.push({
-          procedure_occurrence_id: nextId(), person_id: personId,
-          // The site is coded from the catalogue when relational-sync has not
-          // already resolved one, so a radial arterial line and an internal
-          // jugular central line stop sharing concept 0. The exact site the
-          // anaesthetist chose stays in the source value either way.
-          procedure_concept_id: resolvedConcept,
-          procedure_date: preciseTs ? isoDate(preciseTs) : startDate,
-          procedure_datetime: preciseTs ? preciseTs.toISOString() : null,
-          procedure_type_concept_id: 32817,
-          modifier_concept_id:       0,
-          modifier_source_value:     null,
-          procedure_source_value: `VASCULAR_ACCESS:${line.siteLabel ?? line.site ?? "unknown"}${line.size ? ` ${line.size}${line.sizeUnit ?? ""}` : ""}`,
-          visit_occurrence_id: visitId,
-        })
-        // Depth, lumen count and whether the line was already there were
-        // selected and discarded. The last one matters most: a pre-existing
-        // line was not placed during this case, so counting it as a procedure
-        // performed here overstates what the anaesthetist did.
+        const lineSource = `VASCULAR_ACCESS:${line.siteLabel ?? line.site ?? "unknown"}${line.size ? ` ${line.size}${line.sizeUnit ?? ""}` : ""}`
+        if (line.preexisting) {
+          // The line was already in the patient. Emitting a
+          // procedure_occurrence for it would credit this team with an
+          // insertion somebody else performed -- the exact fault the comment
+          // here used to describe while the code went on doing it anyway.
+          //
+          // Stated instead as a history, the same decomposition
+          // presentsIntubated uses: 1340204 (History of event) answered with
+          // the line's own concept. So "history of: insertion of arterial
+          // catheter", which is true and does not overstate the work.
+          sourceObservation(lineSource, true, startDate, null, 1340204, resolvedConcept)
+        } else {
+          procedures.push({
+            procedure_occurrence_id: nextId(), person_id: personId,
+            // The site is coded from the catalogue when relational-sync has not
+            // already resolved one, so a radial arterial line and an internal
+            // jugular central line stop sharing concept 0. The exact site the
+            // anaesthetist chose stays in the source value either way.
+            procedure_concept_id: resolvedConcept,
+            procedure_date: preciseTs ? isoDate(preciseTs) : startDate,
+            procedure_datetime: preciseTs ? preciseTs.toISOString() : null,
+            procedure_type_concept_id: 32817,
+            modifier_concept_id:       0,
+            modifier_source_value:     null,
+            procedure_source_value: lineSource,
+            visit_occurrence_id: visitId,
+          })
+        }
+        // Depth and lumen count were selected and discarded. The pre-existing
+        // flag is kept alongside the coded history above: it is the per-line
+        // answer including its negative, which the history row cannot state
+        // because it only exists when the answer is yes.
         const lineKey = line.siteLabel ?? line.site ?? "unknown"
         if (line.depthCm) sourceObservation("LOSPOR:VASCULAR_ACCESS_DEPTH_CM", `${lineKey}=${line.depthCm}`, startDate, Number(line.depthCm))
         if (line.lumens) sourceObservation("LOSPOR:VASCULAR_ACCESS_LUMENS", `${lineKey}=${line.lumens}`, startDate, Number(line.lumens))
