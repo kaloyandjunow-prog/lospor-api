@@ -35,6 +35,9 @@ export type CaseEventAvgAggregateOutputType = {
   etco2: number | null
   temp: number | null
   bgl: number | null
+  bis: number | null
+  tofRatio: number | null
+  cvp: number | null
   fgfLitersPerMin: number | null
   fio2Percent: number | null
   fiAirPercent: number | null
@@ -55,6 +58,9 @@ export type CaseEventSumAggregateOutputType = {
   etco2: number | null
   temp: number | null
   bgl: number | null
+  bis: number | null
+  tofRatio: number | null
+  cvp: number | null
   fgfLitersPerMin: number | null
   fio2Percent: number | null
   fiAirPercent: number | null
@@ -87,6 +93,9 @@ export type CaseEventMinAggregateOutputType = {
   bgl: number | null
   bglLoincCode: string | null
   bglUnitCanon: string | null
+  bis: number | null
+  tofRatio: number | null
+  cvp: number | null
   fgfLitersPerMin: number | null
   carrierGas: string | null
   fio2Percent: number | null
@@ -146,6 +155,9 @@ export type CaseEventMaxAggregateOutputType = {
   bgl: number | null
   bglLoincCode: string | null
   bglUnitCanon: string | null
+  bis: number | null
+  tofRatio: number | null
+  cvp: number | null
   fgfLitersPerMin: number | null
   carrierGas: string | null
   fio2Percent: number | null
@@ -205,6 +217,9 @@ export type CaseEventCountAggregateOutputType = {
   bgl: number
   bglLoincCode: number
   bglUnitCanon: number
+  bis: number
+  tofRatio: number
+  cvp: number
   fgfLitersPerMin: number
   carrierGas: number
   fio2Percent: number
@@ -256,6 +271,9 @@ export type CaseEventAvgAggregateInputType = {
   etco2?: true
   temp?: true
   bgl?: true
+  bis?: true
+  tofRatio?: true
+  cvp?: true
   fgfLitersPerMin?: true
   fio2Percent?: true
   fiAirPercent?: true
@@ -276,6 +294,9 @@ export type CaseEventSumAggregateInputType = {
   etco2?: true
   temp?: true
   bgl?: true
+  bis?: true
+  tofRatio?: true
+  cvp?: true
   fgfLitersPerMin?: true
   fio2Percent?: true
   fiAirPercent?: true
@@ -308,6 +329,9 @@ export type CaseEventMinAggregateInputType = {
   bgl?: true
   bglLoincCode?: true
   bglUnitCanon?: true
+  bis?: true
+  tofRatio?: true
+  cvp?: true
   fgfLitersPerMin?: true
   carrierGas?: true
   fio2Percent?: true
@@ -367,6 +391,9 @@ export type CaseEventMaxAggregateInputType = {
   bgl?: true
   bglLoincCode?: true
   bglUnitCanon?: true
+  bis?: true
+  tofRatio?: true
+  cvp?: true
   fgfLitersPerMin?: true
   carrierGas?: true
   fio2Percent?: true
@@ -426,6 +453,9 @@ export type CaseEventCountAggregateInputType = {
   bgl?: true
   bglLoincCode?: true
   bglUnitCanon?: true
+  bis?: true
+  tofRatio?: true
+  cvp?: true
   fgfLitersPerMin?: true
   carrierGas?: true
   fio2Percent?: true
@@ -574,6 +604,9 @@ export type CaseEventGroupByOutputType = {
   bgl: number | null
   bglLoincCode: string | null
   bglUnitCanon: string | null
+  bis: number | null
+  tofRatio: number | null
+  cvp: number | null
   fgfLitersPerMin: number | null
   carrierGas: string | null
   fio2Percent: number | null
@@ -658,6 +691,9 @@ export type CaseEventWhereInput = {
   bgl?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   bglLoincCode?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   bglUnitCanon?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
+  bis?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
+  tofRatio?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
+  cvp?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   fgfLitersPerMin?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   carrierGas?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   fio2Percent?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
@@ -720,6 +756,9 @@ export type CaseEventOrderByWithRelationInput = {
   bgl?: Prisma.SortOrderInput | Prisma.SortOrder
   bglLoincCode?: Prisma.SortOrderInput | Prisma.SortOrder
   bglUnitCanon?: Prisma.SortOrderInput | Prisma.SortOrder
+  bis?: Prisma.SortOrderInput | Prisma.SortOrder
+  tofRatio?: Prisma.SortOrderInput | Prisma.SortOrder
+  cvp?: Prisma.SortOrderInput | Prisma.SortOrder
   fgfLitersPerMin?: Prisma.SortOrderInput | Prisma.SortOrder
   carrierGas?: Prisma.SortOrderInput | Prisma.SortOrder
   fio2Percent?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -786,6 +825,9 @@ export type CaseEventWhereUniqueInput = Prisma.AtLeast<{
   bgl?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   bglLoincCode?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   bglUnitCanon?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
+  bis?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
+  tofRatio?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
+  cvp?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   fgfLitersPerMin?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   carrierGas?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   fio2Percent?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
@@ -847,6 +889,9 @@ export type CaseEventOrderByWithAggregationInput = {
   bgl?: Prisma.SortOrderInput | Prisma.SortOrder
   bglLoincCode?: Prisma.SortOrderInput | Prisma.SortOrder
   bglUnitCanon?: Prisma.SortOrderInput | Prisma.SortOrder
+  bis?: Prisma.SortOrderInput | Prisma.SortOrder
+  tofRatio?: Prisma.SortOrderInput | Prisma.SortOrder
+  cvp?: Prisma.SortOrderInput | Prisma.SortOrder
   fgfLitersPerMin?: Prisma.SortOrderInput | Prisma.SortOrder
   carrierGas?: Prisma.SortOrderInput | Prisma.SortOrder
   fio2Percent?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -916,6 +961,9 @@ export type CaseEventScalarWhereWithAggregatesInput = {
   bgl?: Prisma.FloatNullableWithAggregatesFilter<"CaseEvent"> | number | null
   bglLoincCode?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
   bglUnitCanon?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
+  bis?: Prisma.FloatNullableWithAggregatesFilter<"CaseEvent"> | number | null
+  tofRatio?: Prisma.FloatNullableWithAggregatesFilter<"CaseEvent"> | number | null
+  cvp?: Prisma.FloatNullableWithAggregatesFilter<"CaseEvent"> | number | null
   fgfLitersPerMin?: Prisma.FloatNullableWithAggregatesFilter<"CaseEvent"> | number | null
   carrierGas?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
   fio2Percent?: Prisma.FloatNullableWithAggregatesFilter<"CaseEvent"> | number | null
@@ -976,6 +1024,9 @@ export type CaseEventCreateInput = {
   bgl?: number | null
   bglLoincCode?: string | null
   bglUnitCanon?: string | null
+  bis?: number | null
+  tofRatio?: number | null
+  cvp?: number | null
   fgfLitersPerMin?: number | null
   carrierGas?: string | null
   fio2Percent?: number | null
@@ -1038,6 +1089,9 @@ export type CaseEventUncheckedCreateInput = {
   bgl?: number | null
   bglLoincCode?: string | null
   bglUnitCanon?: string | null
+  bis?: number | null
+  tofRatio?: number | null
+  cvp?: number | null
   fgfLitersPerMin?: number | null
   carrierGas?: string | null
   fio2Percent?: number | null
@@ -1098,6 +1152,9 @@ export type CaseEventUpdateInput = {
   bgl?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bglLoincCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bglUnitCanon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bis?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cvp?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fgfLitersPerMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   carrierGas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fio2Percent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1160,6 +1217,9 @@ export type CaseEventUncheckedUpdateInput = {
   bgl?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bglLoincCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bglUnitCanon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bis?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cvp?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fgfLitersPerMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   carrierGas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fio2Percent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1221,6 +1281,9 @@ export type CaseEventCreateManyInput = {
   bgl?: number | null
   bglLoincCode?: string | null
   bglUnitCanon?: string | null
+  bis?: number | null
+  tofRatio?: number | null
+  cvp?: number | null
   fgfLitersPerMin?: number | null
   carrierGas?: string | null
   fio2Percent?: number | null
@@ -1281,6 +1344,9 @@ export type CaseEventUpdateManyMutationInput = {
   bgl?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bglLoincCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bglUnitCanon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bis?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cvp?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fgfLitersPerMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   carrierGas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fio2Percent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1342,6 +1408,9 @@ export type CaseEventUncheckedUpdateManyInput = {
   bgl?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bglLoincCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bglUnitCanon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bis?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cvp?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fgfLitersPerMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   carrierGas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fio2Percent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1413,6 +1482,9 @@ export type CaseEventCountOrderByAggregateInput = {
   bgl?: Prisma.SortOrder
   bglLoincCode?: Prisma.SortOrder
   bglUnitCanon?: Prisma.SortOrder
+  bis?: Prisma.SortOrder
+  tofRatio?: Prisma.SortOrder
+  cvp?: Prisma.SortOrder
   fgfLitersPerMin?: Prisma.SortOrder
   carrierGas?: Prisma.SortOrder
   fio2Percent?: Prisma.SortOrder
@@ -1462,6 +1534,9 @@ export type CaseEventAvgOrderByAggregateInput = {
   etco2?: Prisma.SortOrder
   temp?: Prisma.SortOrder
   bgl?: Prisma.SortOrder
+  bis?: Prisma.SortOrder
+  tofRatio?: Prisma.SortOrder
+  cvp?: Prisma.SortOrder
   fgfLitersPerMin?: Prisma.SortOrder
   fio2Percent?: Prisma.SortOrder
   fiAirPercent?: Prisma.SortOrder
@@ -1494,6 +1569,9 @@ export type CaseEventMaxOrderByAggregateInput = {
   bgl?: Prisma.SortOrder
   bglLoincCode?: Prisma.SortOrder
   bglUnitCanon?: Prisma.SortOrder
+  bis?: Prisma.SortOrder
+  tofRatio?: Prisma.SortOrder
+  cvp?: Prisma.SortOrder
   fgfLitersPerMin?: Prisma.SortOrder
   carrierGas?: Prisma.SortOrder
   fio2Percent?: Prisma.SortOrder
@@ -1553,6 +1631,9 @@ export type CaseEventMinOrderByAggregateInput = {
   bgl?: Prisma.SortOrder
   bglLoincCode?: Prisma.SortOrder
   bglUnitCanon?: Prisma.SortOrder
+  bis?: Prisma.SortOrder
+  tofRatio?: Prisma.SortOrder
+  cvp?: Prisma.SortOrder
   fgfLitersPerMin?: Prisma.SortOrder
   carrierGas?: Prisma.SortOrder
   fio2Percent?: Prisma.SortOrder
@@ -1600,6 +1681,9 @@ export type CaseEventSumOrderByAggregateInput = {
   etco2?: Prisma.SortOrder
   temp?: Prisma.SortOrder
   bgl?: Prisma.SortOrder
+  bis?: Prisma.SortOrder
+  tofRatio?: Prisma.SortOrder
+  cvp?: Prisma.SortOrder
   fgfLitersPerMin?: Prisma.SortOrder
   fio2Percent?: Prisma.SortOrder
   fiAirPercent?: Prisma.SortOrder
@@ -1673,6 +1757,9 @@ export type CaseEventCreateWithoutCaseInput = {
   bgl?: number | null
   bglLoincCode?: string | null
   bglUnitCanon?: string | null
+  bis?: number | null
+  tofRatio?: number | null
+  cvp?: number | null
   fgfLitersPerMin?: number | null
   carrierGas?: string | null
   fio2Percent?: number | null
@@ -1733,6 +1820,9 @@ export type CaseEventUncheckedCreateWithoutCaseInput = {
   bgl?: number | null
   bglLoincCode?: string | null
   bglUnitCanon?: string | null
+  bis?: number | null
+  tofRatio?: number | null
+  cvp?: number | null
   fgfLitersPerMin?: number | null
   carrierGas?: string | null
   fio2Percent?: number | null
@@ -1823,6 +1913,9 @@ export type CaseEventScalarWhereInput = {
   bgl?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   bglLoincCode?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   bglUnitCanon?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
+  bis?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
+  tofRatio?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
+  cvp?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   fgfLitersPerMin?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
   carrierGas?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   fio2Percent?: Prisma.FloatNullableFilter<"CaseEvent"> | number | null
@@ -1883,6 +1976,9 @@ export type CaseEventCreateManyCaseInput = {
   bgl?: number | null
   bglLoincCode?: string | null
   bglUnitCanon?: string | null
+  bis?: number | null
+  tofRatio?: number | null
+  cvp?: number | null
   fgfLitersPerMin?: number | null
   carrierGas?: string | null
   fio2Percent?: number | null
@@ -1943,6 +2039,9 @@ export type CaseEventUpdateWithoutCaseInput = {
   bgl?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bglLoincCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bglUnitCanon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bis?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cvp?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fgfLitersPerMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   carrierGas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fio2Percent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2003,6 +2102,9 @@ export type CaseEventUncheckedUpdateWithoutCaseInput = {
   bgl?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bglLoincCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bglUnitCanon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bis?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cvp?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fgfLitersPerMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   carrierGas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fio2Percent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2063,6 +2165,9 @@ export type CaseEventUncheckedUpdateManyWithoutCaseInput = {
   bgl?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   bglLoincCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bglUnitCanon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bis?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  cvp?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fgfLitersPerMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   carrierGas?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fio2Percent?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2126,6 +2231,9 @@ export type CaseEventSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   bgl?: boolean
   bglLoincCode?: boolean
   bglUnitCanon?: boolean
+  bis?: boolean
+  tofRatio?: boolean
+  cvp?: boolean
   fgfLitersPerMin?: boolean
   carrierGas?: boolean
   fio2Percent?: boolean
@@ -2188,6 +2296,9 @@ export type CaseEventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   bgl?: boolean
   bglLoincCode?: boolean
   bglUnitCanon?: boolean
+  bis?: boolean
+  tofRatio?: boolean
+  cvp?: boolean
   fgfLitersPerMin?: boolean
   carrierGas?: boolean
   fio2Percent?: boolean
@@ -2250,6 +2361,9 @@ export type CaseEventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   bgl?: boolean
   bglLoincCode?: boolean
   bglUnitCanon?: boolean
+  bis?: boolean
+  tofRatio?: boolean
+  cvp?: boolean
   fgfLitersPerMin?: boolean
   carrierGas?: boolean
   fio2Percent?: boolean
@@ -2312,6 +2426,9 @@ export type CaseEventSelectScalar = {
   bgl?: boolean
   bglLoincCode?: boolean
   bglUnitCanon?: boolean
+  bis?: boolean
+  tofRatio?: boolean
+  cvp?: boolean
   fgfLitersPerMin?: boolean
   carrierGas?: boolean
   fio2Percent?: boolean
@@ -2352,7 +2469,7 @@ export type CaseEventSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CaseEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "userId" | "logicalId" | "version" | "status" | "type" | "timestamp" | "label" | "value" | "unit" | "systolic" | "diastolic" | "heartRate" | "spO2" | "etco2" | "temp" | "bgl" | "bglLoincCode" | "bglUnitCanon" | "fgfLitersPerMin" | "carrierGas" | "fio2Percent" | "fiAirPercent" | "fiN2OPercent" | "atcCode" | "drugId" | "inn" | "drugRoute" | "standardConceptId" | "mappingStatus" | "concentrationValue" | "concentrationUnit" | "formulation" | "calculationBasis" | "calculationWeightKg" | "calculationMethod" | "clinicalRuleKey" | "clinicalRuleVersion" | "clinicalRuleSourceIds" | "clinicalPresetId" | "clinicalPresetVersion" | "clinicalPresetScope" | "infId" | "fluidId" | "rate" | "concentration" | "volume" | "fluidCategory" | "agentPercent" | "clinicalEventCode" | "metadataJson" | "source" | "sourceVersion" | "schemaVersion" | "idempotencyKey" | "createdAt" | "updatedAt", ExtArgs["result"]["caseEvent"]>
+export type CaseEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "userId" | "logicalId" | "version" | "status" | "type" | "timestamp" | "label" | "value" | "unit" | "systolic" | "diastolic" | "heartRate" | "spO2" | "etco2" | "temp" | "bgl" | "bglLoincCode" | "bglUnitCanon" | "bis" | "tofRatio" | "cvp" | "fgfLitersPerMin" | "carrierGas" | "fio2Percent" | "fiAirPercent" | "fiN2OPercent" | "atcCode" | "drugId" | "inn" | "drugRoute" | "standardConceptId" | "mappingStatus" | "concentrationValue" | "concentrationUnit" | "formulation" | "calculationBasis" | "calculationWeightKg" | "calculationMethod" | "clinicalRuleKey" | "clinicalRuleVersion" | "clinicalRuleSourceIds" | "clinicalPresetId" | "clinicalPresetVersion" | "clinicalPresetScope" | "infId" | "fluidId" | "rate" | "concentration" | "volume" | "fluidCategory" | "agentPercent" | "clinicalEventCode" | "metadataJson" | "source" | "sourceVersion" | "schemaVersion" | "idempotencyKey" | "createdAt" | "updatedAt", ExtArgs["result"]["caseEvent"]>
 export type CaseEventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
 }
@@ -2389,6 +2506,9 @@ export type $CaseEventPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     bgl: number | null
     bglLoincCode: string | null
     bglUnitCanon: string | null
+    bis: number | null
+    tofRatio: number | null
+    cvp: number | null
     fgfLitersPerMin: number | null
     carrierGas: string | null
     fio2Percent: number | null
@@ -2871,6 +2991,9 @@ export interface CaseEventFieldRefs {
   readonly bgl: Prisma.FieldRef<"CaseEvent", 'Float'>
   readonly bglLoincCode: Prisma.FieldRef<"CaseEvent", 'String'>
   readonly bglUnitCanon: Prisma.FieldRef<"CaseEvent", 'String'>
+  readonly bis: Prisma.FieldRef<"CaseEvent", 'Float'>
+  readonly tofRatio: Prisma.FieldRef<"CaseEvent", 'Float'>
+  readonly cvp: Prisma.FieldRef<"CaseEvent", 'Float'>
   readonly fgfLitersPerMin: Prisma.FieldRef<"CaseEvent", 'Float'>
   readonly carrierGas: Prisma.FieldRef<"CaseEvent", 'String'>
   readonly fio2Percent: Prisma.FieldRef<"CaseEvent", 'Float'>

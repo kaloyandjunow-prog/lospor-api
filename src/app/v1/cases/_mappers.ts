@@ -11,7 +11,6 @@ import {
   canonicalizePostopPatch,
   canonicalizePreopPatch,
 } from "@lospor/core/case-payloads"
-import { MONITORING_VALUE_FIELDS } from "@lospor/core/monitoring-values"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import { aldreteTotal as coreAldreteTotal } from "@lospor/core/postop"
 import {
@@ -336,7 +335,6 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     // rebuildProjection (case-events.ts), so a client PATCH can't override the
     // single source of truth. The read path (below) still returns them.
     "bloodProductsNote","urineMl","bloodLossMl","labResults","complications",
-    "bisValue","tofRatio","cvpMmHg",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
     if (has(k)) copyKey(r, full, k)
@@ -359,17 +357,6 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
   } else {
     if (has("ippv"))           r.ippv           = full.ippv
     if (has("jetVentilation")) r.jetVentilation = full.jetVentilation
-  }
-
-  // A monitoring value cannot outlive the monitor that produced it.
-  //
-  // Unticking BIS and leaving a stored 42 behind would export a reading from a
-  // monitor the same record says was not used, which is a contradiction rather
-  // than data. Only flags this patch actually mentions are considered: a save
-  // that never touched the monitoring section must not clear values on the
-  // strength of fields it did not send.
-  for (const { flag, value } of MONITORING_VALUE_FIELDS) {
-    if (has(flag) && !full[flag]) r[value] = null
   }
 
   return r
@@ -547,9 +534,6 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     bloodProductsNote: intraop.bloodProductsNote ?? null,
     urineMl:           intraop.urineMl           ?? null,
     bloodLossMl:       intraop.bloodLossMl       ?? null,
-    bisValue:          intraop.bisValue          ?? null,
-    tofRatio:          intraop.tofRatio          ?? null,
-    cvpMmHg:           intraop.cvpMmHg           ?? null,
     labResults:        intraop.labResults        ?? [],
     complications:     intraop.complications     ?? null,
   }

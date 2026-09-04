@@ -207,6 +207,12 @@ export function buildRow(
     bgl,
     bglLoincCode:   bgl != null ? INTRAOP_GLUCOSE_LOINC_CODE : null,
     bglUnitCanon:   bgl != null ? INTRAOP_GLUCOSE_UNIT_CANON : null,
+    // numF, not numI: a train-of-four ratio is a fraction, and it and the BIS
+    // both read 0 legitimately -- numF returns null only for an absent or
+    // unparseable value, so a charted 0 survives as 0.
+    bis:            isVital ? numF(ev.bis)      : null,
+    tofRatio:       isVital ? numF(ev.tofRatio) : null,
+    cvp:            isVital ? numF(ev.cvp)      : null,
     fgfLitersPerMin: isGas ? numF(ev.fgf) : null,
     carrierGas:      isGas ? ev.carrierGas ?? null : null,
     fio2Percent:     gas?.fio2 ?? null,

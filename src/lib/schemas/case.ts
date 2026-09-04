@@ -241,9 +241,6 @@ export const intraopSchema = z.object({
 
   // The three monitoring values. Bound to the flags above and cleared with
   // them, so a stored reading always has a monitor behind it.
-  bisValue: cInt("intraop", "bisValue"),
-  tofRatio: cNum("intraop", "tofRatio"),
-  cvpMmHg:  cNum("intraop", "cvpMmHg"),
 
   vascularAccesses:     z.array(z.unknown()).optional(),
   premedicationEvening: z.string().max(500).nullable().optional(),

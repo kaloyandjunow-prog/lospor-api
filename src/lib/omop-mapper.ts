@@ -617,25 +617,40 @@ const MALLAMPATI_NOT_ASSESSABLE_CONCEPT_ID = 4309852
 // unit and a 0 in unit_concept_id at every site that read them -- a tool
 // that trusts the coded column over the string, which is the point of
 // having one, saw an unlabelled number.
-const VITAL_CONCEPTS: Record<string, { concept_id: number; loinc: string; unit: string; unitConceptId: number }> = {
-  systolic:    { concept_id: 3004249, loinc: "8480-6",  unit: "mmHg", unitConceptId: 8876 },
-  diastolic:   { concept_id: 3012888, loinc: "8462-4",  unit: "mmHg", unitConceptId: 8876 },
-  heartRate:   { concept_id: 3027018, loinc: "8867-4",  unit: "/min", unitConceptId: 8541 },
-  spO2:        { concept_id: 3016502, loinc: "59408-5", unit: "%", unitConceptId: 8554 },
-  etco2:       { concept_id: 3020892, loinc: "19889-5", unit: "mmHg", unitConceptId: 8876 },
-  temp:        { concept_id: 3020891, loinc: "8310-5",  unit: "Cel", unitConceptId: 586323 },
+const VITAL_CONCEPTS: Record<string, { concept_id: number; code: string; system?: string; unit: string; unitConceptId: number }> = {
+  systolic:    { concept_id: 3004249, code: "8480-6",  unit: "mmHg", unitConceptId: 8876 },
+  diastolic:   { concept_id: 3012888, code: "8462-4",  unit: "mmHg", unitConceptId: 8876 },
+  heartRate:   { concept_id: 3027018, code: "8867-4",  unit: "/min", unitConceptId: 8541 },
+  spO2:        { concept_id: 3016502, code: "59408-5", unit: "%", unitConceptId: 8554 },
+  etco2:       { concept_id: 3020892, code: "19889-5", unit: "mmHg", unitConceptId: 8876 },
+  temp:        { concept_id: 3020891, code: "8310-5",  unit: "Cel", unitConceptId: 586323 },
   // 3004501, not 0. This row carried the right LOINC code and then threw the
   // concept away, so every intraoperative glucose exported unmapped while
   // sitting next to a code that identifies it exactly.
-  bgl:         { concept_id: 3004501, loinc: "2345-7",  unit: "mmol/L", unitConceptId: 8753 },
-  respiratoryRate: { concept_id: 3024171, loinc: "9279-1", unit: "/min", unitConceptId: 8541 },
+  bgl:         { concept_id: 3004501, code: "2345-7",  unit: "mmol/L", unitConceptId: 8753 },
+  respiratoryRate: { concept_id: 3024171, code: "9279-1", unit: "/min", unitConceptId: 8541 },
+  // The monitors that read a number. Timed like every other vital, because
+  // when the reading was taken is part of what it means: a BIS of 22 matters
+  // because of how long it stayed there, and a train-of-four of 0.4 means one
+  // thing at incision and another at extubation.
+  //
+  // The index is dimensionless, so no unit concept is asserted rather than
+  // borrowing a plausible one.
+  bis:         { concept_id: 21490711, code: "75918-3", unit: "{index}", unitConceptId: 0 },
+  // 250831000 is the ratio. The count is a different measurement with its own
+  // concept (4353950); this row is the ratio only, so the source value names
+  // SNOMED rather than claiming a LOINC code that does not exist for it.
+  tofRatio:    { concept_id: 4108453,  code: "250831000", system: "SNOMED", unit: "{ratio}", unitConceptId: 8523 },
+  // Always mmHg. The clinician may enter cmH2O; the conversion happens at entry
+  // so the exported figure never depends on a display preference.
+  cvp:         { concept_id: 21490675, code: "60985-9", unit: "mmHg", unitConceptId: 8876 },
   // Height and weight are required before a case can reach the intraoperative
   // form, so every case has them — and until they were added here the export
   // silently dropped both, while the data dictionary documented them. Weight in
   // particular is how every dose on the chart was calculated; without it a
   // reviewer cannot check a dose or study dosing at all.
-  heightCm:    { concept_id: 3036277, loinc: "8302-2",  unit: "cm", unitConceptId: 8582 },
-  weightKg:    { concept_id: 3025315, loinc: "29463-7", unit: "kg", unitConceptId: 9529 },
+  heightCm:    { concept_id: 3036277, code: "8302-2",  unit: "cm", unitConceptId: 8582 },
+  weightKg:    { concept_id: 3025315, code: "29463-7", unit: "kg", unitConceptId: 9529 },
 }
 
 // Canonical lab unit string -> UCUM unit concept, covering every distinct
@@ -1108,6 +1123,9 @@ type CaseRow = {
     etco2?: number | null
     temp?: number | null
     bgl: number | null
+    bis?: number | null
+    tofRatio?: number | null
+    cvp?: number | null
     bglLoincCode: string | null
     bglUnitCanon: string | null
     atcCode: string | null
@@ -1315,9 +1333,6 @@ type CaseRow = {
     bloodMl: number | null
     urineMl: number | null
     bloodLossMl: number | null
-    bisValue: number | null
-    tofRatio: number | null
-    cvpMmHg: number | null
     complications: string | null
     premedicationEvening: string | null
     premedicationMorning: string | null
@@ -2018,7 +2033,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           value_as_concept_id:       val == null ? UNOBTAINABLE_CONCEPT_ID : null,
           unit_concept_id:           cfg.unitConceptId,
           unit_source_value:         cfg.unit,
-          measurement_source_value:  `LOINC:${cfg.loinc}`,
+          measurement_source_value:  `${cfg.system ?? "LOINC"}:${cfg.code}`,
           // Vitals carry no source text and no laboratory reference range.
           value_source_value:        null,
           range_low:                 null,
@@ -2971,6 +2986,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
             ["etco2", ev.etco2, null],
             ["temp", ev.temp, null],
             ["bgl", ev.bgl, ev.bglLoincCode],
+            ["bis", ev.bis, null],
+            ["tofRatio", ev.tofRatio, null],
+            ["cvp", ev.cvp, null],
           ]
           for (const [key, val, loincOverride] of eventVitals) {
             if (val == null) continue
@@ -2986,7 +3004,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               value_as_concept_id: null,
               unit_concept_id:           key === "bgl" ? (ev.bglUnitCanon ? (LAB_UNIT_CONCEPTS[ev.bglUnitCanon] ?? cfg.unitConceptId) : cfg.unitConceptId) : cfg.unitConceptId,
               unit_source_value:         key === "bgl" ? ev.bglUnitCanon ?? cfg.unit : cfg.unit,
-              measurement_source_value:  `LOINC:${loincOverride ?? cfg.loinc}`,
+              measurement_source_value:  `${cfg.system ?? "LOINC"}:${loincOverride ?? cfg.code}`,
               // Vitals carry no source text and no laboratory reference range.
               value_source_value:        null,
               range_low:                 null,
@@ -3362,27 +3380,6 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       sourceMeasurement("LOSPOR:URINE_OUTPUT_ML", c.intraop.urineMl, 3014315, 8587, "mL", endDate)
       sourceObservation("LOSPOR:BLOOD_LOSS_ML", c.intraop.bloodLossMl, endDate)
 
-      // ── What the monitors read ────────────────────────────────────────────
-      // The sixteen monitoring flags say a modality was used. These three say
-      // what it showed, which is the half a research question can use: "was a
-      // BIS used" supports almost nothing, "the BIS was 38" supports most of
-      // what depth-of-anaesthesia work asks.
-      //
-      // All three are Measurement-domain concepts, so they belong in
-      // MEASUREMENT rather than beside the flags in OBSERVATION. That split is
-      // the vocabulary's, not a choice made here.
-      //
-      // 4134573, Bispectral index. Dimensionless -- the index has no unit, so
-      // unit_concept_id stays 0 rather than borrowing a plausible one.
-      sourceMeasurement("LOSPOR:BIS_VALUE", c.intraop.bisValue, 4134573, 0, null, endDate)
-      // 4108453 is the ratio specifically, not 4353950 the count. They are
-      // different measurements and the field accepts only the ratio, so
-      // exporting under the count's concept would misstate what was recorded.
-      sourceMeasurement("LOSPOR:TOF_RATIO", c.intraop.tofRatio, 4108453, 8523, "{ratio}", endDate)
-      // 8876, millimetre of mercury. The column is mmHg regardless of the unit
-      // the clinician entered, so no conversion happens here -- doing it at
-      // export would mean the exported number depended on a display preference.
-      sourceMeasurement("LOSPOR:CVP_MMHG", c.intraop.cvpMmHg, 4323687, 8876, "mmHg", endDate)
 
       // ── Lab draws taken during the case -> MEASUREMENT ────────────────────
       // The same emission path preoperative labs use. Each row carries its own
@@ -3546,7 +3543,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       for (const [key, val, unobtainable] of postopVitals) {
         if (val == null && !unobtainable) continue
         const cfg = VITAL_CONCEPTS[key]
-        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val ?? null, value_as_concept_id: val == null ? UNOBTAINABLE_CONCEPT_ID : null, unit_concept_id: cfg.unitConceptId, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.loinc}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
+        measurements.push({ measurement_id: nextId(), person_id: personId, measurement_concept_id: cfg.concept_id, measurement_date: postDate, measurement_datetime: postDate, measurement_type_concept_id: 32817, value_as_number: val ?? null, value_as_concept_id: val == null ? UNOBTAINABLE_CONCEPT_ID : null, unit_concept_id: cfg.unitConceptId, unit_source_value: cfg.unit, measurement_source_value: `POSTOP_LOINC:${cfg.code}`, value_source_value: null, range_low: null, range_high: null, visit_occurrence_id: visitId })
       }
       // Aldrete subscores and their total: 0-2 each, 0-10 summed. A discharge
       // threshold is a numeric comparison, so these have to be numbers.

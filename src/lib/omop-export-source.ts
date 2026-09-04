@@ -93,6 +93,9 @@ export const CASE_SELECT = {
       etco2: true,
       temp: true,
       bgl: true,
+      bis: true,
+      tofRatio: true,
+      cvp: true,
       bglLoincCode: true,
       bglUnitCanon: true,
       fgfLitersPerMin: true,
@@ -222,7 +225,6 @@ export const CASE_SELECT = {
       tubeSize: true, cuffed: true,
       ventilationModes: true, ippv: true, jetVentilation: true, peepCmH2O: true,
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, urineMl: true, bloodLossMl: true,
-      bisValue: true, tofRatio: true, cvpMmHg: true,
       complications: true, premedicationEvening: true, premedicationMorning: true,
       vascularAccessRows: {
         select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },

@@ -859,6 +859,19 @@ model CaseEvent {
   bgl                   Float?
   bglLoincCode          String?
   bglUnitCanon          String?
+  // The monitors that read a number rather than only being switched on. Timed
+  // like the vitals above, because when the reading was taken is part of what
+  // it means: a BIS of 22 matters for how long it stayed there, and a
+  // train-of-four means one thing at incision and another at extubation.
+  //
+  // bis and tofRatio can legitimately be 0 -- an isoelectric EEG and a fully
+  // paralysed patient are both readings -- so null is the only way to say "not
+  // recorded" and neither column may be defaulted.
+  //
+  // cvp is always mmHg, whatever unit the clinician entered.
+  bis                   Float?
+  tofRatio              Float?
+  cvp                   Float?
   // Typed gas settings (populated when type = "gas_start" | "gas_change")
   fgfLitersPerMin       Float?
   carrierGas            String?
@@ -1202,20 +1215,6 @@ model IntraoperativeRecord {
   nirsMonitor      Boolean @default(false)
   evokedPotentials Boolean @default(false)
   tofMonitor       Boolean @default(false)
-
-  // What the monitor read, for the three modalities that carry a number.
-  //
-  // Nullable rather than defaulted: a case with the BIS on and no value
-  // charted is a real and common record, and a 0 would read as an isoelectric
-  // EEG. Each is cleared when its flag above is unset, so a value always has a
-  // monitor behind it.
-  //
-  // cvpMmHg is mmHg whatever unit the clinician typed in. The entry unit is a
-  // display preference; a column whose unit varied per user could not be
-  // pooled.
-  bisValue         Int?
-  tofRatio         Float?
-  cvpMmHg          Float?
 
   vascularAccesses Json @default("[]")
 

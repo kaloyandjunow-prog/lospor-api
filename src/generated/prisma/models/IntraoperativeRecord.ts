@@ -35,9 +35,6 @@ export type IntraoperativeRecordAvgAggregateOutputType = {
   nasalTubeSize: number | null
   dltSize: number | null
   endobronchialSize: number | null
-  bisValue: number | null
-  tofRatio: number | null
-  cvpMmHg: number | null
   crystalloidsMl: number | null
   colloidsMl: number | null
   bloodMl: number | null
@@ -55,9 +52,6 @@ export type IntraoperativeRecordSumAggregateOutputType = {
   nasalTubeSize: number | null
   dltSize: number | null
   endobronchialSize: number | null
-  bisValue: number | null
-  tofRatio: number | null
-  cvpMmHg: number | null
   crystalloidsMl: number | null
   colloidsMl: number | null
   bloodMl: number | null
@@ -116,9 +110,6 @@ export type IntraoperativeRecordMinAggregateOutputType = {
   nirsMonitor: boolean | null
   evokedPotentials: boolean | null
   tofMonitor: boolean | null
-  bisValue: number | null
-  tofRatio: number | null
-  cvpMmHg: number | null
   premedicationEvening: string | null
   premedicationMorning: string | null
   crystalloidsMl: number | null
@@ -183,9 +174,6 @@ export type IntraoperativeRecordMaxAggregateOutputType = {
   nirsMonitor: boolean | null
   evokedPotentials: boolean | null
   tofMonitor: boolean | null
-  bisValue: number | null
-  tofRatio: number | null
-  cvpMmHg: number | null
   premedicationEvening: string | null
   premedicationMorning: string | null
   crystalloidsMl: number | null
@@ -255,9 +243,6 @@ export type IntraoperativeRecordCountAggregateOutputType = {
   nirsMonitor: number
   evokedPotentials: number
   tofMonitor: number
-  bisValue: number
-  tofRatio: number
-  cvpMmHg: number
   vascularAccesses: number
   premedicationEvening: number
   premedicationMorning: number
@@ -288,9 +273,6 @@ export type IntraoperativeRecordAvgAggregateInputType = {
   nasalTubeSize?: true
   dltSize?: true
   endobronchialSize?: true
-  bisValue?: true
-  tofRatio?: true
-  cvpMmHg?: true
   crystalloidsMl?: true
   colloidsMl?: true
   bloodMl?: true
@@ -308,9 +290,6 @@ export type IntraoperativeRecordSumAggregateInputType = {
   nasalTubeSize?: true
   dltSize?: true
   endobronchialSize?: true
-  bisValue?: true
-  tofRatio?: true
-  cvpMmHg?: true
   crystalloidsMl?: true
   colloidsMl?: true
   bloodMl?: true
@@ -369,9 +348,6 @@ export type IntraoperativeRecordMinAggregateInputType = {
   nirsMonitor?: true
   evokedPotentials?: true
   tofMonitor?: true
-  bisValue?: true
-  tofRatio?: true
-  cvpMmHg?: true
   premedicationEvening?: true
   premedicationMorning?: true
   crystalloidsMl?: true
@@ -436,9 +412,6 @@ export type IntraoperativeRecordMaxAggregateInputType = {
   nirsMonitor?: true
   evokedPotentials?: true
   tofMonitor?: true
-  bisValue?: true
-  tofRatio?: true
-  cvpMmHg?: true
   premedicationEvening?: true
   premedicationMorning?: true
   crystalloidsMl?: true
@@ -508,9 +481,6 @@ export type IntraoperativeRecordCountAggregateInputType = {
   nirsMonitor?: true
   evokedPotentials?: true
   tofMonitor?: true
-  bisValue?: true
-  tofRatio?: true
-  cvpMmHg?: true
   vascularAccesses?: true
   premedicationEvening?: true
   premedicationMorning?: true
@@ -672,9 +642,6 @@ export type IntraoperativeRecordGroupByOutputType = {
   nirsMonitor: boolean
   evokedPotentials: boolean
   tofMonitor: boolean
-  bisValue: number | null
-  tofRatio: number | null
-  cvpMmHg: number | null
   vascularAccesses: runtime.JsonValue
   premedicationEvening: string | null
   premedicationMorning: string | null
@@ -772,9 +739,6 @@ export type IntraoperativeRecordWhereInput = {
   nirsMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   evokedPotentials?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   tofMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
-  bisValue?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
-  tofRatio?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
-  cvpMmHg?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   vascularAccesses?: Prisma.JsonFilter<"IntraoperativeRecord">
   premedicationEvening?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
   premedicationMorning?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
@@ -853,9 +817,6 @@ export type IntraoperativeRecordOrderByWithRelationInput = {
   nirsMonitor?: Prisma.SortOrder
   evokedPotentials?: Prisma.SortOrder
   tofMonitor?: Prisma.SortOrder
-  bisValue?: Prisma.SortOrderInput | Prisma.SortOrder
-  tofRatio?: Prisma.SortOrderInput | Prisma.SortOrder
-  cvpMmHg?: Prisma.SortOrderInput | Prisma.SortOrder
   vascularAccesses?: Prisma.SortOrder
   premedicationEvening?: Prisma.SortOrderInput | Prisma.SortOrder
   premedicationMorning?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -937,9 +898,6 @@ export type IntraoperativeRecordWhereUniqueInput = Prisma.AtLeast<{
   nirsMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   evokedPotentials?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   tofMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
-  bisValue?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
-  tofRatio?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
-  cvpMmHg?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   vascularAccesses?: Prisma.JsonFilter<"IntraoperativeRecord">
   premedicationEvening?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
   premedicationMorning?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
@@ -1018,9 +976,6 @@ export type IntraoperativeRecordOrderByWithAggregationInput = {
   nirsMonitor?: Prisma.SortOrder
   evokedPotentials?: Prisma.SortOrder
   tofMonitor?: Prisma.SortOrder
-  bisValue?: Prisma.SortOrderInput | Prisma.SortOrder
-  tofRatio?: Prisma.SortOrderInput | Prisma.SortOrder
-  cvpMmHg?: Prisma.SortOrderInput | Prisma.SortOrder
   vascularAccesses?: Prisma.SortOrder
   premedicationEvening?: Prisma.SortOrderInput | Prisma.SortOrder
   premedicationMorning?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1103,9 +1058,6 @@ export type IntraoperativeRecordScalarWhereWithAggregatesInput = {
   nirsMonitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   evokedPotentials?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   tofMonitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
-  bisValue?: Prisma.IntNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
-  tofRatio?: Prisma.FloatNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
-  cvpMmHg?: Prisma.FloatNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   vascularAccesses?: Prisma.JsonWithAggregatesFilter<"IntraoperativeRecord">
   premedicationEvening?: Prisma.StringNullableWithAggregatesFilter<"IntraoperativeRecord"> | string | null
   premedicationMorning?: Prisma.StringNullableWithAggregatesFilter<"IntraoperativeRecord"> | string | null
@@ -1179,9 +1131,6 @@ export type IntraoperativeRecordCreateInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -1260,9 +1209,6 @@ export type IntraoperativeRecordUncheckedCreateInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -1339,9 +1285,6 @@ export type IntraoperativeRecordUpdateInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1420,9 +1363,6 @@ export type IntraoperativeRecordUncheckedUpdateInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1500,9 +1440,6 @@ export type IntraoperativeRecordCreateManyInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -1576,9 +1513,6 @@ export type IntraoperativeRecordUpdateManyMutationInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1653,9 +1587,6 @@ export type IntraoperativeRecordUncheckedUpdateManyInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1735,9 +1666,6 @@ export type IntraoperativeRecordCountOrderByAggregateInput = {
   nirsMonitor?: Prisma.SortOrder
   evokedPotentials?: Prisma.SortOrder
   tofMonitor?: Prisma.SortOrder
-  bisValue?: Prisma.SortOrder
-  tofRatio?: Prisma.SortOrder
-  cvpMmHg?: Prisma.SortOrder
   vascularAccesses?: Prisma.SortOrder
   premedicationEvening?: Prisma.SortOrder
   premedicationMorning?: Prisma.SortOrder
@@ -1766,9 +1694,6 @@ export type IntraoperativeRecordAvgOrderByAggregateInput = {
   nasalTubeSize?: Prisma.SortOrder
   dltSize?: Prisma.SortOrder
   endobronchialSize?: Prisma.SortOrder
-  bisValue?: Prisma.SortOrder
-  tofRatio?: Prisma.SortOrder
-  cvpMmHg?: Prisma.SortOrder
   crystalloidsMl?: Prisma.SortOrder
   colloidsMl?: Prisma.SortOrder
   bloodMl?: Prisma.SortOrder
@@ -1827,9 +1752,6 @@ export type IntraoperativeRecordMaxOrderByAggregateInput = {
   nirsMonitor?: Prisma.SortOrder
   evokedPotentials?: Prisma.SortOrder
   tofMonitor?: Prisma.SortOrder
-  bisValue?: Prisma.SortOrder
-  tofRatio?: Prisma.SortOrder
-  cvpMmHg?: Prisma.SortOrder
   premedicationEvening?: Prisma.SortOrder
   premedicationMorning?: Prisma.SortOrder
   crystalloidsMl?: Prisma.SortOrder
@@ -1894,9 +1816,6 @@ export type IntraoperativeRecordMinOrderByAggregateInput = {
   nirsMonitor?: Prisma.SortOrder
   evokedPotentials?: Prisma.SortOrder
   tofMonitor?: Prisma.SortOrder
-  bisValue?: Prisma.SortOrder
-  tofRatio?: Prisma.SortOrder
-  cvpMmHg?: Prisma.SortOrder
   premedicationEvening?: Prisma.SortOrder
   premedicationMorning?: Prisma.SortOrder
   crystalloidsMl?: Prisma.SortOrder
@@ -1920,9 +1839,6 @@ export type IntraoperativeRecordSumOrderByAggregateInput = {
   nasalTubeSize?: Prisma.SortOrder
   dltSize?: Prisma.SortOrder
   endobronchialSize?: Prisma.SortOrder
-  bisValue?: Prisma.SortOrder
-  tofRatio?: Prisma.SortOrder
-  cvpMmHg?: Prisma.SortOrder
   crystalloidsMl?: Prisma.SortOrder
   colloidsMl?: Prisma.SortOrder
   bloodMl?: Prisma.SortOrder
@@ -2074,9 +1990,6 @@ export type IntraoperativeRecordCreateWithoutCaseInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -2153,9 +2066,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutCaseInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -2248,9 +2158,6 @@ export type IntraoperativeRecordUpdateWithoutCaseInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2327,9 +2234,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutCaseInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2406,9 +2310,6 @@ export type IntraoperativeRecordCreateWithoutLabRowsInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -2486,9 +2387,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutLabRowsInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -2580,9 +2478,6 @@ export type IntraoperativeRecordUpdateWithoutLabRowsInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2660,9 +2555,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutLabRowsInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2738,9 +2630,6 @@ export type IntraoperativeRecordCreateWithoutVascularAccessRowsInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -2818,9 +2707,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutVascularAccessRowsInput = 
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -2912,9 +2798,6 @@ export type IntraoperativeRecordUpdateWithoutVascularAccessRowsInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2992,9 +2875,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutVascularAccessRowsInput = 
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3070,9 +2950,6 @@ export type IntraoperativeRecordCreateWithoutPremedicationRowsInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -3150,9 +3027,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutPremedicationRowsInput = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: number | null
-  tofRatio?: number | null
-  cvpMmHg?: number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: string | null
   premedicationMorning?: string | null
@@ -3244,9 +3118,6 @@ export type IntraoperativeRecordUpdateWithoutPremedicationRowsInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3324,9 +3195,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutPremedicationRowsInput = {
   nirsMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   evokedPotentials?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tofMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bisValue?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tofRatio?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  cvpMmHg?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   vascularAccesses?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   premedicationEvening?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   premedicationMorning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3452,9 +3320,6 @@ export type IntraoperativeRecordSelect<ExtArgs extends runtime.Types.Extensions.
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: boolean
-  tofRatio?: boolean
-  cvpMmHg?: boolean
   vascularAccesses?: boolean
   premedicationEvening?: boolean
   premedicationMorning?: boolean
@@ -3534,9 +3399,6 @@ export type IntraoperativeRecordSelectCreateManyAndReturn<ExtArgs extends runtim
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: boolean
-  tofRatio?: boolean
-  cvpMmHg?: boolean
   vascularAccesses?: boolean
   premedicationEvening?: boolean
   premedicationMorning?: boolean
@@ -3612,9 +3474,6 @@ export type IntraoperativeRecordSelectUpdateManyAndReturn<ExtArgs extends runtim
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: boolean
-  tofRatio?: boolean
-  cvpMmHg?: boolean
   vascularAccesses?: boolean
   premedicationEvening?: boolean
   premedicationMorning?: boolean
@@ -3690,9 +3549,6 @@ export type IntraoperativeRecordSelectScalar = {
   nirsMonitor?: boolean
   evokedPotentials?: boolean
   tofMonitor?: boolean
-  bisValue?: boolean
-  tofRatio?: boolean
-  cvpMmHg?: boolean
   vascularAccesses?: boolean
   premedicationEvening?: boolean
   premedicationMorning?: boolean
@@ -3712,7 +3568,7 @@ export type IntraoperativeRecordSelectScalar = {
   syncRevision?: boolean
 }
 
-export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "bglMonitor" | "bloodGasMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "bisValue" | "tofRatio" | "cvpMmHg" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
+export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "bglMonitor" | "bloodGasMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
 export type IntraoperativeRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   vascularAccessRows?: boolean | Prisma.IntraoperativeRecord$vascularAccessRowsArgs<ExtArgs>
@@ -3802,9 +3658,6 @@ export type $IntraoperativeRecordPayload<ExtArgs extends runtime.Types.Extension
     nirsMonitor: boolean
     evokedPotentials: boolean
     tofMonitor: boolean
-    bisValue: number | null
-    tofRatio: number | null
-    cvpMmHg: number | null
     vascularAccesses: runtime.JsonValue
     premedicationEvening: string | null
     premedicationMorning: string | null
@@ -4303,9 +4156,6 @@ export interface IntraoperativeRecordFieldRefs {
   readonly nirsMonitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly evokedPotentials: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly tofMonitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
-  readonly bisValue: Prisma.FieldRef<"IntraoperativeRecord", 'Int'>
-  readonly tofRatio: Prisma.FieldRef<"IntraoperativeRecord", 'Float'>
-  readonly cvpMmHg: Prisma.FieldRef<"IntraoperativeRecord", 'Float'>
   readonly vascularAccesses: Prisma.FieldRef<"IntraoperativeRecord", 'Json'>
   readonly premedicationEvening: Prisma.FieldRef<"IntraoperativeRecord", 'String'>
   readonly premedicationMorning: Prisma.FieldRef<"IntraoperativeRecord", 'String'>

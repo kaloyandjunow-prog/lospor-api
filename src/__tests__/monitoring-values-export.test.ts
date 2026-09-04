@@ -5,84 +5,98 @@ import { mapCasesToOmop } from "@/lib/omop-mapper"
 import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
 
 /**
- * The sixteen monitoring flags say a modality was used. They cannot say what it
- * showed, and for these three that is the whole clinical question: a BIS that
- * sat at 55 and one that dropped to 22 for twenty minutes are the same case to
- * a boolean, as are a train-of-four of 0.9 and one of 0.4 at extubation.
+ * The sixteen monitoring flags say a modality was used. These three say what it
+ * read, and when -- which is the half a register can pool. A case whose BIS sat
+ * at 55 and one that dropped to 22 for twenty minutes are the same case to a
+ * boolean, and to a single stored figure they are still nearly the same case.
+ * The timestamp is the information.
  */
-describe("what the monitors read reaches the export", () => {
+describe("what the monitors read reaches the export, with its time", () => {
   const options = {
     userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
     excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
   }
 
-  function caseWith(values: Record<string, unknown>) {
-    const c = completeCase() as never as { intraop: Record<string, unknown> }
-    Object.assign(c.intraop, values)
+  function caseWithReadings(readings: Record<string, unknown>[]) {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = readings.map((r, i) => ({
+      type: "vital",
+      timestamp: new Date(Date.UTC(2026, 5, 1, 9, 40 + i * 5)),
+      label: null, value: null, unit: null,
+      systolic: null, diastolic: null, heartRate: null,
+      spO2: null, etco2: null, temp: null,
+      bgl: null, bglLoincCode: null, bglUnitCanon: null,
+      bis: null, tofRatio: null, cvp: null,
+      atcCode: null, drugId: null, metadataJson: null,
+      ...r,
+    }))
     return c
   }
 
-  function measurement(bundle: ReturnType<typeof mapCasesToOmop>, source: string) {
-    return bundle.measurement.find(m => m.measurement_source_value === source)
+  function rows(bundle: ReturnType<typeof mapCasesToOmop>, source: string) {
+    return bundle.measurement.filter(m => m.measurement_source_value === source)
   }
 
-  it("exports the bispectral index as a measurement, not an observation", () => {
-    // Measurement domain is the vocabulary's own classification for all three,
-    // so they belong in MEASUREMENT rather than beside the flags.
-    const bundle = mapCasesToOmop([caseWith({ bis: true, bisValue: 38 }) as never], options as never)
-    const row = measurement(bundle, "LOSPOR:BIS_VALUE")
+  it("exports one row per BIS reading, each at its own minute", () => {
+    const bundle = mapCasesToOmop(
+      [caseWithReadings([{ bis: 55 }, { bis: 22 }, { bis: 48 }]) as never],
+      options as never,
+    )
+    const bis = rows(bundle, "LOINC:75918-3")
 
-    expect(row).toBeDefined()
-    expect(row?.measurement_concept_id).toBe(4134573)
-    expect(row?.value_as_number).toBe(38)
-    // Dimensionless. Borrowing a plausible unit concept would assert something
-    // the index does not have.
-    expect(row?.unit_concept_id).toBe(0)
+    expect(bis).toHaveLength(3)
+    expect(bis.map(r => r.value_as_number)).toEqual([55, 22, 48])
+    // Distinct instants: collapsing them would lose the dip, which is the only
+    // reason to record a BIS at all.
+    expect(new Set(bis.map(r => r.measurement_datetime)).size).toBe(3)
+    expect(bis[0]?.measurement_concept_id).toBe(21490711)
+    // The index is dimensionless; no unit concept is borrowed for it.
+    expect(bis[0]?.unit_concept_id).toBe(0)
   })
 
-  it("exports the train-of-four under the ratio's concept, not the count's", () => {
-    // 4353950 is the count and is a different measurement. The field takes only
-    // the ratio, so exporting under the count would misstate what was recorded.
-    const bundle = mapCasesToOmop([caseWith({ tofMonitor: true, tofRatio: 0.4 }) as never], options as never)
-    const row = measurement(bundle, "LOSPOR:TOF_RATIO")
+  it("names SNOMED for the train-of-four, which has no LOINC code", () => {
+    // 4108453 is the ratio. Claiming a LOINC prefix for a SNOMED code would
+    // point a reader at a vocabulary that does not contain it.
+    const bundle = mapCasesToOmop([caseWithReadings([{ tofRatio: 0.4 }]) as never], options as never)
+    const tof = rows(bundle, "SNOMED:250831000")
 
-    expect(row?.measurement_concept_id).toBe(4108453)
-    expect(row?.value_as_number).toBe(0.4)
-    expect(row?.unit_concept_id).toBe(8523)
+    expect(tof).toHaveLength(1)
+    expect(tof[0]?.measurement_concept_id).toBe(4108453)
+    expect(tof[0]?.value_as_number).toBe(0.4)
+    expect(tof[0]?.unit_concept_id).toBe(8523)
+  })
+
+  it("exports CVP in mmHg without converting it again", () => {
+    // The conversion happens at entry. Converting here as well would make the
+    // exported figure depend on whichever unit the clinician had selected.
+    const bundle = mapCasesToOmop([caseWithReadings([{ cvp: 7.4 }]) as never], options as never)
+    const cvp = rows(bundle, "LOINC:60985-9")
+
+    expect(cvp[0]?.measurement_concept_id).toBe(21490675)
+    expect(cvp[0]?.value_as_number).toBe(7.4)
+    expect(cvp[0]?.unit_source_value).toBe("mmHg")
   })
 
   /**
-   * The one that would be silently wrong. CVP is entered in cmH2O by default
-   * and stored in mmHg, and the conversion happens at entry. If the export
-   * converted instead, the exported number would depend on whatever unit the
-   * clinician happened to have selected -- so a value already in mmHg must
-   * leave untouched.
+   * The one that would be quietly wrong. A BIS of 0 is an isoelectric EEG and a
+   * train-of-four of 0 is a fully paralysed patient. Both are readings somebody
+   * charted, and a falsy check anywhere on the path would drop exactly the two
+   * values that matter most.
    */
-  it("exports CVP in mmHg without converting it again", () => {
-    const bundle = mapCasesToOmop([caseWith({ cvpMonitor: true, cvpMmHg: 7.4 }) as never], options as never)
-    const row = measurement(bundle, "LOSPOR:CVP_MMHG")
+  it("exports a charted zero rather than treating it as nothing", () => {
+    const bundle = mapCasesToOmop(
+      [caseWithReadings([{ bis: 0, tofRatio: 0 }]) as never],
+      options as never,
+    )
 
-    expect(row?.measurement_concept_id).toBe(4323687)
-    expect(row?.value_as_number).toBe(7.4)
-    expect(row?.unit_concept_id).toBe(8876)
-    expect(row?.unit_source_value).toBe("mmHg")
+    expect(rows(bundle, "LOINC:75918-3")[0]?.value_as_number).toBe(0)
+    expect(rows(bundle, "SNOMED:250831000")[0]?.value_as_number).toBe(0)
   })
 
-  it("says nothing when a monitor was used but no value was charted", () => {
-    // A common and honest record: the monitor was on, nobody wrote a number
-    // down. The flag still exports; the measurement must not, because a 0 here
-    // would read as an isoelectric EEG.
-    const bundle = mapCasesToOmop([caseWith({ bis: true, bisValue: null }) as never], options as never)
+  it("says nothing for a monitor that was used but never charted", () => {
+    const bundle = mapCasesToOmop([caseWithReadings([{ bis: 40 }]) as never], options as never)
 
-    expect(measurement(bundle, "LOSPOR:BIS_VALUE")).toBeUndefined()
-  })
-
-  it("exports a genuine zero rather than dropping it", () => {
-    // The other half, and the reason the column is nullable rather than
-    // defaulted: a train-of-four of 0 is a fully paralysed patient, which is a
-    // reading, not a blank.
-    const bundle = mapCasesToOmop([caseWith({ tofMonitor: true, tofRatio: 0 }) as never], options as never)
-
-    expect(measurement(bundle, "LOSPOR:TOF_RATIO")?.value_as_number).toBe(0)
+    expect(rows(bundle, "SNOMED:250831000")).toHaveLength(0)
+    expect(rows(bundle, "LOINC:60985-9")).toHaveLength(0)
   })
 })

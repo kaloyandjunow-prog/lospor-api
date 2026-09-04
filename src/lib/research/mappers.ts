@@ -165,7 +165,6 @@ export const RESEARCH_DETAIL_SELECT = {
       bloodMl: true,
       urineMl: true,
       bloodLossMl: true,
-      bisValue: true, tofRatio: true, cvpMmHg: true,
     },
   },
   postop: {
@@ -470,9 +469,6 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       bloodMl: row.intraop?.bloodMl ?? null,
       urineMl: row.intraop?.urineMl ?? null,
       bloodLossMl: row.intraop?.bloodLossMl ?? null,
-      bisValue: row.intraop?.bisValue ?? null,
-      tofRatio: row.intraop?.tofRatio ?? null,
-      cvpMmHg: row.intraop?.cvpMmHg ?? null,
     },
     postoperative: {
       aldreteTotal: row.postop?.aldreteTotal ?? null,
