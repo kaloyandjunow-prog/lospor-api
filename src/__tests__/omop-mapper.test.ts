@@ -64,6 +64,10 @@ describe("mapCasesToOmop", () => {
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
       visit_source_value: "RC-10000000-0000-4000-8000-000000000001",
       care_site_source_value: "inst-1",
+      // Anaesthesia start/end is a clock time, not just a day -- visit_start_date
+      // carried the day alone until now.
+      visit_start_datetime: "2026-06-01T08:00:00.000Z",
+      visit_end_datetime: "2026-06-01T09:00:00.000Z",
     }))
     expect(bundle.condition_occurrence).toEqual(expect.arrayContaining([
       expect.objectContaining({

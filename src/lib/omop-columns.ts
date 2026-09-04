@@ -37,7 +37,8 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     "observation_period_end_date", "period_type_concept_id",
   ],
   visit_occurrence: [
-    "visit_occurrence_id", "person_id", "visit_concept_id", "visit_start_date", "visit_end_date",
+    "visit_occurrence_id", "person_id", "visit_concept_id",
+    "visit_start_date", "visit_start_datetime", "visit_end_date", "visit_end_datetime",
     "visit_type_concept_id", "visit_source_value", "care_site_source_value", "care_site_id",
   ],
   condition_occurrence: [

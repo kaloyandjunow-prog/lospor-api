@@ -860,7 +860,9 @@ interface OmopVisit {
   person_id: number
   visit_concept_id: number
   visit_start_date: string | null
+  visit_start_datetime: string | null
   visit_end_date: string | null
+  visit_end_datetime: string | null
   visit_type_concept_id: number
   visit_source_value: string | null
   care_site_id: number | null
@@ -1485,8 +1487,16 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // dummy date as if it were the day of surgery.
     const legacyDay = (d: Date | null | undefined) =>
       d && d.getUTCFullYear() > 2000 ? d : null
-    const startDate = isoDate(c.intraop?.startedAt ?? legacyDay(c.intraop?.startTime) ?? c.createdAt)
-    const endDate   = isoDate(c.intraop?.endedAt ?? legacyDay(c.intraop?.endTime) ?? c.intraop?.startedAt ?? c.createdAt)
+    const startInstant = c.intraop?.startedAt ?? legacyDay(c.intraop?.startTime) ?? c.createdAt
+    const endInstant   = c.intraop?.endedAt ?? legacyDay(c.intraop?.endTime) ?? c.intraop?.startedAt ?? c.createdAt
+    const startDate = isoDate(startInstant)
+    const endDate   = isoDate(endInstant)
+    // The same instants, kept at full precision. Anaesthesia start/end is a
+    // clock time, not just a day -- case duration, turnover and first-case
+    // metrics all need it -- but visit_occurrence only ever carried the
+    // truncated date.
+    const startDateTime = startInstant ? startInstant.toISOString() : null
+    const endDateTime   = endInstant ? endInstant.toISOString() : null
 
     // The case's own institution, stamped at creation and never updated,
     // because a case belongs to the institution it was performed at — see
@@ -1567,7 +1577,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // that filter on visit type, to avoid stating something that is true.
       visit_concept_id:      9201,
       visit_start_date:      startDate,
+      visit_start_datetime:  startDateTime,
       visit_end_date:        endDate,
+      visit_end_datetime:    endDateTime,
       visit_type_concept_id: 32817, // EHR
       visit_source_value:    `RC-${c.researchId}`,
       care_site_source_value: careSite,
