@@ -2664,10 +2664,12 @@ export type PreoperativeAssessmentCreateNestedOneWithoutLabRowsInput = {
   connect?: Prisma.PreoperativeAssessmentWhereUniqueInput
 }
 
-export type PreoperativeAssessmentUpdateOneRequiredWithoutLabRowsNestedInput = {
+export type PreoperativeAssessmentUpdateOneWithoutLabRowsNestedInput = {
   create?: Prisma.XOR<Prisma.PreoperativeAssessmentCreateWithoutLabRowsInput, Prisma.PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput>
   connectOrCreate?: Prisma.PreoperativeAssessmentCreateOrConnectWithoutLabRowsInput
   upsert?: Prisma.PreoperativeAssessmentUpsertWithoutLabRowsInput
+  disconnect?: Prisma.PreoperativeAssessmentWhereInput | boolean
+  delete?: Prisma.PreoperativeAssessmentWhereInput | boolean
   connect?: Prisma.PreoperativeAssessmentWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.PreoperativeAssessmentUpdateToOneWithWhereWithoutLabRowsInput, Prisma.PreoperativeAssessmentUpdateWithoutLabRowsInput>, Prisma.PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput>
 }

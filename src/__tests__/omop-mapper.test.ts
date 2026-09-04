@@ -2268,3 +2268,97 @@ describe("dose_unit_source_value carries the unit, not the whole dose string", (
     expect(row?.dose_unit_source_value).toBe("mL")
   })
 })
+
+describe("laboratory results carry the time the specimen was drawn", () => {
+  const labRow = (over: Record<string, unknown>) => ({
+    test: "Haemoglobin (Hb)", valueNum: 120, value: "120", unitCanon: "g/L",
+    loincCode: "718-7", abnormalFlag: null, referenceLow: null, referenceHigh: null,
+    standardConceptId: 3000963, mappingStatus: "MAPPED", ...over,
+  })
+
+  it("stamps a preop result with its own takenAt, not the record's date", () => {
+    // The bug this fixes: every lab row was stamped with the preoperative
+    // vitals date, so a result drawn three days before surgery and one drawn
+    // on the morning of it were indistinguishable in the export. takenAt was
+    // stored faithfully by relational-sync all along and thrown away here.
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.labRows = [labRow({ takenAt: new Date("2026-05-29T06:15:00Z") })]
+
+    const row = mapCasesToOmop([c as never]).measurement
+      .find(r => r.measurement_source_value === "LOINC:718-7")
+
+    expect(row?.measurement_date).toBe("2026-05-29")
+    // The datetime column keeps the whole instant. Truncating it to the day,
+    // which is what this used to do, is what made two draws indistinguishable.
+    expect(row?.measurement_datetime).toBe("2026-05-29T06:15:00.000Z")
+  })
+
+  it("falls back to the record's date when a result has no draw time", () => {
+    // Preoperative labs typed by hand routinely carry no draw time. Dropping
+    // the row, or leaving its date null, would both be worse than saying it
+    // belongs to the case.
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.labRows = [labRow({ takenAt: null })]
+
+    const row = mapCasesToOmop([c as never]).measurement
+      .find(r => r.measurement_source_value === "LOINC:718-7")
+
+    expect(row?.measurement_date).toBe("2026-06-01")
+  })
+
+  it("exports intraoperative draws, each at its own time", () => {
+    // The point of intraop labs: a gas at induction and another after the
+    // blood are two draws on the timeline, not one value that got edited.
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.labRows = [
+      labRow({ test: "pH", loincCode: "2744-1", valueNum: 7.35, value: "7.35", unitCanon: null, standardConceptId: 3014605, takenAt: new Date("2026-06-01T08:20:00Z") }),
+      labRow({ test: "pH", loincCode: "2744-1", valueNum: 7.21, value: "7.21", unitCanon: null, standardConceptId: 3014605, takenAt: new Date("2026-06-01T08:50:00Z") }),
+    ]
+
+    const rows = mapCasesToOmop([c as never]).measurement
+      .filter(r => r.measurement_source_value === "LOINC:2744-1")
+
+    expect(rows).toHaveLength(2)
+    expect(rows.map(r => r.value_as_number)).toEqual([7.35, 7.21])
+    // Two distinct instants, so a falling trend is visible rather than being
+    // collapsed onto one timestamp.
+    expect(new Set(rows.map(r => r.measurement_datetime)).size).toBe(2)
+  })
+
+  it("keeps a preop and an intraop result of the same test apart", () => {
+    // Same analyte, same LOINC, two sections. Without takenAt these were one
+    // undifferentiated pair of rows on the same date.
+    const c = completeCase() as unknown as {
+      preop: Record<string, unknown>
+      intraop: Record<string, unknown>
+    }
+    c.preop.labRows = [labRow({ takenAt: new Date("2026-05-30T07:00:00Z") })]
+    c.intraop.labRows = [labRow({ valueNum: 88, value: "88", takenAt: new Date("2026-06-01T08:40:00Z") })]
+
+    const rows = mapCasesToOmop([c as never]).measurement
+      .filter(r => r.measurement_source_value === "LOINC:718-7")
+
+    expect(rows).toHaveLength(2)
+    expect(rows.map(r => r.measurement_date).sort()).toEqual(["2026-05-30", "2026-06-01"])
+  })
+
+  it("carries the abnormal flag at the draw's time too", () => {
+    // The flag observation is keyed to the same source value as its
+    // measurement, so the two must agree about when the result happened.
+    // The fixture's own preop rows are cleared so the assertion cannot match
+    // the preoperative haemoglobin instead of the intraoperative one.
+    const c = completeCase() as unknown as {
+      preop: Record<string, unknown>
+      intraop: Record<string, unknown>
+    }
+    c.preop.labRows = []
+    c.intraop.labRows = [labRow({ abnormalFlag: "low", takenAt: new Date("2026-06-01T08:35:00Z") })]
+
+    const flag = mapCasesToOmop([c as never]).observation
+      .find(r => r.observation_source_value === "LOSPOR:LAB_ABNORMAL_FLAG"
+        && String(r.value_as_string).includes("LOINC:718-7"))
+
+    expect(flag?.value_as_string).toBe("LOINC:718-7=low")
+    expect(flag?.observation_date).toBe("2026-06-01")
+  })
+})

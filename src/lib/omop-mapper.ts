@@ -528,6 +528,21 @@ function isoDate(d: Date | string | null | undefined): string | null {
   return isNaN(dt.getTime()) ? null : dt.toISOString().substring(0, 10)
 }
 
+/**
+ * The full instant, for CDM's `*_datetime` columns.
+ *
+ * `isoDate` truncates to a bare date, which is right for `*_date` and wrong for
+ * `*_datetime`: two blood gases half an hour apart are the clinically
+ * interesting case, and writing both as "2026-06-01" collapses them into one
+ * indistinguishable pair. The intraoperative event rows have always written a
+ * real instant here; this is the same thing for everything else that knows one.
+ */
+function isoInstant(d: Date | string | null | undefined): string | null {
+  if (!d) return null
+  const dt = typeof d === "string" ? new Date(d) : d
+  return isNaN(dt.getTime()) ? null : dt.toISOString()
+}
+
 // ─── Attempted, no result ────────────────────────────────────────────────────
 //
 // A vital the anaesthetist tried and could not obtain is not the same as one
@@ -985,6 +1000,34 @@ interface OmopProcedure {
   visit_occurrence_id: number
 }
 
+/**
+ * One row of the LabResult mirror, as the export reads it.
+ *
+ * Shared by the preoperative snapshot and the intraoperative draws: the two
+ * are the same clinical object and go through the same emission path, so a
+ * single shape keeps them from drifting.
+ */
+interface OmopLabRow {
+  test: string
+  valueNum: number | null
+  value: string | null
+  unitCanon: string | null
+  loincCode: string | null
+  abnormalFlag: string | null
+  /**
+   * When the specimen was drawn. Carried by LabResult all along and thrown
+   * away here until intraoperative labs existed: every lab row was stamped
+   * with the preoperative vitals date instead, so a result drawn three days
+   * before surgery and one drawn during it were indistinguishable in the
+   * export.
+   */
+  takenAt?: Date | string | null
+  referenceLow?: number | null
+  referenceHigh?: number | null
+  standardConceptId?: number | null
+  mappingStatus?: string
+}
+
 interface OmopObservation {
   observation_id: number
   person_id: number
@@ -1171,18 +1214,7 @@ type CaseRow = {
     malignantHyperthermiaHistory?: boolean | null
     unexplainedAnaesthesiaComplications?: boolean | null
     labResults: unknown
-    labRows?: {
-      test: string
-      valueNum: number | null
-      value: string | null
-      unitCanon: string | null
-      loincCode: string | null
-      abnormalFlag: string | null
-      referenceLow?: number | null
-      referenceHigh?: number | null
-      standardConceptId?: number | null
-      mappingStatus?: string
-    }[]
+    labRows?: OmopLabRow[]
     diagnoses?: {
       code: string | null
       label: string
@@ -1301,6 +1333,8 @@ type CaseRow = {
       route: string | null
       ordinal: number
     }[]
+    /** Laboratory draws taken during the case, each with its own `takenAt`. */
+    labRows?: OmopLabRow[]
   } | null
   postop?: {
     aldreteActivity: number | null
@@ -1701,6 +1735,68 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     }
 
     /**
+     * Laboratory results -> MEASUREMENT, with the abnormal flag alongside.
+     *
+     * Shared by the preoperative snapshot and the intraoperative draws. The two
+     * differ only in which record they hang off and what date a result falls
+     * back to; everything else -- LOINC coding, units, reference ranges, the
+     * qualitative-result rule -- is identical, so they emit through one path.
+     *
+     * `fallbackDate` is used only when a row has no `takenAt` of its own.
+     */
+    const emitLabRows = (rows: OmopLabRow[], fallbackDate: string | null) => {
+      for (const lab of rows) {
+        // A result with neither a number nor text is not a result. Anything
+        // else is exported: this used to skip every row without a parsed
+        // number, so a qualitative result -- a blood group, a culture, a
+        // dipstick -- was dropped with no trace that it had been recorded.
+        if (lab.valueNum == null && !lab.value) continue
+        trackMapping(lab.mappingStatus)
+        const labSource = lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`
+        // The draw time when there is one. Falling back to the record's date
+        // for every row was the old behaviour, and it made a result drawn days
+        // before surgery indistinguishable from one drawn during it -- fatal
+        // for intraoperative labs, whose whole point is the separate timestamp.
+        //
+        // The datetime column keeps the full instant so two draws within a day
+        // stay distinguishable; the date column is the calendar day, as CDM
+        // defines it.
+        const labDate = isoDate(lab.takenAt) ?? fallbackDate
+        const labInstant = isoInstant(lab.takenAt) ?? fallbackDate
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      lab.standardConceptId ?? 0,
+          measurement_date:            labDate,
+          measurement_datetime:        labInstant,
+          measurement_type_concept_id: 32817,
+          value_as_number:             lab.valueNum,
+          value_as_concept_id: null,
+          unit_concept_id:             lab.unitCanon ? LAB_UNIT_CONCEPTS[lab.unitCanon] ?? 0 : 0,
+          unit_source_value:           lab.unitCanon ?? null,
+          measurement_source_value:    labSource,
+          // The value as the lab reported it. For a numeric result this is the
+          // unparsed original; for a qualitative one it is the only value there
+          // is.
+          value_source_value:          lab.value ?? null,
+          // The range this result was judged against. Reference ranges differ
+          // by laboratory, assay and patient age, so "high" is not a claim the
+          // export can support without carrying the range that produced it.
+          range_low:                   lab.referenceLow ?? null,
+          range_high:                  lab.referenceHigh ?? null,
+          visit_occurrence_id:         visitId,
+        })
+        // CDM 5.4 has no abnormal-flag column, and value_as_concept_id would
+        // need a standard concept this export does not assign. The flag is
+        // LOSPOR's own judgement, so it is carried as its own observation,
+        // keyed by the same source value the measurement row uses.
+        if (lab.abnormalFlag) {
+          sourceObservation("LOSPOR:LAB_ABNORMAL_FLAG", `${labSource}=${lab.abnormalFlag}`, labDate)
+        }
+      }
+    }
+
+    /**
      * Whether a tracheal tube was cuffed, as the coded answer it has.
      *
      * LOINC registers "Cuffed endotracheal tube" (36311248) and "Uncuffed"
@@ -1871,46 +1967,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
 
       // ── Lab results from LabResult rows -> MEASUREMENT ────────────────────
       // Use SQL LabResult rows (LOINC-coded) instead of raw JSON
-      const labRows = preop.labRows ?? []
-      for (const lab of labRows) {
-        // A result with neither a number nor text is not a result. Anything
-        // else is exported: this used to skip every row without a parsed
-        // number, so a qualitative result -- a blood group, a culture, a
-        // dipstick -- was dropped with no trace that it had been recorded.
-        if (lab.valueNum == null && !lab.value) continue
-        trackMapping(lab.mappingStatus)
-        const labSource = lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`
-        measurements.push({
-          measurement_id:              nextId(),
-          person_id:                   personId,
-          measurement_concept_id:      lab.standardConceptId ?? 0,
-          measurement_date:            vitDate,
-          measurement_datetime:        vitDate,
-          measurement_type_concept_id: 32817,
-          value_as_number:             lab.valueNum,
-          value_as_concept_id: null,
-          unit_concept_id:             lab.unitCanon ? LAB_UNIT_CONCEPTS[lab.unitCanon] ?? 0 : 0,
-          unit_source_value:           lab.unitCanon ?? null,
-          measurement_source_value:    labSource,
-          // The value as the lab reported it. For a numeric result this is the
-          // unparsed original; for a qualitative one it is the only value there
-          // is.
-          value_source_value:          lab.value ?? null,
-          // The range this result was judged against. Reference ranges differ
-          // by laboratory, assay and patient age, so "high" is not a claim the
-          // export can support without carrying the range that produced it.
-          range_low:                   lab.referenceLow ?? null,
-          range_high:                  lab.referenceHigh ?? null,
-          visit_occurrence_id:         visitId,
-        })
-        // CDM 5.4 has no abnormal-flag column, and value_as_concept_id would
-        // need a standard concept this export does not assign. The flag is
-        // LOSPOR's own judgement, so it is carried as its own observation,
-        // keyed by the same source value the measurement row uses.
-        if (lab.abnormalFlag) {
-          sourceObservation("LOSPOR:LAB_ABNORMAL_FLAG", `${labSource}=${lab.abnormalFlag}`, vitDate)
-        }
-      }
+      emitLabRows(preop.labRows ?? [], vitDate)
 
       // ── Comorbidities -> CONDITION_OCCURRENCE ─────────────────────────────
       for (const co of preop.comorbidityRows ?? []) {
@@ -3150,6 +3207,13 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // case total.
       sourceMeasurement("LOSPOR:URINE_OUTPUT_ML", c.intraop.urineMl, 3014315, 8587, "mL", endDate)
       sourceObservation("LOSPOR:BLOOD_LOSS_ML", c.intraop.bloodLossMl, endDate)
+
+      // ── Lab draws taken during the case -> MEASUREMENT ────────────────────
+      // The same emission path preoperative labs use. Each row carries its own
+      // `takenAt`, so a gas at induction and one after transfusion land on the
+      // timeline where they happened; the case start is only the fallback for
+      // a draw whose time was never recorded.
+      emitLabRows(c.intraop.labRows ?? [], startDate)
     }
 
     for (const sel of c.selections ?? []) {

@@ -333,7 +333,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     // they are derived from the fluid events and written server-side in
     // rebuildProjection (case-events.ts), so a client PATCH can't override the
     // single source of truth. The read path (below) still returns them.
-    "bloodProductsNote","urineMl","bloodLossMl","complications",
+    "bloodProductsNote","urineMl","bloodLossMl","labResults","complications",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
     if (has(k)) copyKey(r, full, k)
@@ -534,6 +534,7 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     bloodProductsNote: intraop.bloodProductsNote ?? null,
     urineMl:           intraop.urineMl           ?? null,
     bloodLossMl:       intraop.bloodLossMl       ?? null,
+    labResults:        intraop.labResults        ?? [],
     complications:     intraop.complications     ?? null,
   }
 }

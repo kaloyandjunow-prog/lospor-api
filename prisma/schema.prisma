@@ -1197,11 +1197,22 @@ model IntraoperativeRecord {
   timeSeriesData Json @default("[]")
   keyEvents      Json @default("[]")
 
+  // Laboratory results drawn during the case, in the same shape preop holds
+  // them (@lospor/core LabResult), and for the same reason: the JSON on the
+  // record is what the clinician edited, and labRows below is the queryable
+  // mirror relational-sync derives from it.
+  //
+  // Unlike preop's single snapshot these are repeated draws, so each entry
+  // carries the `takenAt` that says which draw it belongs to. A blood gas at
+  // induction and another after transfusion are two draws, not an edit of one.
+  labResults Json @default("[]")
+
   complications String?
 
   // Normalised mirror of vascularAccesses JSON (queryable; written best-effort)
   vascularAccessRows VascularAccess[]
   premedicationRows  PremedicationAdministration[]
+  labRows            LabResult[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1666,9 +1677,24 @@ model Comorbidity {
 }
 
 model LabResult {
-  id                String                 @id @default(cuid())
-  preopId           String
-  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
+
+  // A result belongs to exactly one of the two records that can hold labs, and
+  // `section` says which without having to test the two ids. Preop labs are a
+  // snapshot taken before the case; intraoperative ones are repeated draws
+  // during it, each with its own `takenAt`. Both are the same clinical object
+  // -- the same catalogue, units, reference ranges and LOINC mapping -- so
+  // they share this table rather than a parallel one that would have to
+  // duplicate all of it.
+  //
+  // preopId was required until intraop labs existed. Each id keeps its own
+  // cascade so a deleted record takes its own results with it.
+  section   String                  @default("preop") // "preop" | "intraop"
+  preopId   String?
+  preop     PreoperativeAssessment? @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  intraopId String?
+  intraop   IntraoperativeRecord?   @relation(fields: [intraopId], references: [id], onDelete: Cascade)
+
   caseId            String
   test              String
   value             String?
@@ -1691,6 +1717,7 @@ model LabResult {
 
   @@index([caseId])
   @@index([preopId])
+  @@index([intraopId])
   @@index([test])
   @@index([loincCode])
   @@index([sourceVocabulary, sourceCode])

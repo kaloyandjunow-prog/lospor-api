@@ -1516,10 +1516,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "lab.result",
     exportName: "measurement.value_as_number (LOINC:<code>, or LAB:<test name> where unmapped)",
-    meaning: "A preoperative laboratory result. The source value carries the LOINC code when the analyte is mapped, and the laboratory's own test name when it is not",
+    meaning: "A laboratory result, preoperative or drawn during the case. The source value carries the LOINC code when the analyte is mapped, and the laboratory's own test name when it is not. Preoperative and intraoperative results are the same clinical object and share this row shape; they are told apart by measurement_datetime, and at source by LabResult.section.",
     type: "float",
     missingnessRule: "No row = that analyte was not resulted; the set of analytes varies by case",
-    derivationRule: "One row per LabResult; unmapped analytes keep their source name rather than being dropped",
+    derivationRule: "One row per LabResult. Unmapped analytes keep their source name rather than being dropped. measurement_datetime is the specimen's own takenAt where one was recorded, falling back to the record's date when it was not -- so repeated intraoperative draws of the same analyte stay distinguishable, and a falling trend is visible.",
     sourceTable: "LabResult", sourceColumn: "value",
     versionIntroduced: "4.0.0",
   },

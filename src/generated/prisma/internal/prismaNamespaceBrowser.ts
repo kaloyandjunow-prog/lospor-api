@@ -860,6 +860,7 @@ export const IntraoperativeRecordScalarFieldEnum = {
   bloodLossMl: 'bloodLossMl',
   timeSeriesData: 'timeSeriesData',
   keyEvents: 'keyEvents',
+  labResults: 'labResults',
   complications: 'complications',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -1122,7 +1123,9 @@ export type ComorbidityScalarFieldEnum = (typeof ComorbidityScalarFieldEnum)[key
 
 export const LabResultScalarFieldEnum = {
   id: 'id',
+  section: 'section',
   preopId: 'preopId',
+  intraopId: 'intraopId',
   caseId: 'caseId',
   test: 'test',
   value: 'value',

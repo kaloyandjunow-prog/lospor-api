@@ -253,11 +253,24 @@ function comorbidityRows(preopId: string, caseId: string, json: unknown, concept
   }).filter(r => r.label !== "(unspecified)" || r.code)
 }
 
+/**
+ * Labs from either record that can hold them.
+ *
+ * `parent` says which one, and only that id is set -- a result belongs to the
+ * preoperative snapshot or to a draw during the case, never to both. Everything
+ * downstream (LOINC lookup, reference ranges, abnormal flag, concept mapping)
+ * is identical for the two, which is exactly why they share one table and one
+ * function rather than a parallel copy that would drift.
+ */
 async function labRowsWithLoinc(
-  preopId: string, caseId: string, json: unknown,
+  parent: { section: "preop"; preopId: string } | { section: "intraop"; intraopId: string },
+  caseId: string, json: unknown,
   loincMap: Map<string, { loincCode: string; unitCanon: string; referenceLow: number | null; referenceHigh: number | null }>,
   concepts: Map<string, ConceptInfo>,
 ) {
+  const parentIds = parent.section === "preop"
+    ? { preopId: parent.preopId, intraopId: null }
+    : { preopId: null, intraopId: parent.intraopId }
   return arr(json)
     .filter((l: JsonItem) => l && l.test != null)
     .map((l: JsonItem, i: number) => {
@@ -267,7 +280,7 @@ async function labRowsWithLoinc(
         ? computeAbnormalFlag(valueNum, loinc.referenceLow, loinc.referenceHigh)
         : null
       return {
-        preopId, caseId,
+        section: parent.section, ...parentIds, caseId,
         test:         String(l.test),
         value:        str(l?.value),
         valueNum,
@@ -486,7 +499,7 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       airwayDevice: true, airwayNotes: true, cormackLehane: true, peepCmH2O: true, ippv: true, jetVentilation: true, fob: true,
       premedicationEvening: true, premedicationMorning: true, drugsAdministered: true,
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, bloodProductsNote: true, urineMl: true, bloodLossMl: true,
-      timeSeriesData: true, keyEvents: true, complications: true,
+      timeSeriesData: true, keyEvents: true, labResults: true, complications: true,
       ecg: true, spO2Monitor: true, nbpMonitor: true, etco2Monitor: true, tempMonitor: true, invasiveBP: true, cvpMonitor: true,
       bglMonitor: true, bloodGasMonitor: true, neuroMonitor: true, paCatheter: true, tee: true, bis: true, entropyMonitor: true,
       nirsMonitor: true, evokedPotentials: true, tofMonitor: true, urinaryCatheter: true, stomachTube: true,
@@ -517,7 +530,7 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     const medJson = parseDrugList(p.currentMedications)
     const allergyJson = parseDrugList(p.allergyDetails)
 
-    const labData = await labRowsWithLoinc(p.id, caseId, p.labResults, loincMap, concepts)
+    const labData = await labRowsWithLoinc({ section: "preop", preopId: p.id }, caseId, p.labResults, loincMap, concepts)
     statuses.push(
       fieldStatus(caseId, "preop", "ageYears", p.ageYears),
       fieldStatus(caseId, "preop", "ageValue", p.ageValue),
@@ -661,8 +674,15 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "intraop", "bloodLossMl", it.bloodLossMl),
       fieldStatus(caseId, "intraop", "timeSeriesData", it.timeSeriesData),
       fieldStatus(caseId, "intraop", "keyEvents", it.keyEvents),
+      fieldStatus(caseId, "intraop", "labResults", it.labResults),
       fieldStatus(caseId, "intraop", "complications", it.complications),
     )
+    // Scoped by intraopId, not by caseId+section: a case's preoperative rows
+    // live in the same table and must not be swept by an intraoperative sync.
+    await db.labResult.deleteMany({ where: { intraopId: it.id } })
+    await db.labResult.createMany({
+      data: await labRowsWithLoinc({ section: "intraop", intraopId: it.id }, caseId, it.labResults, loincMap, concepts),
+    })
     await db.vascularAccess.deleteMany({ where: { intraopId: it.id } })
     await db.vascularAccess.createMany({ data: vascularRows(it.id, caseId, it.vascularAccesses, concepts) })
     await db.premedicationAdministration.deleteMany({ where: { intraopId: it.id } })
