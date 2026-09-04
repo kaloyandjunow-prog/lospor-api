@@ -488,6 +488,105 @@ describe("a technique's timeline marker refines its procedure row instead of dup
     expect(line!.procedure_datetime).toBeNull()
     expect(line!.procedure_date).toBe("2026-06-01")
   })
+
+  it("uses Block done's timestamp when exactly one peripheral block is on the technique list", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["BLOCK_TAP"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T07:50:00Z"),
+      label: "Block done", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:BLOCK_TAP/.test(String(row.procedure_source_value)))
+    expect(line!.procedure_datetime).toBe("2026-06-01T07:50:00.000Z")
+  })
+
+  it("leaves two simultaneous peripheral blocks unrefined by Block done -- which one it timed is ambiguous", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["BLOCK_TAP", "BLOCK_FEMORAL"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T07:50:00Z"),
+      label: "Block done", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const lines = bundle.procedure_occurrence.filter(row => /ANAESTHESIA_TECHNIQUE:BLOCK_/.test(String(row.procedure_source_value)))
+    expect(lines).toHaveLength(2)
+    expect(lines.every(row => row.procedure_datetime === null)).toBe(true)
+  })
+
+  it("emits Spinal removed as its own procedure, not a refinement", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T09:00:00Z"),
+      label: "Spinal removed", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => row.procedure_source_value === "INTRAOP_EVENT:Spinal removed")
+    expect(line, "fixture must contain a Spinal removed row").toBeDefined()
+    expect(line!.procedure_concept_id).toBe(37165151)
+    expect(line!.procedure_datetime).toBe("2026-06-01T09:00:00.000Z")
+  })
+
+  it("refines a solitary arterial line's row from Art line in, but not when two lines exist", () => {
+    const base = completeCase() as never as {
+      intraop: { vascularAccessRows: { site: string; standardConceptId: number | null }[] }
+      events: unknown[]
+    }
+    base.intraop.vascularAccessRows = [{ site: "RADIAL", standardConceptId: 4051187 }]
+    base.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:10:00Z"),
+      label: "Art line in", value: null, unit: null, metadataJson: {},
+    }]
+    const solo = mapCasesToOmop([base as never], options as never)
+    const soloLine = solo.procedure_occurrence.find(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(soloLine!.procedure_datetime).toBe("2026-06-01T08:10:00.000Z")
+
+    const two = completeCase() as never as {
+      intraop: { vascularAccessRows: { site: string; standardConceptId: number | null }[] }
+      events: unknown[]
+    }
+    two.intraop.vascularAccessRows = [
+      { site: "RADIAL", standardConceptId: 4051187 },
+      { site: "FEMORAL", standardConceptId: 4050420 },
+    ]
+    two.events = base.events
+    const bundle = mapCasesToOmop([two as never], options as never)
+    const lines = bundle.procedure_occurrence.filter(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(lines).toHaveLength(2)
+    expect(lines.every(row => row.procedure_datetime === null)).toBe(true)
+  })
+
+  it("refines a solitary CVC/PICC line's row from CVC in/PICC", () => {
+    const c = completeCase() as never as {
+      intraop: { vascularAccessRows: { site: string; standardConceptId: number | null }[] }
+      events: unknown[]
+    }
+    c.intraop.vascularAccessRows = [
+      { site: "IJV", standardConceptId: 4051188 },
+    ]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:15:00Z"),
+      label: "CVC in", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(line!.procedure_datetime).toBe("2026-06-01T08:15:00.000Z")
+  })
+
+  it("emits PA cath coded to the jugular route, and IO access, as their own new procedures", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:20:00Z"), label: "PA cath", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:22:00Z"), label: "IO access", value: null, unit: null, metadataJson: {} },
+    ]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const paCath = bundle.procedure_occurrence.find(row => row.procedure_source_value === "INTRAOP_EVENT:PA cath")
+    expect(paCath!.procedure_concept_id).toBe(4052529)
+    expect(paCath!.procedure_datetime).toBe("2026-06-01T08:20:00.000Z")
+    const ioAccess = bundle.procedure_occurrence.find(row => row.procedure_source_value === "INTRAOP_EVENT:IO access")
+    expect(ioAccess!.procedure_concept_id).toBe(4257889)
+    expect(ioAccess!.procedure_datetime).toBe("2026-06-01T08:22:00.000Z")
+  })
 })
 
 describe("curated mappings reach the export", () => {

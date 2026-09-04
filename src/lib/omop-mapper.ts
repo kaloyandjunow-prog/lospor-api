@@ -2539,11 +2539,32 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       const clinicalEventTimestamp = (label: string): Date | undefined =>
         (c.events ?? []).find(e => e.type === "clinical_event" && e.label === label)?.timestamp
 
+      // Whether tech sits at or under the named tree node -- used to find
+      // "any peripheral block" for the generic "Block done" marker, the same
+      // way SPINAL/EPIDURAL are found for their own dedicated markers.
+      const isUnderTechniqueNode = (tech: string, ancestor: string): boolean => {
+        let node: string | undefined = tech
+        const seen = new Set<string>()
+        while (node && !seen.has(node)) {
+          if (node === ancestor) return true
+          seen.add(node)
+          node = TECHNIQUE_PARENT[node]
+        }
+        return false
+      }
+
       const techs: string[] = Array.isArray(c.intraop.techniques) ? c.intraop.techniques as string[] : []
+      // "Block done" names no specific block, so it can only refine a
+      // technique row unambiguously when exactly one peripheral block is on
+      // the list -- two simultaneous blocks (e.g. bilateral) leave it unclear
+      // which one the marker timed, so neither is refined.
+      const peripheralBlockTechs = techs.filter(t => isUnderTechniqueNode(t, "PERIPHERAL"))
+      const blockDoneTs = peripheralBlockTechs.length === 1 ? clinicalEventTimestamp("Block done") : undefined
       for (const tech of techs) {
         const techConceptId = techniqueConceptFor(tech)
         const preciseTs = techConceptId === TECHNIQUE_CONCEPTS.SPINAL ? clinicalEventTimestamp("Spinal in")
           : techConceptId === TECHNIQUE_CONCEPTS.EPIDURAL ? clinicalEventTimestamp("Epidural in")
+          : (peripheralBlockTechs.length === 1 && tech === peripheralBlockTechs[0]) ? blockDoneTs
           : undefined
         procedures.push({
           procedure_occurrence_id:    nextId(),
@@ -2560,6 +2581,28 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           visit_occurrence_id:       visitId,
         })
       }
+
+      // Removing a neuraxial catheter is a distinct procedure from placing
+      // one, not a second sighting of the same fact -- so unlike Spinal in/
+      // Epidural in/Block done above, this is its own new row rather than a
+      // refinement.
+      const spinalRemovedTs = clinicalEventTimestamp("Spinal removed")
+      if (spinalRemovedTs) {
+        procedures.push({
+          procedure_occurrence_id:    nextId(),
+          person_id:                  personId,
+          procedure_concept_id:       37165151, // Removal of intrathecal catheter
+          procedure_date:             isoDate(spinalRemovedTs),
+          procedure_datetime:         spinalRemovedTs.toISOString(),
+          procedure_type_concept_id:  32817,
+          modifier_concept_id:        0,
+          modifier_source_value:      null,
+          procedure_source_value:     "INTRAOP_EVENT:Spinal removed",
+          visit_occurrence_id:        visitId,
+        })
+      }
+      // Epidural removed has no standard concept -- searched exhaustively,
+      // only non-standard CCAM/OPS results exist. Left unmapped.
 
       // ── Drug events from CaseEvent rows -> DRUG_EXPOSURE ─────────────────
       // Read from SQL CaseEvent rows (type="drug", status="active")
@@ -2856,15 +2899,38 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         })
       }
 
-      for (const line of c.intraop.vascularAccessRows ?? []) {
+      // Same duplication problem as the anaesthesia technique above: "Art
+      // line in"/"CVC in"/"PICC" name no specific site, so they can only
+      // refine a vascular-access row unambiguously when exactly one line of
+      // that family exists on the case. Two arterial lines (e.g. one
+      // pre-existing, one placed) leave it unclear which the marker timed.
+      const ARTERIAL_LINE_CONCEPTS = new Set([4311043, 4051187, 4052409, 4052408, 4049830, 4050420])
+      const CENTRAL_VENOUS_CONCEPTS = new Set([4052413, 4051188, 4052414, 4052415, 4050424, 4052416])
+      const vascularAccessLines = c.intraop.vascularAccessRows ?? []
+      const vascularAccessConcept = (line: typeof vascularAccessLines[number]) =>
+        line.standardConceptId ?? vascularAccessConceptFor(line.site)
+      const arterialLines = vascularAccessLines.filter(l => ARTERIAL_LINE_CONCEPTS.has(vascularAccessConcept(l)))
+      const centralVenousLines = vascularAccessLines.filter(l => CENTRAL_VENOUS_CONCEPTS.has(vascularAccessConcept(l)))
+      const piccLines = vascularAccessLines.filter(l => vascularAccessConcept(l) === 4322380)
+      const artLineInTs = arterialLines.length === 1 ? clinicalEventTimestamp("Art line in") : undefined
+      const cvcInTs = centralVenousLines.length === 1 ? clinicalEventTimestamp("CVC in") : undefined
+      const piccInTs = piccLines.length === 1 ? clinicalEventTimestamp("PICC") : undefined
+
+      for (const line of vascularAccessLines) {
+        const resolvedConcept = vascularAccessConcept(line)
+        const preciseTs = ARTERIAL_LINE_CONCEPTS.has(resolvedConcept) ? artLineInTs
+          : CENTRAL_VENOUS_CONCEPTS.has(resolvedConcept) ? cvcInTs
+          : resolvedConcept === 4322380 ? piccInTs
+          : undefined
         procedures.push({
           procedure_occurrence_id: nextId(), person_id: personId,
           // The site is coded from the catalogue when relational-sync has not
           // already resolved one, so a radial arterial line and an internal
           // jugular central line stop sharing concept 0. The exact site the
           // anaesthetist chose stays in the source value either way.
-          procedure_concept_id: line.standardConceptId ?? vascularAccessConceptFor(line.site),
-          procedure_date: startDate,
+          procedure_concept_id: resolvedConcept,
+          procedure_date: preciseTs ? isoDate(preciseTs) : startDate,
+          procedure_datetime: preciseTs ? preciseTs.toISOString() : null,
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,
           modifier_source_value:     null,
@@ -2879,6 +2945,45 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         if (line.depthCm) sourceObservation("LOSPOR:VASCULAR_ACCESS_DEPTH_CM", `${lineKey}=${line.depthCm}`, startDate, Number(line.depthCm))
         if (line.lumens) sourceObservation("LOSPOR:VASCULAR_ACCESS_LUMENS", `${lineKey}=${line.lumens}`, startDate, Number(line.lumens))
         sourceObservation("LOSPOR:VASCULAR_ACCESS_PREEXISTING", `${lineKey}=${line.preexisting}`, startDate)
+      }
+
+      // PA catheter and IO access have no counterpart elsewhere in the
+      // export -- vascularAccessRows has no site for either -- so these are
+      // new rows, not refinements, with the marker's own timestamp since it
+      // is the only source of one.
+      const paCathTs = clinicalEventTimestamp("PA cath")
+      if (paCathTs) {
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          // 4052529, Pulmonary artery catheter insertion via jugular vein --
+          // SNOMED has no route-unqualified concept, and jugular is coded by
+          // product decision as the default route; the source value carries
+          // no route detail either, since the event does not capture one.
+          procedure_concept_id:      4052529,
+          procedure_date:            isoDate(paCathTs),
+          procedure_datetime:        paCathTs.toISOString(),
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    "INTRAOP_EVENT:PA cath",
+          visit_occurrence_id:       visitId,
+        })
+      }
+      const ioAccessTs = clinicalEventTimestamp("IO access")
+      if (ioAccessTs) {
+        procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 personId,
+          procedure_concept_id:      4257889, // Insertion of needle for intraosseous infusion
+          procedure_date:            isoDate(ioAccessTs),
+          procedure_datetime:        ioAccessTs.toISOString(),
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    "INTRAOP_EVENT:IO access",
+          visit_occurrence_id:       visitId,
+        })
       }
 
       // Fluid totals as observations. Millilitres given: a quantity, and one
