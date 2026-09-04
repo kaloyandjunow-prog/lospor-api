@@ -430,6 +430,28 @@ const VASCULAR_ACCESS_CONCEPTS: Record<string, number> = {
   PICC:           4322380,
 }
 
+// Ventilation mode answers to LOINC 20124-4 (Ventilation mode Ventilator).
+// PAV has no concept in any vocabulary here -- even semantic search over the
+// full concept space came back empty -- and stays a source value only.
+// PRVC and VG share a concept: no vocabulary here distinguishes the two
+// vendor names for the same dual-control (volume-targeted pressure-control)
+// mechanism.
+const VENTILATION_MODE_CONCEPTS: Record<string, number> = {
+  "A/C":      4055375, // Assisted controlled mandatory ventilation
+  "PSV":      37154096, // Pressure support ventilation
+  "BiPAP":    3657511, // Recently performed administration of BiPAP ventilation
+  "CPAP":     4165535, // Continuous positive airway pressure ventilation treatment
+  // Approximation: SIMV alone, the vocabulary's nearest concept -- it does
+  // not encode the added pressure-support component.
+  "SIMV+PSV": 4245036, // Synchronized intermittent mandatory ventilation
+  "VCV":      37152413, // Continuous mandatory ventilation, volume-control inflation-type
+  "PCV":      37151337, // Continuous mandatory ventilation, pressure-control inflation-type
+  "PRVC":     37152411, // Assist control ventilation, volume-targeted pressure-control inflation-type
+  "APRV":     4072515, // Airway pressure release ventilation
+  "HFOV":     4074666, // High frequency oscillatory ventilation
+  "VG":       37152411, // Same concept as PRVC -- see note above
+}
+
 /** Every vascular-access node's parent, so an unmapped site inherits a true
  *  ancestor rather than nothing. */
 const VASCULAR_ACCESS_PARENT: Record<string, string> = {
@@ -2491,11 +2513,31 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       cuffedObservation("LOSPOR:TUBE_CUFFED_LEGACY", ia.cuffed)
 
       // ── Ventilation ──────────────────────────────────────────────────────
-      // 3004921, Ventilation mode Ventilator. The mode names themselves --
-      // VCV, PCV, SIMV+PSV -- have no value concepts, so the mode stays in
-      // value_as_string while the row gains a real question concept.
+      // 3004921, Ventilation mode Ventilator -- a Measurement-domain LOINC
+      // concept, so this belongs in MEASUREMENT, not OBSERVATION where it
+      // sat before: putting a Measurement-domain concept in
+      // observation_concept_id is exactly the CDM violation "domain governs
+      // table" exists to catch, the same as BSA/PEEP/urine output earlier.
+      // The mode itself now carries a real answer concept too, where the
+      // vocabulary has one -- see VENTILATION_MODE_CONCEPTS.
       for (const mode of strList(ia.ventilationModes)) {
-        sourceObservation("LOSPOR:VENTILATION_MODE", mode, startDate, null, 3004921)
+        measurements.push({
+          measurement_id:              nextId(),
+          person_id:                   personId,
+          measurement_concept_id:      3004921,
+          measurement_date:            startDate,
+          measurement_datetime:        startDate,
+          measurement_type_concept_id: 32817,
+          value_as_number:             null,
+          value_as_concept_id:         VENTILATION_MODE_CONCEPTS[mode] ?? 0,
+          unit_concept_id:             0,
+          unit_source_value:           null,
+          measurement_source_value:    "LOSPOR:VENTILATION_MODE",
+          value_source_value:          mode,
+          range_low:                   null,
+          range_high:                  null,
+          visit_occurrence_id:         visitId,
+        })
       }
       // Unqualified in both cases: the fields are plain flags, and the
       // narrower concepts assert a route or a modality neither records.

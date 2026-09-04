@@ -54,10 +54,13 @@ describe("mapCasesToOmop", () => {
       // concepts. The same facts, in the table that makes them poolable.
       // Two more, three fewer observations: BMI moved to measurement, and the
       // blood group is one row instead of a type row and a rhesus row.
-      measurement: 42,
+      // One more again, one fewer observation: ventilation mode moved to
+      // measurement too -- 3004921 is Measurement-domain, the same "domain
+      // governs table" fix as BSA/PEEP/urine output.
+      measurement: 43,
       // Two planned procedures + anaesthesia technique + vascular access.
       procedure_occurrence: 6,
-      observation: 48,
+      observation: 47,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -907,7 +910,10 @@ describe("airway management", () => {
       .toMatchObject({ measurement_concept_id: 3022875, value_as_number: 5 })
     expect(obs(bundle, "LOSPOR:AIRWAY_TOOL").map(o => o.value_as_string).sort())
       .toEqual(["BOUGIE", "VIDEO_LARY"])
-    expect(obs(bundle, "LOSPOR:VENTILATION_MODE")[0]?.value_as_string).toBe("VCV")
+    // Measurement, not observation -- 3004921 is a Measurement-domain LOINC
+    // concept -- and the mode itself now carries a real answer concept too.
+    const ventMode = bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:VENTILATION_MODE")
+    expect(ventMode).toMatchObject({ measurement_concept_id: 3004921, value_as_concept_id: 37152413, value_source_value: "VCV" })
   })
 
   it("puts a size in value_as_number, not only in text", () => {
@@ -1929,6 +1935,8 @@ describe("ventilation, the airway tools, and vascular access", () => {
   }
   const obsIn = (b: ReturnType<typeof mapCasesToOmop>, s: string) =>
     b.observation.find(r => r.observation_source_value === s)
+  const measIn = (b: ReturnType<typeof mapCasesToOmop>, s: string) =>
+    b.measurement.find(r => r.measurement_source_value === s)
 
   it("codes the ventilation flags without asserting a route or modality", () => {
     const b = withIntraop({ ippv: true, jetVentilation: true, ventilationModes: ["VCV"] })
@@ -1942,11 +1950,35 @@ describe("ventilation, the airway tools, and vascular access", () => {
     expect(obsIn(b, "LOSPOR:JET_VENTILATION")).toMatchObject({
       observation_concept_id: 4168475, value_as_concept_id: 4188539,
     })
-    // The mode names have no value concepts, so the question is coded and the
-    // answer stays text.
-    expect(obsIn(b, "LOSPOR:VENTILATION_MODE")).toMatchObject({
-      observation_concept_id: 3004921, value_as_string: "VCV",
+    // Measurement, not observation (3004921 is Measurement-domain), and VCV
+    // now carries a real answer concept alongside the text.
+    expect(measIn(b, "LOSPOR:VENTILATION_MODE")).toMatchObject({
+      measurement_concept_id: 3004921, value_as_concept_id: 37152413, value_source_value: "VCV",
     })
+  })
+
+  it("codes every ventilation mode that has a concept, and leaves PAV a source value only", () => {
+    const b = withIntraop({
+      ventilationModes: ["A/C", "PSV", "BiPAP", "CPAP", "SIMV+PSV", "PAV", "VCV", "PCV", "PRVC", "APRV", "HFOV", "VG"],
+    })
+    const byMode = (mode: string) => b.measurement.find(r => r.measurement_source_value === "LOSPOR:VENTILATION_MODE" && r.value_source_value === mode)
+    expect(byMode("A/C")!.value_as_concept_id).toBe(4055375)
+    expect(byMode("PSV")!.value_as_concept_id).toBe(37154096)
+    expect(byMode("BiPAP")!.value_as_concept_id).toBe(3657511)
+    expect(byMode("CPAP")!.value_as_concept_id).toBe(4165535)
+    expect(byMode("SIMV+PSV")!.value_as_concept_id).toBe(4245036)
+    expect(byMode("VCV")!.value_as_concept_id).toBe(37152413)
+    expect(byMode("PCV")!.value_as_concept_id).toBe(37151337)
+    expect(byMode("APRV")!.value_as_concept_id).toBe(4072515)
+    expect(byMode("HFOV")!.value_as_concept_id).toBe(4074666)
+    // PRVC and VG deliberately share a concept -- no vocabulary here
+    // distinguishes the two vendor names for the same mechanism.
+    expect(byMode("PRVC")!.value_as_concept_id).toBe(37152411)
+    expect(byMode("VG")!.value_as_concept_id).toBe(37152411)
+    // PAV has no concept anywhere in this vocabulary; the row still exists
+    // (the mode was recorded) but carries 0, not a guess.
+    expect(byMode("PAV")!.value_as_concept_id).toBe(0)
+    expect(byMode("PAV")!.value_source_value).toBe("PAV")
   })
 
   it("codes fibreoptic intubation, not diagnostic bronchoscopy", () => {

@@ -965,8 +965,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "ventilationModes",
-    exportName: "observation.value_as_string (LOSPOR:VENTILATION_MODE)",
-    meaning: "Ventilation modes used during the case. One row per mode, since a case may move between them.",
+    exportName: "measurement.value_as_concept_id (LOSPOR:VENTILATION_MODE)",
+    meaning: "Ventilation modes used during the case. One row per mode, since a case may move between them. Coded where the vocabulary has a concept for the mode (most do; PAV does not) -- the mode name is kept as text in value_source_value either way.",
     type: "string",
     missingnessRule: "No row = no mode recorded",
     sourceTable: "IntraoperativeRecord", sourceColumn: "ventilationModes",
