@@ -165,6 +165,9 @@ function makeCaseRow() {
       cormackLehane: "I",
       peepCmH2O: 5,
       ippv: true,
+      labResults: [
+        { test: "Hemoglobin", value: "88", unit: "g/L", takenAt: "2026-06-01T08:40:00.000Z", source: "manual" },
+      ],
       jetVentilation: false,
       fob: false,
       premedicationEvening: "Midazolam 2 mg PO",
@@ -463,5 +466,37 @@ describe("concept mapping provenance", () => {
     // Both end with no concept, but they are different states of the work: one
     // is a decision, the other is a backlog item.
     expect(unseen.mappingStatus).toBe("SOURCE_ONLY")
+  })
+})
+
+describe("laboratory draws taken during a case", () => {
+  it("mirrors them under the intraoperative record, not the preoperative one", async () => {
+    // The two sections share the LabResult table, so the sweep before each
+    // write has to be scoped by parent. Scoping it by caseId would delete the
+    // patient's preoperative labs every time an intraoperative draw was saved.
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const caseRow = makeCaseRow()
+    const db = makeDb(caseRow)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.labResult.deleteMany).toHaveBeenCalledWith({ where: { intraopId: "intraop-1" } })
+    expect(db.labResult.deleteMany).toHaveBeenCalledWith({ where: { preopId: "preop-1" } })
+
+    const intraopWrite = db.labResult.createMany.mock.calls
+      .map((call: unknown[]) => (call[0] as { data: Record<string, unknown>[] }).data)
+      .find((rows: Record<string, unknown>[]) => rows.some(row => row.section === "intraop"))
+
+    expect(intraopWrite, "an intraoperative draw must be mirrored").toBeDefined()
+    expect(intraopWrite![0]).toEqual(expect.objectContaining({
+      section: "intraop",
+      intraopId: "intraop-1",
+      // Null, not the preop id: a result belongs to one parent or the other.
+      preopId: null,
+      test: "Hemoglobin",
+      valueNum: 88,
+      // The draw time survives, which is the whole point of intraop labs.
+      takenAt: new Date("2026-06-01T08:40:00.000Z"),
+    }))
   })
 })
