@@ -1,4 +1,5 @@
 import { intraopAtcCode } from "@lospor/core/catalog"
+import { getLabSeverity } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
@@ -182,13 +183,20 @@ async function getLoincMap(db: Db) {
   return loincCache
 }
 
+/**
+ * How far out of range a result is.
+ *
+ * Delegates to Core so the flag stored here and the one a client computes for a
+ * summary row are the same judgement. They were the same rule written twice,
+ * which is how a screen ends up calling a potassium critical while the export
+ * calls it high.
+ */
 function computeAbnormalFlag(value: number | null, low: number | null, high: number | null): string | null {
   if (value == null) return null
-  if (high != null && value > high * 1.5) return "critical"
-  if (low  != null && value < low  * 0.5) return "critical"
-  if (high != null && value > high) return "high"
-  if (low  != null && value < low)  return "low"
-  return "normal"
+  return getLabSeverity(
+    { name: "", unit: "", ...(low != null ? { refLow: low } : {}), ...(high != null ? { refHigh: high } : {}) },
+    value,
+  )
 }
 
 function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {
