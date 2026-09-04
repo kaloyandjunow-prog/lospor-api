@@ -1,3 +1,20 @@
+// 4.4.0 adds what three monitors read, rather than only that they were on. The
+// sixteen monitoring flags are yes/no for the whole case, so a BIS that sat at
+// 55 and one that dropped to 22 for twenty minutes were the same record, as
+// were a train-of-four of 0.9 and one of 0.4 at extubation. Depth of
+// anaesthesia and adequacy of reversal are what these monitors exist to answer.
+// Each value is bound to its flag and cleared with it, so a reading never
+// outlives the monitor that produced it. CVP is stored and exported in mmHg
+// whatever unit was typed: the entry unit is a per-user display preference and
+// a column following it could not be pooled.
+//
+// 4.3.0 documents what the traceability pass found: the risk-score and COLDS
+// factors, which exported their totals and not one component; the allergy flag,
+// whose absence made a documented "no known allergies" identical to an unasked
+// question; and the superseded storage -- JSON blobs and free-text columns a
+// mirror table now carries -- which is marked rather than deleted, because an
+// empty column called complications reads as "no complications".
+//
 // 4.2.0 adds bloodLossMl, the first intraoperative quantity a clinician enters
 // that is not derivable from the fluid events. Crystalloids, colloids and blood
 // products are projections of what was actually given; blood lost is an
@@ -20,7 +37,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.3.0"
+export const DICTIONARY_VERSION = "4.4.0"
 
 export interface DictionaryEntry {
   name: string
@@ -2013,6 +2030,39 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = no paediatric pain score was recorded. The scale is never exported without a score and a score is never exported without the scale; a record carrying one and not the other emits neither, on purpose",
     sourceTable: "PostoperativeRecord", sourceColumn: "pediatricPainScale",
     versionIntroduced: "4.3.0",
+  },
+  {
+    name: "monitoring.bisValue",
+    exportName: "measurement.value_as_number (LOSPOR:BIS_VALUE)",
+    meaning: "The bispectral index read during the case, 0-100, coded 4134573. Dimensionless, so no unit concept is asserted. The monitoring.bis flag beside it still answers whether the monitor was used at all; this answers what it showed, which is what a depth-of-anaesthesia question needs -- a case that sat at 55 and one that dropped to 22 are indistinguishable without it.",
+    type: "integer",
+    allowedValues: "0–100",
+    missingnessRule: "No row = no value was charted. That is not the same as the monitor being absent: a case can carry monitoring.bis with no reading here, which honestly means it was on and nobody wrote a number down. A row is only ever present when the flag is",
+    derivationRule: "Cleared whenever monitoring.bis is unset, so a reading never outlives the monitor that produced it",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "bisValue",
+    versionIntroduced: "4.4.0",
+  },
+  {
+    name: "monitoring.tofRatio",
+    exportName: "measurement.value_as_number (LOSPOR:TOF_RATIO)",
+    meaning: "The train-of-four ratio, 0 to 1, coded 4108453 with unit 8523 (ratio). The ratio only: the train-of-four count has its own concept (4353950) and is a different measurement, so this field does not accept it. A 0.9 and a count of 4 both mean adequately reversed and are not the same number, and one column holding either could not be interpreted.",
+    type: "float",
+    allowedValues: "0–1",
+    missingnessRule: "No row = no ratio was charted, whether or not the monitor was used. Adequacy of reversal is precisely what absence here cannot tell you",
+    derivationRule: "Cleared whenever monitoring.tofMonitor is unset",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "tofRatio",
+    versionIntroduced: "4.4.0",
+  },
+  {
+    name: "monitoring.cvpMmHg",
+    exportName: "measurement.value_as_number (LOSPOR:CVP_MMHG)",
+    meaning: "Central venous pressure, coded 4323687 with unit 8876 (mmHg). Always exported in mmHg, whatever unit the clinician typed. Entry defaults to cmH2O because that is how the transducers here are usually scaled, and the unit is switchable per user under Settings, but that preference governs display only -- the stored and exported number never changes with it.",
+    type: "float",
+    allowedValues: "0.1–50",
+    missingnessRule: "No row = no value was charted. A case with monitoring.cvpMonitor and no row here had a line transduced and no pressure recorded",
+    derivationRule: "Converted to mmHg at entry, not at export, so the exported figure never depends on a display preference. Cleared whenever monitoring.cvpMonitor is unset. Bounded 0.1-50 mmHg",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "cvpMmHg",
+    versionIntroduced: "4.4.0",
   },
   {
     name: "monitoring.ecg",

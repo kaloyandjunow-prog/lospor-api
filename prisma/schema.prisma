@@ -1203,6 +1203,20 @@ model IntraoperativeRecord {
   evokedPotentials Boolean @default(false)
   tofMonitor       Boolean @default(false)
 
+  // What the monitor read, for the three modalities that carry a number.
+  //
+  // Nullable rather than defaulted: a case with the BIS on and no value
+  // charted is a real and common record, and a 0 would read as an isoelectric
+  // EEG. Each is cleared when its flag above is unset, so a value always has a
+  // monitor behind it.
+  //
+  // cvpMmHg is mmHg whatever unit the clinician typed in. The entry unit is a
+  // display preference; a column whose unit varied per user could not be
+  // pooled.
+  bisValue         Int?
+  tofRatio         Float?
+  cvpMmHg          Float?
+
   vascularAccesses Json @default("[]")
 
   premedicationEvening String?

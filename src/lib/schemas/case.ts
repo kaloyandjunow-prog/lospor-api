@@ -239,6 +239,12 @@ export const intraopSchema = z.object({
   entropyMonitor: z.boolean().optional(), nirsMonitor: z.boolean().optional(), evokedPotentials: z.boolean().optional(),
   tofMonitor: z.boolean().optional(),
 
+  // The three monitoring values. Bound to the flags above and cleared with
+  // them, so a stored reading always has a monitor behind it.
+  bisValue: cInt("intraop", "bisValue"),
+  tofRatio: cNum("intraop", "tofRatio"),
+  cvpMmHg:  cNum("intraop", "cvpMmHg"),
+
   vascularAccesses:     z.array(z.unknown()).optional(),
   premedicationEvening: z.string().max(500).nullable().optional(),
   premedicationMorning: z.string().max(500).nullable().optional(),

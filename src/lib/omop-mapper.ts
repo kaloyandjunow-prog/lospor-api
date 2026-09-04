@@ -1315,6 +1315,9 @@ type CaseRow = {
     bloodMl: number | null
     urineMl: number | null
     bloodLossMl: number | null
+    bisValue: number | null
+    tofRatio: number | null
+    cvpMmHg: number | null
     complications: string | null
     premedicationEvening: string | null
     premedicationMorning: string | null
@@ -3358,6 +3361,28 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // case total.
       sourceMeasurement("LOSPOR:URINE_OUTPUT_ML", c.intraop.urineMl, 3014315, 8587, "mL", endDate)
       sourceObservation("LOSPOR:BLOOD_LOSS_ML", c.intraop.bloodLossMl, endDate)
+
+      // ── What the monitors read ────────────────────────────────────────────
+      // The sixteen monitoring flags say a modality was used. These three say
+      // what it showed, which is the half a research question can use: "was a
+      // BIS used" supports almost nothing, "the BIS was 38" supports most of
+      // what depth-of-anaesthesia work asks.
+      //
+      // All three are Measurement-domain concepts, so they belong in
+      // MEASUREMENT rather than beside the flags in OBSERVATION. That split is
+      // the vocabulary's, not a choice made here.
+      //
+      // 4134573, Bispectral index. Dimensionless -- the index has no unit, so
+      // unit_concept_id stays 0 rather than borrowing a plausible one.
+      sourceMeasurement("LOSPOR:BIS_VALUE", c.intraop.bisValue, 4134573, 0, null, endDate)
+      // 4108453 is the ratio specifically, not 4353950 the count. They are
+      // different measurements and the field accepts only the ratio, so
+      // exporting under the count's concept would misstate what was recorded.
+      sourceMeasurement("LOSPOR:TOF_RATIO", c.intraop.tofRatio, 4108453, 8523, "{ratio}", endDate)
+      // 8876, millimetre of mercury. The column is mmHg regardless of the unit
+      // the clinician entered, so no conversion happens here -- doing it at
+      // export would mean the exported number depended on a display preference.
+      sourceMeasurement("LOSPOR:CVP_MMHG", c.intraop.cvpMmHg, 4323687, 8876, "mmHg", endDate)
 
       // ── Lab draws taken during the case -> MEASUREMENT ────────────────────
       // The same emission path preoperative labs use. Each row carries its own
