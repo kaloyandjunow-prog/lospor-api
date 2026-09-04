@@ -541,6 +541,10 @@ const COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS = new Set([
   4162376,  // Drug error (Medication error)
   4154707,  // Serotonin syndrome
   4010901,  // Massive haemorrhage / Unexpected major haemorrhage (Massive hemorrhage)
+  443346,   // LAST (Local anesthetic drug adverse reaction)
+  4266020,  // Gas supply failure (Medical gas supply failure)
+  37116691, // Circuit disconnection (Breathing system disconnection)
+  439625,   // Monitoring failure / Equipment malfunction (Mechanical failure of instrument or apparatus during surgical operation)
 ])
 
 // Rarer still: a curated complication concept whose own domain is Procedure

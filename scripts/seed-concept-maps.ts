@@ -117,13 +117,18 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   { value: "Peripheral nerve injury", conceptId: 4248551, label: "Injury of peripheral nerve" },
 
   // Batch 4 -- everything else in the catalogue that has a real concept.
-  // Gaps (left SOURCE_ONLY, no standard concept found after lexical +
-  // semantic search): High spinal, Anaphylactoid reaction, Latex reaction,
-  // LAST, Residual neuromuscular blockade, Blood loss >1L, ETT displacement,
-  // Circuit disconnection, Gas supply failure, Monitoring failure, Equipment
-  // malfunction, Tourniquet complication. "Adrenal crisis"/"Coagulopathy"/
-  // "Pneumoperitoneum complication" were removed from the schema instead of
-  // researched, per product decision.
+  // Gaps after a first pass (left SOURCE_ONLY, no standard concept found
+  // after lexical + semantic search): High spinal, Tourniquet complication.
+  // A second sweep resolved the other ten of the original twelve -- wrong
+  // search terms, not real gaps: "endotracheal tube" missed "Displacement of
+  // tracheal tube" (SNOMED's own wording), "Residual curarization"/
+  // "paralysis" missed "Incomplete reversal of neuromuscular block",
+  // "Anaphylactoid reaction" alone missed that its modern SNOMED name is
+  // "Non-allergic anaphylaxis", and several were found only by following the
+  // ICD10CM "Maps to" relationship to its SNOMED standard target rather than
+  // free-text search. "Adrenal crisis"/"Coagulopathy"/"Pneumoperitoneum
+  // complication" were removed from the schema instead of researched, per
+  // product decision.
 
   // Neurological, remaining.
   { value: "Total spinal", conceptId: 4172551, label: "Total spinal blockade" },
@@ -193,6 +198,33 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   // laparoscopic culprit, included); nearest honest match is the air
   // embolism concept already curated for the Cardiovascular category.
   { value: "Venous gas embolism", conceptId: 4173338, label: "Venous air embolism" },
+
+  // Second sweep of the twelve original gaps -- ten resolved (see the note
+  // above this array). Tourniquet complication and High spinal are still
+  // absent here: a genuinely closer second look found nothing for either.
+  { value: "Anaphylactoid reaction", conceptId: 4148381, label: "Non-allergic anaphylaxis" },
+  // Found via ICD10CM T78.2XXA's "Maps to" SNOMED target, not free text --
+  // "Anaphylactoid shock" only turns up an SMQ (MedDRA pharmacovigilance
+  // grouping), which is a classification concept, not a standard one.
+  { value: "Latex reaction", conceptId: 604829, label: "Anaphylaxis caused by Hevea brasiliensis latex protein" },
+  // Also found via ICD10CM "Maps to": T41.3X5A (Adverse effect of local
+  // anesthetics) maps to this. Observation-domain, generic (not toxicity-
+  // specific) -- the nearest standard concept SNOMED has for LAST.
+  { value: "Local anaesthetic systemic toxicity (LAST)", conceptId: 443346, label: "Local anesthetic drug adverse reaction" },
+  { value: "Residual neuromuscular blockade", conceptId: 4287800, label: "Incomplete reversal of neuromuscular block" },
+  // Observation-domain.
+  { value: "Gas supply failure", conceptId: 4266020, label: "Medical gas supply failure" },
+  { value: "ETT displacement", conceptId: 37472242, label: "Displacement of tracheal tube" },
+  // Observation-domain.
+  { value: "Circuit disconnection", conceptId: 37116691, label: "Breathing system disconnection" },
+  // Observation-domain. Shares its concept with Equipment malfunction below
+  // -- SNOMED has one generic mechanical-failure-during-surgery concept, not
+  // a monitor-specific one.
+  { value: "Monitoring failure", conceptId: 439625, label: "Mechanical failure of instrument or apparatus during surgical operation" },
+  { value: "Equipment malfunction", conceptId: 439625, label: "Mechanical failure of instrument or apparatus during surgical operation" },
+  // No volume-banded finding exists in SNOMED (no ">1L" threshold concept);
+  // nearest honest match is the plain intraoperative bleeding event.
+  { value: "Blood loss >1L", conceptId: 4308716, label: "Intraoperative hemorrhage" },
 ]
 
 const KNOWN_VITALS = [
