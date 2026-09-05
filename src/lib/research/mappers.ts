@@ -210,7 +210,6 @@ export const RESEARCH_DETAIL_SELECT = {
       spO2: true,
       etco2: true,
       temp: true,
-      bgl: true,
       fgfLitersPerMin: true,
       carrierGas: true,
       fio2Percent: true,
@@ -314,7 +313,6 @@ function eventLabel(event: ResearchDetailRow["events"][number]): {
       event.spO2 != null ? `SpO2 ${event.spO2}%` : null,
       event.etco2 != null ? `EtCO2 ${event.etco2}` : null,
       event.temp != null ? `Temp ${event.temp} C` : null,
-      event.bgl != null ? `Glucose ${event.bgl}` : null,
     ].filter(Boolean)
     return { label: "Vitals", value: values.join(" | ") }
   }

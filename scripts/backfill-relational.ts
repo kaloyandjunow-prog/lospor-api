@@ -48,7 +48,6 @@ async function backfillEventColumns() {
       const isClinicalEvent = ev.type === "clinical_event" || ev.type === "event"
       const carrierGas = typeof m.carrierGas === "string" ? m.carrierGas : null
       const gas = isGas ? gasFractions(carrierGas, numF(m.fio2)) : null
-      const bgl = isVital ? numF(m.bgl) : null
 
       await prisma.caseEvent.update({
         where: { id: ev.id },
@@ -59,9 +58,6 @@ async function backfillEventColumns() {
           spO2: isVital ? numF(m.spO2) : null,
           etco2: isVital ? numF(m.etco2) : null,
           temp: isVital ? numF(m.temp) : null,
-          bgl,
-          bglLoincCode: bgl != null ? "2345-7" : null,
-          bglUnitCanon: bgl != null ? "mmol/L" : null,
           fgfLitersPerMin: isGas ? numF(m.fgf) : null,
           carrierGas: isGas ? carrierGas : null,
           fio2Percent: gas?.fio2 ?? null,

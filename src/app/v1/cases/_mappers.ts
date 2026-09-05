@@ -326,7 +326,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     "volatileAgent",
 
     "ecg","urinaryCatheter","stomachTube","spO2Monitor","invasiveBP","cvpMonitor",
-    "bglMonitor","bloodGasMonitor","neuroMonitor","nbpMonitor","etco2Monitor",
+    "neuroMonitor","nbpMonitor","etco2Monitor",
     "tempMonitor","paCatheter","tee","bis","entropyMonitor","nirsMonitor",
     "evokedPotentials","tofMonitor",
     "vascularAccesses","premedicationEvening","premedicationMorning","drugsAdministered",
@@ -509,8 +509,6 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     spO2Monitor:      intraop.spO2Monitor      ?? true,
     invasiveBP:       intraop.invasiveBP       ?? false,
     cvpMonitor:       intraop.cvpMonitor       ?? false,
-    bglMonitor:       intraop.bglMonitor       ?? false,
-    bloodGasMonitor:  intraop.bloodGasMonitor  ?? false,
     neuroMonitor:     intraop.neuroMonitor     ?? false,
     nbpMonitor:       intraop.nbpMonitor       ?? true,
     etco2Monitor:     intraop.etco2Monitor     ?? false,

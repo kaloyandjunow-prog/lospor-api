@@ -57,7 +57,7 @@ describe("mapCasesToOmop", () => {
       // One more again, one fewer observation: ventilation mode moved to
       // measurement too -- 3004921 is Measurement-domain, the same "domain
       // governs table" fix as BSA/PEEP/urine output.
-      measurement: 43,
+      measurement: 42,
       // Two planned procedures + anaesthesia technique, plus the fixture's ECG
       // monitoring selection: 4187078 (Electrocardiographic monitoring) is a
       // Procedure-domain concept, so it routes here rather than to observation,
@@ -1982,13 +1982,16 @@ describe("the numbers an anaesthetic chart records, coded", () => {
   const obs = (source: string) => bundle().observation
     .find(r => r.observation_source_value === source)
 
-  it("codes the two that were hardcoded zeros beside their own LOINC code", () => {
-    // Both carried the right LOINC code and then threw the concept away. The
-    // glucose row said concept 0 in the vitals table itself; the inspired
-    // oxygen was emitted as a bare source string. Neither was a vocabulary
-    // gap -- the concepts existed the whole time.
-    expect(bundle().measurement.find(r => r.measurement_source_value === "LOINC:2345-7")
-      ?.measurement_concept_id).toBe(3004501)
+  it("codes the inspired oxygen beside its own LOINC code", () => {
+    // It carried the right LOINC code and then threw the concept away, emitted
+    // as a bare source string. Not a vocabulary gap -- the concept existed the
+    // whole time.
+    //
+    // Glucose was the other half of this and is no longer a vital: it left the
+    // monitoring options when the labs lane was built, so the row it was
+    // charted in became unreachable, and it is now recorded as a lab draw. The
+    // labs path codes it to the same LOINC 2345-7 in mmol/L, so the coding this
+    // once asserted is unchanged -- only the route to it is.
     expect(meas("LOINC:3150-0")?.measurement_concept_id).toBe(3020716)
   })
 

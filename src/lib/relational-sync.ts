@@ -509,8 +509,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       premedicationEvening: true, premedicationMorning: true, drugsAdministered: true,
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, bloodProductsNote: true, urineMl: true, bloodLossMl: true,
       timeSeriesData: true, keyEvents: true, labResults: true, complications: true,
+      neuroMonitor: true, paCatheter: true, tee: true, bis: true, entropyMonitor: true,
       ecg: true, spO2Monitor: true, nbpMonitor: true, etco2Monitor: true, tempMonitor: true, invasiveBP: true, cvpMonitor: true,
-      bglMonitor: true, bloodGasMonitor: true, neuroMonitor: true, paCatheter: true, tee: true, bis: true, entropyMonitor: true,
       nirsMonitor: true, evokedPotentials: true, tofMonitor: true, urinaryCatheter: true, stomachTube: true,
     },
   })

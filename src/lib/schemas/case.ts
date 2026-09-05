@@ -233,11 +233,11 @@ export const intraopSchema = z.object({
 
   ecg: z.boolean().optional(), urinaryCatheter: z.boolean().optional(), stomachTube: z.boolean().optional(),
   spO2Monitor: z.boolean().optional(), invasiveBP: z.boolean().optional(), cvpMonitor: z.boolean().optional(),
-  bglMonitor: z.boolean().optional(), bloodGasMonitor: z.boolean().optional(), neuroMonitor: z.boolean().optional(),
   nbpMonitor: z.boolean().optional(), etco2Monitor: z.boolean().optional(), tempMonitor: z.boolean().optional(),
   paCatheter: z.boolean().optional(), tee: z.boolean().optional(), bis: z.boolean().optional(),
   entropyMonitor: z.boolean().optional(), nirsMonitor: z.boolean().optional(), evokedPotentials: z.boolean().optional(),
   tofMonitor: z.boolean().optional(),
+  neuroMonitor: z.boolean().optional(),
 
   // The three monitoring values. Bound to the flags above and cleared with
   // them, so a stored reading always has a monitor behind it.

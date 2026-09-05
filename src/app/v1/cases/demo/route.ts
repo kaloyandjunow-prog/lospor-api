@@ -105,7 +105,6 @@ export async function GET(req: NextRequest) {
           cvpMonitor:      false,
           urinaryCatheter: true,
           stomachTube:     true,
-          bglMonitor:      true,
           tofMonitor:      true,
           vascularAccesses: [
             { site: "PERIPHERAL_IV", siteLabel: "Peripheral IV", size: "18", sizeUnit: "G" },

@@ -624,10 +624,6 @@ const VITAL_CONCEPTS: Record<string, { concept_id: number; code: string; system?
   spO2:        { concept_id: 3016502, code: "59408-5", unit: "%", unitConceptId: 8554 },
   etco2:       { concept_id: 3020892, code: "19889-5", unit: "mmHg", unitConceptId: 8876 },
   temp:        { concept_id: 3020891, code: "8310-5",  unit: "Cel", unitConceptId: 586323 },
-  // 3004501, not 0. This row carried the right LOINC code and then threw the
-  // concept away, so every intraoperative glucose exported unmapped while
-  // sitting next to a code that identifies it exactly.
-  bgl:         { concept_id: 3004501, code: "2345-7",  unit: "mmol/L", unitConceptId: 8753 },
   respiratoryRate: { concept_id: 3024171, code: "9279-1", unit: "/min", unitConceptId: 8541 },
   // The monitors that read a number. Timed like every other vital, because
   // when the reading was taken is part of what it means: a BIS of 22 matters
@@ -1122,12 +1118,9 @@ type CaseRow = {
     spO2?: number | null
     etco2?: number | null
     temp?: number | null
-    bgl: number | null
     bis?: number | null
     tofRatio?: number | null
     cvp?: number | null
-    bglLoincCode: string | null
-    bglUnitCanon: string | null
     atcCode: string | null
     drugId: string | null
     standardConceptId?: number | null
@@ -2985,7 +2978,6 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
             ["spO2", ev.spO2, null],
             ["etco2", ev.etco2, null],
             ["temp", ev.temp, null],
-            ["bgl", ev.bgl, ev.bglLoincCode],
             ["bis", ev.bis, null],
             ["tofRatio", ev.tofRatio, null],
             ["cvp", ev.cvp, null],
@@ -3002,8 +2994,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
               measurement_type_concept_id: 32817,
               value_as_number:           val,
               value_as_concept_id: null,
-              unit_concept_id:           key === "bgl" ? (ev.bglUnitCanon ? (LAB_UNIT_CONCEPTS[ev.bglUnitCanon] ?? cfg.unitConceptId) : cfg.unitConceptId) : cfg.unitConceptId,
-              unit_source_value:         key === "bgl" ? ev.bglUnitCanon ?? cfg.unit : cfg.unit,
+              unit_concept_id:           cfg.unitConceptId,
+              unit_source_value:         cfg.unit,
               measurement_source_value:  `${cfg.system ?? "LOINC"}:${loincOverride ?? cfg.code}`,
               // Vitals carry no source text and no laboratory reference range.
               value_source_value:        null,

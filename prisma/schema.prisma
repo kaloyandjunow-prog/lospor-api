@@ -856,9 +856,6 @@ model CaseEvent {
   spO2                  Float?
   etco2                 Float?
   temp                  Float?
-  bgl                   Float?
-  bglLoincCode          String?
-  bglUnitCanon          String?
   // The monitors that read a number rather than only being switched on. Timed
   // like the vitals above, because when the reading was taken is part of what
   // it means: a BIS of 22 matters for how long it stayed there, and a
@@ -1202,8 +1199,6 @@ model IntraoperativeRecord {
   spO2Monitor      Boolean @default(true)
   invasiveBP       Boolean @default(false)
   cvpMonitor       Boolean @default(false)
-  bglMonitor       Boolean @default(false)
-  bloodGasMonitor  Boolean @default(false)
   neuroMonitor     Boolean @default(false)
   nbpMonitor       Boolean @default(true)
   etco2Monitor     Boolean @default(false)

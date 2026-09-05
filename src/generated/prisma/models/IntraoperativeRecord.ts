@@ -97,8 +97,6 @@ export type IntraoperativeRecordMinAggregateOutputType = {
   spO2Monitor: boolean | null
   invasiveBP: boolean | null
   cvpMonitor: boolean | null
-  bglMonitor: boolean | null
-  bloodGasMonitor: boolean | null
   neuroMonitor: boolean | null
   nbpMonitor: boolean | null
   etco2Monitor: boolean | null
@@ -161,8 +159,6 @@ export type IntraoperativeRecordMaxAggregateOutputType = {
   spO2Monitor: boolean | null
   invasiveBP: boolean | null
   cvpMonitor: boolean | null
-  bglMonitor: boolean | null
-  bloodGasMonitor: boolean | null
   neuroMonitor: boolean | null
   nbpMonitor: boolean | null
   etco2Monitor: boolean | null
@@ -230,8 +226,6 @@ export type IntraoperativeRecordCountAggregateOutputType = {
   spO2Monitor: number
   invasiveBP: number
   cvpMonitor: number
-  bglMonitor: number
-  bloodGasMonitor: number
   neuroMonitor: number
   nbpMonitor: number
   etco2Monitor: number
@@ -335,8 +329,6 @@ export type IntraoperativeRecordMinAggregateInputType = {
   spO2Monitor?: true
   invasiveBP?: true
   cvpMonitor?: true
-  bglMonitor?: true
-  bloodGasMonitor?: true
   neuroMonitor?: true
   nbpMonitor?: true
   etco2Monitor?: true
@@ -399,8 +391,6 @@ export type IntraoperativeRecordMaxAggregateInputType = {
   spO2Monitor?: true
   invasiveBP?: true
   cvpMonitor?: true
-  bglMonitor?: true
-  bloodGasMonitor?: true
   neuroMonitor?: true
   nbpMonitor?: true
   etco2Monitor?: true
@@ -468,8 +458,6 @@ export type IntraoperativeRecordCountAggregateInputType = {
   spO2Monitor?: true
   invasiveBP?: true
   cvpMonitor?: true
-  bglMonitor?: true
-  bloodGasMonitor?: true
   neuroMonitor?: true
   nbpMonitor?: true
   etco2Monitor?: true
@@ -629,8 +617,6 @@ export type IntraoperativeRecordGroupByOutputType = {
   spO2Monitor: boolean
   invasiveBP: boolean
   cvpMonitor: boolean
-  bglMonitor: boolean
-  bloodGasMonitor: boolean
   neuroMonitor: boolean
   nbpMonitor: boolean
   etco2Monitor: boolean
@@ -726,8 +712,6 @@ export type IntraoperativeRecordWhereInput = {
   spO2Monitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   invasiveBP?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   cvpMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
-  bglMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
-  bloodGasMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   neuroMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   nbpMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   etco2Monitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
@@ -804,8 +788,6 @@ export type IntraoperativeRecordOrderByWithRelationInput = {
   spO2Monitor?: Prisma.SortOrder
   invasiveBP?: Prisma.SortOrder
   cvpMonitor?: Prisma.SortOrder
-  bglMonitor?: Prisma.SortOrder
-  bloodGasMonitor?: Prisma.SortOrder
   neuroMonitor?: Prisma.SortOrder
   nbpMonitor?: Prisma.SortOrder
   etco2Monitor?: Prisma.SortOrder
@@ -885,8 +867,6 @@ export type IntraoperativeRecordWhereUniqueInput = Prisma.AtLeast<{
   spO2Monitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   invasiveBP?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   cvpMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
-  bglMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
-  bloodGasMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   neuroMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   nbpMonitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
   etco2Monitor?: Prisma.BoolFilter<"IntraoperativeRecord"> | boolean
@@ -963,8 +943,6 @@ export type IntraoperativeRecordOrderByWithAggregationInput = {
   spO2Monitor?: Prisma.SortOrder
   invasiveBP?: Prisma.SortOrder
   cvpMonitor?: Prisma.SortOrder
-  bglMonitor?: Prisma.SortOrder
-  bloodGasMonitor?: Prisma.SortOrder
   neuroMonitor?: Prisma.SortOrder
   nbpMonitor?: Prisma.SortOrder
   etco2Monitor?: Prisma.SortOrder
@@ -1045,8 +1023,6 @@ export type IntraoperativeRecordScalarWhereWithAggregatesInput = {
   spO2Monitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   invasiveBP?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   cvpMonitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
-  bglMonitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
-  bloodGasMonitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   neuroMonitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   nbpMonitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
   etco2Monitor?: Prisma.BoolWithAggregatesFilter<"IntraoperativeRecord"> | boolean
@@ -1118,8 +1094,6 @@ export type IntraoperativeRecordCreateInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -1196,8 +1170,6 @@ export type IntraoperativeRecordUncheckedCreateInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -1272,8 +1244,6 @@ export type IntraoperativeRecordUpdateInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1350,8 +1320,6 @@ export type IntraoperativeRecordUncheckedUpdateInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1427,8 +1395,6 @@ export type IntraoperativeRecordCreateManyInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -1500,8 +1466,6 @@ export type IntraoperativeRecordUpdateManyMutationInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1574,8 +1538,6 @@ export type IntraoperativeRecordUncheckedUpdateManyInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1653,8 +1615,6 @@ export type IntraoperativeRecordCountOrderByAggregateInput = {
   spO2Monitor?: Prisma.SortOrder
   invasiveBP?: Prisma.SortOrder
   cvpMonitor?: Prisma.SortOrder
-  bglMonitor?: Prisma.SortOrder
-  bloodGasMonitor?: Prisma.SortOrder
   neuroMonitor?: Prisma.SortOrder
   nbpMonitor?: Prisma.SortOrder
   etco2Monitor?: Prisma.SortOrder
@@ -1739,8 +1699,6 @@ export type IntraoperativeRecordMaxOrderByAggregateInput = {
   spO2Monitor?: Prisma.SortOrder
   invasiveBP?: Prisma.SortOrder
   cvpMonitor?: Prisma.SortOrder
-  bglMonitor?: Prisma.SortOrder
-  bloodGasMonitor?: Prisma.SortOrder
   neuroMonitor?: Prisma.SortOrder
   nbpMonitor?: Prisma.SortOrder
   etco2Monitor?: Prisma.SortOrder
@@ -1803,8 +1761,6 @@ export type IntraoperativeRecordMinOrderByAggregateInput = {
   spO2Monitor?: Prisma.SortOrder
   invasiveBP?: Prisma.SortOrder
   cvpMonitor?: Prisma.SortOrder
-  bglMonitor?: Prisma.SortOrder
-  bloodGasMonitor?: Prisma.SortOrder
   neuroMonitor?: Prisma.SortOrder
   nbpMonitor?: Prisma.SortOrder
   etco2Monitor?: Prisma.SortOrder
@@ -1977,8 +1933,6 @@ export type IntraoperativeRecordCreateWithoutCaseInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -2053,8 +2007,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutCaseInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -2145,8 +2097,6 @@ export type IntraoperativeRecordUpdateWithoutCaseInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2221,8 +2171,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutCaseInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2297,8 +2245,6 @@ export type IntraoperativeRecordCreateWithoutLabRowsInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -2374,8 +2320,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutLabRowsInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -2465,8 +2409,6 @@ export type IntraoperativeRecordUpdateWithoutLabRowsInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2542,8 +2484,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutLabRowsInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2617,8 +2557,6 @@ export type IntraoperativeRecordCreateWithoutVascularAccessRowsInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -2694,8 +2632,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutVascularAccessRowsInput = 
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -2785,8 +2721,6 @@ export type IntraoperativeRecordUpdateWithoutVascularAccessRowsInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2862,8 +2796,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutVascularAccessRowsInput = 
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2937,8 +2869,6 @@ export type IntraoperativeRecordCreateWithoutPremedicationRowsInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -3014,8 +2944,6 @@ export type IntraoperativeRecordUncheckedCreateWithoutPremedicationRowsInput = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -3105,8 +3033,6 @@ export type IntraoperativeRecordUpdateWithoutPremedicationRowsInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3182,8 +3108,6 @@ export type IntraoperativeRecordUncheckedUpdateWithoutPremedicationRowsInput = {
   spO2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   invasiveBP?: Prisma.BoolFieldUpdateOperationsInput | boolean
   cvpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bglMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bloodGasMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   neuroMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   nbpMonitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
   etco2Monitor?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3307,8 +3231,6 @@ export type IntraoperativeRecordSelect<ExtArgs extends runtime.Types.Extensions.
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -3386,8 +3308,6 @@ export type IntraoperativeRecordSelectCreateManyAndReturn<ExtArgs extends runtim
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -3461,8 +3381,6 @@ export type IntraoperativeRecordSelectUpdateManyAndReturn<ExtArgs extends runtim
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -3536,8 +3454,6 @@ export type IntraoperativeRecordSelectScalar = {
   spO2Monitor?: boolean
   invasiveBP?: boolean
   cvpMonitor?: boolean
-  bglMonitor?: boolean
-  bloodGasMonitor?: boolean
   neuroMonitor?: boolean
   nbpMonitor?: boolean
   etco2Monitor?: boolean
@@ -3568,7 +3484,7 @@ export type IntraoperativeRecordSelectScalar = {
   syncRevision?: boolean
 }
 
-export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "bglMonitor" | "bloodGasMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
+export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
 export type IntraoperativeRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   vascularAccessRows?: boolean | Prisma.IntraoperativeRecord$vascularAccessRowsArgs<ExtArgs>
@@ -3645,8 +3561,6 @@ export type $IntraoperativeRecordPayload<ExtArgs extends runtime.Types.Extension
     spO2Monitor: boolean
     invasiveBP: boolean
     cvpMonitor: boolean
-    bglMonitor: boolean
-    bloodGasMonitor: boolean
     neuroMonitor: boolean
     nbpMonitor: boolean
     etco2Monitor: boolean
@@ -4143,8 +4057,6 @@ export interface IntraoperativeRecordFieldRefs {
   readonly spO2Monitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly invasiveBP: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly cvpMonitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
-  readonly bglMonitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
-  readonly bloodGasMonitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly neuroMonitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly nbpMonitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
   readonly etco2Monitor: Prisma.FieldRef<"IntraoperativeRecord", 'Boolean'>
