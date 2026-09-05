@@ -1,4 +1,5 @@
 import { intraopAtcCode } from "@lospor/core/catalog"
+import { vocabularyForSystem } from "@lospor/core/code-systems"
 import { getLabSeverity } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
@@ -207,7 +208,11 @@ function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts:
     labelEn: str(d?.labelEn),
     labelBg: str(d?.labelBg),
     system: str(d?.system),
-    ...concept(concepts, "condition", "ICD10", str(d?.sub ?? d?.code)),
+    // The system the code came from decides what it means, and a hospital may
+    // send SNOMED where our own forms send ICD-10. Absent means our forms, so
+    // ICD-10 stands; unrecognised is passed through and simply will not match,
+    // which is safer than looking a code up in a vocabulary it never came from.
+    ...concept(concepts, "condition", vocabularyForSystem(str(d?.system), "ICD10"), str(d?.sub ?? d?.code)),
     source: SYNC_SOURCE,
     // Clinical provenance (who/what recorded this item) is a different fact
     // from `source` above, which is sync-audit metadata hard-coded to
@@ -250,7 +255,8 @@ function comorbidityRows(preopId: string, caseId: string, json: unknown, concept
       code:     rawCode,
       icd10Code,
       system:   str(c?.system),
-      ...concept(concepts, "condition", "ICD10", icd10Code ?? rawCode),
+      // Same reasoning as diagnosisRows above.
+      ...concept(concepts, "condition", vocabularyForSystem(str(c?.system), "ICD10"), icd10Code ?? rawCode),
       source: SYNC_SOURCE,
       // See diagnosisRows: `source` is sync-audit metadata, not who/what
       // recorded the item, so clinical provenance gets its own column.
