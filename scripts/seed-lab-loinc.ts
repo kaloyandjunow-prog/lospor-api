@@ -30,7 +30,13 @@ const LOINC_CODES: Record<string, string> = {
   "INR": "6301-6",
   "aPTT": "3173-2",
   "Fibrinogen": "3255-7",
-  "D-dimer": "48066-5",
+  // FEU, not 48066-5 (DDU). D-dimer is reported in two conventions that differ
+  // by roughly a factor of two, and this register stores mg/L FEU -- it even has
+  // a UCUM concept for it. Exporting an FEU value under the DDU code reads as
+  // about double what it is to anyone pooling on the code, and the usual VTE
+  // exclusion threshold sits in exactly that range. Both codes are
+  // [Mass/volume], so a check on dimension alone cannot see this.
+  "D-dimer": "48065-7",
   "Thrombin time (TT)": "3243-3",
   // "Anti-Xa" ships no code: 3179-9 is Bleeding time by Ivy method, and LOINC separates
   // unfractionated from low-molecular-weight assays where this field does not.
