@@ -1,6 +1,6 @@
 import { intraopAtcCode } from "@lospor/core/catalog"
 import { vocabularyForSystem } from "@lospor/core/code-systems"
-import { getLabSeverity } from "@lospor/core/labs"
+import { getLabSeverity, parseLabValue } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
@@ -25,10 +25,12 @@ const str = (v: unknown): string | null => (v == null ? null : String(v))
 const SYNC_SOURCE = "relational-sync"
 const SYNC_SOURCE_VERSION = "research-grade-v1"
 
-const flt = (v: unknown): number | null => {
-  const n = parseFloat(String(v ?? ""))
-  return isFinite(n) ? n : null
-}
+// The mirror and the summary a clinician reads must agree about what counts as
+// a number, so both use Core's parser. parseFloat read until the string
+// stopped making sense and kept what it had: "5.2 (H)" became 5.2 and a
+// European "5,8" became 5, and that invented figure then took an abnormal flag
+// and reached the export with nothing recording that it had ever been text.
+const flt = parseLabValue
 
 // A malformed or absent takenAt must resolve to null, not to "now" or the
 // unparsed string — a fabricated draw time is worse than an absent one, and
