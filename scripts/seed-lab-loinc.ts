@@ -21,47 +21,62 @@ const LOINC_CODES: Record<string, string> = {
   "MCHC": "786-4",
   "Neutrophils": "770-8",
   "Lymphocytes": "736-9",
-  "Monocytes": "742-7",
+  // was 742-7: 742-7 is the absolute count; we store a percentage.
+  "Monocytes": "5905-5",
   "Eosinophils": "713-8",
-  "Reticulocytes": "415-0",
+  // was 415-0: 415-0 is Pivampicillin susceptibility.
+  "Reticulocytes": "17849-1",
   "PT (Prothrombin time)": "5902-2",
   "INR": "6301-6",
   "aPTT": "3173-2",
   "Fibrinogen": "3255-7",
   "D-dimer": "48066-5",
   "Thrombin time (TT)": "3243-3",
-  "Anti-Xa": "3179-9",
+  // "Anti-Xa" ships no code: 3179-9 is Bleeding time by Ivy method, and LOINC separates
+  // unfractionated from low-molecular-weight assays where this field does not.
+  // A wrong code would be read as a different drug's activity; an absent one
+  // exports under the test's own name, which is what it is.
   "Sodium (Na⁺)": "2951-2",
   "Potassium (K⁺)": "2823-3",
   "Chloride (Cl⁻)": "2075-0",
   "Bicarbonate (HCO₃⁻)": "1963-8",
-  "Calcium (Ca²⁺)": "17861-6",
+  // was 17861-6: mass per volume; we store mmol/L.
+  "Calcium (Ca²⁺)": "2000-8",
   "Ionised Ca²⁺": "1994-3",
   "Magnesium (Mg²⁺)": "2601-3",
-  "Phosphate": "2777-1",
+  // was 2777-1: mass per volume; we store mmol/L.
+  "Phosphate": "14879-1",
   "Creatinine": "14682-9",
   "eGFR": "62238-1",
-  "Urea (BUN)": "3094-0",
-  "Glucose": "2345-7",
+  // was 3094-0: mass per volume; we store mmol/L.
+  "Urea (BUN)": "22664-7",
+  // was 2345-7: mass per volume; we store mmol/L.
+  "Glucose": "14749-6",
   "HbA1c": "4548-4",
   "Lactate": "2524-7",
-  "Uric acid": "3084-1",
+  // was 3084-1: mass per volume; we store µmol/L.
+  "Uric acid": "14933-6",
   "Total protein": "2885-2",
   "Albumin": "1751-7",
   "ALT (SGPT)": "1742-6",
   "AST (SGOT)": "1920-8",
   "ALP": "6768-6",
   "GGT": "2324-2",
-  "Total bilirubin": "1975-2",
-  "Direct bilirubin": "14631-6",
-  "Total bile acids": "30239-8",
+  // was 1975-2: mass per volume; we store µmol/L.
+  "Total bilirubin": "14631-6",
+  // was 14631-6: 14631-6 is Bilirubin.total, which is now on the row above.
+  "Direct bilirubin": "14629-0",
+  // was 30239-8: 30239-8 is AST.
+  "Total bile acids": "14628-2",
   "Troponin I (hs-cTnI)": "89579-7",
   "Troponin T (hs-cTnT)": "67151-1",
   "CK (Creatine kinase)": "2157-6",
-  "CK-MB": "12187-7",
+  // was 12187-7: 12187-7 is in no vocabulary we ship.
+  "CK-MB": "32673-6",
   "BNP": "42637-9",
   "NT-proBNP": "33762-6",
-  "Myoglobin": "2154-3",
+  // was 2154-3: 2154-3 is CK-MB.
+  "Myoglobin": "2639-3",
   "pH": "2744-1",
   "PaO₂": "2703-7",
   "PaCO₂": "2019-8",
@@ -77,8 +92,10 @@ const LOINC_CODES: Record<string, string> = {
   // imported, and a query for arterial lactate silently missed every typed one.
   "Lactate (ABG)": "2518-9",
   "TSH": "3016-3",
-  "Free T4 (fT4)": "3024-7",
-  "Free T3 (fT3)": "3051-0",
+  // was 3024-7: mass per volume; we store pmol/L.
+  "Free T4 (fT4)": "14920-3",
+  // was 3051-0: mass per volume; we store pmol/L.
+  "Free T3 (fT3)": "14928-6",
   "CRP": "1988-5",
   "ESR": "4537-7",
   "Ferritin": "2276-4",
