@@ -188,7 +188,6 @@ function makeCaseRow() {
       tempMonitor: true,
       invasiveBP: false,
       cvpMonitor: false,
-      bglMonitor: false,
       bloodGasMonitor: false,
       neuroMonitor: false,
       paCatheter: false,

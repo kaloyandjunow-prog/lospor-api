@@ -25,7 +25,6 @@ describe("what the monitors read reaches the export, with its time", () => {
       label: null, value: null, unit: null,
       systolic: null, diastolic: null, heartRate: null,
       spO2: null, etco2: null, temp: null,
-      bgl: null, bglLoincCode: null, bglUnitCanon: null,
       bis: null, tofRatio: null, cvp: null,
       atcCode: null, drugId: null, metadataJson: null,
       ...r,

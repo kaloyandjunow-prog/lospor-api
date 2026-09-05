@@ -68,7 +68,14 @@ const LOINC_CODES: Record<string, string> = {
   "HCO₃⁻ (ABG)": "1960-4",
   "Base excess (BE)": "1925-7",
   "SaO₂": "2708-6",
-  "Lactate (ABG)": "32693-4",
+  // 2518-9 is lactate in *arterial* blood, which is what a test named "(ABG)"
+  // is. This was 32693-4, the unqualified blood measure -- so a hand-entered
+  // arterial lactate exported as a less specific concept than the plain
+  // "Lactate" above it, which carries the serum/plasma code. It also disagreed
+  // with the EHR import map, which has always recognised 2518-9: the same
+  // lactate split into two concepts depending on whether it was typed or
+  // imported, and a query for arterial lactate silently missed every typed one.
+  "Lactate (ABG)": "2518-9",
   "TSH": "3016-3",
   "Free T4 (fT4)": "3024-7",
   "Free T3 (fT3)": "3051-0",
