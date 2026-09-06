@@ -1,5 +1,30 @@
 # Changelog - LOSPOR API
 
+## [9.8.0] - 2026-09-06
+
+### Changed
+
+- **Depends on Core 9.8.0**, which resolves an age from a date of birth by
+  calendar arithmetic rather than by dividing days by an average year — so a
+  patient is eighteen on their eighteenth birthday, which is the boundary the
+  paediatric mode check sits on.
+
+- **`@lospor/core` moved off the local `file:../lospor-core` path** and onto
+  the released tag. That path had been committed rather than only present in a
+  working tree, so HEAD could not be built by anyone but the machine it was
+  written on.
+
+### Fixed
+
+- **Two dependency advisories that had fixes npm did not offer.** `fast-uri`
+  and `mysql2` both had patched releases available; for mysql2 npm proposed
+  downgrading Prisma three major versions instead, because `npm audit fix`
+  reasons about the direct dependency rather than the transitive one. Both are
+  `overrides` applied with `--package-lock-only`, with the platform-specific
+  lockfile entries counted before and after and held at 95 — a regenerated
+  lock on Windows strips the binaries other platforms need, and Linux CI then
+  dies on bindings that are present locally.
+
 ## [9.7.2] - 2026-09-03
 
 ### Fixed
