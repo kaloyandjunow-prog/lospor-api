@@ -194,11 +194,57 @@ async function getLoincMap(db: Db) {
  * which is how a screen ends up calling a potassium critical while the export
  * calls it high.
  */
-function computeAbnormalFlag(value: number | null, low: number | null, high: number | null): string | null {
+/**
+ * The range a result was actually read against.
+ *
+ * What the laboratory supplied wins over the bundled catalogue. The
+ * catalogue is a general adult reference; the supplied one is this
+ * laboratory's, for this assay, on this analyser, and where the two differ
+ * the supplied one is the one the result means something against. A
+ * paediatric haemoglobin read against an adult range is the ordinary case,
+ * not an exotic one.
+ *
+ * Taken as a whole rather than field by field: a low from one range and a
+ * high from another is a range that was never anybody's.
+ */
+type LoincRange = { referenceLow: number | null; referenceHigh: number | null }
+
+function effectiveRange(row: JsonItem, loinc: LoincRange | undefined) {
+  const suppliedLow = flt(row?.refLow)
+  const suppliedHigh = flt(row?.refHigh)
+  const supplied = suppliedLow != null || suppliedHigh != null
+
+  return {
+    referenceLow: supplied ? suppliedLow : loinc?.referenceLow ?? null,
+    referenceHigh: supplied ? suppliedHigh : loinc?.referenceHigh ?? null,
+    // Critical thresholds are only ever the laboratory's. Nothing in the
+    // bundled catalogue states one, and deriving them arithmetically from a
+    // reference range is what produced a sodium of 130 reading as critical.
+    criticalLow: flt(row?.criticalLow),
+    criticalHigh: flt(row?.criticalHigh),
+  }
+}
+
+/**
+ * Delegates to Core so the flag stored here and the one a client computes for
+ * a summary row are the same judgement -- they were the same rule written
+ * twice, which is how a screen ends up calling a potassium critical while the
+ * export calls it high.
+ */
+function computeAbnormalFlag(
+  value: number | null,
+  range: ReturnType<typeof effectiveRange>,
+): string | null {
   if (value == null) return null
   return getLabSeverity(
-    { name: "", unit: "", ...(low != null ? { refLow: low } : {}), ...(high != null ? { refHigh: high } : {}) },
+    { name: "", unit: "" },
     value,
+    {
+      ...(range.referenceLow != null ? { refLow: range.referenceLow } : {}),
+      ...(range.referenceHigh != null ? { refHigh: range.referenceHigh } : {}),
+      ...(range.criticalLow != null ? { criticalLow: range.criticalLow } : {}),
+      ...(range.criticalHigh != null ? { criticalHigh: range.criticalHigh } : {}),
+    },
   )
 }
 
@@ -292,9 +338,12 @@ async function labRowsWithLoinc(
     .map((l: JsonItem, i: number) => {
       const loinc = loincMap.get(String(l.test))
       const valueNum = flt(l?.value)
-      const abnormalFlag = loinc
-        ? computeAbnormalFlag(valueNum, loinc.referenceLow, loinc.referenceHigh)
-        : null
+      // The laboratory's own range where it stated one; the catalogue only as
+      // a fallback. A flag computed against a range the result was not read
+      // against is how the clinician's summary and the research export end up
+      // disagreeing about the same number.
+      const range = effectiveRange(l, loinc)
+      const abnormalFlag = computeAbnormalFlag(valueNum, range)
       return {
         section: parent.section, ...parentIds, caseId,
         test:         String(l.test),
@@ -303,8 +352,10 @@ async function labRowsWithLoinc(
         unit:         str(l?.unit),
         unitCanon:    loinc?.unitCanon ?? null,
         loincCode:    loinc?.loincCode ?? null,
-        referenceLow:  loinc?.referenceLow ?? null,
-        referenceHigh: loinc?.referenceHigh ?? null,
+        referenceLow:  range.referenceLow,
+        referenceHigh: range.referenceHigh,
+        criticalLow:   range.criticalLow,
+        criticalHigh:  range.criticalHigh,
         abnormalFlag,
         takenAt:      isoDate(l?.takenAt),
         source:       str(l?.source) ?? "manual",

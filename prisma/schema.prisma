@@ -1710,8 +1710,21 @@ model LabResult {
   unit              String?
   unitCanon         String? // canonical unit from LabLoinc
   loincCode         String? // LOINC code for this test
+  /// The range this result was read against.
+  ///
+  /// The laboratory's own where it supplied one, and the bundled catalogue
+  /// only as a fallback. The catalogue is a general adult reference; the
+  /// supplied one is this laboratory's, for this assay, on this analyser.
   referenceLow      Float?
   referenceHigh     Float?
+  /// Explicit critical thresholds, and only ever the laboratory's own.
+  ///
+  /// Nothing in the bundled catalogue states one, and deriving them from a
+  /// reference range is what made a sodium of 130 read as critical. Without
+  /// these columns the thresholds a hospital sends arrive in the case and stop
+  /// there, so the export could never call anything critical however extreme.
+  criticalLow       Float?
+  criticalHigh      Float?
   abnormalFlag      String? // "low" | "normal" | "high" | "critical"
   takenAt           DateTime?
   source            String? // "manual" | "ai-scan" | "import"

@@ -6106,6 +6106,8 @@ export const LabResultScalarFieldEnum = {
   loincCode: 'loincCode',
   referenceLow: 'referenceLow',
   referenceHigh: 'referenceHigh',
+  criticalLow: 'criticalLow',
+  criticalHigh: 'criticalHigh',
   abnormalFlag: 'abnormalFlag',
   takenAt: 'takenAt',
   source: 'source',
