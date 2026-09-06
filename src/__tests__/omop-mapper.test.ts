@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { AIRWAY_ACTS, mapCasesToOmop } from "@/lib/omop-mapper"
 
 import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
+import { pediatricCaseFixture } from "./fixtures/pediatric-case"
 
 describe("mapCasesToOmop", () => {
   it("exports finalized relational rows into OMOP CDM tables", () => {
@@ -24,9 +25,10 @@ describe("mapCasesToOmop", () => {
       excluded_case_count: 2,
       app_git_commit: "abc123",
       data_quality_status: "WARNING",
-      // Five mapped rows, not four: the second planned procedure the export
-      // used to discard is now counted like the rest.
-      mapping_summary: { mapped_rows: 5, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 3, unmapped_rows: 1 },
+      // Six mapped rows, not five: the fixture's PONV complication is now
+      // tracked by mapping_summary at all, which it never was before
+      // complications called trackMapping.
+      mapping_summary: { mapped_rows: 6, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 3, unmapped_rows: 1 },
     }))
     expect(bundle.metadata.table_counts).toEqual({
       // PERSON and OBSERVATION_PERIOD are the OMOP root tables — without them
@@ -34,7 +36,14 @@ describe("mapCasesToOmop", () => {
       person: 1,
       observation_period: 1,
       visit_occurrence: 1,
-      condition_occurrence: 2,
+      // Three, not two: a complication with a resolved concept now reaches
+      // CONDITION_OCCURRENCE like a comorbidity or a diagnosis does, instead
+      // of sitting in OBSERVATION with a Condition-domain concept id in a
+      // column that implies a different domain.
+      condition_occurrence: 3,
+      // Airway devices and laryngoscopy tools, which had exact Device-domain
+      // concepts and no table to put them in until now.
+      device_exposure: 4,
       // Six: two preop (diazepam, premedication) + fentanyl + the propofol
       // infusion + the sevoflurane agent + the fluid administration. The last
       // three used to be one, two, or none of these.
@@ -43,16 +52,33 @@ describe("mapCasesToOmop", () => {
       // opening, thyromental distance and the Cormack-Lehane grade moved from
       // unmapped LOSPOR observations to measurements carrying their SNOMED
       // concepts. The same facts, in the table that makes them poolable.
-      measurement: 31,
-      // Two planned procedures + anaesthesia technique + vascular access.
-      procedure_occurrence: 5,
-      observation: 60,
+      // Two more, three fewer observations: BMI moved to measurement, and the
+      // blood group is one row instead of a type row and a rhesus row.
+      // One more again, one fewer observation: ventilation mode moved to
+      // measurement too -- 3004921 is Measurement-domain, the same "domain
+      // governs table" fix as BSA/PEEP/urine output.
+      measurement: 42,
+      // Two planned procedures + anaesthesia technique, plus the fixture's ECG
+      // monitoring selection: 4187078 (Electrocardiographic monitoring) is a
+      // Procedure-domain concept, so it routes here rather than to observation,
+      // the same per-concept domain routing complications already use.
+      //
+      // The vascular line is NOT here, and that is the point: the fixture's
+      // line is pre-existing, so it is stated as a history observation instead
+      // of a procedure this team performed. One row moved between the two
+      // tables rather than being added or lost.
+      procedure_occurrence: 6,
+      observation: 48,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
       visit_source_value: "RC-10000000-0000-4000-8000-000000000001",
       care_site_source_value: "inst-1",
+      // Anaesthesia start/end is a clock time, not just a day -- visit_start_date
+      // carried the day alone until now.
+      visit_start_datetime: "2026-06-01T08:00:00.000Z",
+      visit_end_datetime: "2026-06-01T09:00:00.000Z",
     }))
     expect(bundle.condition_occurrence).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -70,7 +96,14 @@ describe("mapCasesToOmop", () => {
         procedure_source_value: "LOSPOR_PROCEDURE:APPY - Appendectomy",
       }),
       expect.objectContaining({ procedure_source_value: "ANAESTHESIA_TECHNIQUE:general" }),
-      expect.objectContaining({ procedure_source_value: "VASCULAR_ACCESS:Internal jugular 18G" }),
+    ]))
+    // The fixture's line is pre-existing, so it is a history observation
+    // rather than a procedure this team performed.
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        observation_source_value: "VASCULAR_ACCESS:Internal jugular 18G",
+        observation_concept_id: 1340204,
+      }),
     ]))
     expect(bundle.drug_exposure).toEqual(expect.arrayContaining([
       expect.objectContaining({
@@ -80,20 +113,31 @@ describe("mapCasesToOmop", () => {
         // and stays null until a real OMOP source concept is resolved.
         drug_source_concept_id: null,
         dose_value: 5,
+        // 32865, Patient self-report: this is what the patient takes at home,
+        // not something charted as administered here.
+        drug_type_concept_id: 32865,
       }),
       expect.objectContaining({
         // Resolved when the event was written, like preop medications always
         // were. This was 0 while the ATC sat unused in the same row.
         drug_concept_id: 1154029,
-        drug_source_value: "ATC:N01AH01 - Fentanyl",
+        // INTRAOP: is what tells this apart from the same drug given as a
+        // premedication, since both now carry the same drug_type_concept_id.
+        drug_source_value: "INTRAOP:ATC:N01AH01 - Fentanyl",
         drug_source_concept_id: null,
         dose_value: 50,
         route_source_value: "IV",
+        // 32818, EHR administration record: charted as given during the case.
+        drug_type_concept_id: 32818,
       }),
       expect.objectContaining({
-        drug_source_value: "Midazolam 2 mg PO",
+        // PREMED:, not INTRAOP:, even though this fixture row has no ATC code
+        // to prefix -- the tag is what marks the phase regardless of whether a
+        // concept was ever resolved.
+        drug_source_value: "PREMED:Midazolam 2 mg PO",
         dose_value: 2,
         route_source_value: "PO",
+        drug_type_concept_id: 32818,
       }),
     ]))
     expect(bundle.measurement).toEqual(expect.arrayContaining([
@@ -124,12 +168,20 @@ describe("mapCasesToOmop", () => {
     ]))
     // A textual observation carries no number: an ASA class is "I", not 1, and
     // writing it as 1 would make it addable to something.
+    //
+    // ASA itself is no longer here: it is a graded scale and now carries the
+    // scale concept with the class as a coded answer, asserted above.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:ASA_CLASS", value_as_string: "I", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:INTRAOP_MONITORING", value_as_string: "ecg", value_as_number: null }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION", value_as_string: "PONV; treated", value_as_number: null }),
+      // The fixture's monitoring selection (ECG) is no longer here: its
+      // curated concept is Procedure-domain, so it now reaches
+      // PROCEDURE_OCCURRENCE instead (asserted in "uses the reviewed concept
+      // for a case selection" below).
+      // The complication itself now reaches CONDITION_OCCURRENCE (asserted in
+      // "curated mappings reach the export" below); the free-text note that
+      // CONDITION_OCCURRENCE has no column for stays here as a companion.
+      expect.objectContaining({ observation_source_value: "LOSPOR:POSTOP_COMPLICATION_NOTE", value_as_string: "PONV; treated", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DISPOSITION", value_as_string: "WARD", value_as_number: null }),
     ]))
     // Every score, on the other hand, has to arrive as a number. Until 3.7.0
@@ -137,33 +189,29 @@ describe("mapCasesToOmop", () => {
     // researcher could not average an Aldrete total or threshold an RCRI
     // without casting the whole column back from text.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:RCRI", value_as_number: 0, value_as_string: "0" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:APFEL", value_as_number: 1 }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:STOP_BANG", value_as_number: 1 }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:AGE_YEARS", value_as_number: 14 }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_TOTAL", value_as_number: 10 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ALDRETE_ACTIVITY", value_as_number: 2 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:CRYSTALLOIDS_ML", value_as_number: 500 }),
       // A zero total is a recorded zero, not a missing value: it has to survive
       // as 0 rather than being dropped as falsy.
       expect.objectContaining({ observation_source_value: "LOSPOR:COLLOIDS_ML", value_as_number: 0, value_as_string: "0" }),
       expect.objectContaining({ observation_source_value: "LOSPOR:ANAESTHESIA_DURATION_MIN", value_as_number: 60 }),
-      expect.objectContaining({ observation_source_value: "LOINC:72514-3", value_as_number: 2 }),
     ]))
     // A boolean is a fact, not a quantity: "true" in value_as_number would be
     // indistinguishable from a score of 1.
     expect(bundle.observation).toEqual(expect.arrayContaining([
-      expect.objectContaining({ observation_source_value: "LOSPOR:EMERGENCY_SURGERY", value_as_string: "false", value_as_number: null }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DIFFICULT_AIRWAY_HISTORY", value_as_string: "true", value_as_number: null }),
     ]))
-    // The NRS pain score used to be emitted under concept 3020891 — body
+    // The NRS pain score was once emitted under concept 3020891 — body
     // temperature, copied from the vital map — which would have put a pain
-    // score of 2 into any OHDSI temperature query.
-    expect(bundle.observation.find(row => row.observation_source_value === "LOINC:72514-3")?.observation_concept_id).toBe(0)
+    // score of 2 into any OHDSI temperature query. Correcting that left it at
+    // 0; it now carries 43055141, its own scale, as a measurement.
+    expect(bundle.measurement.find(row => row.measurement_source_value === "LOINC:72514-3"))
+      .toMatchObject({ measurement_concept_id: 43055141, value_as_number: 2 })
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
       expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 3 }),
-      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 8 }),
+      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 9 }),
       expect.objectContaining({ code: "INSTITUTION_LINKAGE", severity: "info", count: 1 }),
       expect.objectContaining({ code: "REDACTED_FREE_TEXT_PRESENT", severity: "warning", count: 1 }),
     ]))
@@ -328,6 +376,40 @@ describe("allergies are not drug administrations", () => {
       .some(row => /Penicillin/i.test(JSON.stringify(row)))
     expect(recorded).toBe(true)
   })
+
+  /**
+   * The allergen rows above can only ever describe a patient who has an
+   * allergy. A patient asked and found to have none produces no allergen rows,
+   * no detail text, and -- before the flag was exported -- nothing at all, so
+   * the export could not tell a documented "no known allergies" from a
+   * question nobody put. The column is Boolean? for exactly that reason, and a
+   * recorded No is the answer a theatre acts on when choosing a relaxant.
+   */
+  it("exports a recorded 'no known allergies' as an answer, not as silence", () => {
+    const c = completeCase() as never as { preop: { allergies: boolean | null; medications: unknown[] } }
+    c.preop.allergies = false
+    c.preop.medications = []
+
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const row = bundle.observation.find(r => r.observation_source_value === "LOSPOR:ALLERGY_PRESENT")
+
+    expect(row).toBeDefined()
+    // "History of allergies, reported", answered No. Asserting the value as
+    // well as the row's existence: emitting the question with an empty answer
+    // would pass a presence check while saying nothing.
+    expect(row?.observation_concept_id).toBe(3013237)
+    expect(row?.value_as_concept_id).toBe(4188540) // No
+  })
+
+  it("says nothing when the allergy question was never recorded", () => {
+    // The other half, and the reason a plain Boolean would have been wrong:
+    // null must stay absent rather than exporting as a No.
+    const c = completeCase() as never as { preop: { allergies: boolean | null } }
+    c.preop.allergies = null
+
+    const bundle = mapCasesToOmop([c as never], options as never)
+    expect(bundle.observation.some(r => r.observation_source_value === "LOSPOR:ALLERGY_PRESENT")).toBe(false)
+  })
 })
 
 /**
@@ -429,37 +511,239 @@ describe("care site comes from the case, not from where its author works now", (
  * The effect was not a missing row. It was a row that said "this maps to
  * nothing", while the database held the mapping.
  */
+describe("a technique's timeline marker refines its procedure row instead of duplicating it", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+
+  it("uses the Spinal in event's exact timestamp on the spinal technique's own row", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["SPINAL"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:05:00Z"),
+      label: "Spinal in", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:SPINAL/.test(String(row.procedure_source_value)))
+    expect(line, "fixture must contain the spinal technique row").toBeDefined()
+    expect(line!.procedure_concept_id).toBe(4332593)
+    expect(line!.procedure_datetime).toBe("2026-06-01T08:05:00.000Z")
+    expect(line!.procedure_date).toBe("2026-06-01")
+    // Not a second row: the marker refines this one rather than duplicating
+    // the procedure.
+    expect(bundle.procedure_occurrence.filter(row => /ANAESTHESIA_TECHNIQUE:SPINAL/.test(String(row.procedure_source_value)))).toHaveLength(1)
+  })
+
+  it("falls back to the case's own start date when no matching marker exists", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] } }
+    c.intraop.techniques = ["SPINAL"]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:SPINAL/.test(String(row.procedure_source_value)))
+    expect(line!.procedure_datetime).toBeNull()
+    expect(line!.procedure_date).toBe("2026-06-01")
+  })
+
+  it("uses Block done's timestamp when exactly one peripheral block is on the technique list", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["BLOCK_TAP"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T07:50:00Z"),
+      label: "Block done", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:BLOCK_TAP/.test(String(row.procedure_source_value)))
+    expect(line!.procedure_datetime).toBe("2026-06-01T07:50:00.000Z")
+  })
+
+  it("leaves two simultaneous peripheral blocks unrefined by Block done -- which one it timed is ambiguous", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["BLOCK_TAP", "BLOCK_FEMORAL"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T07:50:00Z"),
+      label: "Block done", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const lines = bundle.procedure_occurrence.filter(row => /ANAESTHESIA_TECHNIQUE:BLOCK_/.test(String(row.procedure_source_value)))
+    expect(lines).toHaveLength(2)
+    expect(lines.every(row => row.procedure_datetime === null)).toBe(true)
+  })
+
+  it("emits Spinal removed as its own procedure, not a refinement", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T09:00:00Z"),
+      label: "Spinal removed", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => row.procedure_source_value === "INTRAOP_EVENT:Spinal removed")
+    expect(line, "fixture must contain a Spinal removed row").toBeDefined()
+    expect(line!.procedure_concept_id).toBe(37165151)
+    expect(line!.procedure_datetime).toBe("2026-06-01T09:00:00.000Z")
+  })
+
+  it("refines a solitary arterial line's row from Art line in, but not when two lines exist", () => {
+    const base = completeCase() as never as {
+      intraop: { vascularAccessRows: { site: string; standardConceptId: number | null }[] }
+      events: unknown[]
+    }
+    base.intraop.vascularAccessRows = [{ site: "RADIAL", standardConceptId: 4051187 }]
+    base.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:10:00Z"),
+      label: "Art line in", value: null, unit: null, metadataJson: {},
+    }]
+    const solo = mapCasesToOmop([base as never], options as never)
+    const soloLine = solo.procedure_occurrence.find(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(soloLine!.procedure_datetime).toBe("2026-06-01T08:10:00.000Z")
+
+    const two = completeCase() as never as {
+      intraop: { vascularAccessRows: { site: string; standardConceptId: number | null }[] }
+      events: unknown[]
+    }
+    two.intraop.vascularAccessRows = [
+      { site: "RADIAL", standardConceptId: 4051187 },
+      { site: "FEMORAL", standardConceptId: 4050420 },
+    ]
+    two.events = base.events
+    const bundle = mapCasesToOmop([two as never], options as never)
+    const lines = bundle.procedure_occurrence.filter(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(lines).toHaveLength(2)
+    expect(lines.every(row => row.procedure_datetime === null)).toBe(true)
+  })
+
+  it("refines a solitary CVC/PICC line's row from CVC in/PICC", () => {
+    const c = completeCase() as never as {
+      intraop: { vascularAccessRows: { site: string; standardConceptId: number | null }[] }
+      events: unknown[]
+    }
+    c.intraop.vascularAccessRows = [
+      { site: "IJV", standardConceptId: 4051188 },
+    ]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:15:00Z"),
+      label: "CVC in", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(line!.procedure_datetime).toBe("2026-06-01T08:15:00.000Z")
+  })
+
+  it("emits PA cath coded to the jugular route, and IO access, as their own new procedures", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:20:00Z"), label: "PA cath", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:22:00Z"), label: "IO access", value: null, unit: null, metadataJson: {} },
+    ]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const paCath = bundle.procedure_occurrence.find(row => row.procedure_source_value === "INTRAOP_EVENT:PA cath")
+    expect(paCath!.procedure_concept_id).toBe(4052529)
+    expect(paCath!.procedure_datetime).toBe("2026-06-01T08:20:00.000Z")
+    const ioAccess = bundle.procedure_occurrence.find(row => row.procedure_source_value === "INTRAOP_EVENT:IO access")
+    expect(ioAccess!.procedure_concept_id).toBe(4257889)
+    expect(ioAccess!.procedure_datetime).toBe("2026-06-01T08:22:00.000Z")
+  })
+})
+
 describe("curated mappings reach the export", () => {
   const options = {
     userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
     excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
   }
 
-  it("uses the reviewed concept for a vascular access procedure", () => {
-    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+  it("uses the reviewed concept for a vascular access line placed here", () => {
+    // The fixture's line is pre-existing, so it is stated as a history rather
+    // than a procedure (asserted below). Clearing the flag makes it a line this
+    // team actually placed, which is what a procedure_occurrence row means.
+    const c = completeCase() as unknown as { intraop: { vascularAccessRows: { preexisting: boolean }[] } }
+    c.intraop.vascularAccessRows[0].preexisting = false
+    const bundle = mapCasesToOmop([c as never], options as never)
     const line = bundle.procedure_occurrence.find(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
     expect(line, "fixture must contain a vascular access row").toBeDefined()
     expect(line!.procedure_concept_id).toBe(4052341)
   })
 
-  it("uses the reviewed concept for a complication", () => {
+  it("states a pre-existing line as a history, not a procedure done here", () => {
+    // The fault this fixes: the export wrote a procedure_occurrence for every
+    // line, including one already in the patient, crediting this team with an
+    // insertion somebody else performed. The comment in the mapper described
+    // that exact problem while the code went on doing it.
     const bundle = mapCasesToOmop([completeCase() as never], options as never)
-    const comp = bundle.observation.find(row => /COMPLICATION/.test(String(row.observation_source_value)))
-    expect(comp, "fixture must contain a complication row").toBeDefined()
-    expect(comp!.observation_concept_id).toBe(4166237)
+
+    expect(bundle.procedure_occurrence.some(
+      row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))).toBe(false)
+
+    const history = bundle.observation.find(row => /VASCULAR_ACCESS/.test(String(row.observation_source_value)))
+    expect(history, "a pre-existing line must still be recorded").toBeDefined()
+    expect(history!.observation_concept_id).toBe(1340204)
+    expect(history!.value_as_concept_id).toBe(4052341)
   })
 
-  it("uses the reviewed concept for a case selection", () => {
+  it("uses the reviewed concept for a complication", () => {
+    // A mapped complication is a Condition-domain SNOMED finding, so it
+    // reaches CONDITION_OCCURRENCE now, not OBSERVATION -- domain governs
+    // table, the same rule every other curated concept in this export
+    // follows.
     const bundle = mapCasesToOmop([completeCase() as never], options as never)
-    const sel = bundle.observation.find(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")
+    const comp = bundle.condition_occurrence.find(row => /LOSPOR_COMPLICATION/.test(String(row.condition_source_value)))
+    expect(comp, "fixture must contain a complication row").toBeDefined()
+    expect(comp!.condition_concept_id).toBe(4166237)
+  })
+
+  it("routes a Procedure-domain complication to procedure_occurrence, not condition_occurrence", () => {
+    // "Endobronchial intubation" is something that was done to the patient,
+    // not a diagnosed disorder -- a third domain among curated complications,
+    // alongside the Condition default and the Observation-domain findings
+    // (Difficult intubation, CICO, ...).
+    const c = completeCase({
+      complications: [{
+        section: "intraop", label: "Endobronchial intubation", note: null,
+        timestamp: new Date("2026-06-01T08:45:00Z"), source: "relational-sync", ordinal: 0,
+        sourceVocabulary: "LOSPOR_COMPLICATION", sourceCode: "Endobronchial intubation",
+        standardConceptId: 4335585, mappingStatus: "MAPPED",
+      }],
+    })
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const proc = bundle.procedure_occurrence.find(row => /LOSPOR_COMPLICATION/.test(String(row.procedure_source_value)))
+    expect(proc, "fixture must contain the complication procedure row").toBeDefined()
+    expect(proc!.procedure_concept_id).toBe(4335585)
+    expect(bundle.condition_occurrence.some(row => /LOSPOR_COMPLICATION/.test(String(row.condition_source_value)))).toBe(false)
+  })
+
+  it("uses the reviewed concept for a case selection, routed by the concept's own domain", () => {
+    // ECG's curated concept (4187078, Electrocardiographic monitoring) is
+    // Procedure-domain -- "domain governs table" applies to c.selections
+    // exactly as it does to complications, so a monitoring selection with a
+    // Procedure-domain concept reaches procedure_occurrence, not observation.
+    const bundle = mapCasesToOmop([completeCase() as never], options as never)
+    const sel = bundle.procedure_occurrence.find(row => row.procedure_source_value === "LOSPOR:INTRAOP_MONITORING")
     expect(sel, "fixture must contain a monitoring selection").toBeDefined()
-    expect(sel!.observation_concept_id).toBe(4145586)
+    expect(sel!.procedure_concept_id).toBe(4187078)
+    expect(bundle.observation.some(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")).toBe(false)
+  })
+
+  it("routes a Measurement-domain selection to measurement, not observation", () => {
+    // NIRS/cerebral oximetry (37206739) is a Measurement-domain SNOMED
+    // concept -- the third domain a case selection can resolve to, alongside
+    // the Observation default and the Procedure-domain concepts above.
+    const c = completeCase({
+      selections: [{
+        section: "intraop", category: "monitoring", value: "nirsMonitor", ordinal: 0,
+        sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_NIRS",
+        standardConceptId: 37206739, mappingStatus: "MAPPED",
+      }],
+    })
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const sel = bundle.measurement.find(row => row.measurement_source_value === "LOSPOR:INTRAOP_MONITORING")
+    expect(sel, "fixture must contain the NIRS selection").toBeDefined()
+    expect(sel!.measurement_concept_id).toBe(37206739)
+    expect(sel!.value_source_value).toBe("nirsMonitor")
   })
 
   it("still emits 0 when nothing was reviewed, rather than inventing one", () => {
     // The rule this file already follows: an unmapped row keeps its source
     // value and claims no concept. Fixing the three above must not turn into
-    // guessing for the rest.
+    // guessing for the rest. A null standardConceptId matches neither domain
+    // set, so it falls through to the Observation default, same as before.
     const c = completeCase() as never as { selections: { standardConceptId: number | null }[] }
     c.selections[0].standardConceptId = null
     const bundle = mapCasesToOmop([c as never], options as never)
@@ -567,6 +851,32 @@ describe("fluids are exported as the events they were, not only as totals", () =
     expect(fluid, "fixture must contain the fluid event").toBeDefined()
     expect(fluid!.dose_value).toBe(500)
     expect(fluid!.drug_exposure_start_date).toBe("2026-06-01")
+  })
+
+  it("closes a fluid at its fluid_end event, the same way an infusion closes at infusion_stop", () => {
+    // fluid_start/fluid_end pair by fluidId exactly the way infusion_start/
+    // infusion_stop pair by infId -- the app already emits fluid_end with
+    // that key, but the mapper's pairing logic had no branch for it, so
+    // every fluid drug_exposure row exported with a start and no end, which
+    // in the CDM reads as "still infusing" no matter how the case actually
+    // went.
+    const bundle = mapCasesToOmop([completeCase() as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const fluid = bundle.drug_exposure.find(row => /Ringer/.test(String(row.drug_source_value)))
+    expect(fluid!.drug_exposure_end_date).toBe("2026-06-01")
+  })
+
+  it("leaves an unstopped fluid open rather than inventing an end", () => {
+    const c = completeCase() as never as { events: { type: string }[] }
+    c.events = c.events.filter(ev => ev.type !== "fluid_end")
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    } as never)
+    const fluid = bundle.drug_exposure.find(row => /Ringer/.test(String(row.drug_source_value)))
+    expect(fluid!.drug_exposure_end_date).toBeNull()
   })
 
   it("still reports the case totals alongside", () => {
@@ -686,12 +996,21 @@ describe("airway management", () => {
     expect(cormack[0].measurement_concept_id).toBe(37398987)
     expect(cormack[0].value_as_concept_id).toBe(4221760)
     expect(cormack[0].value_source_value).toBe("IIa")
-    expect(obs(bundle, "LOSPOR:ORAL_TUBE_SIZE")[0]?.value_as_number).toBe(7.5)
+    // Tube sizes moved to measurement with concept 21491186 (Endotracheal
+    // tube Diameter), a Measurement-domain LOINC concept.
+    expect(bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:ORAL_TUBE_SIZE"))
+      .toMatchObject({ measurement_concept_id: 21491186, value_as_number: 7.5, unit_concept_id: 8588 })
     expect(obs(bundle, "LOSPOR:ORAL_TUBE_CUFFED")[0]?.value_as_string).toBe("true")
-    expect(obs(bundle, "LOSPOR:PEEP_CMH2O")[0]?.value_as_number).toBe(5)
+    // PEEP moved to measurement with concept 3022875 (the ventilator setting,
+    // not the measured airway pressure), which is a Measurement-domain concept.
+    expect(bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:PEEP_CMH2O"))
+      .toMatchObject({ measurement_concept_id: 3022875, value_as_number: 5 })
     expect(obs(bundle, "LOSPOR:AIRWAY_TOOL").map(o => o.value_as_string).sort())
       .toEqual(["BOUGIE", "VIDEO_LARY"])
-    expect(obs(bundle, "LOSPOR:VENTILATION_MODE")[0]?.value_as_string).toBe("VCV")
+    // Measurement, not observation -- 3004921 is a Measurement-domain LOINC
+    // concept -- and the mode itself now carries a real answer concept too.
+    const ventMode = bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:VENTILATION_MODE")
+    expect(ventMode).toMatchObject({ measurement_concept_id: 3004921, value_as_concept_id: 37152413, value_source_value: "VCV" })
   })
 
   it("puts a size in value_as_number, not only in text", () => {
@@ -762,6 +1081,62 @@ describe("airway management", () => {
     expect(obs(bundle, "LOSPOR:CORMACK_LEHANE")).toEqual([])
     expect(airwayProcs(bundle)).toEqual([])
   })
+
+  it("refines Intubated/LMA in/DLT placed onto their own act rows, each only when exactly one match exists", () => {
+    const base = completeCase() as unknown as { intraop: Record<string, unknown>; events: unknown[] }
+    const c = {
+      ...base,
+      intraop: { ...base.intraop, airwayDevice: null, airwayDevices: ["LMA", "DOUBLE_LUMEN_TUBE"] },
+      events: [
+        { type: "clinical_event", timestamp: new Date("2026-06-01T08:01:00Z"), label: "LMA in", value: null, unit: null, metadataJson: {} },
+        { type: "clinical_event", timestamp: new Date("2026-06-01T08:02:00Z"), label: "DLT placed", value: null, unit: null, metadataJson: {} },
+      ],
+    }
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const lma = bundle.procedure_occurrence.find(p => p.procedure_source_value === "AIRWAY_MANAGEMENT:SUPRAGLOTTIC_AIRWAY_PLACEMENT")
+    const dlt = bundle.procedure_occurrence.find(p => p.procedure_source_value === "AIRWAY_MANAGEMENT:DOUBLE_LUMEN_TUBE_PLACEMENT")
+    expect(lma!.procedure_datetime).toBe("2026-06-01T08:01:00.000Z")
+    expect(dlt!.procedure_datetime).toBe("2026-06-01T08:02:00.000Z")
+  })
+
+  it("emits Induction, Mask vent, Extubated and Airway exchange as their own new procedures", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [
+      { type: "clinical_event", timestamp: new Date("2026-06-01T07:55:00Z"), label: "Induction", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T07:56:00Z"), label: "Mask vent", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:58:00Z"), label: "Extubated", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:30:00Z"), label: "Airway exchange", value: null, unit: null, metadataJson: {} },
+    ]
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const byLabel = (label: string) => bundle.procedure_occurrence.find(p => p.procedure_source_value === `INTRAOP_EVENT:${label}`)
+    expect(byLabel("Induction")).toMatchObject({ procedure_concept_id: 4082850, procedure_datetime: "2026-06-01T07:55:00.000Z" })
+    expect(byLabel("Mask vent")).toMatchObject({ procedure_concept_id: 37157165, procedure_datetime: "2026-06-01T07:56:00.000Z" })
+    expect(byLabel("Extubated")).toMatchObject({ procedure_concept_id: 4148972, procedure_datetime: "2026-06-01T08:58:00.000Z" })
+    expect(byLabel("Airway exchange")).toMatchObject({ procedure_concept_id: 4216776, procedure_datetime: "2026-06-01T08:30:00.000Z" })
+  })
+
+  it("emits Incision, Tourniquet on and Tourniquet off as their own new procedures", () => {
+    const c = completeCase() as never as { events: unknown[] }
+    c.events = [
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:10:00Z"), label: "Incision", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:12:00Z"), label: "Tourniquet on", value: null, unit: null, metadataJson: {} },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:50:00Z"), label: "Tourniquet off", value: null, unit: null, metadataJson: {} },
+    ]
+    const bundle = mapCasesToOmop([c as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const byLabel = (label: string) => bundle.procedure_occurrence.find(p => p.procedure_source_value === `INTRAOP_EVENT:${label}`)
+    expect(byLabel("Incision")).toMatchObject({ procedure_concept_id: 4214428, procedure_datetime: "2026-06-01T08:10:00.000Z" })
+    expect(byLabel("Tourniquet on")).toMatchObject({ procedure_concept_id: 4049036, procedure_datetime: "2026-06-01T08:12:00.000Z" })
+    expect(byLabel("Tourniquet off")).toMatchObject({ procedure_concept_id: 4084008, procedure_datetime: "2026-06-01T08:50:00.000Z" })
+  })
 })
 
 describe("AIRWAY_ACTS", () => {
@@ -804,10 +1179,29 @@ describe("clinical data that used to never leave", () => {
     expect(obs("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")[0]?.value_as_string).toBe("true")
     expect(obs("LOSPOR:DENTAL_PROSTHETICS")[0]?.value_as_string).toBe("false")
     expect(obs("LOSPOR:HEART_ARRHYTHMIA")[0]?.value_as_string).toBe("false")
-    expect(obs("LOSPOR:BMI")[0]?.value_as_number).toBe(24.2)
-    expect(obs("LOSPOR:BLOOD_TYPE")[0]?.value_as_string).toBe("A")
-    expect(obs("LOSPOR:RH_FACTOR")[0]?.value_as_string).toBe("POSITIVE")
     expect(obs("LOSPOR:GUTA_SCORE")[0]?.value_as_number).toBe(2)
+  })
+
+  it("measures body mass index rather than observing it", () => {
+    // A quantity with a standard concept and a unit belongs in measurement.
+    const bmi = bundle().measurement.filter(row => row.measurement_source_value === "LOSPOR:BMI")
+
+    expect(bmi).toHaveLength(1)
+    expect(bmi[0]).toMatchObject({ measurement_concept_id: 4245997, value_as_number: 24.2 })
+  })
+
+  it("writes a blood group as one fact rather than two", () => {
+    // "A positive" is what a crossmatch label says and what a transfusion query
+    // asks for. As separate group and rhesus rows it is findable only by
+    // joining them back together.
+    const group = bundle().measurement.filter(row => row.measurement_source_value === "LOSPOR:BLOOD_GROUP")
+
+    expect(group).toHaveLength(1)
+    expect(group[0]).toMatchObject({
+      measurement_concept_id: 3003694,
+      value_as_concept_id: 4082948,
+      value_source_value: "A+",
+    })
   })
 
   it("exports the airway examination separately from the airway history", () => {
@@ -822,7 +1216,11 @@ describe("clinical data that used to never leave", () => {
     expect(airway("LOSPOR:MOUTH_OPENING_CM")[0]?.measurement_concept_id).toBe(4303387)
     expect(airway("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.value_as_number).toBe(6.5)
     expect(airway("LOSPOR:THYROMENTAL_DISTANCE_CM")[0]?.measurement_concept_id).toBe(4142891)
-    expect(obs("LOSPOR:NECK_MOBILITY")[0]?.value_as_string).toBe("FULL")
+    // Neck mobility is a graded scale now, so it is a measurement carrying the
+    // range as a coded answer rather than an observation carrying the word.
+    const neck = bundle().measurement.filter(r => r.measurement_source_value === "LOSPOR:NECK_MOBILITY")
+    expect(neck).toHaveLength(1)
+    expect(neck[0]).toMatchObject({ measurement_concept_id: 4039256, value_as_concept_id: 4124732, value_source_value: "FULL" })
     expect(obs("LOSPOR:UPPER_LIP_BITE_TEST")[0]?.value_as_string).toBe("CLASS_I")
     expect(obs("LOSPOR:RETROGNATHIA")[0]?.value_as_string).toBe("false")
     expect(obs("LOSPOR:PROMINENT_INCISORS")[0]?.value_as_string).toBe("true")
@@ -952,5 +1350,1179 @@ describe("mapping summary provenance", () => {
     expect(rejected.unmapped_rows).toBe(unmapped.unmapped_rows - 1)
     expect(rejected.mapped_rows).toBe(unmapped.mapped_rows)
     expect(rejected.source_only_rows).toBe(unmapped.source_only_rows)
+  })
+})
+
+describe("one source answer is one row", () => {
+  // A source concept with both a Maps to and a Maps to value describes one
+  // fact, and the OHDSI convention puts both halves in a single row. Emitting
+  // them as two made one latex-allergic patient count twice under
+  // observation_concept_id 43530807 — the same double-count that keeps urgency
+  // off procedure_occurrence, reproduced one field later.
+  const latexRows = (latexAllergy: boolean | null) => {
+    const base = completeCase() as Record<string, unknown>
+    const preop = { ...(base.preop as Record<string, unknown>), latexAllergy }
+    return mapCasesToOmop([{ ...base, preop } as never]).observation
+      .filter(row => row.observation_concept_id === 43530807)
+  }
+
+  it("counts a latex-allergic patient once, not twice", () => {
+    expect(latexRows(true)).toHaveLength(1)
+    expect(latexRows(true)[0].value_as_concept_id).toBe(4188539)
+  })
+
+  it("keeps the denial, which is a safety check rather than an absence", () => {
+    expect(latexRows(false)).toHaveLength(1)
+    expect(latexRows(false)[0].value_as_concept_id).toBe(4188540)
+  })
+
+  it("says nothing at all when the question was never asked", () => {
+    expect(latexRows(null)).toHaveLength(0)
+  })
+})
+
+describe("the risk scores that have a concept", () => {
+  // SNOMED models each score as a single scale with no decomposition — there
+  // is no concept for "RCRI criterion 2" — so the criteria are exported as the
+  // ordinary conditions they are, and reconstructing a score means looking for
+  // those rather than for score components.
+  const scored = (source: string) => mapCasesToOmop([completeCase() as never])
+    .measurement.filter(row => row.measurement_source_value === source)
+
+  it("writes RCRI and STOP-BANG as measurements a tool can find", () => {
+    expect(scored("LOSPOR:RCRI")[0]).toMatchObject({ measurement_concept_id: 40488922, value_as_number: 0 })
+    expect(scored("LOSPOR:STOP_BANG")[0]).toMatchObject({ measurement_concept_id: 46286812, value_as_number: 1 })
+  })
+
+  it("leaves Apfel where no concept exists, rather than borrowing a wrong one", () => {
+    // Every near match is postoperative vomiting itself, which is the outcome
+    // these scores predict and not the prediction.
+    const apfel = mapCasesToOmop([completeCase() as never])
+      .observation.filter(row => row.observation_source_value === "LOSPOR:APFEL")
+
+    expect(apfel).toHaveLength(1)
+    expect(apfel[0].observation_concept_id).toBe(0)
+  })
+})
+
+describe("the anaesthesia history that is about the patient, not their family", () => {
+  const withPreop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    Object.assign(c.preop, patch)
+    return c as never
+  }
+  const obs = (source: string, value: boolean | null) => {
+    const key = source === "LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY"
+      ? "malignantHyperthermiaHistory"
+      : "unexplainedAnaesthesiaComplications"
+    return mapCasesToOmop([withPreop({ [key]: value })]).observation
+      .filter(row => row.observation_source_value === source)
+  }
+
+  it("codes a personal malignant hyperthermia history separately from the family question", () => {
+    // These were the same question until now: a patient who had had MH himself
+    // could only be recorded through familyAnesthesiaProblems, which is about
+    // relatives, or in free text. They are different concepts and now different
+    // rows.
+    const mine = obs("LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY", true)
+    const family = mapCasesToOmop([completeCase() as never]).observation
+      .filter(row => row.observation_source_value === "LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")
+
+    expect(mine[0]).toMatchObject({ observation_concept_id: 440285, value_as_concept_id: 4188539 })
+    expect(family[0].observation_concept_id).not.toBe(440285)
+  })
+
+  it("records a denied malignant hyperthermia history as a denial", () => {
+    // The whole reason the field is tri-state. "Asked, and the patient said no"
+    // is a safety check another anaesthetist relies on; it must not read as
+    // "nobody asked".
+    expect(obs("LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY", false)[0])
+      .toMatchObject({ observation_concept_id: 440285, value_as_concept_id: 4188540 })
+    expect(obs("LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY", null)).toHaveLength(0)
+  })
+
+  it("codes an unexplained event to the operative complication, not to a drug reaction", () => {
+    // 4171869 (Anesthetics adverse reaction) is the tempting match and names a
+    // cause. This field exists for the events where nobody could.
+    const row = obs("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", true)[0]
+
+    expect(row.observation_concept_id).toBe(37017043)
+    expect(row.value_as_concept_id).toBe(4188539)
+  })
+
+  it("keeps all three states of the unexplained-event question apart", () => {
+    expect(obs("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", false)[0].value_as_concept_id).toBe(4188540)
+    expect(obs("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", null)).toHaveLength(0)
+  })
+})
+
+describe("the airway examination findings that gained a concept", () => {
+  const airway = (source: string) => mapCasesToOmop([completeCase() as never]).observation
+    .filter(row => row.observation_source_value === source)
+
+  it("codes an anticipated difficult airway as a risk rather than an expectation", () => {
+    // 37397720 (Expected difficult tracheal intubation) is the closer wording
+    // and the stronger claim. Bedside tests predict poorly, so most patients
+    // flagged here are intubated uneventfully, and an expectation the case then
+    // contradicts reads like an error rather than a precaution that paid off.
+    const row = airway("LOSPOR:ANTICIPATED_DIFFICULT_AIRWAY")[0]
+
+    expect(row.observation_concept_id).toBe(37159176)
+    expect(row.value_as_concept_id).toBe(4188539)
+  })
+
+  it("codes prominent incisors, which an earlier search wrongly gave up on", () => {
+    // That search only tried dysmorphology phrasings and came back with HPO
+    // entries this product does not ship. The plain SNOMED term was always
+    // there.
+    expect(airway("LOSPOR:PROMINENT_INCISORS")[0])
+      .toMatchObject({ observation_concept_id: 4033016, value_as_concept_id: 4188539 })
+  })
+
+  it("leaves facial hair uncoded, because every candidate means hirsutism", () => {
+    // An ordinary beard is not a pathological finding, and coding it as one
+    // would put every bearded patient into a hirsutism cohort. The conclusion a
+    // beard feeds — whether difficulty is anticipated — is what carries a
+    // concept instead.
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.facialHair = true
+
+    expect(mapCasesToOmop([c as never]).observation
+      .filter(row => row.observation_source_value === "LOSPOR:FACIAL_HAIR")[0].observation_concept_id).toBe(0)
+  })
+})
+
+describe("the rows that were saying the same thing twice", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never])
+  const obs = (source: string) => bundle().observation
+    .filter(row => row.observation_source_value === source)
+
+  it("carries age as a measurement with a concept and a unit", () => {
+    // OMOP tooling normally derives age from person.year_of_birth and a visit
+    // date. This register coarsens the birth year deliberately, so the recorded
+    // age is the more precise of the two and is worth its own row.
+    const age = bundle().measurement
+      .filter(row => row.measurement_source_value === "LOSPOR:AGE_YEARS")
+
+    expect(age).toHaveLength(1)
+    expect(age[0]).toMatchObject({
+      measurement_concept_id: 4314456,
+      value_as_number: 14,
+      unit_concept_id: 9448,
+      unit_source_value: "a",
+    })
+    expect(obs("LOSPOR:AGE_YEARS")).toHaveLength(0)
+  })
+
+  it("states surgical urgency once, on the procedure", () => {
+    // It used to be here as well, at concept 0, so a query that counted both
+    // counted every emergency case twice.
+    expect(obs("LOSPOR:EMERGENCY_SURGERY")).toHaveLength(0)
+    expect(bundle().procedure_occurrence.some(row => row.modifier_concept_id !== 0)).toBe(true)
+  })
+
+  it("does not export clinical mode", () => {
+    // Provenance about how this product computed a case, not a fact about the
+    // patient — and the fact a researcher would reach for it for is age, which
+    // answers the same question exactly rather than approximately.
+    expect(obs("LOSPOR:CLINICAL_MODE")).toHaveLength(0)
+  })
+})
+
+describe("what anaesthetic was given", () => {
+  const proc = (c: unknown) => mapCasesToOmop([c as never]).procedure_occurrence
+  const withTechniques = (techniques: string[], devices: string[] = []) => {
+    const c = completeCase() as unknown as {
+      intraop: Record<string, unknown>
+    }
+    c.intraop.techniques = techniques
+    if (devices.length) c.intraop.airwayDevices = devices
+    return c
+  }
+  const techRow = (code: string) => proc(withTechniques([code]))
+    .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+
+  it("codes the four techniques that have a concept", () => {
+    // Until now every anaesthetic in the register exported at concept 0, so the
+    // register could not say, in any coded form, what anaesthetic was given.
+    expect(techRow("GENERAL")?.procedure_concept_id).toBe(4174669)
+    expect(techRow("SPINAL")?.procedure_concept_id).toBe(4332593)
+    expect(techRow("EPIDURAL")?.procedure_concept_id).toBe(4078199)
+    expect(techRow("SEDATION")?.procedure_concept_id).toBe(4219502)
+  })
+
+  it("gives a node below a coded one its nearest coded ancestor", () => {
+    // The tree is deeper than the vocabulary. A lumbar single-shot spinal is a
+    // spinal anaesthetic, and coding it as one is true; inventing a concept for
+    // the exact node would not be.
+    expect(techRow("SPINAL_SINGLE_LUMBAR")?.procedure_concept_id).toBe(4332593)
+    expect(techRow("SPINAL_CONT_MID_THORACIC")?.procedure_concept_id).toBe(4332593)
+    expect(techRow("EPIDURAL_CAUDAL")?.procedure_concept_id).toBe(4078199)
+  })
+
+  it("keeps the exact node the anaesthetist chose", () => {
+    // The whole point of coding at the ancestor: nothing is flattened away.
+    // "Single shot, lumbar" is still readable off the row.
+    expect(techRow("SPINAL_SINGLE_LUMBAR")?.procedure_source_value)
+      .toBe("ANAESTHESIA_TECHNIQUE:SPINAL_SINGLE_LUMBAR")
+  })
+
+  it("codes the block regions, so most of the peripheral tree inherits something true", () => {
+    // SNOMED has a "Local anesthetic nerve block in <region>" family that
+    // mirrors this part of the tree almost exactly, so four nodes cover roughly
+    // forty leaves and each leaf can be refined later without touching a stored
+    // value. TAP, femoral, interscalene and every other named leaf were
+    // examples of this until their own concepts were mapped; rectus sheath is
+    // one of the three confirmed vocabulary gaps and stays inherited for good.
+    expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
+  })
+
+  it("codes popliteal the same way and for the same reason as sciatic", () => {
+    // A popliteal block is a sciatic block performed at the popliteal fossa
+    // and has no procedure concept of its own -- only the same four
+    // approach-qualified sciatic concepts. Lateral approach, by product
+    // decision, matching BLOCK_SCIATIC.
+    expect(techRow("BLOCK_POPLITEAL")?.procedure_concept_id).toBe(4215528)
+  })
+
+  it("codes REGIONAL now the tree beneath it is finished", () => {
+    // Held back until every node below it had been looked at, so mapping it
+    // would not silently mark undecided work as done. Three nodes remain at 0
+    // -- BLOCK_QL, BLOCK_RECTUS, BLOCK_SUB_TENONS -- and all three are confirmed
+    // gaps in the vocabulary itself rather than undecided work, so REGIONAL no
+    // longer hides anything by going in.
+    expect(techRow("REGIONAL")?.procedure_concept_id).toBe(4100052)
+    // OTHER is the free-text escape at the top of the tree and will never carry
+    // a concept: whatever it means is in the source value.
+    expect(techRow("OTHER")?.procedure_concept_id).toBe(0)
+    // Nor does an unrecognised code reach for something plausible.
+    expect(techRow("NOT_A_REAL_NODE")?.procedure_concept_id).toBe(0)
+  })
+
+  it("codes an oral intubation and an LMA insertion as the different procedures they are", () => {
+    const rows = proc(withTechniques(["GENERAL"], ["ORAL_ETT", "LMA"]))
+    const oral = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL")
+    const lma = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:SUPRAGLOTTIC_AIRWAY_PLACEMENT")
+
+    expect(oral?.procedure_concept_id).toBe(4335481)
+    expect(lma?.procedure_concept_id).toBe(4314149)
+  })
+
+  it("codes the nasal, double-lumen and endobronchial airway acts", () => {
+    const rows = proc(withTechniques(["GENERAL"], ["NASAL_ETT", "DOUBLE_LUMEN_TUBE", "ENDOBRONCHIAL_TUBE"]))
+    const nasal = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_NASAL")
+    const dlt = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:DOUBLE_LUMEN_TUBE_PLACEMENT")
+    const endo = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:ENDOBRONCHIAL_TUBE_PLACEMENT")
+
+    expect(nasal?.procedure_concept_id).toBe(4337616)
+    expect(dlt?.procedure_concept_id).toBe(37116698)
+    // 4335585, the deliberate placement, not 4134538 (Unintended endobronchial
+    // intubation), which is the complication of an ordinary tube slipping too
+    // far -- a different fact from choosing to place one.
+    expect(endo?.procedure_concept_id).toBe(4335585)
+  })
+
+  it("codes a surgical airway as a cricothyroidotomy, unqualified", () => {
+    const rows = proc(withTechniques(["GENERAL"], ["SURGICAL_AIRWAY"]))
+    const surgical = rows.find(r => r.procedure_source_value === "AIRWAY_MANAGEMENT:SURGICAL_AIRWAY")
+
+    // Never a tracheostomy: that is a separate planned procedure done by a
+    // different team, not something chosen from this device list, and both
+    // tracheostomy concepts in this vocabulary are deprecated regardless.
+    // Unqualified rather than "Emergency cricothyroidotomy" -- real-world use
+    // is almost always an emergency, but the form does not record that, the
+    // same reasoning as the sciatic approach and ESP's ultrasound guidance.
+    expect(surgical?.procedure_concept_id).toBe(4068680)
+  })
+})
+
+describe("local infiltration", () => {
+  it("is not coded as the umbrella that is also the ancestor of every nerve block", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = ["LOCAL"]
+    const row = mapCasesToOmop([c as never]).procedure_occurrence
+      .find(r => r.procedure_source_value === "ANAESTHESIA_TECHNIQUE:LOCAL")
+
+    // 4303995 (Local anesthesia) looked like the obvious choice and is verified,
+    // against CONCEPT_ANCESTOR, as the parent of the entire nerve block family
+    // too. Using it would give a plain wound infiltration the same lineage as a
+    // spinal or a TAP block.
+    expect(row?.procedure_concept_id).toBe(4124873)
+  })
+})
+
+describe("the rest of the technique tree", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes the neuraxial family, each as itself", () => {
+    // A combined spinal-epidural is not a spinal with an epidural noted beside
+    // it, and a dural puncture epidural is not an ordinary one. Both have their
+    // own concept, which is why neither was folded into a neighbour earlier.
+    expect(techRow("NEURAXIAL")?.procedure_concept_id).toBe(4228322)
+    expect(techRow("CSE")?.procedure_concept_id).toBe(4335024)
+    expect(techRow("DPE")?.procedure_concept_id).toBe(37159083)
+    expect(techRow("CSE_LUMBAR")?.procedure_concept_id).toBe(4335024)
+  })
+
+  it("codes head and neck blocks at their own region", () => {
+    // They inherited the peripheral umbrella until now, which was true but
+    // coarser than the vocabulary allows.
+    expect(techRow("BLOCK_HEAD_NECK")?.procedure_concept_id).toBe(4125198)
+    expect(techRow("BLOCK_SCALP")?.procedure_concept_id).toBe(4125198)
+  })
+
+  it("codes the eye blocks one by one rather than under a false umbrella", () => {
+    // 4123783 (Ocular infiltration of local anesthetic) is the tempting parent
+    // and is flatly false for the topical case, where nothing is infiltrated.
+    expect(techRow("BLOCK_PERIBULBAR")?.procedure_concept_id).toBe(4123785)
+    expect(techRow("BLOCK_RETROBULBAR")?.procedure_concept_id).toBe(4123784)
+    expect(techRow("BLOCK_TOPICAL_EYE")?.procedure_concept_id).toBe(4335044)
+  })
+
+  it("leaves sub-Tenon's on the peripheral umbrella, because nothing better exists", () => {
+    // A real vocabulary gap, not a search that gave up: the only matches for
+    // "tenon" anywhere in CONCEPT.csv are drug names and orbital inflammation.
+    // A widely used technique with no concept.
+    expect(techRow("BLOCK_SUB_TENONS")?.procedure_concept_id).toBe(4140397)
+  })
+})
+
+describe("how a general anaesthetic was maintained", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("tells inhalational and TIVA apart", () => {
+    // Both used to inherit the general-anaesthesia parent, so the register
+    // could not answer the question the specialty most often asks of it —
+    // volatile against total intravenous, for PONV, emergence and oncological
+    // outcome.
+    expect(techRow("GENERAL_INHALATION")?.procedure_concept_id).toBe(4118897)
+    expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4086418)
+  })
+
+  it("keeps a balanced anaesthetic at the parent, deliberately", () => {
+    // Neither sibling is true of it. TIVA means *total* intravenous, so a case
+    // running a volatile is not TIVA, and it is not inhalation-only either.
+    // The parent is the right answer rather than a fallback, and this test is
+    // here so nobody later "corrects" it to one of the other two.
+    expect(techRow("GENERAL_BALANCED")?.procedure_concept_id).toBe(4171773)
+  })
+})
+
+describe("a general-anaesthetic cohort catches every maintenance route", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes GENERAL as the true parent of all three maintenance routes", () => {
+    // 4171773 (Operative general anesthesia) looked like the right node and is
+    // not: it is a sibling of GENERAL_INHALATION and GENERAL_TIVA under this
+    // concept, not their ancestor. An ATLAS cohort built on 4171773 +
+    // descendants would have missed every inhalational and every TIVA case --
+    // the opposite of what a "general anaesthetic" filter should return.
+    // 4174669 is verified, against CONCEPT_ANCESTOR, as the true parent of all
+    // three, and its descendant set stops at general anaesthesia: sedation
+    // sits elsewhere, under 4249997, so this does not also sweep in sedation
+    // cases.
+    expect(techRow("GENERAL")?.procedure_concept_id).toBe(4174669)
+    expect(techRow("GENERAL_INHALATION")?.procedure_concept_id).toBe(4118897)
+    expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4086418)
+    expect(techRow("GENERAL_BALANCED")?.procedure_concept_id).toBe(4171773)
+  })
+})
+
+describe("the first named block leaves", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes the four unqualified leaves exactly", () => {
+    expect(techRow("BLOCK_TAP")?.procedure_concept_id).toBe(44783705)
+    expect(techRow("BLOCK_FEMORAL")?.procedure_concept_id).toBe(4336456)
+    expect(techRow("BLOCK_INTERSCALENE")?.procedure_concept_id).toBe(4333843)
+  })
+
+  it("codes the adductor canal block as the saphenous nerve block it is", () => {
+    // No "adductor canal block" procedure concept exists anywhere in this
+    // vocabulary -- only anatomy and a syndrome. This is the procedure-level
+    // fact, not a stand-in: the saphenous nerve is what the block anaesthetises.
+    expect(techRow("BLOCK_ADDUCTOR")?.procedure_concept_id).toBe(4333280)
+  })
+
+  it("states the sciatic block as one specific approach, by product decision", () => {
+    // SNOMED splits this block by approach and has no unqualified concept. The
+    // form does not record which approach was used, so 4215528 (lateral) is
+    // asserted for every case rather than read from the record. If the form
+    // gains an approach field, this is the line to revisit.
+    expect(techRow("BLOCK_SCIATIC")?.procedure_concept_id).toBe(4215528)
+  })
+})
+
+describe("the brachial plexus family, complete, and intercostal", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes all four brachial plexus approaches, each as itself", () => {
+    expect(techRow("BLOCK_INTERSCALENE")?.procedure_concept_id).toBe(4333843)
+    expect(techRow("BLOCK_SUPRACLAVICULAR")?.procedure_concept_id).toBe(4332444)
+    expect(techRow("BLOCK_INFRACLAVICULAR")?.procedure_concept_id).toBe(4332445)
+    expect(techRow("BLOCK_AXILLARY")?.procedure_concept_id).toBe(4336448)
+  })
+
+  it("codes intercostal", () => {
+    expect(techRow("BLOCK_INTERCOSTAL")?.procedure_concept_id).toBe(4332575)
+  })
+
+  it("codes ilioinguinal, and drops the iliohypogastric half by product decision", () => {
+    // The form has one checkbox for both nerves; SNOMED has two concepts and no
+    // combined one, so a single row cannot say "both". This is stated as a
+    // decision, not a derived fact, the same way BLOCK_SCIATIC's approach is --
+    // the iliohypogastric concept (4332577) is not coded here.
+    expect(techRow("BLOCK_ILIOINGUINAL")?.procedure_concept_id).toBe(4333290)
+  })
+})
+
+describe("the chest wall plane blocks", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes PECS I at pectoral compartment nerve block, the vocabulary's own parent of PECS II", () => {
+    // No concept is literally named PECS I. 37017575 is not a stand-in: the
+    // vocabulary's own ancestry has it as PECS II's direct parent, which
+    // mirrors the clinical relationship -- PECS I targets the interpectoral
+    // plane, PECS II extends that to the serratus plane.
+    expect(techRow("BLOCK_PECS1")?.procedure_concept_id).toBe(37017575)
+    expect(techRow("BLOCK_PECS2")?.procedure_concept_id).toBe(37397715)
+  })
+
+  it("codes serratus and erector spinae plane blocks", () => {
+    expect(techRow("BLOCK_SERRATUS")?.procedure_concept_id).toBe(37018762)
+    // The only ESP concept in this vocabulary names ultrasound guidance, which
+    // the form does not record. Coded anyway: ESP is not a landmark technique
+    // in current practice, so this is very unlikely to be false.
+    expect(techRow("BLOCK_ESP")?.procedure_concept_id).toBe(37311663)
+  })
+
+  it("codes paravertebral without asserting a spinal level the form does not ask for", () => {
+    expect(techRow("BLOCK_PARAVERTEBRAL")?.procedure_concept_id).toBe(4205280)
+  })
+})
+
+describe("the last upper-limb block leaves", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("codes wrist, digital, elbow and IVRA", () => {
+    expect(techRow("BLOCK_WRIST")?.procedure_concept_id).toBe(4332447)
+    // The tree scopes this leaf under Upper extremity, so the hand-specific
+    // concept applies rather than one of SNOMED's five per-toe foot concepts.
+    expect(techRow("BLOCK_DIGITAL")?.procedure_concept_id).toBe(4333956)
+    expect(techRow("BLOCK_ELBOW")?.procedure_concept_id).toBe(4332446)
+    // No concept is literally named "Bier block"; IVRA is the technical name.
+    expect(techRow("BLOCK_BIER")?.procedure_concept_id).toBe(4117443)
+  })
+})
+
+describe("the three confirmed vocabulary gaps stay 0, even under a mapped REGIONAL", () => {
+  const techRow = (code: string) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.techniques = [code]
+    return mapCasesToOmop([c as never]).procedure_occurrence
+      .find(row => row.procedure_source_value === `ANAESTHESIA_TECHNIQUE:${code}`)
+  }
+
+  it("leaves quadratus lumborum, rectus sheath and sub-Tenon's inherited from their region, not from REGIONAL", () => {
+    // These three have no procedure concept anywhere in this vocabulary --
+    // only anatomy and, for QL, a syndrome. They inherit their nearer region
+    // ancestor (trunk, or the peripheral umbrella for sub-Tenon's), which is
+    // still the coarser but true statement, and never fall all the way back to
+    // the newly-mapped REGIONAL, because a nearer ancestor already resolves
+    // them.
+    expect(techRow("BLOCK_QL")?.procedure_concept_id).toBe(4125199)
+    expect(techRow("BLOCK_RECTUS")?.procedure_concept_id).toBe(4125199)
+    expect(techRow("BLOCK_SUB_TENONS")?.procedure_concept_id).toBe(4140397)
+  })
+})
+
+describe("postop recovery: Aldrete total, PONV, disposition, paediatric pain", () => {
+  const withPostop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { postop: Record<string, unknown> }
+    Object.assign(c.postop, patch)
+    return c as never
+  }
+
+  it("carries the Aldrete total as a measurement, and leaves its subscores uncoded", () => {
+    const bundle = mapCasesToOmop([completeCase() as never])
+    const total = bundle.measurement.find(r => r.measurement_source_value === "LOSPOR:ALDRETE_TOTAL")
+    const activity = bundle.observation.find(r => r.observation_source_value === "LOSPOR:ALDRETE_ACTIVITY")
+
+    expect(total).toMatchObject({ measurement_concept_id: 40488911, value_as_number: 10 })
+    // The five subscores have no concept in this vocabulary -- only the total
+    // is a scored entity in SNOMED, the same shape as RCRI's criteria.
+    expect(activity?.observation_concept_id).toBe(0)
+  })
+
+  it("codes PONV as a condition that occurred, not an observation about one", () => {
+    const withPonv = mapCasesToOmop([withPostop({ ponv: true })])
+    const row = withPonv.condition_occurrence.find(r => r.condition_source_value === "LOSPOR:PONV")
+
+    expect(row?.condition_concept_id).toBe(4032472)
+
+    // Recorded only when present, the same rule as every other "no row = not
+    // present" field in this file.
+    const withoutPonv = mapCasesToOmop([withPostop({ ponv: false })])
+    expect(withoutPonv.condition_occurrence.some(r => r.condition_source_value === "LOSPOR:PONV")).toBe(false)
+  })
+
+  it("codes ward and ICU disposition, and leaves PACU uncoded", () => {
+    const dispRow = (disposition: string) => mapCasesToOmop([withPostop({ disposition })])
+      .observation.find(r => r.observation_source_value === "LOSPOR:DISPOSITION")
+
+    expect(dispRow("WARD")?.observation_concept_id).toBe(4142136)
+    expect(dispRow("ICU")?.observation_concept_id).toBe(4138933)
+    // "Post Anesthesia Care Unit" (45880582) exists but is a Meas Value/Answer
+    // concept, not a fact for observation_concept_id, and nothing else names
+    // remaining in recovery as an event -- a real vocabulary gap.
+    expect(dispRow("PACU")?.observation_concept_id).toBe(0)
+  })
+
+  it("codes FLACC as a measurement and FPS-R as an observation, matching where SNOMED puts each", () => {
+    const flacc = mapCasesToOmop([withPostop({ pediatricPainScale: "FLACC", pediatricPainScore: 3 })])
+    const fpsR = mapCasesToOmop([withPostop({ pediatricPainScale: "FPS_R", pediatricPainScore: 4 })])
+    const nrs = mapCasesToOmop([withPostop({ pediatricPainScale: "NRS", pediatricPainScore: 5 })])
+
+    const flaccRow = flacc.measurement.find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")
+    const fpsRRow = fpsR.observation.find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_PAIN_FPS_R_0_10")
+    const nrsRow = nrs.measurement.find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_NRS_0_10")
+
+    expect(flaccRow).toMatchObject({ measurement_concept_id: 3037051, value_as_number: 3 })
+    expect(fpsRRow).toMatchObject({ observation_concept_id: 40760807, value_as_number: 4 })
+    // NRS now carries 43055141, the same concept as the adult NRS -- it is the
+    // same 0-10 scale, and the concept was simply absent from the vocabulary
+    // bundle when this branch was written.
+    expect(nrsRow?.measurement_concept_id).toBe(43055141)
+  })
+})
+
+describe("telling apart a home medication, a premedication and an intraop drug", () => {
+  it("gives the same drug three different rows when given in three different contexts", () => {
+    // The exact regression this closes: before today all three collapsed to
+    // drug_type_concept_id 32817 and a bare "ATC:CODE - Name" source value, so
+    // a researcher could not tell a patient's home midazolam from a
+    // premedication dose from an intraop bolus of the same drug -- the rows
+    // were textually identical.
+    const c = completeCase() as unknown as {
+      preop: Record<string, unknown>
+      intraop: Record<string, unknown>
+      events: Record<string, unknown>[]
+    }
+    c.preop.medications = [{
+      kind: "CURRENT", nameRaw: "Midazolam", inn: "midazolam", atcCode: "N05CD08",
+      dose: "5 mg", route: "PO", sourceVocabulary: "ATC", sourceCode: "N05CD08",
+      standardConceptId: 19069898, mappingStatus: "MAPPED", ordinal: 0,
+    }]
+    c.intraop.premedicationRows = [{
+      phase: "morning", nameRaw: "Midazolam", inn: "midazolam", atcCode: "N05CD08",
+      standardConceptId: 19069898, mappingStatus: "MAPPED", dose: "2 mg", route: "IV", ordinal: 0,
+    }]
+    c.events = [{
+      type: "drug", timestamp: c.intraop.startTime, atcCode: "N05CD08",
+      standardConceptId: 19069898, mappingStatus: "MAPPED",
+      metadataJson: { dose: "1", name: "Midazolam" },
+    }]
+
+    const bundle = mapCasesToOmop([c as never])
+    const rows = bundle.drug_exposure.filter(r => r.drug_concept_id === 19069898)
+
+    expect(rows).toHaveLength(3)
+    const bySource = new Map(rows.map(r => [r.drug_source_value, r]))
+
+    expect(bySource.get("ATC:N05CD08 - Midazolam")).toMatchObject({ drug_type_concept_id: 32865 })
+    expect(bySource.get("PREMED:ATC:N05CD08 - Midazolam")).toMatchObject({ drug_type_concept_id: 32818 })
+    expect(bySource.get("INTRAOP:ATC:N05CD08 - Midazolam")).toMatchObject({ drug_type_concept_id: 32818 })
+
+    // The three source values are distinct even though the concept is not --
+    // this is the actual fix, since drug_type_concept_id alone cannot separate
+    // the last two.
+    expect(new Set(rows.map(r => r.drug_source_value)).size).toBe(3)
+  })
+})
+
+describe("the numbers an anaesthetic chart records, coded", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never])
+  const meas = (source: string) => bundle().measurement
+    .find(r => r.measurement_source_value === source)
+  const obs = (source: string) => bundle().observation
+    .find(r => r.observation_source_value === source)
+
+  it("codes the inspired oxygen beside its own LOINC code", () => {
+    // It carried the right LOINC code and then threw the concept away, emitted
+    // as a bare source string. Not a vocabulary gap -- the concept existed the
+    // whole time.
+    //
+    // Glucose was the other half of this and is no longer a vital: it left the
+    // monitoring options when the labs lane was built, so the row it was
+    // charted in became unreachable, and it is now recorded as a lab draw. The
+    // labs path codes it to the same LOINC 2345-7 in mmol/L, so the coding this
+    // once asserted is unchanged -- only the route to it is.
+    expect(meas("LOINC:3150-0")?.measurement_concept_id).toBe(3020716)
+  })
+
+  it("puts each quantity in the table its concept's domain names", () => {
+    // Which table a value belongs in is the vocabulary's decision. Fresh gas
+    // flow and inspired nitrous oxide are Observation-domain concepts and the
+    // rest are Measurement-domain, even though all of them read as ordinary
+    // numbers on the same chart.
+    expect(meas("LOSPOR:URINE_OUTPUT_ML")?.measurement_concept_id).toBe(3014315)
+    // Body surface area is a paediatric field and is asserted against the
+    // paediatric fixture in pediatric-omop.test.ts instead.
+    expect(meas("LOSPOR:PEEP_CMH2O")?.measurement_concept_id).toBe(3022875)
+    expect(meas("LOSPOR:VOLATILE_AGENT_PERCENT")?.measurement_concept_id).toBe(4354275)
+
+    expect(obs("LOSPOR:FGF_L_PER_MIN")?.observation_concept_id).toBe(4108006)
+    expect(obs("LOSPOR:FIN2O_PERCENT")?.observation_concept_id).toBe(4354273)
+    expect(obs("LOSPOR:ANAESTHESIA_DURATION_MIN")?.observation_concept_id).toBe(1176109)
+  })
+
+  it("carries a real unit rather than leaving unit_concept_id at 0", () => {
+    // A number with no unit concept is only half a measurement: 400 of what.
+    expect(meas("LOSPOR:URINE_OUTPUT_ML")?.unit_concept_id).toBe(8587)
+    expect(meas("LOSPOR:PEEP_CMH2O")?.unit_concept_id).toBe(44777590)
+    expect(meas("LOSPOR:VOLATILE_AGENT_PERCENT")?.unit_concept_id).toBe(8554)
+  })
+
+  it("leaves inspired air uncoded, because the vocabulary names only oxygen and nitrous oxide", () => {
+    // A real gap, not an oversight: SNOMED has inspired oxygen and inspired
+    // nitrous oxide concepts and no inspired-air equivalent. It sits in
+    // measurement beside the inspired oxygen it is computed alongside.
+    const fiAir = bundle().measurement.find(r => r.measurement_source_value === "LOSPOR:FIAIR_PERCENT")
+    if (fiAir) expect(fiAir.measurement_concept_id).toBe(0)
+  })
+})
+
+describe("ventilation, the airway tools, and vascular access", () => {
+  const withIntraop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    Object.assign(c.intraop, patch)
+    return mapCasesToOmop([c as never])
+  }
+  const obsIn = (b: ReturnType<typeof mapCasesToOmop>, s: string) =>
+    b.observation.find(r => r.observation_source_value === s)
+  const measIn = (b: ReturnType<typeof mapCasesToOmop>, s: string) =>
+    b.measurement.find(r => r.measurement_source_value === s)
+
+  it("codes the ventilation flags without asserting a route or modality", () => {
+    const b = withIntraop({ ippv: true, jetVentilation: true, ventilationModes: ["VCV"] })
+
+    // Unqualified concepts. The narrower ones -- "via endotracheal tube",
+    // "high frequency" -- would each claim something these plain flags do not
+    // record.
+    expect(obsIn(b, "LOSPOR:IPPV")).toMatchObject({
+      observation_concept_id: 607086, value_as_concept_id: 4188539,
+    })
+    expect(obsIn(b, "LOSPOR:JET_VENTILATION")).toMatchObject({
+      observation_concept_id: 4168475, value_as_concept_id: 4188539,
+    })
+    // Measurement, not observation (3004921 is Measurement-domain), and VCV
+    // now carries a real answer concept alongside the text.
+    expect(measIn(b, "LOSPOR:VENTILATION_MODE")).toMatchObject({
+      measurement_concept_id: 3004921, value_as_concept_id: 37152413, value_source_value: "VCV",
+    })
+  })
+
+  it("codes every ventilation mode remaining in the schema", () => {
+    // PAV and Volume Guarantee (VG) are no longer selectable at all -- both
+    // were removed from the schema entirely, having no concept anywhere in
+    // this vocabulary even under semantic search.
+    const b = withIntraop({
+      ventilationModes: ["A/C", "PSV", "BiPAP", "CPAP", "SIMV+PSV", "VCV", "PCV", "PRVC", "APRV", "HFOV"],
+    })
+    const byMode = (mode: string) => b.measurement.find(r => r.measurement_source_value === "LOSPOR:VENTILATION_MODE" && r.value_source_value === mode)
+    expect(byMode("A/C")!.value_as_concept_id).toBe(4055375)
+    expect(byMode("PSV")!.value_as_concept_id).toBe(37154096)
+    expect(byMode("BiPAP")!.value_as_concept_id).toBe(3657511)
+    expect(byMode("CPAP")!.value_as_concept_id).toBe(4165535)
+    expect(byMode("SIMV+PSV")!.value_as_concept_id).toBe(4245036)
+    expect(byMode("VCV")!.value_as_concept_id).toBe(37152413)
+    expect(byMode("PCV")!.value_as_concept_id).toBe(37151337)
+    expect(byMode("APRV")!.value_as_concept_id).toBe(4072515)
+    expect(byMode("HFOV")!.value_as_concept_id).toBe(4074666)
+    expect(byMode("PRVC")!.value_as_concept_id).toBe(37152411)
+  })
+
+  it("codes fibreoptic intubation, not diagnostic bronchoscopy", () => {
+    // 604177 (Flexible bronchoscopy) is the tempting match and is a diagnostic
+    // procedure; this field sits among the airway tools.
+    expect(obsIn(withIntraop({ fob: true }), "LOSPOR:FIBREOPTIC_BRONCHOSCOPY"))
+      .toMatchObject({ observation_concept_id: 4337615, value_as_concept_id: 4188539 })
+  })
+
+  it("codes each vascular access site as the distinct procedure it is", () => {
+    const siteConcept = (site: string) => {
+      const b = withIntraop({ vascularAccessRows: [{ site, siteLabel: site, preexisting: false }] })
+      return b.procedure_occurrence.find(r => String(r.procedure_source_value).startsWith("VASCULAR_ACCESS:"))
+        ?.procedure_concept_id
+    }
+
+    // A radial arterial line and an internal jugular central line are
+    // different procedures and used to share concept 0.
+    expect(siteConcept("ART_RADIAL")).toBe(4051187)
+    expect(siteConcept("ART_ULNAR")).toBe(4052409)
+    expect(siteConcept("CVK_IJV")).toBe(4051188)
+    expect(siteConcept("CVK_SUBCLAVIAN")).toBe(4052415)
+    expect(siteConcept("VEN_PERIPHERAL")).toBe(4049832)
+
+    // Carotid has no arterial concept in SNOMED and the PICC veins are not
+    // separately named, so each inherits a truthful parent rather than
+    // borrowing a neighbouring site's id.
+    expect(siteConcept("ART_CAROTID")).toBe(4311043)
+    expect(siteConcept("PICC_BASILIC")).toBe(4322380)
+    expect(siteConcept("CVK_AXILLARY")).toBe(4050424)
+  })
+})
+
+describe("devices, which had concepts and nowhere to put them", () => {
+  const withIntraop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    Object.assign(c.intraop, patch)
+    return mapCasesToOmop([c as never])
+  }
+  const dev = (b: ReturnType<typeof mapCasesToOmop>, src: string) =>
+    b.device_exposure.find(r => r.device_source_value === src)
+
+  it("emits the device alongside the act of placing it, not instead of it", () => {
+    // Both are true and they answer different questions: a cohort of patients
+    // intubated wants the procedure, a cohort of cases using a
+    // videolaryngoscope wants the device.
+    const b = withIntraop({ airwayDevices: ["ORAL_ETT"], airwayTools: ["VIDEO_LARY"] })
+
+    expect(dev(b, "AIRWAY_DEVICE:ORAL_ETT")?.device_concept_id).toBe(4097216)
+    expect(dev(b, "AIRWAY_TOOL:VIDEO_LARY")?.device_concept_id).toBe(40492457)
+    expect(b.procedure_occurrence.some(r =>
+      r.procedure_source_value === "AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL")).toBe(true)
+  })
+
+  it("codes the devices that are instruments and leaves the techniques alone", () => {
+    const b = withIntraop({
+      airwayDevices: ["LMA", "OPA", "NPA", "ENDOBRONCHIAL_TUBE", "FACE_MASK"],
+      airwayTools: ["BOUGIE", "DIRECT_LARY", "FOB", "AWAKE", "RETROGRADE"],
+    })
+
+    expect(dev(b, "AIRWAY_DEVICE:LMA")?.device_concept_id).toBe(4106029)
+    expect(dev(b, "AIRWAY_DEVICE:OPA")?.device_concept_id).toBe(4139134)
+    expect(dev(b, "AIRWAY_DEVICE:NPA")?.device_concept_id).toBe(4266238)
+    expect(dev(b, "AIRWAY_DEVICE:ENDOBRONCHIAL_TUBE")?.device_concept_id).toBe(4161796)
+    expect(dev(b, "AIRWAY_TOOL:BOUGIE")?.device_concept_id).toBe(4094381)
+    expect(dev(b, "AIRWAY_TOOL:FOB")?.device_concept_id).toBe(4220610)
+
+    expect(dev(b, "AIRWAY_DEVICE:FACE_MASK")?.device_concept_id).toBe(4126216)
+    // "Awake" and "retrograde" are techniques rather than instruments, so they
+    // have no device concept. Each still gets a row -- the technique was used
+    // -- carrying 0 rather than a borrowed neighbour.
+    expect(dev(b, "AIRWAY_TOOL:AWAKE")?.device_concept_id).toBe(0)
+    expect(dev(b, "AIRWAY_TOOL:RETROGRADE")?.device_concept_id).toBe(0)
+  })
+
+  it("codes cuffed and uncuffed as the registered answers they are", () => {
+    // Unusually, both halves are codeable: LOINC registers these as the
+    // answers to question 40771868, so this is not the Yes/No qualifier
+    // pattern used for the history questions.
+    const cuffed = withIntraop({ oralCuffed: true }).observation
+      .find(r => r.observation_source_value === "LOSPOR:ORAL_TUBE_CUFFED")
+    const uncuffed = withIntraop({ oralCuffed: false }).observation
+      .find(r => r.observation_source_value === "LOSPOR:ORAL_TUBE_CUFFED")
+
+    expect(cuffed).toMatchObject({ observation_concept_id: 40771868, value_as_concept_id: 36311248 })
+    expect(uncuffed).toMatchObject({ observation_concept_id: 40771868, value_as_concept_id: 36311029 })
+  })
+})
+
+describe("the last concepts the vocabulary bundle was missing", () => {
+  const bundle = () => mapCasesToOmop([completeCase() as never])
+
+  it("codes the NRS pain score, adult and paediatric, as the same scale", () => {
+    // Left at 0 with a comment saying no reviewed mapping existed. That was
+    // true of the bundle shipping at the time and is not any more -- 43055141
+    // is standard, Measurement-domain, and exactly this 0-10 scale.
+    expect(bundle().measurement.find(r => r.measurement_source_value === "LOINC:72514-3"))
+      .toMatchObject({ measurement_concept_id: 43055141 })
+
+    const c = completeCase() as unknown as { postop: Record<string, unknown> }
+    c.postop.pediatricPainScale = "NRS"
+    c.postop.pediatricPainScore = 4
+    expect(mapCasesToOmop([c as never]).measurement
+      .find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_NRS_0_10"))
+      .toMatchObject({ measurement_concept_id: 43055141, value_as_number: 4 })
+  })
+
+  it("codes the face mask, leaving the surgical airway as the only uncoded device", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.airwayDevices = ["FACE_MASK", "SURGICAL_AIRWAY"]
+    const devices = mapCasesToOmop([c as never]).device_exposure
+
+    expect(devices.find(d => d.device_source_value === "AIRWAY_DEVICE:FACE_MASK")?.device_concept_id)
+      .toBe(4126216)
+    // No device concept: the vocabulary names the cricothyroidotomy procedure
+    // and its cannula separately, and which was used is not recorded.
+    expect(devices.find(d => d.device_source_value === "AIRWAY_DEVICE:SURGICAL_AIRWAY")?.device_concept_id)
+      .toBe(0)
+  })
+
+  it("codes the fasting question while keeping the interval detail in the value", () => {
+    const pediatric = mapCasesToOmop([pediatricCaseFixture() as never]).observation
+      .find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")
+
+    expect(pediatric?.observation_concept_id).toBe(3031632)
+    // No vocabulary models a per-interval fasting assessment, so the JSON
+    // stays as the value rather than being flattened away.
+    expect(pediatric?.value_as_string).toContain("{")
+  })
+})
+
+describe("a recorded dose of zero survives, the same way a recorded volume of zero does", () => {
+  // parseFloat(x) || null turns 0 into null, because 0 is falsy in JS. A
+  // zero-rate infusion charted while paused, a genuinely zero-dose entry, or a
+  // premedication dose of 0 all used to export identically to "no dose was
+  // ever recorded" -- the same failure fluid-figures-export.test.ts already
+  // guards crystalloidsMl/urineMl/bloodLossMl against, on a line that guard
+  // never reached.
+
+  it("keeps a zero preop medication dose", () => {
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.medications = [{
+      kind: "CURRENT", nameRaw: "Diazepam", dose: "0", route: "PO",
+      sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905,
+      mappingStatus: "MAPPED", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => r.drug_source_value === "ATC:N05BA01 - Diazepam")
+
+    expect(row?.dose_value).toBe(0)
+  })
+
+  it("keeps a zero intraop drug/infusion/fluid dose", () => {
+    const c = completeCase() as unknown as { events: Record<string, unknown>[] }
+    c.events = [{
+      type: "fluid_start", timestamp: (completeCase() as never as { intraop: { startTime: Date } }).intraop.startTime,
+      volume: 0, fluidId: "fl-zero", fluidCategory: "CRYSTALLOID",
+      metadataJson: { name: "Test fluid" }, atcCode: null,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => String(r.drug_source_value).includes("Test fluid"))
+
+    expect(row?.dose_value).toBe(0)
+  })
+
+  it("keeps a zero premedication dose", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.premedicationRows = [{
+      phase: "morning", nameRaw: "Test premed", dose: "0", route: "PO",
+      atcCode: null, standardConceptId: null, mappingStatus: "SOURCE_ONLY", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => String(r.drug_source_value).includes("Test premed"))
+
+    expect(row?.dose_value).toBe(0)
+  })
+})
+
+describe("fluid and premedication administration as procedure facts", () => {
+  const withIntraop = (patch: Record<string, unknown>) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    Object.assign(c.intraop, patch)
+    return mapCasesToOmop([c as never])
+  }
+  const proc = (b: ReturnType<typeof mapCasesToOmop>, src: string) =>
+    b.procedure_occurrence.filter(r => r.procedure_source_value === src)
+
+  it("emits the administration fact alongside the volume, not instead of it", () => {
+    const b = withIntraop({ colloidsMl: 500, bloodMl: 300 })
+
+    expect(proc(b, "LOSPOR:COLLOID_ADMINISTRATION")[0]?.procedure_concept_id).toBe(44790654)
+    expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")[0]?.procedure_concept_id).toBe(4024656)
+    // The mL figure is unaffected -- still an observation, still uncoded, since
+    // PROCEDURE_OCCURRENCE has nowhere to put a continuous volume.
+    expect(b.observation.find(r => r.observation_source_value === "LOSPOR:COLLOIDS_ML")
+      ?.value_as_number).toBe(500)
+  })
+
+  it("does not claim an administration happened when the recorded total is a documented zero", () => {
+    // colloidsMl: 0 means "none given", not "unknown". A procedure row here
+    // would assert something that was recorded not to have occurred.
+    const b = withIntraop({ colloidsMl: 0, bloodMl: 0 })
+
+    expect(proc(b, "LOSPOR:COLLOID_ADMINISTRATION")).toHaveLength(0)
+    expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")).toHaveLength(0)
+  })
+
+  it("never codes crystalloids, because no concept names the pooled total honestly", () => {
+    // Every candidate either asserts a specific fluid (Hartmann's, dextrose,
+    // saline) this pooled figure does not distinguish, or is generic enough
+    // (Intravenous infusion) to be equally true of a drug or a transfusion.
+    const b = withIntraop({ crystalloidsMl: 1000 })
+    expect(proc(b, "LOSPOR:CRYSTALLOID_ADMINISTRATION")).toHaveLength(0)
+    expect(b.procedure_occurrence.filter(r => String(r.procedure_source_value).includes("CRYSTALLOID")))
+      .toHaveLength(0)
+  })
+
+  it("codes premedication as a procedure fact alongside its drug row", () => {
+    const bundle = mapCasesToOmop([completeCase() as never])
+    const fact = proc(bundle, "LOSPOR:PREMEDICATION")
+
+    expect(fact).toHaveLength(1)
+    expect(fact[0].procedure_concept_id).toBe(4169397)
+    // The drug row still says which substance; this says the clinical act of
+    // premedicating happened. Neither replaces the other.
+    expect(bundle.drug_exposure.some(r => String(r.drug_source_value).startsWith("PREMED:"))).toBe(true)
+  })
+})
+
+describe("dose_unit_source_value carries the unit, not the whole dose string", () => {
+  // There is no structured unit column on Medication or
+  // PremedicationAdministration -- dose is one free-text field, "5 mg" -- so
+  // this used to put the whole string where a researcher expects "mg" alone,
+  // duplicating the number already readable from dose_value.
+  it("isolates the unit for a preop medication", () => {
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.medications = [{
+      kind: "CURRENT", nameRaw: "Diazepam", dose: "5 mg", route: "PO",
+      sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905,
+      mappingStatus: "MAPPED", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => r.drug_source_value === "ATC:N05BA01 - Diazepam")
+
+    expect(row?.dose_value).toBe(5)
+    expect(row?.dose_unit_source_value).toBe("mg")
+  })
+
+  it("isolates the unit for a premedication dose", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.premedicationRows = [{
+      phase: "morning", nameRaw: "Test premed", dose: "2.5 mL", route: "IV",
+      atcCode: null, standardConceptId: null, mappingStatus: "SOURCE_ONLY", ordinal: 0,
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure
+      .find(r => String(r.drug_source_value).includes("Test premed"))
+
+    expect(row?.dose_value).toBe(2.5)
+    expect(row?.dose_unit_source_value).toBe("mL")
+  })
+})
+
+describe("laboratory results carry the time the specimen was drawn", () => {
+  const labRow = (over: Record<string, unknown>) => ({
+    test: "Haemoglobin (Hb)", valueNum: 120, value: "120", unitCanon: "g/L",
+    loincCode: "718-7", abnormalFlag: null, referenceLow: null, referenceHigh: null,
+    standardConceptId: 3000963, mappingStatus: "MAPPED", ...over,
+  })
+
+  it("stamps a preop result with its own takenAt, not the record's date", () => {
+    // The bug this fixes: every lab row was stamped with the preoperative
+    // vitals date, so a result drawn three days before surgery and one drawn
+    // on the morning of it were indistinguishable in the export. takenAt was
+    // stored faithfully by relational-sync all along and thrown away here.
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.labRows = [labRow({ takenAt: new Date("2026-05-29T06:15:00Z") })]
+
+    const row = mapCasesToOmop([c as never]).measurement
+      .find(r => r.measurement_source_value === "LOINC:718-7")
+
+    expect(row?.measurement_date).toBe("2026-05-29")
+    // The datetime column keeps the whole instant. Truncating it to the day,
+    // which is what this used to do, is what made two draws indistinguishable.
+    expect(row?.measurement_datetime).toBe("2026-05-29T06:15:00.000Z")
+  })
+
+  it("falls back to the record's date when a result has no draw time", () => {
+    // Preoperative labs typed by hand routinely carry no draw time. Dropping
+    // the row, or leaving its date null, would both be worse than saying it
+    // belongs to the case.
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.labRows = [labRow({ takenAt: null })]
+
+    const row = mapCasesToOmop([c as never]).measurement
+      .find(r => r.measurement_source_value === "LOINC:718-7")
+
+    expect(row?.measurement_date).toBe("2026-06-01")
+  })
+
+  it("exports intraoperative draws, each at its own time", () => {
+    // The point of intraop labs: a gas at induction and another after the
+    // blood are two draws on the timeline, not one value that got edited.
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.labRows = [
+      labRow({ test: "pH", loincCode: "2744-1", valueNum: 7.35, value: "7.35", unitCanon: null, standardConceptId: 3014605, takenAt: new Date("2026-06-01T08:20:00Z") }),
+      labRow({ test: "pH", loincCode: "2744-1", valueNum: 7.21, value: "7.21", unitCanon: null, standardConceptId: 3014605, takenAt: new Date("2026-06-01T08:50:00Z") }),
+    ]
+
+    const rows = mapCasesToOmop([c as never]).measurement
+      .filter(r => r.measurement_source_value === "LOINC:2744-1")
+
+    expect(rows).toHaveLength(2)
+    expect(rows.map(r => r.value_as_number)).toEqual([7.35, 7.21])
+    // Two distinct instants, so a falling trend is visible rather than being
+    // collapsed onto one timestamp.
+    expect(new Set(rows.map(r => r.measurement_datetime)).size).toBe(2)
+  })
+
+  it("keeps a preop and an intraop result of the same test apart", () => {
+    // Same analyte, same LOINC, two sections. Without takenAt these were one
+    // undifferentiated pair of rows on the same date.
+    const c = completeCase() as unknown as {
+      preop: Record<string, unknown>
+      intraop: Record<string, unknown>
+    }
+    c.preop.labRows = [labRow({ takenAt: new Date("2026-05-30T07:00:00Z") })]
+    c.intraop.labRows = [labRow({ valueNum: 88, value: "88", takenAt: new Date("2026-06-01T08:40:00Z") })]
+
+    const rows = mapCasesToOmop([c as never]).measurement
+      .filter(r => r.measurement_source_value === "LOINC:718-7")
+
+    expect(rows).toHaveLength(2)
+    expect(rows.map(r => r.measurement_date).sort()).toEqual(["2026-05-30", "2026-06-01"])
+  })
+
+  it("carries the abnormal flag at the draw's time too", () => {
+    // The flag observation is keyed to the same source value as its
+    // measurement, so the two must agree about when the result happened.
+    // The fixture's own preop rows are cleared so the assertion cannot match
+    // the preoperative haemoglobin instead of the intraoperative one.
+    const c = completeCase() as unknown as {
+      preop: Record<string, unknown>
+      intraop: Record<string, unknown>
+    }
+    c.preop.labRows = []
+    c.intraop.labRows = [labRow({ abnormalFlag: "low", takenAt: new Date("2026-06-01T08:35:00Z") })]
+
+    const flag = mapCasesToOmop([c as never]).observation
+      .find(r => r.observation_source_value === "LOSPOR:LAB_ABNORMAL_FLAG"
+        && String(r.value_as_string).includes("LOINC:718-7"))
+
+    expect(flag?.value_as_string).toBe("LOINC:718-7=low")
+    expect(flag?.observation_date).toBe("2026-06-01")
+  })
+})
+
+describe("why a case has no airway device of its own", () => {
+  it("states an arrival intubation as a history, not as a procedure this team did", () => {
+    // The vocabulary's own decomposition: "Endotracheal tube present" (4168966)
+    // is non-standard, and Athena maps it to 1340204 (History of event) with
+    // "Maps to value" 4013354 (Insertion of endotracheal tube). Writing a
+    // procedure_occurrence row instead would credit this team with an
+    // intubation somebody else performed.
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.presentsIntubated = true
+
+    const bundle = mapCasesToOmop([c as never])
+    const row = bundle.observation.find(r => r.observation_source_value === "LOSPOR:PRESENTS_INTUBATED")
+
+    expect(row?.observation_concept_id).toBe(1340204)
+    expect(row?.value_as_concept_id).toBe(4013354)
+    expect(bundle.procedure_occurrence.some(
+      r => r.procedure_source_value === "LOSPOR:PRESENTS_INTUBATED")).toBe(false)
+  })
+
+  it("states no airway intervention as Airway management answered No", () => {
+    // CDM cannot record a procedure that did not happen -- a
+    // procedure_occurrence row asserts that it did -- so the negative has to be
+    // an observation, the same shape ippv and jetVentilation already use.
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.airwayNotApplicable = true
+
+    const row = mapCasesToOmop([c as never]).observation
+      .find(r => r.observation_source_value === "LOSPOR:AIRWAY_NOT_APPLICABLE")
+
+    expect(row?.observation_concept_id).toBe(4303568)
+    expect(row?.value_as_concept_id).toBe(4188540)
+  })
+
+  it("says nothing at all when neither was asserted", () => {
+    // False is the ordinary case: the airway rows themselves describe what was
+    // done, and a row on every case claiming "did not arrive intubated" would
+    // be noise a researcher has to filter out.
+    const bundle = mapCasesToOmop([completeCase() as never])
+
+    expect(bundle.observation.some(
+      r => r.observation_source_value === "LOSPOR:PRESENTS_INTUBATED")).toBe(false)
+    expect(bundle.observation.some(
+      r => r.observation_source_value === "LOSPOR:AIRWAY_NOT_APPLICABLE")).toBe(false)
+  })
+})
+
+describe("a line the patient arrived with, and a line placed on top of it", () => {
+  it("keeps both, and only credits this team with the one they placed", () => {
+    // The common ward-to-theatre case: the patient comes down with a
+    // peripheral cannula already in, and the anaesthetist puts in an arterial
+    // line. Both are real and both must survive; only one is work done here.
+    const c = completeCase() as unknown as {
+      intraop: { vascularAccessRows: Record<string, unknown>[] }
+    }
+    c.intraop.vascularAccessRows = [
+      {
+        site: "VEN_PERIPHERAL", siteLabel: "Peripheral IV", size: "18", sizeUnit: "G",
+        depthCm: null, lumens: null, preexisting: true, ordinal: 0,
+        sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "VEN_PERIPHERAL",
+        standardConceptId: 4133183, mappingStatus: "MAPPED",
+      },
+      {
+        site: "ART_RADIAL", siteLabel: "Radial", size: "20", sizeUnit: "G",
+        depthCm: null, lumens: null, preexisting: false, ordinal: 1,
+        sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "ART_RADIAL",
+        standardConceptId: 4311043, mappingStatus: "MAPPED",
+      },
+    ]
+    const bundle = mapCasesToOmop([c as never])
+
+    // The line they placed is a procedure. The one that was already there is
+    // not, and must not be counted as work done in this theatre.
+    const procedures = bundle.procedure_occurrence
+      .filter(row => /VASCULAR_ACCESS/.test(String(row.procedure_source_value)))
+    expect(procedures).toHaveLength(1)
+    expect(procedures[0].procedure_concept_id).toBe(4311043)
+
+    // The pre-existing one still reaches the export, as a history.
+    const history = bundle.observation.find(row =>
+      String(row.observation_source_value).includes("Peripheral IV")
+      && row.observation_concept_id === 1340204)
+    expect(history, "the line the patient arrived with must still be recorded").toBeDefined()
+    expect(history!.value_as_concept_id).toBe(4133183)
+
+    // And the per-line flag still answers the question for both of them,
+    // including the negative the history row cannot state.
+    const flags = bundle.observation
+      .filter(row => row.observation_source_value === "LOSPOR:VASCULAR_ACCESS_PREEXISTING")
+      .map(row => row.value_as_string)
+    expect(flags).toEqual(expect.arrayContaining([
+      "Peripheral IV=true",
+      "Radial=false",
+    ]))
   })
 })

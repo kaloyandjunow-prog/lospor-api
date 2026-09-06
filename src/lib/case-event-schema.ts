@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { canonicalConcentrationUnit } from "@lospor/core/clinical-rule-vocabulary"
 import { isBloodProductFluid } from "@lospor/core/intraop-fluids"
+import { INTRAOP_VITAL_RULES } from "@lospor/core/intraop-vitals"
 
 const numericValue = z.number().finite()
 const doseValue = z.union([z.string().max(80), numericValue])
@@ -35,6 +36,21 @@ function positiveRate(value: unknown): boolean {
  * kinds carry additional projection fields. Drug route-profile audit fields
  * are explicit so malformed provenance cannot be silently persisted.
  */
+/** One bounded, optional number per charted vital, from the shared rules. */
+function vitalFields(): Record<string, z.ZodTypeAny> {
+  const fields: Record<string, z.ZodTypeAny> = {}
+  for (const [name, rule] of Object.entries(INTRAOP_VITAL_RULES)) {
+    const base = rule.integer ? z.number().int() : z.number()
+    fields[name] = z.preprocess(
+      // A cleared field arrives as "" or null and means "not recorded",
+      // which is not a value to validate.
+      value => (value === "" || value === null ? undefined : value),
+      base.min(rule.min).max(rule.max).optional(),
+    )
+  }
+  return fields
+}
+
 export const caseEventSchema = z.object({
   id: z.string().max(200).optional(),
   ts: z.string().optional(),
@@ -64,6 +80,12 @@ export const caseEventSchema = z.object({
   clinicalPresetId: z.string().min(1).max(240).optional(),
   clinicalPresetVersion: z.number().int().positive().optional(),
   clinicalPresetScope: z.enum(["PLATFORM", "INSTITUTION", "USER"]).optional(),
+  // Every charted vital, bounded. Without these they arrived through
+  // passthrough below and were coerced with a bare Number(), so the API stored
+  // whatever a client sent -- a BIS of -500, a train-of-four of 20 -- with the
+  // only check living in a control the server does not run. Out of range is
+  // refused rather than clamped: a clamped reading is an invented one.
+  ...vitalFields(),
 }).passthrough().superRefine((event, context) => {
   const isFluidRate = event.type === "fluid_rate"
   const isRateStart = event.type === "fluid_start" && event.fluidEntryMode === "RATE"

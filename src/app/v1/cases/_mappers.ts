@@ -194,6 +194,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     currentMedications:       taggedListToStorage(preop.currentMedications),
     familyAnesthesiaProblems,
     familyAnesthesiaDetails,
+    unexplainedAnaesthesiaComplications: preop.unexplainedAnaesthesiaComplications ?? null,
+    malignantHyperthermiaHistory: preop.malignantHyperthermiaHistory ?? null,
+    anticipatedDifficultAirway: preop.anticipatedDifficultAirway ?? null,
     dentalProsthetics: preop.dentalProsthetics ?? null,
     looseTeeth: preop.looseTeeth ?? null,
     smoking: preop.smoking ?? null,
@@ -317,12 +320,13 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
   const DIRECT = [
     "positions","techniques",
     "tubeSize","cuffed","peepCmH2O","airwayNotes","cormackLehane",
+    "presentsIntubated","airwayNotApplicable",
     "lmaSize","oralTubeSize","oralCuffed","nasalTubeSize","nasalCuffed",
     "dltType","dltSide","dltSize","endobronchialSize",
     "volatileAgent",
-    "plexusBlock","cvkSite","arterialLineSite",
+
     "ecg","urinaryCatheter","stomachTube","spO2Monitor","invasiveBP","cvpMonitor",
-    "bglMonitor","bloodGasMonitor","neuroMonitor","nbpMonitor","etco2Monitor",
+    "neuroMonitor","nbpMonitor","etco2Monitor",
     "tempMonitor","paCatheter","tee","bis","entropyMonitor","nirsMonitor",
     "evokedPotentials","tofMonitor",
     "vascularAccesses","premedicationEvening","premedicationMorning","drugsAdministered",
@@ -330,7 +334,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     // they are derived from the fluid events and written server-side in
     // rebuildProjection (case-events.ts), so a client PATCH can't override the
     // single source of truth. The read path (below) still returns them.
-    "bloodProductsNote","urineMl","bloodLossMl","complications",
+    "bloodProductsNote","urineMl","bloodLossMl","labResults","complications",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
     if (has(k)) copyKey(r, full, k)
@@ -475,6 +479,8 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     })(),
     airwayNotes:     intraop.airwayNotes     ?? null,
     cormackLehane:   safeEnum(intraop.cormackLehane, ["I","IIa","IIb","III","IV"] as const),
+    presentsIntubated:   intraop.presentsIntubated   ?? false,
+    airwayNotApplicable: intraop.airwayNotApplicable ?? false,
     airwayDevices:   Array.isArray(intraop.airwayDevices)    ? intraop.airwayDevices    : [],
     ventilationModes:Array.isArray(intraop.ventilationModes) ? intraop.ventilationModes : [],
     dltType:         intraop.dltType         ?? null,
@@ -497,17 +503,12 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
       ? (intraop.ventilationModes as string[]).includes("Jet")
       : (intraop.jetVentilation ?? false),
     volatileAgent:   safeEnum(intraop.volatileAgent,   ["SEVOFLURANE","DESFLURANE","ISOFLURANE"] as const),
-    plexusBlock:     safeEnum(intraop.plexusBlock, ["AXILLARY","INTERSCALENE","SUPRACLAVICULAR","INFRACLAVICULAR","FEMORAL","SCIATIC","POPLITEAL","TAP","ERECTOR_SPINAE"] as const),
-    cvkSite:         safeEnum(intraop.cvkSite, ["INTERNAL_JUGULAR","EXTERNAL_JUGULAR","SUBCLAVIAN","FEMORAL"] as const),
-    arterialLineSite:safeEnum(intraop.arterialLineSite, ["RADIAL","DORSALIS_PEDIS","FEMORAL","BRACHIAL"] as const),
     ecg:              intraop.ecg              ?? false,
     urinaryCatheter:  intraop.urinaryCatheter  ?? false,
     stomachTube:      intraop.stomachTube      ?? false,
     spO2Monitor:      intraop.spO2Monitor      ?? true,
     invasiveBP:       intraop.invasiveBP       ?? false,
     cvpMonitor:       intraop.cvpMonitor       ?? false,
-    bglMonitor:       intraop.bglMonitor       ?? false,
-    bloodGasMonitor:  intraop.bloodGasMonitor  ?? false,
     neuroMonitor:     intraop.neuroMonitor     ?? false,
     nbpMonitor:       intraop.nbpMonitor       ?? true,
     etco2Monitor:     intraop.etco2Monitor     ?? false,
@@ -531,6 +532,7 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     bloodProductsNote: intraop.bloodProductsNote ?? null,
     urineMl:           intraop.urineMl           ?? null,
     bloodLossMl:       intraop.bloodLossMl       ?? null,
+    labResults:        intraop.labResults        ?? [],
     complications:     intraop.complications     ?? null,
   }
 }
@@ -555,11 +557,13 @@ export function mapPreopUpdate(
     "sex", "heightCm", "weightKg", "bloodType", "rhFactor",
     "teamNotes", "physicalExamReport", "notes", "aiOptIn", "comorbidities",
     "allergies", "latexAllergy", "currentMedications",
+    "unexplainedAnaesthesiaComplications", "malignantHyperthermiaHistory",
     "dentalProsthetics", "looseTeeth", "smoking", "substanceAbuse",
     "bpSystolic", "bpDiastolic", "heartRate", "heartArrhythmia", "spO2", "temperature", "respiratoryRate",
     "bpUnobtainable", "heartRateUnobtainable", "spO2Unobtainable", "temperatureUnobtainable", "respiratoryRateUnobtainable",
     "mallampati", "mouthOpeningCm", "thyromental", "neckMobility",
-    "retrognathia", "prominentIncisors", "facialHair", "difficultAirwayNotes", "cormackLehane", "airwayUnobtainable",
+    "retrognathia", "prominentIncisors", "facialHair", "anticipatedDifficultAirway",
+    "difficultAirwayNotes", "cormackLehane", "airwayUnobtainable",
     "asaScore", "elective", "emergencySurgery", "highRiskSurgery",
     "rcriIschemicHeart", "rcriCHF", "rcriCVD", "rcriInsulinDM", "rcriCreatinine",
     "rcriScore", "gutaScore", "apfelScore", "stopBangScore",

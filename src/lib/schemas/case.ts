@@ -67,6 +67,22 @@ const labelledItem = z.object({
   system: z.string().optional(),
 }).passthrough()
 
+/**
+ * Laboratory results, in the one shape both records that hold them use.
+ *
+ * Preoperatively this is a snapshot; intraoperatively it is repeated draws
+ * distinguished by `takenAt`. The validation is identical either way, so it is
+ * written once -- two copies of a clinical shape is how the two drift.
+ */
+const labResultsSchema = z.array(z.object({
+  test:  z.string(),
+  value: z.string(),
+  unit:  z.string().optional(),
+  flag:  z.string().optional(),
+  source: z.enum(["manual", "ai-scan", "import"]).optional(),
+  takenAt: z.string().optional(),
+})).optional()
+
 export const preopSchema = z.object({
   ageYears:  cInt("preop", "ageYears"),
   ageValue:  cInt("preop", "ageValue"),
@@ -97,6 +113,9 @@ export const preopSchema = z.object({
   currentMedications:       z.union([z.string(), z.array(labelledItem)]).optional(),
   familyAnesthesiaProblems: z.boolean().nullable().optional(),
   familyAnesthesiaDetails:  z.string().max(500).nullable().optional(),
+  unexplainedAnaesthesiaComplications: z.boolean().nullable().optional(),
+  malignantHyperthermiaHistory:        z.boolean().nullable().optional(),
+  anticipatedDifficultAirway:          z.boolean().nullable().optional(),
   dentalProsthetics:        z.boolean().nullable().optional(),
   looseTeeth:               z.boolean().nullable().optional(),
   smoking:                  z.boolean().nullable().optional(),
@@ -169,14 +188,7 @@ export const preopSchema = z.object({
   // exist as DB columns and relational-sync already reads them, but every
   // request arrived with them already stripped, so AI-scanned labs were
   // indistinguishable from manually typed ones in the data.
-  labResults: z.array(z.object({
-    test:  z.string(),
-    value: z.string(),
-    unit:  z.string().optional(),
-    flag:  z.string().optional(),
-    source: z.enum(["manual", "ai-scan", "import"]).optional(),
-    takenAt: z.string().optional(),
-  })).optional(),
+  labResults: labResultsSchema,
 }).passthrough().superRefine((data, ctx) => addCoreIssues(validatePreopPatch(data), ctx))
 
 export const intraopSchema = z.object({
@@ -195,6 +207,12 @@ export const intraopSchema = z.object({
   ippv:           z.boolean().optional(),
   jetVentilation: z.boolean().optional(),
   fob:            z.boolean().optional(),
+  // Why this case has no airway device of its own. See the schema comment on
+  // IntraoperativeRecord: both were web-only React state until now, so a case
+  // that arrived intubated looked identical to one whose airway section was
+  // never filled in.
+  presentsIntubated:   z.boolean().optional(),
+  airwayNotApplicable: z.boolean().optional(),
   airwayTools:      z.array(z.unknown()).optional(),
   airwayNotes:      z.string().max(2000).nullable().optional(),
   cormackLehane:    z.enum(["I", "IIa", "IIb", "III", "IV"]).nullable().optional(),
@@ -212,17 +230,17 @@ export const intraopSchema = z.object({
 
   volatileAgent:   z.enum(["SEVOFLURANE", "DESFLURANE", "ISOFLURANE"]).nullable().optional(),
 
-  plexusBlock:      z.enum(["AXILLARY", "INTERSCALENE", "SUPRACLAVICULAR", "INFRACLAVICULAR", "FEMORAL", "SCIATIC", "POPLITEAL", "TAP", "ERECTOR_SPINAE"]).nullable().optional(),
-  cvkSite:          z.enum(["INTERNAL_JUGULAR", "EXTERNAL_JUGULAR", "SUBCLAVIAN", "FEMORAL"]).nullable().optional(),
-  arterialLineSite: z.enum(["RADIAL", "DORSALIS_PEDIS", "FEMORAL", "BRACHIAL"]).nullable().optional(),
 
   ecg: z.boolean().optional(), urinaryCatheter: z.boolean().optional(), stomachTube: z.boolean().optional(),
   spO2Monitor: z.boolean().optional(), invasiveBP: z.boolean().optional(), cvpMonitor: z.boolean().optional(),
-  bglMonitor: z.boolean().optional(), bloodGasMonitor: z.boolean().optional(), neuroMonitor: z.boolean().optional(),
   nbpMonitor: z.boolean().optional(), etco2Monitor: z.boolean().optional(), tempMonitor: z.boolean().optional(),
   paCatheter: z.boolean().optional(), tee: z.boolean().optional(), bis: z.boolean().optional(),
   entropyMonitor: z.boolean().optional(), nirsMonitor: z.boolean().optional(), evokedPotentials: z.boolean().optional(),
   tofMonitor: z.boolean().optional(),
+  neuroMonitor: z.boolean().optional(),
+
+  // The three monitoring values. Bound to the flags above and cleared with
+  // them, so a stored reading always has a monitor behind it.
 
   vascularAccesses:     z.array(z.unknown()).optional(),
   premedicationEvening: z.string().max(500).nullable().optional(),
@@ -238,6 +256,9 @@ export const intraopSchema = z.object({
 
   timeSeriesData: z.array(z.unknown()).optional(),
   keyEvents:      z.array(z.unknown()).optional(),
+  // Draws taken during the case. Same shape as preop's, deliberately: see
+  // labResultsSchema.
+  labResults:     labResultsSchema,
   complications:  z.string().max(2000).nullable().optional(),
 }).passthrough().superRefine((data, ctx) => addCoreIssues(validateIntraopPatch(data), ctx))
 

@@ -92,9 +92,9 @@ export const CASE_SELECT = {
       spO2: true,
       etco2: true,
       temp: true,
-      bgl: true,
-      bglLoincCode: true,
-      bglUnitCanon: true,
+      bis: true,
+      tofRatio: true,
+      cvp: true,
       fgfLitersPerMin: true,
       carrierGas: true,
       fio2Percent: true,
@@ -153,9 +153,17 @@ export const CASE_SELECT = {
       // The airway examination, as distinct from the difficult-airway history.
       mouthOpeningCm: true, thyromental: true, neckMobility: true, upperLipBiteTest: true,
       retrognathia: true, prominentIncisors: true, facialHair: true,
-      difficultAirwayNotes: true,
+      difficultAirwayNotes: true, anticipatedDifficultAirway: true,
+      // The two anaesthesia-history questions that are about this patient
+      // rather than their family.
+      malignantHyperthermiaHistory: true, unexplainedAnaesthesiaComplications: true,
       currentMedications: true, rcriScore: true, apfelScore: true, stopBangScore: true,
       povocScore: true, povocRiskPercent: true, coldsScore: true, pediatricFasting: true,
+      // The COLDS factors, for the same reason as the risk factors above: the
+      // score alone does not say whether a child was postponed for a two-week
+      // coryza or for the airway the operation needed.
+      coldsApplicable: true, coldsCurrentSymptoms: true, coldsOnset: true,
+      coldsLungDisease: true, coldsAirwayDevice: true, coldsSurgery: true,
       difficultAirwayHistory: true, mallampati: true, labResults: true,
       labRows: {
         select: {

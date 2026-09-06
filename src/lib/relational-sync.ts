@@ -1,3 +1,6 @@
+import { intraopAtcCode } from "@lospor/core/catalog"
+import { vocabularyForSystem } from "@lospor/core/code-systems"
+import { getLabSeverity, parseLabValue } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
@@ -22,10 +25,12 @@ const str = (v: unknown): string | null => (v == null ? null : String(v))
 const SYNC_SOURCE = "relational-sync"
 const SYNC_SOURCE_VERSION = "research-grade-v1"
 
-const flt = (v: unknown): number | null => {
-  const n = parseFloat(String(v ?? ""))
-  return isFinite(n) ? n : null
-}
+// The mirror and the summary a clinician reads must agree about what counts as
+// a number, so both use Core's parser. parseFloat read until the string
+// stopped making sense and kept what it had: "5.2 (H)" became 5.2 and a
+// European "5,8" became 5, and that invented figure then took an abnormal flag
+// and reached the export with nothing recording that it had ever been text.
+const flt = parseLabValue
 
 // A malformed or absent takenAt must resolve to null, not to "now" or the
 // unparsed string — a fabricated draw time is worse than an absent one, and
@@ -112,6 +117,60 @@ export async function resolveDrugConcept(
   return { standardConceptId: mapped.standardConceptId, mappingStatus: mapped.mappingStatus }
 }
 
+/**
+ * The event kinds the OMOP export turns into drug_exposure rows.
+ *
+ * All four are administrations of a substance to a patient, so all four need a
+ * concept. Only `drug` was ever resolved, which is why a sevoflurane
+ * maintenance and a litre of Hartmann's exported unmapped even after the bolus
+ * beside them stopped doing so.
+ */
+export const DRUG_EXPOSURE_EVENT_TYPES = [
+  "drug",
+  "infusion_start",
+  "fluid_start",
+  "agent_start",
+] as const
+
+type MutableEvent = Record<string, unknown>
+
+const asString = (value: unknown): string | null => typeof value === "string" && value ? value : null
+
+/**
+ * Resolve and stamp the standard concept on every drug-exposure event in a
+ * batch, in place.
+ *
+ * Written once and called from all three write paths — the single-event POST,
+ * the whole-log PUT, and the case PATCH that reconciles a client's timetable —
+ * because a drug recorded through one of them and the same drug recorded
+ * through another must not end up mapped differently. The concept is stored on
+ * the row rather than looked up at export time, so exporting a case twice
+ * produces the same file.
+ *
+ * When the event carries no ATC code the catalog is asked for one by name.
+ * That is a lookup, not a guess: an unrecognised name yields nothing and the
+ * row stays uncoded. A code found this way is written onto the event as well,
+ * so the export's drug_source_value carries it and a later re-resolution can
+ * use it directly.
+ */
+export async function resolveDrugExposureConcepts(db: Db, events: MutableEvent[]): Promise<void> {
+  const kinds = new Set<string>(DRUG_EXPOSURE_EVENT_TYPES)
+  for (const event of events) {
+    if (!event || !kinds.has(String(event.type))) continue
+    // The event schema is deliberately permissive, so these arrive as unknown.
+    // Narrow rather than assert: a non-string here would resolve against a
+    // nonsense key and quietly return no concept.
+    const label = asString(event.name) ?? asString(event.label)
+    const atcCode = asString(event.atcCode) ?? intraopAtcCode(label) ?? null
+    const resolved = await resolveDrugConcept(db, atcCode, asString(event.inn), label)
+    Object.assign(event, {
+      ...(atcCode && !asString(event.atcCode) ? { atcCode } : {}),
+      standardConceptId: resolved.standardConceptId,
+      mappingStatus: resolved.mappingStatus,
+    })
+  }
+}
+
 // LabLoinc cache (loaded once per process, tiny table)
 let loincCache: Map<string, { loincCode: string; unitCanon: string; referenceLow: number | null; referenceHigh: number | null }> | null = null
 
@@ -127,13 +186,20 @@ async function getLoincMap(db: Db) {
   return loincCache
 }
 
+/**
+ * How far out of range a result is.
+ *
+ * Delegates to Core so the flag stored here and the one a client computes for a
+ * summary row are the same judgement. They were the same rule written twice,
+ * which is how a screen ends up calling a potassium critical while the export
+ * calls it high.
+ */
 function computeAbnormalFlag(value: number | null, low: number | null, high: number | null): string | null {
   if (value == null) return null
-  if (high != null && value > high * 1.5) return "critical"
-  if (low  != null && value < low  * 0.5) return "critical"
-  if (high != null && value > high) return "high"
-  if (low  != null && value < low)  return "low"
-  return "normal"
+  return getLabSeverity(
+    { name: "", unit: "", ...(low != null ? { refLow: low } : {}), ...(high != null ? { refHigh: high } : {}) },
+    value,
+  )
 }
 
 function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {
@@ -144,7 +210,11 @@ function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts:
     labelEn: str(d?.labelEn),
     labelBg: str(d?.labelBg),
     system: str(d?.system),
-    ...concept(concepts, "condition", "ICD10", str(d?.sub ?? d?.code)),
+    // The system the code came from decides what it means, and a hospital may
+    // send SNOMED where our own forms send ICD-10. Absent means our forms, so
+    // ICD-10 stands; unrecognised is passed through and simply will not match,
+    // which is safer than looking a code up in a vocabulary it never came from.
+    ...concept(concepts, "condition", vocabularyForSystem(str(d?.system), "ICD10"), str(d?.sub ?? d?.code)),
     source: SYNC_SOURCE,
     // Clinical provenance (who/what recorded this item) is a different fact
     // from `source` above, which is sync-audit metadata hard-coded to
@@ -187,7 +257,8 @@ function comorbidityRows(preopId: string, caseId: string, json: unknown, concept
       code:     rawCode,
       icd10Code,
       system:   str(c?.system),
-      ...concept(concepts, "condition", "ICD10", icd10Code ?? rawCode),
+      // Same reasoning as diagnosisRows above.
+      ...concept(concepts, "condition", vocabularyForSystem(str(c?.system), "ICD10"), icd10Code ?? rawCode),
       source: SYNC_SOURCE,
       // See diagnosisRows: `source` is sync-audit metadata, not who/what
       // recorded the item, so clinical provenance gets its own column.
@@ -198,11 +269,24 @@ function comorbidityRows(preopId: string, caseId: string, json: unknown, concept
   }).filter(r => r.label !== "(unspecified)" || r.code)
 }
 
+/**
+ * Labs from either record that can hold them.
+ *
+ * `parent` says which one, and only that id is set -- a result belongs to the
+ * preoperative snapshot or to a draw during the case, never to both. Everything
+ * downstream (LOINC lookup, reference ranges, abnormal flag, concept mapping)
+ * is identical for the two, which is exactly why they share one table and one
+ * function rather than a parallel copy that would drift.
+ */
 async function labRowsWithLoinc(
-  preopId: string, caseId: string, json: unknown,
+  parent: { section: "preop"; preopId: string } | { section: "intraop"; intraopId: string },
+  caseId: string, json: unknown,
   loincMap: Map<string, { loincCode: string; unitCanon: string; referenceLow: number | null; referenceHigh: number | null }>,
   concepts: Map<string, ConceptInfo>,
 ) {
+  const parentIds = parent.section === "preop"
+    ? { preopId: parent.preopId, intraopId: null }
+    : { preopId: null, intraopId: parent.intraopId }
   return arr(json)
     .filter((l: JsonItem) => l && l.test != null)
     .map((l: JsonItem, i: number) => {
@@ -212,7 +296,7 @@ async function labRowsWithLoinc(
         ? computeAbnormalFlag(valueNum, loinc.referenceLow, loinc.referenceHigh)
         : null
       return {
-        preopId, caseId,
+        section: parent.section, ...parentIds, caseId,
         test:         String(l.test),
         value:        str(l?.value),
         valueNum,
@@ -403,12 +487,15 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       bmi: true, bodySurfaceAreaM2: true, bloodType: true, rhFactor: true,
       diagnosesJson: true, proceduresJson: true, comorbidities: true, labResults: true,
       currentMedications: true, allergies: true, allergyDetails: true, latexAllergy: true,
-      familyAnesthesiaProblems: true, familyAnesthesiaDetails: true, dentalProsthetics: true, looseTeeth: true,
+      familyAnesthesiaProblems: true, familyAnesthesiaDetails: true,
+      unexplainedAnaesthesiaComplications: true, malignantHyperthermiaHistory: true,
+      dentalProsthetics: true, looseTeeth: true,
       smoking: true, substanceAbuse: true, bpSystolic: true, bpDiastolic: true, heartRate: true, spO2: true,
       temperature: true, respiratoryRate: true, bpUnobtainable: true, heartRateUnobtainable: true,
       spO2Unobtainable: true, temperatureUnobtainable: true, respiratoryRateUnobtainable: true,
       mallampati: true, mouthOpeningCm: true, thyromental: true, neckMobility: true, upperLipBiteTest: true,
       retrognathia: true, prominentIncisors: true, facialHair: true, difficultAirwayHistory: true,
+      anticipatedDifficultAirway: true,
       difficultAirwayNotes: true, cormackLehane: true, airwayUnobtainable: true, asaScore: true,
       elective: true, emergencySurgery: true, highRiskSurgery: true, rcriIschemicHeart: true, rcriCHF: true,
       rcriCVD: true, rcriInsulinDM: true, rcriCreatinine: true, rcriScore: true, gutaScore: true,
@@ -426,11 +513,12 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       id: true, startedAt: true, endedAt: true, startTime: true, endTime: true, durationMinutes: true, monthYear: true,
       vascularAccesses: true, positions: true, techniques: true, airwayTools: true, airwayDevices: true, ventilationModes: true,
       airwayDevice: true, airwayNotes: true, cormackLehane: true, peepCmH2O: true, ippv: true, jetVentilation: true, fob: true,
+      presentsIntubated: true, airwayNotApplicable: true,
       premedicationEvening: true, premedicationMorning: true, drugsAdministered: true,
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, bloodProductsNote: true, urineMl: true, bloodLossMl: true,
-      timeSeriesData: true, keyEvents: true, complications: true,
+      timeSeriesData: true, keyEvents: true, labResults: true, complications: true,
+      neuroMonitor: true, paCatheter: true, tee: true, bis: true, entropyMonitor: true,
       ecg: true, spO2Monitor: true, nbpMonitor: true, etco2Monitor: true, tempMonitor: true, invasiveBP: true, cvpMonitor: true,
-      bglMonitor: true, bloodGasMonitor: true, neuroMonitor: true, paCatheter: true, tee: true, bis: true, entropyMonitor: true,
       nirsMonitor: true, evokedPotentials: true, tofMonitor: true, urinaryCatheter: true, stomachTube: true,
     },
   })
@@ -459,7 +547,7 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     const medJson = parseDrugList(p.currentMedications)
     const allergyJson = parseDrugList(p.allergyDetails)
 
-    const labData = await labRowsWithLoinc(p.id, caseId, p.labResults, loincMap, concepts)
+    const labData = await labRowsWithLoinc({ section: "preop", preopId: p.id }, caseId, p.labResults, loincMap, concepts)
     statuses.push(
       fieldStatus(caseId, "preop", "ageYears", p.ageYears),
       fieldStatus(caseId, "preop", "ageValue", p.ageValue),
@@ -482,6 +570,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "preop", "latexAllergy", p.latexAllergy),
       fieldStatus(caseId, "preop", "familyAnesthesiaProblems", p.familyAnesthesiaProblems),
       fieldStatus(caseId, "preop", "familyAnesthesiaDetails", p.familyAnesthesiaProblems ? p.familyAnesthesiaDetails : null),
+      fieldStatus(caseId, "preop", "unexplainedAnaesthesiaComplications", p.unexplainedAnaesthesiaComplications),
+      fieldStatus(caseId, "preop", "malignantHyperthermiaHistory", p.malignantHyperthermiaHistory),
       fieldStatus(caseId, "preop", "dentalProsthetics", p.dentalProsthetics),
       fieldStatus(caseId, "preop", "looseTeeth", p.looseTeeth),
       fieldStatus(caseId, "preop", "smoking", p.smoking),
@@ -501,6 +591,7 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "preop", "prominentIncisors", p.prominentIncisors),
       fieldStatus(caseId, "preop", "facialHair", p.facialHair),
       fieldStatus(caseId, "preop", "difficultAirwayHistory", p.difficultAirwayHistory),
+      fieldStatus(caseId, "preop", "anticipatedDifficultAirway", p.anticipatedDifficultAirway),
       fieldStatus(caseId, "preop", "difficultAirwayNotes", p.difficultAirwayHistory ? p.difficultAirwayNotes : null),
       fieldStatus(caseId, "preop", "cormackLehane", p.cormackLehane),
       fieldStatus(caseId, "preop", "asaScore", p.asaScore),
@@ -551,8 +642,6 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       tempMonitor: it.tempMonitor,
       invasiveBP: it.invasiveBP,
       cvpMonitor: it.cvpMonitor,
-      bglMonitor: it.bglMonitor,
-      bloodGasMonitor: it.bloodGasMonitor,
       neuroMonitor: it.neuroMonitor,
       paCatheter: it.paCatheter,
       tee: it.tee,
@@ -589,6 +678,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "intraop", "ippv", it.ippv),
       fieldStatus(caseId, "intraop", "jetVentilation", it.jetVentilation),
       fieldStatus(caseId, "intraop", "fob", it.fob),
+      fieldStatus(caseId, "intraop", "presentsIntubated", it.presentsIntubated),
+      fieldStatus(caseId, "intraop", "airwayNotApplicable", it.airwayNotApplicable),
       fieldStatus(caseId, "intraop", "ventilationModes", it.ventilationModes),
       fieldStatus(caseId, "intraop", "monitoring", monitoring),
       fieldStatus(caseId, "intraop", "premedicationEvening", it.premedicationEvening),
@@ -602,8 +693,15 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "intraop", "bloodLossMl", it.bloodLossMl),
       fieldStatus(caseId, "intraop", "timeSeriesData", it.timeSeriesData),
       fieldStatus(caseId, "intraop", "keyEvents", it.keyEvents),
+      fieldStatus(caseId, "intraop", "labResults", it.labResults),
       fieldStatus(caseId, "intraop", "complications", it.complications),
     )
+    // Scoped by intraopId, not by caseId+section: a case's preoperative rows
+    // live in the same table and must not be swept by an intraoperative sync.
+    await db.labResult.deleteMany({ where: { intraopId: it.id } })
+    await db.labResult.createMany({
+      data: await labRowsWithLoinc({ section: "intraop", intraopId: it.id }, caseId, it.labResults, loincMap, concepts),
+    })
     await db.vascularAccess.deleteMany({ where: { intraopId: it.id } })
     await db.vascularAccess.createMany({ data: vascularRows(it.id, caseId, it.vascularAccesses, concepts) })
     await db.premedicationAdministration.deleteMany({ where: { intraopId: it.id } })

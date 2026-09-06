@@ -1,0 +1,26 @@
+-- The patient's own anaesthetic history, as two questions of its own.
+--
+-- familyAnesthesiaProblems already asks whether anything went wrong for a
+-- relative. Nothing asked whether anything went wrong for the patient in front
+-- of you, which is the stronger signal of the two and the one a clinician acts
+-- on first. A previous unexplained event -- a rigid jaw, an unexplained fever,
+-- an unexplained tachycardia, a wake-up that never came -- is the reason a
+-- trigger-free technique gets chosen, and it was being written into free text
+-- or not at all.
+--
+-- malignantHyperthermiaHistory is separated from it rather than folded into the
+-- same question because "known MH" and "something unexplained happened" are
+-- different clinical facts: the first is a diagnosis carrying a defined
+-- protocol, the second is a suspicion that has never been worked up. Recording
+-- them as one field would either overstate the suspicion or lose the diagnosis.
+--
+-- Nullable with no default, matching 20260816160000_tristate_clinical_questions:
+-- NULL means the question was not asked, false means it was asked and denied.
+-- A default of false would make every existing row assert that the patient has
+-- no MH history and has never had an unexplained anaesthetic event, which is a
+-- claim about people nobody has interviewed.
+--
+-- Existing rows are left NULL. These questions were never put to those
+-- patients, and NULL is the honest record of that.
+ALTER TABLE "PreoperativeAssessment" ADD COLUMN "unexplainedAnaesthesiaComplications" BOOLEAN;
+ALTER TABLE "PreoperativeAssessment" ADD COLUMN "malignantHyperthermiaHistory" BOOLEAN;

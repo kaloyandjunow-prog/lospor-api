@@ -1,0 +1,21 @@
+-- Why a case has no airway device of its own.
+--
+-- Both of these were checkboxes in the web form's React state and nowhere else.
+-- They relaxed the finalisation gate -- by feeding a synthetic
+-- "DOCUMENTED_WITHOUT_NEW_DEVICE" into the readiness check -- and were then
+-- discarded. The saved record showed no airway device and no reason for it, so
+-- "arrived intubated from the ICU" and "the airway section was skipped" were
+-- the same row. Neither reached mobile at all.
+--
+-- presentsIntubated: the patient arrived with a tracheal tube already in place,
+-- put there by somebody else. The intubation is a real fact about the patient
+-- and belongs in the record; this team simply did not perform it.
+--
+-- airwayNotApplicable: no airway intervention at all -- a regional or sedation
+-- case where the patient kept their own airway throughout.
+--
+-- Defaulting to false matches ippv/jetVentilation/fob: these are positive
+-- assertions a clinician ticks, so false is "not asserted", which for these two
+-- means the ordinary case where the airway rows themselves tell the story.
+ALTER TABLE "IntraoperativeRecord" ADD COLUMN "presentsIntubated" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "IntraoperativeRecord" ADD COLUMN "airwayNotApplicable" BOOLEAN NOT NULL DEFAULT false;

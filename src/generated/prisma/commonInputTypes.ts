@@ -759,27 +759,6 @@ export type EnumVolatileAgentNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumVolatileAgentNullableFilter<$PrismaModel> | $Enums.VolatileAgent | null
 }
 
-export type EnumPlexusBlockNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.PlexusBlock | Prisma.EnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  in?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumPlexusBlockNullableFilter<$PrismaModel> | $Enums.PlexusBlock | null
-}
-
-export type EnumCVKSiteNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.CVKSite | Prisma.EnumCVKSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumCVKSiteNullableFilter<$PrismaModel> | $Enums.CVKSite | null
-}
-
-export type EnumArterialLineSiteNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.ArterialLineSite | Prisma.EnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel> | $Enums.ArterialLineSite | null
-}
-
 export type EnumAirwayDeviceNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.AirwayDevice | Prisma.EnumAirwayDeviceFieldRefInput<$PrismaModel> | null
   in?: $Enums.AirwayDevice[] | Prisma.ListEnumAirwayDeviceFieldRefInput<$PrismaModel> | null
@@ -798,36 +777,6 @@ export type EnumVolatileAgentNullableWithAggregatesFilter<$PrismaModel = never> 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumVolatileAgentNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumVolatileAgentNullableFilter<$PrismaModel>
-}
-
-export type EnumPlexusBlockNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.PlexusBlock | Prisma.EnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  in?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumPlexusBlockNullableWithAggregatesFilter<$PrismaModel> | $Enums.PlexusBlock | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumPlexusBlockNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumPlexusBlockNullableFilter<$PrismaModel>
-}
-
-export type EnumCVKSiteNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.CVKSite | Prisma.EnumCVKSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumCVKSiteNullableWithAggregatesFilter<$PrismaModel> | $Enums.CVKSite | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumCVKSiteNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumCVKSiteNullableFilter<$PrismaModel>
-}
-
-export type EnumArterialLineSiteNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.ArterialLineSite | Prisma.EnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumArterialLineSiteNullableWithAggregatesFilter<$PrismaModel> | $Enums.ArterialLineSite | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel>
 }
 
 export type EnumPediatricPainScaleNullableFilter<$PrismaModel = never> = {
@@ -1684,27 +1633,6 @@ export type NestedEnumVolatileAgentNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumVolatileAgentNullableFilter<$PrismaModel> | $Enums.VolatileAgent | null
 }
 
-export type NestedEnumPlexusBlockNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.PlexusBlock | Prisma.EnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  in?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumPlexusBlockNullableFilter<$PrismaModel> | $Enums.PlexusBlock | null
-}
-
-export type NestedEnumCVKSiteNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.CVKSite | Prisma.EnumCVKSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumCVKSiteNullableFilter<$PrismaModel> | $Enums.CVKSite | null
-}
-
-export type NestedEnumArterialLineSiteNullableFilter<$PrismaModel = never> = {
-  equals?: $Enums.ArterialLineSite | Prisma.EnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel> | $Enums.ArterialLineSite | null
-}
-
 export type NestedEnumAirwayDeviceNullableWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.AirwayDevice | Prisma.EnumAirwayDeviceFieldRefInput<$PrismaModel> | null
   in?: $Enums.AirwayDevice[] | Prisma.ListEnumAirwayDeviceFieldRefInput<$PrismaModel> | null
@@ -1723,36 +1651,6 @@ export type NestedEnumVolatileAgentNullableWithAggregatesFilter<$PrismaModel = n
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumVolatileAgentNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumVolatileAgentNullableFilter<$PrismaModel>
-}
-
-export type NestedEnumPlexusBlockNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.PlexusBlock | Prisma.EnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  in?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.PlexusBlock[] | Prisma.ListEnumPlexusBlockFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumPlexusBlockNullableWithAggregatesFilter<$PrismaModel> | $Enums.PlexusBlock | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumPlexusBlockNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumPlexusBlockNullableFilter<$PrismaModel>
-}
-
-export type NestedEnumCVKSiteNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.CVKSite | Prisma.EnumCVKSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.CVKSite[] | Prisma.ListEnumCVKSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumCVKSiteNullableWithAggregatesFilter<$PrismaModel> | $Enums.CVKSite | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumCVKSiteNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumCVKSiteNullableFilter<$PrismaModel>
-}
-
-export type NestedEnumArterialLineSiteNullableWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.ArterialLineSite | Prisma.EnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  in?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  notIn?: $Enums.ArterialLineSite[] | Prisma.ListEnumArterialLineSiteFieldRefInput<$PrismaModel> | null
-  not?: Prisma.NestedEnumArterialLineSiteNullableWithAggregatesFilter<$PrismaModel> | $Enums.ArterialLineSite | null
-  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumArterialLineSiteNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumPediatricPainScaleNullableFilter<$PrismaModel = never> = {

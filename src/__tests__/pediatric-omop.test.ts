@@ -9,12 +9,14 @@ describe("pediatric OMOP source preservation", () => {
     const observations = new Map(
       bundle.observation.map(row => [row.observation_source_value, row]),
     )
+    const measurements = new Map(
+      bundle.measurement.map(row => [row.measurement_source_value, row]),
+    )
 
     expect(bundle.metadata.source_version).toBe("3.8.0")
     expect(bundle.metadata.schema_version).toBe("3.6.0")
     expect(bundle.person[0].year_of_birth).toBe(2026)
 
-    expect(observations.get("LOSPOR:CLINICAL_MODE")?.value_as_string).toBe("PEDIATRIC")
     expect(observations.get("LOSPOR:CLINICAL_RULES_VERSION")?.value_as_string)
       .toBe("2026.08.04-release.1")
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_string).toBe("14 DAYS")
@@ -22,7 +24,6 @@ describe("pediatric OMOP source preservation", () => {
       .toBe("14")
     expect(observations.get("LOSPOR:POVOC_SCORE")?.value_as_string).toBe("2")
     expect(observations.get("LOSPOR:COLDS_SCORE")?.value_as_string).toBe("8")
-    expect(observations.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.value_as_string).toBe("3")
     expect(observations.get("LOSPOR:PAED_SCORE")?.value_as_string).toBe("7")
 
     // The paediatric scores are the ones most likely to be analysed as numbers
@@ -30,23 +31,27 @@ describe("pediatric OMOP source preservation", () => {
     expect(observations.get("LOSPOR:POVOC_SCORE")?.value_as_number).toBe(2)
     expect(observations.get("LOSPOR:POVOC_RISK_PERCENT")?.value_as_number).toBe(30)
     expect(observations.get("LOSPOR:COLDS_SCORE")?.value_as_number).toBe(8)
-    expect(observations.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.value_as_number).toBe(3)
+    // FLACC moved to measurement.value_as_number (3037051, a real SNOMED
+    // concept), the same way RCRI, STOP-BANG and the Aldrete total did — it is
+    // no longer a LOSPOR-only observation at concept 0.
+    expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.value_as_number).toBe(3)
+    expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.measurement_concept_id).toBe(3037051)
     expect(observations.get("LOSPOR:PAED_SCORE")?.value_as_number).toBe(7)
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS")?.value_as_number).toBe(14)
-    expect(observations.get("LOSPOR:BODY_SURFACE_AREA_M2")?.value_as_number).toBe(0.35)
+    // Moved to measurement with concept 3005424, whose domain is Measurement.
+    expect(measurements.get("LOSPOR:BODY_SURFACE_AREA_M2")).toMatchObject({
+      measurement_concept_id: 3005424, value_as_number: 0.35,
+    })
     // "14 DAYS" is a rendering, not a quantity: 14 alone would be meaningless
     // without its unit, and the normalised age above is the numeric form.
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_number).toBeNull()
-    expect(observations.get("LOSPOR:CLINICAL_MODE")?.value_as_number).toBeNull()
     // A fasting assessment is a JSON blob; there is no number to lift out.
     expect(observations.get("LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")?.value_as_number).toBeNull()
 
     for (const source of [
-      "LOSPOR:CLINICAL_MODE",
       "LOSPOR:AGE_AT_PROCEDURE_EXACT",
       "LOSPOR:POVOC_SCORE",
       "LOSPOR:COLDS_SCORE",
-      "LOSPOR:PEDIATRIC_PAIN_FLACC_0_10",
       "LOSPOR:PAED_SCORE",
     ]) {
       expect(observations.get(source)?.observation_concept_id).toBe(0)

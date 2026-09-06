@@ -68,6 +68,8 @@ export function buildPatientSummary(data: Record<string, unknown>): string {
   if (data.latexAllergy) safety.push("LATEX ALLERGY")
   if (currentMedications.length) safety.push(`Current medications: ${currentMedications.map(t => t.label).join(", ")}`)
   if (data.familyAnesthesiaProblems) safety.push("Family anaesthesia problems: yes (details withheld)")
+  if (data.malignantHyperthermiaHistory) safety.push("KNOWN MALIGNANT HYPERTHERMIA HISTORY")
+  if (data.unexplainedAnaesthesiaComplications) safety.push("Unexplained complications during a previous anaesthetic")
   if (data.dentalProsthetics) safety.push("Dental prosthetics present")
   if (data.looseTeeth) safety.push("Loose teeth")
   if (data.smoking) safety.push("Smoker")

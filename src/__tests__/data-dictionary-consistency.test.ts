@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { CLINICAL_NUMBER_RULES } from "@lospor/core/clinical-validation"
 import { DATA_DICTIONARY, DICTIONARY_VERSION, type DictionaryEntry } from "@/lib/data-dictionary"
@@ -105,12 +107,27 @@ describe("the dictionary describes the export it ships with", () => {
     expect(unknown, "documented under a table the export does not produce").toEqual([])
   })
 
-  it("gives every entry a parseable export name", () => {
+  it("gives every exported entry a parseable export name", () => {
     const unparseable = DATA_DICTIONARY
+      .filter(entry => entry.exported !== false)
       .filter(entry => !parseExportName(entry).table)
       .map(entry => entry.name)
 
     expect(unparseable, "exportName must read as table.column").toEqual([])
+  })
+
+  it("keeps a not-exported entry out of the export-side checks entirely", () => {
+    // An entry marked exported:false is a statement that the field stays in the
+    // hospital. Every assertion in this file about tables, columns and value
+    // forms is about what arrives, so applying them to a field that never
+    // arrives would either fail or, worse, pass by accident and imply the
+    // field is in the dataset.
+    const withheld = DATA_DICTIONARY.filter(entry => entry.exported === false)
+    expect(withheld.length, "at least one field is deliberately withheld").toBeGreaterThan(0)
+    for (const entry of withheld) {
+      expect(entry.exportName, `${entry.name} must not claim an export location`).toBe("(not exported)")
+      expect(entry.missingnessRule, `${entry.name} must say it never appears`).toMatch(/never/i)
+    }
   })
 
   it("gives every entry a meaning and a missingness rule", () => {
@@ -151,7 +168,7 @@ const LAB_ANALYTE_CODES = new Set(["LOINC:2345-7", "LOINC:718-7"])
 
 const VALUE_NAMESPACES = [
   "ATC:", "ICD10:", "LAB:", "LOSPOR_PROCEDURE:",
-  "ANAESTHESIA_TECHNIQUE:", "VASCULAR_ACCESS:",
+  "ANAESTHESIA_TECHNIQUE:", "VASCULAR_ACCESS:", "LOSPOR_COMPLICATION:",
 ]
 
 function emittedVariables(): Map<string, string> {
@@ -296,5 +313,146 @@ describe("the dictionary names the column the value is actually written to", () 
       .map(entry => `${entry.name}: ${entry.type} in ${parseExportName(entry).column}`)
 
     expect(contradictory.sort(), "declared type and declared column disagree").toEqual([])
+  })
+})
+
+/**
+ * The dictionary's *source* side, which nothing checked until now.
+ *
+ * Every assertion above is about the export: which OMOP table a variable lands
+ * in, which column, in what form. None of them looks at where the value came
+ * from, so `sourceTable` and `sourceColumn` were free text that drifted
+ * unchallenged — 27 entries named "PreoperativeRecord", a model that has never
+ * existed, and two named "Complication" instead of "CaseComplication".
+ *
+ * That is not only a documentation fault. SECTION_BY_SOURCE_TABLE is keyed on
+ * these names, so the 24 entries that spelled the preoperative table correctly
+ * were skipped by the range check above — the check that exists because the
+ * documented height range once excluded every neonate on file.
+ */
+describe("the dictionary names a real place for every value to come from", () => {
+  const schema = readFileSync(
+    join(process.cwd(), "prisma", "schema.prisma"),
+    "utf8",
+  )
+
+  /** Model name to the set of columns it declares. */
+  const modelColumns = new Map<string, Set<string>>()
+  {
+    let current: string | null = null
+    for (const raw of schema.split(/\r?\n/)) {
+      const line = raw.trim()
+      const opened = line.match(/^model\s+(\w+)\s*\{/)
+      if (opened) { current = opened[1]; modelColumns.set(current, new Set()); continue }
+      if (line === "}") { current = null; continue }
+      if (!current || !line || line.startsWith("//") || line.startsWith("@@")) continue
+      const field = line.split(/\s+/)[0]
+      if (/^[a-z][A-Za-z0-9]*$/.test(field)) modelColumns.get(current)!.add(field)
+    }
+  }
+
+  it("reads the schema at all", () => {
+    // Guards the two assertions below: a parse that found nothing would let
+    // them pass while checking nothing, which is the failure mode of every
+    // test that reads its own source of truth.
+    expect(modelColumns.size).toBeGreaterThan(20)
+    expect(modelColumns.get("PreoperativeAssessment")?.size ?? 0).toBeGreaterThan(50)
+  })
+
+  it("names a table the schema declares", () => {
+    const unknown = DATA_DICTIONARY
+      .filter(entry => !modelColumns.has(entry.sourceTable))
+      .map(entry => `${entry.name} → ${entry.sourceTable}`)
+
+    expect([...new Set(unknown)].sort(), "sourceTable is not a model in schema.prisma").toEqual([])
+  })
+
+  it("names a column that table actually has", () => {
+    const unknown: string[] = []
+    for (const entry of DATA_DICTIONARY) {
+      const columns = modelColumns.get(entry.sourceTable)
+      // A bad table is already reported above; reporting it twice buries the
+      // column faults underneath it.
+      if (!columns) continue
+      // A variable derived from more than one column names them "a / b" --
+      // an age from its value and unit, a visit boundary from the real instant
+      // and the legacy wall clock. Each part has to exist; the joined string
+      // never will.
+      for (const column of entry.sourceColumn.split("/").map(part => part.trim())) {
+        if (!columns.has(column)) {
+          unknown.push(`${entry.name} → ${entry.sourceTable}.${column}`)
+        }
+      }
+    }
+
+    expect(unknown.sort(), "sourceColumn is not a field on that model").toEqual([])
+  })
+})
+
+/**
+ * The dictionary must not tell a researcher to discard a real distinction.
+ *
+ * A reading that was attempted and could not be obtained carries 618772 on the
+ * measurement row; one nobody recorded carries nothing. Six preoperative
+ * entries used to say "NULL = not recorded or marked unobtainable", which is
+ * the opposite of what the export does, and four recovery entries said only
+ * "NULL = not measured".
+ *
+ * That reads as an instruction to exclude every blank as missing data — and
+ * unobtainable readings cluster in shocked, arrhythmic and peripherally
+ * shut-down patients, so following it drops the sickest cases and leaves a
+ * cohort that looks healthier than it was. Nothing about the resulting analysis
+ * would look wrong.
+ */
+describe("a measurement that could not be obtained is documented as such", () => {
+  /**
+   * Table and column, not column alone.
+   *
+   * The intraoperative timetable also has heartRate and spO2, on CaseEvent, and
+   * those carry no unobtainable flag -- a vital charted during a case is either
+   * recorded at that minute or not. Matching on the column name alone pulled
+   * them in and demanded an explanation that would have been untrue.
+   */
+  const FLAGGED = [
+    ["PreoperativeAssessment", "bpSystolic"],
+    ["PreoperativeAssessment", "bpDiastolic"],
+    ["PreoperativeAssessment", "heartRate"],
+    ["PreoperativeAssessment", "spO2"],
+    ["PreoperativeAssessment", "temperature"],
+    ["PreoperativeAssessment", "respiratoryRate"],
+    ["PostoperativeRecord", "recoveryBpSystolic"],
+    ["PostoperativeRecord", "recoveryBpDiastolic"],
+    ["PostoperativeRecord", "recoveryHeartRate"],
+    ["PostoperativeRecord", "recoverySpO2"],
+    ["PostoperativeRecord", "temperatureCelsius"],
+  ] as const
+  const isFlagged = (entry: DictionaryEntry) =>
+    FLAGGED.some(([table, column]) => entry.sourceTable === table && entry.sourceColumn === column)
+
+  it("names the qualifier on every measurement that can carry it", () => {
+    const silent = DATA_DICTIONARY
+      .filter(isFlagged)
+      .filter(entry => !entry.missingnessRule?.includes("618772"))
+      .map(entry => entry.name)
+
+    expect(silent.sort(), "blank could mean unobtainable, and the rule does not say so").toEqual([])
+  })
+
+  it("covers every flagged measurement, so the list above cannot rot", () => {
+    // If a column is renamed or a new flagged vital is added, this fails rather
+    // than the check above quietly testing nothing.
+    const missing = FLAGGED
+      .filter(([table, column]) => !DATA_DICTIONARY.some(
+        entry => entry.sourceTable === table && entry.sourceColumn === column))
+      .map(([table, column]) => `${table}.${column}`)
+    expect(missing).toEqual([])
+  })
+
+  it("never says the two are indistinguishable", () => {
+    const conflating = DATA_DICTIONARY
+      .filter(entry => /not recorded or marked unobtainable/i.test(entry.missingnessRule ?? ""))
+      .map(entry => entry.name)
+
+    expect(conflating, "the export separates these; the dictionary must not pool them").toEqual([])
   })
 })

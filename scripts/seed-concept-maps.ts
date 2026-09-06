@@ -6,6 +6,8 @@
  * mapping. Without Athena imported, rows remain explicit SOURCE_ONLY maps.
  */
 import "dotenv/config"
+import { INTRAOP_DRUG_CODE_ENTRIES } from "@lospor/core/catalog"
+import { ALL_COMPLICATIONS } from "@lospor/core/complications"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
@@ -13,6 +15,266 @@ import path from "path"
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
 const SOURCE_VERSION = "local-bilingual-map-v2"
+
+// Patient position, from lospor-core/src/catalog/position.ts. Every option
+// category defaults to SOURCE_ONLY below -- there is no vocabulary of
+// positions to resolve against automatically, the way ATC or ICD10PCS codes
+// are. These are curated by hand, one at a time, against the local Athena
+// snapshot, the same way every other concept in this project is.
+//
+// LEFT_LATERAL/RIGHT_LATERAL share their concept with LATERAL_DECUBITUS_LEFT/
+// RIGHT on purpose: SNOMED has no "lateral position" finding distinct from
+// "lateral decubitus position", and the product decision was to collapse the
+// two picker buttons onto the same code rather than leave them unmapped.
+const CURATED_POSITIONS: { value: string; conceptId: number; label: string }[] = [
+  { value: "SUPINE", conceptId: 4221822, label: "Supine body position" },
+  { value: "PRONE", conceptId: 4050473, label: "Prone body position" },
+  { value: "TRENDELENBURG", conceptId: 4142024, label: "Trendelenburg position" },
+  // "Reverse Trendelenburg" has no concept of that name in Observation domain
+  // -- the name match (423413008) is a Procedure. "Inverse Trendelenburg
+  // position" is SNOMED's Observation-domain finding for the same posture.
+  { value: "REVERSE_TRENDELENBURG", conceptId: 4132147, label: "Inverse Trendelenburg position" },
+  { value: "FOWLER", conceptId: 4147052, label: "Fowler's position" },
+  { value: "BEACH_CHAIR", conceptId: 4202146, label: "Beach chair position" },
+  { value: "LLOYD_DAVIES", conceptId: 4220311, label: "Lloyd Davis position" },
+  { value: "SITTING", conceptId: 4142787, label: "Sitting position" },
+  { value: "JACKKNIFE", conceptId: 40486534, label: "Jackknife surgical position" },
+  { value: "KNEE_CHEST", conceptId: 4051496, label: "Knee-chest position" },
+  { value: "LATERAL_DECUBITUS_LEFT", conceptId: 4010960, label: "Left lateral decubitus position" },
+  { value: "LATERAL_DECUBITUS_RIGHT", conceptId: 4009274, label: "Right lateral decubitus position" },
+  { value: "LEFT_LATERAL", conceptId: 4010960, label: "Left lateral decubitus position" },
+  { value: "RIGHT_LATERAL", conceptId: 4009274, label: "Right lateral decubitus position" },
+  // GYNECOLOGICAL's own description is "Legs in stirrups" -- exactly what
+  // Lithotomy position is. LLOYD_DAVIES keeps its own exact concept above
+  // rather than sharing this one, since Lloyd Davis is a distinct modified
+  // lithotomy SNOMED already names separately.
+  { value: "GYNECOLOGICAL", conceptId: 4031023, label: "Lithotomy position" },
+]
+
+// Intraop monitoring modalities, from lospor-core/src/catalog/monitoring.ts
+// (MONITORING). Each field is a boolean flag ("was this modality used"),
+// stored as a LOSPOR_OPTION selection the same way position is. Verified
+// individually against the local Athena snapshot.
+//
+// Gaps (left SOURCE_ONLY, no standard concept found after lexical + semantic
+// search): etco2Monitor (capnography -- surprising, given how standard it
+// is; only device/adaptor concepts exist, nothing for the monitoring act
+// itself), bis (Bispectral index), entropyMonitor (Entropy/pEEG) -- BIS and
+// Entropy are proprietary depth-of-anaesthesia metrics and SNOMED has
+// nothing that names either specifically, only a generic "anesthesia depth
+// monitor" device concept that would be no more honest than leaving these
+// uncoded.
+const CURATED_MONITORING: { value: string; conceptId: number; label: string }[] = [
+  { value: "ecg", conceptId: 4187078, label: "Electrocardiographic monitoring" },
+  { value: "spO2Monitor", conceptId: 4155650, label: "Pulse oximetry monitoring" },
+  { value: "nbpMonitor", conceptId: 4064646, label: "Arterial pressure monitoring, non-invasive method" },
+  { value: "tempMonitor", conceptId: 4045951, label: "Monitoring of patient temperature" },
+  { value: "invasiveBP", conceptId: 4301474, label: "Arterial pressure monitoring, invasive method" },
+  { value: "cvpMonitor", conceptId: 4313586, label: "Central venous pressure monitoring" },
+  { value: "paCatheter", conceptId: 4076945, label: "Pulmonary artery pressure monitoring" },
+  { value: "tee", conceptId: 4019824, label: "Transesophageal echocardiography" },
+  { value: "nirsMonitor", conceptId: 37206739, label: "Near-infrared spectroscopy" },
+  // Generic, not qualified to SSEP or MEP specifically -- the checkbox
+  // itself covers both ("Somatosensory / motor evoked potentials"), and
+  // SNOMED has no single concept naming that exact combination.
+  { value: "evokedPotentials", conceptId: 4154582, label: "Evoked potentials monitoring" },
+  { value: "tofMonitor", conceptId: 4152647, label: "Neuromuscular blockade monitoring" },
+  // Matches the field's own catalogue label ("Urine output") better than a
+  // generic urinary-catheterization concept would: this flag is about
+  // monitoring output, not the act of placing the catheter.
+  { value: "urinaryCatheter", conceptId: 44813911, label: "Intraoperative fluid balance monitoring" },
+  { value: "stomachTube", conceptId: 4227418, label: "Insertion of nasogastric tube" },
+]
+
+// Intraoperative/postop complications, from lospor-core/src/complications.ts
+// (ALL_COMPLICATIONS, 81 items across 8 categories). LOSPOR_COMPLICATION had
+// zero ConceptMap rows at all before this -- the resolver in relational-sync.ts
+// (`concept(concepts, "observation", "LOSPOR_COMPLICATION", label)`) has
+// existed since CaseComplication carried source columns, but nothing ever
+// seeded a row for it to find, so every complication resolved to unmapped
+// regardless of how well-known the finding was. Curated in batches of 10,
+// verified against the local Athena snapshot the same way every other concept
+// in this project is; sourceCode is the catalogue label itself, matching what
+// relational-sync.ts looks up.
+//
+// Batch 1 of 9 -- Cardiovascular, items 1-10 of 14.
+const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }[] = [
+  { value: "Hypotension", conceptId: 317002, label: "Low blood pressure" },
+  { value: "Hypertension", conceptId: 316866, label: "Hypertensive disorder" },
+  { value: "Bradycardia", conceptId: 4169095, label: "Bradycardia" },
+  { value: "Tachycardia", conceptId: 444070, label: "Tachycardia" },
+  { value: "Atrial fibrillation", conceptId: 313217, label: "Atrial fibrillation" },
+  { value: "Supraventricular arrhythmia", conceptId: 4248028, label: "Supraventricular arrhythmia" },
+  { value: "Ventricular tachycardia", conceptId: 4103295, label: "Ventricular tachycardia" },
+  { value: "Ventricular fibrillation", conceptId: 437894, label: "Ventricular fibrillation" },
+  // "during surgery" variant, not the generic disorder: more precise for an
+  // intraop complication log, and it is what was asked for.
+  { value: "Myocardial ischaemia", conceptId: 37108686, label: "Myocardial ischemia during surgery" },
+  { value: "Myocardial infarction", conceptId: 4329847, label: "Myocardial infarction" },
+
+  // Batch 2 of 9 -- Cardiovascular items 11-14 (of 14) + Respiratory items 1-6
+  // (of 12).
+  { value: "Cardiac arrest", conceptId: 321042, label: "Cardiac arrest" },
+  { value: "Venous air embolism", conceptId: 4173338, label: "Venous air embolism" },
+  { value: "Pulmonary embolism", conceptId: 440417, label: "Pulmonary embolism" },
+  // No single "ST changes" concept exists; intraop ST-segment charting is
+  // usually non-specific (could be elevation, depression, or a T-wave
+  // change), so the nonspecific finding is the more honest match than
+  // committing to "ST segment elevation" alone.
+  { value: "ST changes", conceptId: 4327859, label: "Nonspecific ST-T abnormality on electrocardiogram" },
+  { value: "Hypoxia / desaturation", conceptId: 4306572, label: "Hypoxia" },
+  { value: "Laryngospasm", conceptId: 437904, label: "Laryngeal spasm" },
+  { value: "Bronchospasm", conceptId: 256717, label: "Bronchospasm" },
+  { value: "Aspiration", conceptId: 4239038, label: "Pulmonary aspiration" },
+  // Observation-domain, not Condition -- see
+  // COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS in omop-mapper.ts.
+  { value: "Difficult intubation", conceptId: 37397718, label: "Difficult intubation" },
+  { value: "Failed intubation", conceptId: 37154260, label: "Failed intubation of trachea" },
+
+  // Batch 3 of 9 -- remaining Respiratory (6 of 12) + first Neurological
+  // items. "Raised intracranial pressure" and "Spinal cord ischaemia" were
+  // removed from the catalogue entirely rather than mapped.
+  { value: "CICO (can't intubate can't oxygenate)", conceptId: 37397447, label: "Cannot intubate cannot ventilate" },
+  { value: "Accidental extubation", conceptId: 4231838, label: "Inadvertent tracheal extubation" },
+  // Procedure-domain, not Condition -- see
+  // COMPLICATION_PROCEDURE_DOMAIN_CONCEPTS in omop-mapper.ts.
+  { value: "Endobronchial intubation", conceptId: 4335585, label: "Endobronchial intubation" },
+  { value: "Pneumothorax", conceptId: 253796, label: "Pneumothorax" },
+  { value: "Tension pneumothorax", conceptId: 4050881, label: "Tension pneumothorax" },
+  // SNOMED's own spelling of the same thing.
+  { value: "Hypercarbia", conceptId: 4105765, label: "Hypercapnia" },
+  // Observation-domain -- see COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS. The
+  // "accidental" framing is deliberate: AAGA (accidental awareness during
+  // general anaesthesia) is the actual clinical/medico-legal term, and every
+  // real complication logged under this label is the accidental kind.
+  { value: "Awareness under anaesthesia", conceptId: 35625730, label: "Accidental awareness under general anesthesia" },
+  { value: "Cerebrovascular accident / stroke", conceptId: 381316, label: "Cerebrovascular accident" },
+  { value: "Peripheral nerve injury", conceptId: 4248551, label: "Injury of peripheral nerve" },
+
+  // Batch 4 -- everything else in the catalogue that has a real concept.
+  // Gaps after a first pass (left SOURCE_ONLY, no standard concept found
+  // after lexical + semantic search): High spinal, Tourniquet complication.
+  // A second sweep resolved the other ten of the original twelve -- wrong
+  // search terms, not real gaps: "endotracheal tube" missed "Displacement of
+  // tracheal tube" (SNOMED's own wording), "Residual curarization"/
+  // "paralysis" missed "Incomplete reversal of neuromuscular block",
+  // "Anaphylactoid reaction" alone missed that its modern SNOMED name is
+  // "Non-allergic anaphylaxis", and several were found only by following the
+  // ICD10CM "Maps to" relationship to its SNOMED standard target rather than
+  // free-text search. "Adrenal crisis"/"Coagulopathy"/"Pneumoperitoneum
+  // complication" were removed from the schema instead of researched, per
+  // product decision.
+
+  // Neurological, remaining.
+  { value: "Total spinal", conceptId: 4172551, label: "Total spinal blockade" },
+  // Observation-domain -- see COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS.
+  { value: "Delayed emergence", conceptId: 4134556, label: "Delayed recovery from general anesthesia" },
+  { value: "Seizure", conceptId: 377091, label: "Seizure" },
+  // Observation-domain. Shares its concept with Regional block failure below
+  // -- the same clinical event, named from two different curatorial angles.
+  { value: "Failed block", conceptId: 4162381, label: "Failed regional anesthesia" },
+
+  // Metabolic / Temperature -- all ten found. SNOMED's own spelling is
+  // American throughout this category (Hypoglycemia, not Hypoglycaemia,
+  // etc.); the source value keeps LOSPOR's British spelling regardless.
+  { value: "Hypothermia", conceptId: 435371, label: "Hypothermia" },
+  { value: "Hyperthermia", conceptId: 37162916, label: "Hyperthermia" },
+  { value: "Malignant hyperthermia", conceptId: 440285, label: "Malignant hyperthermia" },
+  { value: "Hypoglycaemia", conceptId: 24609, label: "Hypoglycemia" },
+  { value: "Hyperglycaemia", conceptId: 4214376, label: "Hyperglycemia" },
+  { value: "Hyponatraemia", conceptId: 4232311, label: "Hyponatremia" },
+  { value: "Hypernatraemia", conceptId: 36674250, label: "Hypernatremia" },
+  { value: "Hypokalaemia", conceptId: 437833, label: "Hypokalemia" },
+  { value: "Hyperkalaemia", conceptId: 434610, label: "Hyperkalemia" },
+  { value: "Hypocalcaemia", conceptId: 435510, label: "Hypocalcemia" },
+
+  // Drug / Pharmacological.
+  { value: "Anaphylaxis / allergic reaction", conceptId: 441202, label: "Anaphylaxis" },
+  // Observation-domain.
+  { value: "Drug reaction", conceptId: 441207, label: "Adverse reaction to drug" },
+  // Observation-domain.
+  { value: "Drug error", conceptId: 4162376, label: "Medication error" },
+  // SNOMED's own vocabulary calls this poisoning, not overdose -- the same
+  // clinical event, its own terminology choice, same as Hypercarbia/
+  // Hypercapnia above.
+  { value: "Drug overdose", conceptId: 438028, label: "Poisoning by drug AND/OR medicinal substance" },
+  // Observation-domain, despite the Disorder concept class.
+  { value: "Serotonin syndrome", conceptId: 4154707, label: "Serotonin syndrome" },
+
+  // Haematological.
+  // Observation-domain. Shares its concept with Unexpected major
+  // haemorrhage below.
+  { value: "Massive haemorrhage", conceptId: 4010901, label: "Massive hemorrhage" },
+  { value: "DIC (disseminated intravascular coagulation)", conceptId: 436093, label: "Disseminated intravascular coagulation" },
+  { value: "Haemolytic transfusion reaction", conceptId: 4218193, label: "Hemolytic transfusion reaction" },
+  { value: "Febrile non-haemolytic transfusion reaction", conceptId: 763017, label: "Febrile transfusion reaction without hemolysis" },
+  { value: "TRALI (transfusion-related acute lung injury)", conceptId: 37116369, label: "Acute lung injury during and following administration of blood product" },
+  { value: "TACO (transfusion-associated circulatory overload)", conceptId: 4261830, label: "Transfusion reaction due to excess volume" },
+
+  // Equipment / Technical -- the worst-covered category. SNOMED models
+  // device malfunction as incident/safety reporting, not as a clinical
+  // finding, so most of this category has nothing to map to.
+  { value: "IV line failure / extravasation", conceptId: 4153362, label: "Extravasation injury" },
+  // Shares its concept with CVK failure below -- SNOMED has one generic
+  // vascular-device-complication concept, not separate arterial/CVC ones.
+  { value: "Arterial line failure", conceptId: 43021245, label: "Complication associated with vascular device" },
+  { value: "CVK failure", conceptId: 43021245, label: "Complication associated with vascular device" },
+  // Observation-domain. Shares its concept with Failed block above.
+  { value: "Regional block failure", conceptId: 4162381, label: "Failed regional anesthesia" },
+
+  // Surgical.
+  // Observation-domain. Shares its concept with Massive haemorrhage above.
+  { value: "Unexpected major haemorrhage", conceptId: 4010901, label: "Massive hemorrhage" },
+  { value: "Injury to major vessel", conceptId: 192763, label: "Injury of blood vessel" },
+  { value: "Injury to organ", conceptId: 193631, label: "Injury of internal organ" },
+  { value: "Positioning injury", conceptId: 4250614, label: "Perioperative positioning injury" },
+  { value: "Compartment syndrome", conceptId: 134734, label: "Compartment syndrome" },
+  // SNOMED has no distinct "gas embolism" concept (CO2, the usual
+  // laparoscopic culprit, included); nearest honest match is the air
+  // embolism concept already curated for the Cardiovascular category.
+  { value: "Venous gas embolism", conceptId: 4173338, label: "Venous air embolism" },
+
+  // Second sweep of the twelve original gaps -- ten resolved (see the note
+  // above this array). Tourniquet complication and High spinal are still
+  // absent here: a genuinely closer second look found nothing for either.
+  { value: "Anaphylactoid reaction", conceptId: 4148381, label: "Non-allergic anaphylaxis" },
+  // Found via ICD10CM T78.2XXA's "Maps to" SNOMED target, not free text --
+  // "Anaphylactoid shock" only turns up an SMQ (MedDRA pharmacovigilance
+  // grouping), which is a classification concept, not a standard one.
+  { value: "Latex reaction", conceptId: 604829, label: "Anaphylaxis caused by Hevea brasiliensis latex protein" },
+  // Also found via ICD10CM "Maps to": T41.3X5A (Adverse effect of local
+  // anesthetics) maps to this. Observation-domain, generic (not toxicity-
+  // specific) -- the nearest standard concept SNOMED has for LAST.
+  { value: "Local anaesthetic systemic toxicity (LAST)", conceptId: 443346, label: "Local anesthetic drug adverse reaction" },
+  { value: "Residual neuromuscular blockade", conceptId: 4287800, label: "Incomplete reversal of neuromuscular block" },
+  // Observation-domain.
+  { value: "Gas supply failure", conceptId: 4266020, label: "Medical gas supply failure" },
+  { value: "ETT displacement", conceptId: 37472242, label: "Displacement of tracheal tube" },
+  // Observation-domain.
+  { value: "Circuit disconnection", conceptId: 37116691, label: "Breathing system disconnection" },
+  // Observation-domain. Shares its concept with Equipment malfunction below
+  // -- SNOMED has one generic mechanical-failure-during-surgery concept, not
+  // a monitor-specific one.
+  { value: "Monitoring failure", conceptId: 439625, label: "Mechanical failure of instrument or apparatus during surgical operation" },
+  { value: "Equipment malfunction", conceptId: 439625, label: "Mechanical failure of instrument or apparatus during surgical operation" },
+  // No volume-banded finding exists in SNOMED (no ">1L" threshold concept);
+  // nearest honest match is the plain intraoperative bleeding event.
+  { value: "Blood loss >1L", conceptId: 4308716, label: "Intraoperative hemorrhage" },
+
+  // The last two, mapped to a deliberately generic umbrella rather than left
+  // unmapped -- explicit approximations, not confident matches. Neither
+  // SNOMED concept says what the LOSPOR label says; each is the closest
+  // honest parent that exists.
+  // Not "Total spinal blockade" (4172551, already curated) -- that names a
+  // more severe, distinct clinical state (complete blockade including
+  // cranial nerves) and reusing it here would overstate a high but partial
+  // block as the full one.
+  { value: "High spinal", conceptId: 4142195, label: "Complication of anesthesia" },
+  // A tourniquet is a surgical adjunct, not an anaesthetic one, so the
+  // surgical-complication umbrella fits better than the anaesthesia one used
+  // for High spinal above.
+  { value: "Tourniquet complication", conceptId: 434547, label: "Complication of surgical procedure" },
+]
 
 const KNOWN_VITALS = [
   { code: "8480-6", label: "Systolic blood pressure", conceptId: 3004249 },
@@ -380,6 +642,48 @@ async function main() {
     }, atcStandards.get(code.code)))
   }
 
+  // Intraoperative drugs, infusions, fluids and volatile agents. These are the
+  // substances the register produces from its own buttons, and the one drug
+  // source it never seeded: the ATC block above walks the Atc table, which
+  // exists only where an Athena CONCEPT.csv has been imported, and the raw-name
+  // fallback vocabulary had no rows at all. Both gaps are filled here from the
+  // catalog itself, so the mapping of what is given during a case is reviewable
+  // as a whole list rather than one discovered row at a time.
+  const atcCodes = new Set(atc.map(code => code.code))
+  const catalogAtc = INTRAOP_DRUG_CODE_ENTRIES
+    .filter((entry): entry is { name: string; atcCode: string } => !!entry.atcCode)
+    .filter(entry => !atcCodes.has(entry.atcCode))
+  const catalogAtcStandards = await resolveStandardMap("ATC", catalogAtc.map(e => e.atcCode), athenaVersion)
+  for (const entry of catalogAtc) {
+    seeds.push(withStandard({
+      domain: "drug",
+      sourceVocabulary: "ATC",
+      sourceCode: entry.atcCode,
+      sourceLabelEn: entry.name,
+    }, catalogAtcStandards.get(entry.atcCode)))
+  }
+
+  // The raw-name fallback. `resolveDrugConcept` reaches for this only when an
+  // event carries no ATC code, so these rows can never override a coded drug —
+  // which is what keeps one substance on one concept. They are seeded without
+  // a concept because a drug name is not evidence of one; what they add is a
+  // row to look at, so an unmapped intraoperative drug is a visible backlog
+  // item rather than a silent absence.
+  for (const entry of INTRAOP_DRUG_CODE_ENTRIES) {
+    seeds.push({
+      domain: "drug",
+      sourceVocabulary: "LOSPOR_DRUG_RAW",
+      sourceCode: entry.name,
+      sourceLabelEn: entry.name,
+      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+      mappingMethod: "source-code-preserved",
+      reviewed: false,
+      mappingNotes: entry.atcCode
+        ? `Catalog drug; normally resolved through ATC ${entry.atcCode}. This row applies only to an event recorded without a code.`
+        : "Catalog drug with no WHO ATC code. Left unmapped deliberately rather than coded to an approximate substance.",
+    })
+  }
+
   const drugs = await prisma.drug.findMany({
     where: { inn: { not: null } },
     select: { inn: true, name: true },
@@ -424,24 +728,61 @@ async function main() {
     }, pcsStandards.get(proc.code)))
   }
 
+  const curatedByCategory = new Map<string, Map<string, { conceptId: number; label: string }>>([
+    ["position", new Map(CURATED_POSITIONS.map(p => [p.value, p]))],
+    ["monitoring", new Map(CURATED_MONITORING.map(p => [p.value, p]))],
+  ])
+
   const options = await prisma.optionLibrary.findMany({ where: { active: true } })
   for (const option of options) {
-    seeds.push({
+    const curated = curatedByCategory.get(option.category.toLowerCase())?.get(option.value)
+    for (const code of [`${option.category}:${option.value}`, `${option.category.toLowerCase()}:${option.value}`]) {
+      seeds.push(curated ? {
+        domain: "observation",
+        sourceVocabulary: "LOSPOR_OPTION",
+        sourceCode: code,
+        sourceLabelEn: option.labelEn,
+        sourceLabelBg: option.labelBg,
+        standardVocabulary: "SNOMED",
+        standardConceptId: curated.conceptId,
+        standardLabel: curated.label,
+        mappingStatus: ConceptMappingStatus.MAPPED,
+        mappingMethod: "manually-curated",
+        mappingConfidence: 1,
+        reviewed: true,
+      } : {
+        domain: "observation",
+        sourceVocabulary: "LOSPOR_OPTION",
+        sourceCode: code,
+        sourceLabelEn: option.labelEn,
+        sourceLabelBg: option.labelBg,
+        mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+        mappingMethod: "source-code-preserved",
+        reviewed: false,
+      })
+    }
+  }
+
+  const curatedComplications = new Map(CURATED_COMPLICATIONS.map(x => [x.value, x]))
+  for (const label of ALL_COMPLICATIONS) {
+    const curated = curatedComplications.get(label)
+    seeds.push(curated ? {
       domain: "observation",
-      sourceVocabulary: "LOSPOR_OPTION",
-      sourceCode: `${option.category}:${option.value}`,
-      sourceLabelEn: option.labelEn,
-      sourceLabelBg: option.labelBg,
-      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
-      mappingMethod: "source-code-preserved",
-      reviewed: false,
-    })
-    seeds.push({
+      sourceVocabulary: "LOSPOR_COMPLICATION",
+      sourceCode: label,
+      sourceLabelEn: label,
+      standardVocabulary: "SNOMED",
+      standardConceptId: curated.conceptId,
+      standardLabel: curated.label,
+      mappingStatus: ConceptMappingStatus.MAPPED,
+      mappingMethod: "manually-curated",
+      mappingConfidence: 1,
+      reviewed: true,
+    } : {
       domain: "observation",
-      sourceVocabulary: "LOSPOR_OPTION",
-      sourceCode: `${option.category.toLowerCase()}:${option.value}`,
-      sourceLabelEn: option.labelEn,
-      sourceLabelBg: option.labelBg,
+      sourceVocabulary: "LOSPOR_COMPLICATION",
+      sourceCode: label,
+      sourceLabelEn: label,
       mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
       mappingMethod: "source-code-preserved",
       reviewed: false,

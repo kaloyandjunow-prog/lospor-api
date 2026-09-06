@@ -108,7 +108,6 @@ async function main() {
     rowUnmapped,
     missing,
     invalidFio2,
-    invalidBgl,
     futureEvents,
     exactEventTimestamps,
     complicationNotes,
@@ -151,7 +150,6 @@ async function main() {
     ]).then(xs => xs.reduce((a, b) => a + b, 0)),
     prisma.clinicalFieldStatus.groupBy({ by: ["presence"], _count: true }),
     prisma.caseEvent.count({ where: { OR: [{ fio2Percent: { lt: 21 } }, { fio2Percent: { gt: 100 } }] } }),
-    prisma.caseEvent.count({ where: { OR: [{ bgl: { lt: 0 } }, { bgl: { gt: 60 } }] } }),
     prisma.caseEvent.count({ where: { timestamp: { gt: new Date(Date.now() + 24 * 60 * 60 * 1000) } } }),
     prisma.caseEvent.count({ where: { status: "active" } }),
     prisma.caseComplication.count({ where: { note: { not: null } } }),
@@ -167,7 +165,6 @@ async function main() {
   console.log("ClinicalFieldStatus:")
   for (const row of missing) console.log(`  ${row.presence}: ${row._count}`)
   console.log(`Invalid FiO2 rows: ${invalidFio2}`)
-  console.log(`Invalid BGL rows: ${invalidBgl}`)
   console.log(`Future CaseEvent rows (>24h): ${futureEvents}`)
   console.log(`Exact active event timestamps retained: ${exactEventTimestamps}`)
   console.log(`Complication rows with notes requiring redaction review: ${complicationNotes}`)

@@ -104,6 +104,9 @@ export type PreoperativeAssessmentMinAggregateOutputType = {
   currentMedications: string | null
   familyAnesthesiaProblems: boolean | null
   familyAnesthesiaDetails: string | null
+  unexplainedAnaesthesiaComplications: boolean | null
+  malignantHyperthermiaHistory: boolean | null
+  anticipatedDifficultAirway: boolean | null
   dentalProsthetics: boolean | null
   looseTeeth: boolean | null
   smoking: boolean | null
@@ -197,6 +200,9 @@ export type PreoperativeAssessmentMaxAggregateOutputType = {
   currentMedications: string | null
   familyAnesthesiaProblems: boolean | null
   familyAnesthesiaDetails: string | null
+  unexplainedAnaesthesiaComplications: boolean | null
+  malignantHyperthermiaHistory: boolean | null
+  anticipatedDifficultAirway: boolean | null
   dentalProsthetics: boolean | null
   looseTeeth: boolean | null
   smoking: boolean | null
@@ -293,6 +299,9 @@ export type PreoperativeAssessmentCountAggregateOutputType = {
   currentMedications: number
   familyAnesthesiaProblems: number
   familyAnesthesiaDetails: number
+  unexplainedAnaesthesiaComplications: number
+  malignantHyperthermiaHistory: number
+  anticipatedDifficultAirway: number
   dentalProsthetics: number
   looseTeeth: number
   smoking: number
@@ -442,6 +451,9 @@ export type PreoperativeAssessmentMinAggregateInputType = {
   currentMedications?: true
   familyAnesthesiaProblems?: true
   familyAnesthesiaDetails?: true
+  unexplainedAnaesthesiaComplications?: true
+  malignantHyperthermiaHistory?: true
+  anticipatedDifficultAirway?: true
   dentalProsthetics?: true
   looseTeeth?: true
   smoking?: true
@@ -535,6 +547,9 @@ export type PreoperativeAssessmentMaxAggregateInputType = {
   currentMedications?: true
   familyAnesthesiaProblems?: true
   familyAnesthesiaDetails?: true
+  unexplainedAnaesthesiaComplications?: true
+  malignantHyperthermiaHistory?: true
+  anticipatedDifficultAirway?: true
   dentalProsthetics?: true
   looseTeeth?: true
   smoking?: true
@@ -631,6 +646,9 @@ export type PreoperativeAssessmentCountAggregateInputType = {
   currentMedications?: true
   familyAnesthesiaProblems?: true
   familyAnesthesiaDetails?: true
+  unexplainedAnaesthesiaComplications?: true
+  malignantHyperthermiaHistory?: true
+  anticipatedDifficultAirway?: true
   dentalProsthetics?: true
   looseTeeth?: true
   smoking?: true
@@ -816,6 +834,9 @@ export type PreoperativeAssessmentGroupByOutputType = {
   currentMedications: string | null
   familyAnesthesiaProblems: boolean | null
   familyAnesthesiaDetails: string | null
+  unexplainedAnaesthesiaComplications: boolean | null
+  malignantHyperthermiaHistory: boolean | null
+  anticipatedDifficultAirway: boolean | null
   dentalProsthetics: boolean | null
   looseTeeth: boolean | null
   smoking: boolean | null
@@ -937,6 +958,9 @@ export type PreoperativeAssessmentWhereInput = {
   currentMedications?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   familyAnesthesiaProblems?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   familyAnesthesiaDetails?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  malignantHyperthermiaHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  anticipatedDifficultAirway?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   dentalProsthetics?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   looseTeeth?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   smoking?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
@@ -1041,6 +1065,9 @@ export type PreoperativeAssessmentOrderByWithRelationInput = {
   currentMedications?: Prisma.SortOrderInput | Prisma.SortOrder
   familyAnesthesiaProblems?: Prisma.SortOrderInput | Prisma.SortOrder
   familyAnesthesiaDetails?: Prisma.SortOrderInput | Prisma.SortOrder
+  unexplainedAnaesthesiaComplications?: Prisma.SortOrderInput | Prisma.SortOrder
+  malignantHyperthermiaHistory?: Prisma.SortOrderInput | Prisma.SortOrder
+  anticipatedDifficultAirway?: Prisma.SortOrderInput | Prisma.SortOrder
   dentalProsthetics?: Prisma.SortOrderInput | Prisma.SortOrder
   looseTeeth?: Prisma.SortOrderInput | Prisma.SortOrder
   smoking?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1148,6 +1175,9 @@ export type PreoperativeAssessmentWhereUniqueInput = Prisma.AtLeast<{
   currentMedications?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   familyAnesthesiaProblems?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   familyAnesthesiaDetails?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  malignantHyperthermiaHistory?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
+  anticipatedDifficultAirway?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   dentalProsthetics?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   looseTeeth?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
   smoking?: Prisma.BoolNullableFilter<"PreoperativeAssessment"> | boolean | null
@@ -1252,6 +1282,9 @@ export type PreoperativeAssessmentOrderByWithAggregationInput = {
   currentMedications?: Prisma.SortOrderInput | Prisma.SortOrder
   familyAnesthesiaProblems?: Prisma.SortOrderInput | Prisma.SortOrder
   familyAnesthesiaDetails?: Prisma.SortOrderInput | Prisma.SortOrder
+  unexplainedAnaesthesiaComplications?: Prisma.SortOrderInput | Prisma.SortOrder
+  malignantHyperthermiaHistory?: Prisma.SortOrderInput | Prisma.SortOrder
+  anticipatedDifficultAirway?: Prisma.SortOrderInput | Prisma.SortOrder
   dentalProsthetics?: Prisma.SortOrderInput | Prisma.SortOrder
   looseTeeth?: Prisma.SortOrderInput | Prisma.SortOrder
   smoking?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1358,6 +1391,9 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
   currentMedications?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
   familyAnesthesiaProblems?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   familyAnesthesiaDetails?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  malignantHyperthermiaHistory?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
+  anticipatedDifficultAirway?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   dentalProsthetics?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   looseTeeth?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
   smoking?: Prisma.BoolNullableWithAggregatesFilter<"PreoperativeAssessment"> | boolean | null
@@ -1455,6 +1491,9 @@ export type PreoperativeAssessmentCreateInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -1559,6 +1598,9 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -1661,6 +1703,9 @@ export type PreoperativeAssessmentUpdateInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -1765,6 +1810,9 @@ export type PreoperativeAssessmentUncheckedUpdateInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -1868,6 +1916,9 @@ export type PreoperativeAssessmentCreateManyInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -1965,6 +2016,9 @@ export type PreoperativeAssessmentUpdateManyMutationInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -2063,6 +2117,9 @@ export type PreoperativeAssessmentUncheckedUpdateManyInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -2166,6 +2223,9 @@ export type PreoperativeAssessmentCountOrderByAggregateInput = {
   currentMedications?: Prisma.SortOrder
   familyAnesthesiaProblems?: Prisma.SortOrder
   familyAnesthesiaDetails?: Prisma.SortOrder
+  unexplainedAnaesthesiaComplications?: Prisma.SortOrder
+  malignantHyperthermiaHistory?: Prisma.SortOrder
+  anticipatedDifficultAirway?: Prisma.SortOrder
   dentalProsthetics?: Prisma.SortOrder
   looseTeeth?: Prisma.SortOrder
   smoking?: Prisma.SortOrder
@@ -2287,6 +2347,9 @@ export type PreoperativeAssessmentMaxOrderByAggregateInput = {
   currentMedications?: Prisma.SortOrder
   familyAnesthesiaProblems?: Prisma.SortOrder
   familyAnesthesiaDetails?: Prisma.SortOrder
+  unexplainedAnaesthesiaComplications?: Prisma.SortOrder
+  malignantHyperthermiaHistory?: Prisma.SortOrder
+  anticipatedDifficultAirway?: Prisma.SortOrder
   dentalProsthetics?: Prisma.SortOrder
   looseTeeth?: Prisma.SortOrder
   smoking?: Prisma.SortOrder
@@ -2380,6 +2443,9 @@ export type PreoperativeAssessmentMinOrderByAggregateInput = {
   currentMedications?: Prisma.SortOrder
   familyAnesthesiaProblems?: Prisma.SortOrder
   familyAnesthesiaDetails?: Prisma.SortOrder
+  unexplainedAnaesthesiaComplications?: Prisma.SortOrder
+  malignantHyperthermiaHistory?: Prisma.SortOrder
+  anticipatedDifficultAirway?: Prisma.SortOrder
   dentalProsthetics?: Prisma.SortOrder
   looseTeeth?: Prisma.SortOrder
   smoking?: Prisma.SortOrder
@@ -2598,10 +2664,12 @@ export type PreoperativeAssessmentCreateNestedOneWithoutLabRowsInput = {
   connect?: Prisma.PreoperativeAssessmentWhereUniqueInput
 }
 
-export type PreoperativeAssessmentUpdateOneRequiredWithoutLabRowsNestedInput = {
+export type PreoperativeAssessmentUpdateOneWithoutLabRowsNestedInput = {
   create?: Prisma.XOR<Prisma.PreoperativeAssessmentCreateWithoutLabRowsInput, Prisma.PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput>
   connectOrCreate?: Prisma.PreoperativeAssessmentCreateOrConnectWithoutLabRowsInput
   upsert?: Prisma.PreoperativeAssessmentUpsertWithoutLabRowsInput
+  disconnect?: Prisma.PreoperativeAssessmentWhereInput | boolean
+  delete?: Prisma.PreoperativeAssessmentWhereInput | boolean
   connect?: Prisma.PreoperativeAssessmentWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.PreoperativeAssessmentUpdateToOneWithWhereWithoutLabRowsInput, Prisma.PreoperativeAssessmentUpdateWithoutLabRowsInput>, Prisma.PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput>
 }
@@ -2648,6 +2716,9 @@ export type PreoperativeAssessmentCreateWithoutCaseInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -2750,6 +2821,9 @@ export type PreoperativeAssessmentUncheckedCreateWithoutCaseInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -2868,6 +2942,9 @@ export type PreoperativeAssessmentUpdateWithoutCaseInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -2970,6 +3047,9 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -3072,6 +3152,9 @@ export type PreoperativeAssessmentCreateWithoutDiagnosesInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -3175,6 +3258,9 @@ export type PreoperativeAssessmentUncheckedCreateWithoutDiagnosesInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -3292,6 +3378,9 @@ export type PreoperativeAssessmentUpdateWithoutDiagnosesInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -3395,6 +3484,9 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -3496,6 +3588,9 @@ export type PreoperativeAssessmentCreateWithoutProcedureRowsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -3599,6 +3694,9 @@ export type PreoperativeAssessmentUncheckedCreateWithoutProcedureRowsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -3716,6 +3814,9 @@ export type PreoperativeAssessmentUpdateWithoutProcedureRowsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -3819,6 +3920,9 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -3920,6 +4024,9 @@ export type PreoperativeAssessmentCreateWithoutComorbidityRowsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -4023,6 +4130,9 @@ export type PreoperativeAssessmentUncheckedCreateWithoutComorbidityRowsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -4140,6 +4250,9 @@ export type PreoperativeAssessmentUpdateWithoutComorbidityRowsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -4243,6 +4356,9 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -4344,6 +4460,9 @@ export type PreoperativeAssessmentCreateWithoutLabRowsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -4447,6 +4566,9 @@ export type PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -4564,6 +4686,9 @@ export type PreoperativeAssessmentUpdateWithoutLabRowsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -4667,6 +4792,9 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -4768,6 +4896,9 @@ export type PreoperativeAssessmentCreateWithoutMedicationsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -4871,6 +5002,9 @@ export type PreoperativeAssessmentUncheckedCreateWithoutMedicationsInput = {
   currentMedications?: string | null
   familyAnesthesiaProblems?: boolean | null
   familyAnesthesiaDetails?: string | null
+  unexplainedAnaesthesiaComplications?: boolean | null
+  malignantHyperthermiaHistory?: boolean | null
+  anticipatedDifficultAirway?: boolean | null
   dentalProsthetics?: boolean | null
   looseTeeth?: boolean | null
   smoking?: boolean | null
@@ -4988,6 +5122,9 @@ export type PreoperativeAssessmentUpdateWithoutMedicationsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -5091,6 +5228,9 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutMedicationsInput = {
   currentMedications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   familyAnesthesiaProblems?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   familyAnesthesiaDetails?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  unexplainedAnaesthesiaComplications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  malignantHyperthermiaHistory?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  anticipatedDifficultAirway?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   dentalProsthetics?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   looseTeeth?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smoking?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -5260,6 +5400,9 @@ export type PreoperativeAssessmentSelect<ExtArgs extends runtime.Types.Extension
   currentMedications?: boolean
   familyAnesthesiaProblems?: boolean
   familyAnesthesiaDetails?: boolean
+  unexplainedAnaesthesiaComplications?: boolean
+  malignantHyperthermiaHistory?: boolean
+  anticipatedDifficultAirway?: boolean
   dentalProsthetics?: boolean
   looseTeeth?: boolean
   smoking?: boolean
@@ -5365,6 +5508,9 @@ export type PreoperativeAssessmentSelectCreateManyAndReturn<ExtArgs extends runt
   currentMedications?: boolean
   familyAnesthesiaProblems?: boolean
   familyAnesthesiaDetails?: boolean
+  unexplainedAnaesthesiaComplications?: boolean
+  malignantHyperthermiaHistory?: boolean
+  anticipatedDifficultAirway?: boolean
   dentalProsthetics?: boolean
   looseTeeth?: boolean
   smoking?: boolean
@@ -5464,6 +5610,9 @@ export type PreoperativeAssessmentSelectUpdateManyAndReturn<ExtArgs extends runt
   currentMedications?: boolean
   familyAnesthesiaProblems?: boolean
   familyAnesthesiaDetails?: boolean
+  unexplainedAnaesthesiaComplications?: boolean
+  malignantHyperthermiaHistory?: boolean
+  anticipatedDifficultAirway?: boolean
   dentalProsthetics?: boolean
   looseTeeth?: boolean
   smoking?: boolean
@@ -5563,6 +5712,9 @@ export type PreoperativeAssessmentSelectScalar = {
   currentMedications?: boolean
   familyAnesthesiaProblems?: boolean
   familyAnesthesiaDetails?: boolean
+  unexplainedAnaesthesiaComplications?: boolean
+  malignantHyperthermiaHistory?: boolean
+  anticipatedDifficultAirway?: boolean
   dentalProsthetics?: boolean
   looseTeeth?: boolean
   smoking?: boolean
@@ -5632,7 +5784,7 @@ export type PreoperativeAssessmentSelectScalar = {
   syncRevision?: boolean
 }
 
-export type PreoperativeAssessmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "ageYears" | "ageValue" | "ageApproxDays" | "ageUnit" | "sex" | "heightCm" | "weightKg" | "bmi" | "bodySurfaceAreaM2" | "bloodType" | "rhFactor" | "diagnosis" | "diagnosesJson" | "plannedProcedure" | "proceduresJson" | "icdCode" | "teamNotes" | "physicalExamReport" | "notes" | "comorbidities" | "allergies" | "allergyDetails" | "latexAllergy" | "currentMedications" | "familyAnesthesiaProblems" | "familyAnesthesiaDetails" | "dentalProsthetics" | "looseTeeth" | "smoking" | "substanceAbuse" | "bpSystolic" | "bpDiastolic" | "heartRate" | "heartArrhythmia" | "spO2" | "temperature" | "respiratoryRate" | "bpUnobtainable" | "heartRateUnobtainable" | "spO2Unobtainable" | "temperatureUnobtainable" | "respiratoryRateUnobtainable" | "mallampati" | "mouthOpeningCm" | "thyromental" | "neckMobility" | "upperLipBiteTest" | "retrognathia" | "prominentIncisors" | "facialHair" | "difficultAirwayHistory" | "difficultAirwayNotes" | "cormackLehane" | "airwayUnobtainable" | "asaScore" | "elective" | "emergencySurgery" | "highRiskSurgery" | "rcriIschemicHeart" | "rcriCHF" | "rcriCVD" | "rcriInsulinDM" | "rcriCreatinine" | "rcriScore" | "gutaScore" | "apfelScore" | "stopBangScore" | "apfelPONVHistory" | "apfelPostopOpioids" | "stopbangSnoring" | "stopbangTired" | "stopbangObserved" | "stopbangBP" | "stopbangNeck" | "povocScore" | "povocRiskPercent" | "povocSurgeryAtLeast30Minutes" | "povocAgeAtLeast3Years" | "povocStrabismusSurgery" | "povocHistory" | "coldsApplicable" | "coldsScore" | "coldsCurrentSymptoms" | "coldsOnset" | "coldsLungDisease" | "coldsAirwayDevice" | "coldsSurgery" | "pediatricFasting" | "labResults" | "aiOptIn" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["preoperativeAssessment"]>
+export type PreoperativeAssessmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "ageYears" | "ageValue" | "ageApproxDays" | "ageUnit" | "sex" | "heightCm" | "weightKg" | "bmi" | "bodySurfaceAreaM2" | "bloodType" | "rhFactor" | "diagnosis" | "diagnosesJson" | "plannedProcedure" | "proceduresJson" | "icdCode" | "teamNotes" | "physicalExamReport" | "notes" | "comorbidities" | "allergies" | "allergyDetails" | "latexAllergy" | "currentMedications" | "familyAnesthesiaProblems" | "familyAnesthesiaDetails" | "unexplainedAnaesthesiaComplications" | "malignantHyperthermiaHistory" | "anticipatedDifficultAirway" | "dentalProsthetics" | "looseTeeth" | "smoking" | "substanceAbuse" | "bpSystolic" | "bpDiastolic" | "heartRate" | "heartArrhythmia" | "spO2" | "temperature" | "respiratoryRate" | "bpUnobtainable" | "heartRateUnobtainable" | "spO2Unobtainable" | "temperatureUnobtainable" | "respiratoryRateUnobtainable" | "mallampati" | "mouthOpeningCm" | "thyromental" | "neckMobility" | "upperLipBiteTest" | "retrognathia" | "prominentIncisors" | "facialHair" | "difficultAirwayHistory" | "difficultAirwayNotes" | "cormackLehane" | "airwayUnobtainable" | "asaScore" | "elective" | "emergencySurgery" | "highRiskSurgery" | "rcriIschemicHeart" | "rcriCHF" | "rcriCVD" | "rcriInsulinDM" | "rcriCreatinine" | "rcriScore" | "gutaScore" | "apfelScore" | "stopBangScore" | "apfelPONVHistory" | "apfelPostopOpioids" | "stopbangSnoring" | "stopbangTired" | "stopbangObserved" | "stopbangBP" | "stopbangNeck" | "povocScore" | "povocRiskPercent" | "povocSurgeryAtLeast30Minutes" | "povocAgeAtLeast3Years" | "povocStrabismusSurgery" | "povocHistory" | "coldsApplicable" | "coldsScore" | "coldsCurrentSymptoms" | "coldsOnset" | "coldsLungDisease" | "coldsAirwayDevice" | "coldsSurgery" | "pediatricFasting" | "labResults" | "aiOptIn" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["preoperativeAssessment"]>
 export type PreoperativeAssessmentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   diagnoses?: boolean | Prisma.PreoperativeAssessment$diagnosesArgs<ExtArgs>
@@ -5677,6 +5829,12 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     diagnosesJson: runtime.JsonValue | null
     plannedProcedure: string
     proceduresJson: runtime.JsonValue | null
+    /**
+     * LEGACY, read-only. The first diagnosis code, denormalised. The diagnoses
+     * themselves export properly through the PreopDiagnosis mirror, so nothing
+     * is lost by this not being exported; it survives because the printed
+     * summary still displays it beside the diagnosis text.
+     */
     icdCode: string | null
     teamNotes: string | null
     physicalExamReport: string | null
@@ -5688,6 +5846,9 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     currentMedications: string | null
     familyAnesthesiaProblems: boolean | null
     familyAnesthesiaDetails: string | null
+    unexplainedAnaesthesiaComplications: boolean | null
+    malignantHyperthermiaHistory: boolean | null
+    anticipatedDifficultAirway: boolean | null
     dentalProsthetics: boolean | null
     looseTeeth: boolean | null
     smoking: boolean | null
@@ -6212,6 +6373,9 @@ export interface PreoperativeAssessmentFieldRefs {
   readonly currentMedications: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
   readonly familyAnesthesiaProblems: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly familyAnesthesiaDetails: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
+  readonly unexplainedAnaesthesiaComplications: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly malignantHyperthermiaHistory: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
+  readonly anticipatedDifficultAirway: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly dentalProsthetics: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly looseTeeth: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly smoking: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>

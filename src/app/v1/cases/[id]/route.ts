@@ -7,7 +7,7 @@ import { logAudit, logAuditInTransaction } from "@/lib/audit"
 import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
 import { parseLenient } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
-import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
+import { resolveDrugExposureConcepts, syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
 import { rebuildProjection, reconcileFullLog, snapshotLogForReconcile } from "@/lib/case-events"
 import {
@@ -518,6 +518,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           if (bridged.length > 0) projectedLog = [...projectedLog, ...bridged]
         }
         if (projectedLog && projectedLog.length > 0) {
+          // The third write path into CaseEvent, and the one a web client uses
+          // most: saving the case saves the whole timetable. Without this a
+          // drug charted here would store its ATC and no concept, while the
+          // identical drug charted through the events endpoint stored both.
+          await resolveDrugExposureConcepts(tx, projectedLog as unknown as Record<string, unknown>[])
           try {
             await reconcileFullLog(tx, id, userId, projectedLog, "web")
             await rebuildProjection(tx, id, { revisionAlreadyReserved: true })

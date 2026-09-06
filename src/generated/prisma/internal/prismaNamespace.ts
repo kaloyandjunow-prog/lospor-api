@@ -5592,9 +5592,9 @@ export const CaseEventScalarFieldEnum = {
   spO2: 'spO2',
   etco2: 'etco2',
   temp: 'temp',
-  bgl: 'bgl',
-  bglLoincCode: 'bglLoincCode',
-  bglUnitCanon: 'bglUnitCanon',
+  bis: 'bis',
+  tofRatio: 'tofRatio',
+  cvp: 'cvp',
   fgfLitersPerMin: 'fgfLitersPerMin',
   carrierGas: 'carrierGas',
   fio2Percent: 'fio2Percent',
@@ -5691,6 +5691,9 @@ export const PreoperativeAssessmentScalarFieldEnum = {
   currentMedications: 'currentMedications',
   familyAnesthesiaProblems: 'familyAnesthesiaProblems',
   familyAnesthesiaDetails: 'familyAnesthesiaDetails',
+  unexplainedAnaesthesiaComplications: 'unexplainedAnaesthesiaComplications',
+  malignantHyperthermiaHistory: 'malignantHyperthermiaHistory',
+  anticipatedDifficultAirway: 'anticipatedDifficultAirway',
   dentalProsthetics: 'dentalProsthetics',
   looseTeeth: 'looseTeeth',
   smoking: 'smoking',
@@ -5782,6 +5785,8 @@ export const IntraoperativeRecordScalarFieldEnum = {
   ippv: 'ippv',
   jetVentilation: 'jetVentilation',
   fob: 'fob',
+  presentsIntubated: 'presentsIntubated',
+  airwayNotApplicable: 'airwayNotApplicable',
   airwayTools: 'airwayTools',
   airwayNotes: 'airwayNotes',
   cormackLehane: 'cormackLehane',
@@ -5797,17 +5802,12 @@ export const IntraoperativeRecordScalarFieldEnum = {
   dltSize: 'dltSize',
   endobronchialSize: 'endobronchialSize',
   volatileAgent: 'volatileAgent',
-  plexusBlock: 'plexusBlock',
-  cvkSite: 'cvkSite',
-  arterialLineSite: 'arterialLineSite',
   ecg: 'ecg',
   urinaryCatheter: 'urinaryCatheter',
   stomachTube: 'stomachTube',
   spO2Monitor: 'spO2Monitor',
   invasiveBP: 'invasiveBP',
   cvpMonitor: 'cvpMonitor',
-  bglMonitor: 'bglMonitor',
-  bloodGasMonitor: 'bloodGasMonitor',
   neuroMonitor: 'neuroMonitor',
   nbpMonitor: 'nbpMonitor',
   etco2Monitor: 'etco2Monitor',
@@ -5831,6 +5831,7 @@ export const IntraoperativeRecordScalarFieldEnum = {
   bloodLossMl: 'bloodLossMl',
   timeSeriesData: 'timeSeriesData',
   keyEvents: 'keyEvents',
+  labResults: 'labResults',
   complications: 'complications',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -6093,7 +6094,9 @@ export type ComorbidityScalarFieldEnum = (typeof ComorbidityScalarFieldEnum)[key
 
 export const LabResultScalarFieldEnum = {
   id: 'id',
+  section: 'section',
   preopId: 'preopId',
+  intraopId: 'intraopId',
   caseId: 'caseId',
   test: 'test',
   value: 'value',
@@ -6783,48 +6786,6 @@ export type EnumVolatileAgentFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
  * Reference to a field of type 'VolatileAgent[]'
  */
 export type ListEnumVolatileAgentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VolatileAgent[]'>
-    
-
-
-/**
- * Reference to a field of type 'PlexusBlock'
- */
-export type EnumPlexusBlockFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlexusBlock'>
-    
-
-
-/**
- * Reference to a field of type 'PlexusBlock[]'
- */
-export type ListEnumPlexusBlockFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlexusBlock[]'>
-    
-
-
-/**
- * Reference to a field of type 'CVKSite'
- */
-export type EnumCVKSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CVKSite'>
-    
-
-
-/**
- * Reference to a field of type 'CVKSite[]'
- */
-export type ListEnumCVKSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CVKSite[]'>
-    
-
-
-/**
- * Reference to a field of type 'ArterialLineSite'
- */
-export type EnumArterialLineSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ArterialLineSite'>
-    
-
-
-/**
- * Reference to a field of type 'ArterialLineSite[]'
- */
-export type ListEnumArterialLineSiteFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ArterialLineSite[]'>
     
 
 

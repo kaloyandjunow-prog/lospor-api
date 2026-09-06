@@ -22,7 +22,7 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
     finalizations: [{ id: "finalization-1" }],
     updatedAt: new Date("2026-06-01T09:01:00Z"),
     finalizedAt: new Date("2026-06-01T09:01:00Z"),
-    selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0, sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_ECG", standardConceptId: 4145586, mappingStatus: "MAPPED" }],
+    selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0, sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_ECG", standardConceptId: 4187078, mappingStatus: "MAPPED" }],
     complications: [{ section: "postop", label: "PONV", note: "treated", timestamp: endTime, source: "relational-sync", ordinal: 0, sourceVocabulary: "LOSPOR_COMPLICATION", sourceCode: "PONV", standardConceptId: 4166237, mappingStatus: "MAPPED" }],
     events: [
       {
@@ -37,9 +37,6 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         spO2: 99,
         etco2: 36,
         temp: 36.5,
-        bgl: 5.6,
-        bglLoincCode: "2345-7",
-        bglUnitCanon: "mmol/L",
         atcCode: null,
         drugId: null,
         drugRoute: null,
@@ -51,9 +48,6 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         label: "Fentanyl",
         value: null,
         unit: "mcg",
-        bgl: null,
-        bglLoincCode: null,
-        bglUnitCanon: null,
         atcCode: "N01AH01",
         drugId: "drug-1",
         standardConceptId: 1154029,
@@ -80,6 +74,11 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         timestamp: new Date("2026-06-01T08:35:00Z"),
         label: "Sevoflurane", value: null, unit: "%",
         agentPercent: 2, metadataJson: { name: "Sevoflurane" },
+        // ATC N01AB08, resolved the way a real event now is: at write time, by
+        // resolveDrugExposureConcepts. Left without one for a while after that
+        // resolver shipped, which is exactly the state a case charted before
+        // this concept existed in the vocabulary would still be in.
+        atcCode: "N01AB08", standardConceptId: 19039298, mappingStatus: "MAPPED",
       },
       {
         type: "agent_stop",
@@ -91,6 +90,17 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         timestamp: new Date("2026-06-01T08:40:00Z"),
         label: "Ringer lactate", value: null, unit: "mL", fluidId: "fl-1",
         volume: 500, fluidCategory: "CRYSTALLOID", metadataJson: { name: "Ringer lactate" },
+        // B05BB01 is a real, correctly-resolved ATC code with no OMOP standard
+        // concept behind it -- SOURCE_ONLY, verified against the live
+        // ConceptMap, not a gap in this fixture. Left uncoded on purpose: this
+        // is the honest state, not something to "fix".
+        atcCode: "B05BB01", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
+      },
+      {
+        type: "fluid_end",
+        timestamp: new Date("2026-06-01T08:55:00Z"),
+        label: "Ringer lactate", value: null, unit: null, fluidId: "fl-1",
+        metadataJson: {},
       },
       {
         type: "gas_change",
@@ -103,9 +113,6 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         fio2Percent: 50,
         fiAirPercent: 50,
         fiN2OPercent: 0,
-        bgl: null,
-        bglLoincCode: null,
-        bglUnitCanon: null,
         atcCode: null,
         drugId: null,
         drugRoute: null,
@@ -162,6 +169,12 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
       retrognathia: false,
       prominentIncisors: true,
       facialHair: null,
+      // One of each tri-state, so the fixture proves the difference rather than
+      // just the true case: anticipated yes, MH asked and denied, the
+      // unexplained-event question never asked at all.
+      anticipatedDifficultAirway: true,
+      malignantHyperthermiaHistory: false,
+      unexplainedAnaesthesiaComplications: null,
       labResults: [],
       labRows: [
         { test: "Hemoglobin", valueNum: 180, value: "180", unitCanon: "g/L", loincCode: "718-7", abnormalFlag: "high", referenceLow: 130, referenceHigh: 175, standardConceptId: 3000963, mappingStatus: "MAPPED" },
