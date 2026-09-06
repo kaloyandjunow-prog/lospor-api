@@ -13,6 +13,7 @@ import {
 } from "@lospor/core/case-payloads"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import { aldreteTotal as coreAldreteTotal } from "@lospor/core/postop"
+import { calcApfel, calcRCRI, calcStopBang } from "@lospor/core/scores"
 import {
   calculateColds,
   calculatePovoc,
@@ -156,13 +157,50 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
       })
     : null
 
+  const ageYears = normalizedAge?.completedYears ?? preop.ageYears ?? null
+
+  // Derived server-side from the stored factors, the same way POVOC and COLDS
+  // already are for a pediatric record. A client that sent its own total
+  // could send one inconsistent with the factors beside it -- stale, a client
+  // bug, or a tampered request -- and nothing here checked.
+  const adultScores = pediatric ? null : {
+    rcriScore: calcRCRI({
+      highRiskSurgery: !!preop.highRiskSurgery,
+      ischaemicHeartDisease: !!preop.rcriIschemicHeart,
+      congestiveHeartFailure: !!preop.rcriCHF,
+      cerebrovascularDisease: !!preop.rcriCVD,
+      insulinDependentDiabetes: !!preop.rcriInsulinDM,
+      creatinineHigh: !!preop.rcriCreatinine,
+    }),
+    apfelScore: calcApfel({
+      female: preop.sex === "FEMALE",
+      // Answered `false` only -- `smoking` is tri-state and this factor is
+      // the negation of the question asked. Treating an unanswered `null` as
+      // a confirmed non-smoker awarded a point to a question nobody had
+      // answered.
+      nonSmoker: preop.smoking === false,
+      ponvHistory: !!preop.apfelPONVHistory,
+      opioidsPlanned: !!preop.apfelPostopOpioids,
+    }),
+    stopBangScore: calcStopBang({
+      snoring: !!preop.stopbangSnoring,
+      tired: !!preop.stopbangTired,
+      observed: !!preop.stopbangObserved,
+      highBP: !!preop.stopbangBP,
+      bmi: bmi ?? 0,
+      ageOver50: ageYears != null && ageYears > 50,
+      neckOver40cm: !!preop.stopbangNeck,
+      male: preop.sex === "MALE",
+    }),
+  }
+
   // Item 26: Build JSON arrays for diagnoses/procedures; keep legacy string columns for compat
   const diagnosesArr = Array.isArray(preop.diagnoses) ? preop.diagnoses : []
   const proceduresArr = Array.isArray(preop.procedures) ? preop.procedures : []
 
   return {
     // Items 18 + 19: Use null instead of 0 for missing biometrics — 0 corrupts risk scores
-    ageYears: normalizedAge?.completedYears ?? preop.ageYears ?? null,
+    ageYears,
     ageApproxDays: normalizedAge?.approximateDays ?? null,
     ageValue: preop.ageValue ?? null,
     ageUnit: preop.ageUnit ?? null,
@@ -239,10 +277,10 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     rcriInsulinDM: preop.rcriInsulinDM ?? null,
     rcriCreatinine: preop.rcriCreatinine ?? null,
 
-    rcriScore:     pediatric ? null : toIntOrNull(preop.rcriScore),
+    rcriScore:     adultScores?.rcriScore ?? null,
     gutaScore:     pediatric ? null : toFloatOrNull(preop.gutaScore),
-    apfelScore:    pediatric ? null : toIntOrNull(preop.apfelScore),
-    stopBangScore: pediatric ? null : toIntOrNull(preop.stopBangScore),
+    apfelScore:    adultScores?.apfelScore ?? null,
+    stopBangScore: adultScores?.stopBangScore ?? null,
 
     apfelPONVHistory: preop.apfelPONVHistory ?? null,
     apfelPostopOpioids: preop.apfelPostopOpioids ?? null,
