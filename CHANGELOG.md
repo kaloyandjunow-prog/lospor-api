@@ -1,5 +1,32 @@
 # Changelog - LOSPOR API
 
+## [9.9.5] - 2026-09-07
+
+### Fixed
+
+- **The hosted API had not been published since 9.8.0.** 9.9.0 added a cron
+  running the case-closure sweep every fifteen minutes. Vercel charges for
+  sub-daily cron schedules and this deployment is on a plan without them, so
+  the entry did not make the sweep run slowly — it made every deployment be
+  *rejected*. 9.9.0, 9.9.1, 9.9.2 and 9.9.4 all merged and tagged with every
+  required check green while the live API stayed at 9.8.0, because the Vercel
+  check is not a required one.
+
+  The cron is removed. `vercel-crons.test.ts` now pins the rule — nothing
+  sub-daily, and this route specifically excluded — so re-adding it fails a
+  test that explains why instead of silently freezing publication again.
+
+### Changed
+
+- **Automatic case closure is an appliance feature.** The appliance schedules
+  this route every five minutes from the delivery worker, which is where the
+  thirty-minute review window can actually be honoured, and a new
+  `delivery.case-close-sweep-scheduled` overlay rule there stops a vendor pass
+  from dropping it. On the hosted deployment nothing schedules it: a case
+  closes if a clinician still has it open when the countdown expires, and
+  otherwise stays in `AWAITING_REVIEW` until someone acts on it. That is stated
+  in the route's own comment rather than left to be discovered.
+
 ## [9.9.4] - 2026-09-07
 
 ### Fixed
