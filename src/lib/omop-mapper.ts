@@ -86,37 +86,14 @@
  */
 
 import { DICTIONARY_VERSION } from "@/lib/data-dictionary"
-import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import { deriveQualityStatus } from "@lospor/core/omop"
 import { nextId, resetIds, pseudonymId } from "./omop-mapper/ids"
-import { isoDate, isoInstant, numOrNull } from "./omop-mapper/date-helpers"
+import { isoDate, isoInstant } from "./omop-mapper/date-helpers"
 import {
   AIRWAY_ACTS,
-  AIRWAY_DEVICE_CONCEPTS,
-  AIRWAY_TOOL_CONCEPTS,
-  TECHNIQUE_CONCEPTS,
-  TECHNIQUE_PARENT,
-  techniqueConceptFor,
-  VASCULAR_ACCESS_CONCEPTS,
-  VENTILATION_MODE_CONCEPTS,
-  vascularAccessConceptFor,
-  AIRWAY_ACT_CONCEPTS,
-  doseUnitOf,
   UNOBTAINABLE_CONCEPT_ID,
-  COMPLICATION_OBSERVATION_DOMAIN_CONCEPTS,
-  COMPLICATION_PROCEDURE_DOMAIN_CONCEPTS,
-  SELECTION_PROCEDURE_DOMAIN_CONCEPTS,
-  SELECTION_MEASUREMENT_DOMAIN_CONCEPTS,
   MALLAMPATI_NOT_ASSESSABLE_CONCEPT_ID,
-  VITAL_CONCEPTS,
   LAB_UNIT_CONCEPTS,
-  AIRWAY_MEASUREMENTS,
-  NECK_MOBILITY_CONCEPTS,
-  BLOOD_GROUP_CONCEPTS,
-  bloodGroupConceptFor,
-  YES_CONCEPT_ID,
-  NO_CONCEPT_ID,
-  ASA_CLASS_CONCEPTS,
   AIRWAY_GRADES,
 } from "./omop-mapper/concepts"
 import type {

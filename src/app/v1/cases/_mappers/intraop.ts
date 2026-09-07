@@ -7,7 +7,7 @@ import {
 } from "@/lib/intraop-time"
 import { canonicalizeIntraopPatch } from "@lospor/core/case-payloads"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
-import { copyKey, safeEnum, toFloatOrNull, toIntOrNull } from "./shared"
+import { copyKey, safeEnum } from "./shared"
 
 /** A bare wall clock, the only shape the legacy startTime/endTime columns accept. */
 const HHMMRE = /^([01]\d|2[0-3]):([0-5]\d)$/

@@ -1,12 +1,10 @@
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePreopPatch } from "@lospor/core/case-payloads"
-import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import { calcApfel, calcRCRI, calcStopBang } from "@lospor/core/scores"
 import {
   calculateColds,
   calculatePovoc,
   normalizePediatricAge,
-  type ClinicalMode,
 } from "@lospor/core/pediatric"
 import { calculateMostellerBsa } from "@lospor/core/pediatric-calculators"
 import {
@@ -14,7 +12,6 @@ import {
   safeEnum,
   taggedListToStorage,
   toFloatOrNull,
-  toIntOrNull,
   type PreopRawInput,
 } from "./shared"
 

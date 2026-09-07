@@ -1,5 +1,15 @@
 # Changelog - LOSPOR API
 
+## [9.9.1] - 2026-09-07
+
+### Fixed
+
+- **Depends on Core 9.9.1** (unused-import cleanup, no behavioral change).
+- Removed 33 unused imports found by running `eslint --max-warnings 0` for
+  the first time against this repo, almost all of them concept-table
+  imports left in `omop-mapper.ts` by the 9.9.0 OMOP mapper split. No
+  behavioral change.
+
 ## [9.9.0] - 2026-09-07
 
 ### Changed
