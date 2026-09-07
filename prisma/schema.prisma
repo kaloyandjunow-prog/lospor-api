@@ -277,6 +277,20 @@ model Case {
   /// countdown so any client, on any device, computes the same remaining time
   /// from this one server timestamp rather than a per-browser local clock.
   awaitingReviewAt     DateTime?
+  /// When the automatic-closure sweep may next consider this case, and how
+  /// many times it has already tried and been refused.
+  ///
+  /// The sweep takes the oldest 25 expired cases each run. A case it cannot
+  /// close stays AWAITING_REVIEW with the same awaitingReviewAt, so without
+  /// these it was selected again on every run for ever -- and twenty-five such
+  /// cases at the front of the queue meant the twenty-sixth was never examined
+  /// at all, however complete it was. One ward's incomplete paperwork could
+  /// silently stop automatic closure for the whole hospital.
+  ///
+  /// Null means no backoff is in effect: never attempted, or attempted and
+  /// closed. Cleared if the case leaves AWAITING_REVIEW and returns.
+  closeAttemptCount    Int          @default(0)
+  closeNextAttemptAt   DateTime?
   finalizedAt          DateTime?
   clientDraftId        String?
   clinicalRevision     Int          @default(0)

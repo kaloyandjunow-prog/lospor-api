@@ -27,12 +27,14 @@ export type AggregateCase = {
 }
 
 export type CaseAvgAggregateOutputType = {
+  closeAttemptCount: number | null
   clinicalRevision: number | null
   eventRevision: number | null
   relationalRevision: number | null
 }
 
 export type CaseSumAggregateOutputType = {
+  closeAttemptCount: number | null
   clinicalRevision: number | null
   eventRevision: number | null
   relationalRevision: number | null
@@ -50,6 +52,8 @@ export type CaseMinAggregateOutputType = {
   clinicalMode: $Enums.ClinicalMode | null
   clinicalRulesVersion: string | null
   awaitingReviewAt: Date | null
+  closeAttemptCount: number | null
+  closeNextAttemptAt: Date | null
   finalizedAt: Date | null
   clientDraftId: string | null
   clinicalRevision: number | null
@@ -71,6 +75,8 @@ export type CaseMaxAggregateOutputType = {
   clinicalMode: $Enums.ClinicalMode | null
   clinicalRulesVersion: string | null
   awaitingReviewAt: Date | null
+  closeAttemptCount: number | null
+  closeNextAttemptAt: Date | null
   finalizedAt: Date | null
   clientDraftId: string | null
   clinicalRevision: number | null
@@ -92,6 +98,8 @@ export type CaseCountAggregateOutputType = {
   clinicalMode: number
   clinicalRulesVersion: number
   awaitingReviewAt: number
+  closeAttemptCount: number
+  closeNextAttemptAt: number
   finalizedAt: number
   clientDraftId: number
   clinicalRevision: number
@@ -104,12 +112,14 @@ export type CaseCountAggregateOutputType = {
 
 
 export type CaseAvgAggregateInputType = {
+  closeAttemptCount?: true
   clinicalRevision?: true
   eventRevision?: true
   relationalRevision?: true
 }
 
 export type CaseSumAggregateInputType = {
+  closeAttemptCount?: true
   clinicalRevision?: true
   eventRevision?: true
   relationalRevision?: true
@@ -127,6 +137,8 @@ export type CaseMinAggregateInputType = {
   clinicalMode?: true
   clinicalRulesVersion?: true
   awaitingReviewAt?: true
+  closeAttemptCount?: true
+  closeNextAttemptAt?: true
   finalizedAt?: true
   clientDraftId?: true
   clinicalRevision?: true
@@ -148,6 +160,8 @@ export type CaseMaxAggregateInputType = {
   clinicalMode?: true
   clinicalRulesVersion?: true
   awaitingReviewAt?: true
+  closeAttemptCount?: true
+  closeNextAttemptAt?: true
   finalizedAt?: true
   clientDraftId?: true
   clinicalRevision?: true
@@ -169,6 +183,8 @@ export type CaseCountAggregateInputType = {
   clinicalMode?: true
   clinicalRulesVersion?: true
   awaitingReviewAt?: true
+  closeAttemptCount?: true
+  closeNextAttemptAt?: true
   finalizedAt?: true
   clientDraftId?: true
   clinicalRevision?: true
@@ -277,6 +293,8 @@ export type CaseGroupByOutputType = {
   clinicalMode: $Enums.ClinicalMode
   clinicalRulesVersion: string | null
   awaitingReviewAt: Date | null
+  closeAttemptCount: number
+  closeNextAttemptAt: Date | null
   finalizedAt: Date | null
   clientDraftId: string | null
   clinicalRevision: number
@@ -321,6 +339,8 @@ export type CaseWhereInput = {
   clinicalMode?: Prisma.EnumClinicalModeFilter<"Case"> | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.StringNullableFilter<"Case"> | string | null
   awaitingReviewAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
+  closeAttemptCount?: Prisma.IntFilter<"Case"> | number
+  closeNextAttemptAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
   clientDraftId?: Prisma.StringNullableFilter<"Case"> | string | null
   clinicalRevision?: Prisma.IntFilter<"Case"> | number
@@ -357,6 +377,8 @@ export type CaseOrderByWithRelationInput = {
   clinicalMode?: Prisma.SortOrder
   clinicalRulesVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   awaitingReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  closeAttemptCount?: Prisma.SortOrder
+  closeNextAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
   finalizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   clientDraftId?: Prisma.SortOrderInput | Prisma.SortOrder
   clinicalRevision?: Prisma.SortOrder
@@ -398,6 +420,8 @@ export type CaseWhereUniqueInput = Prisma.AtLeast<{
   clinicalMode?: Prisma.EnumClinicalModeFilter<"Case"> | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.StringNullableFilter<"Case"> | string | null
   awaitingReviewAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
+  closeAttemptCount?: Prisma.IntFilter<"Case"> | number
+  closeNextAttemptAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
   clientDraftId?: Prisma.StringNullableFilter<"Case"> | string | null
   clinicalRevision?: Prisma.IntFilter<"Case"> | number
@@ -434,6 +458,8 @@ export type CaseOrderByWithAggregationInput = {
   clinicalMode?: Prisma.SortOrder
   clinicalRulesVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   awaitingReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  closeAttemptCount?: Prisma.SortOrder
+  closeNextAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
   finalizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   clientDraftId?: Prisma.SortOrderInput | Prisma.SortOrder
   clinicalRevision?: Prisma.SortOrder
@@ -463,6 +489,8 @@ export type CaseScalarWhereWithAggregatesInput = {
   clinicalMode?: Prisma.EnumClinicalModeWithAggregatesFilter<"Case"> | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.StringNullableWithAggregatesFilter<"Case"> | string | null
   awaitingReviewAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Case"> | Date | string | null
+  closeAttemptCount?: Prisma.IntWithAggregatesFilter<"Case"> | number
+  closeNextAttemptAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Case"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Case"> | Date | string | null
   clientDraftId?: Prisma.StringNullableWithAggregatesFilter<"Case"> | string | null
   clinicalRevision?: Prisma.IntWithAggregatesFilter<"Case"> | number
@@ -481,6 +509,8 @@ export type CaseCreateInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -517,6 +547,8 @@ export type CaseUncheckedCreateInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -547,6 +579,8 @@ export type CaseUpdateInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -583,6 +617,8 @@ export type CaseUncheckedUpdateInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -616,6 +652,8 @@ export type CaseCreateManyInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -634,6 +672,8 @@ export type CaseUpdateManyMutationInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -655,6 +695,8 @@ export type CaseUncheckedUpdateManyInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -696,6 +738,8 @@ export type CaseCountOrderByAggregateInput = {
   clinicalMode?: Prisma.SortOrder
   clinicalRulesVersion?: Prisma.SortOrder
   awaitingReviewAt?: Prisma.SortOrder
+  closeAttemptCount?: Prisma.SortOrder
+  closeNextAttemptAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   clientDraftId?: Prisma.SortOrder
   clinicalRevision?: Prisma.SortOrder
@@ -706,6 +750,7 @@ export type CaseCountOrderByAggregateInput = {
 }
 
 export type CaseAvgOrderByAggregateInput = {
+  closeAttemptCount?: Prisma.SortOrder
   clinicalRevision?: Prisma.SortOrder
   eventRevision?: Prisma.SortOrder
   relationalRevision?: Prisma.SortOrder
@@ -723,6 +768,8 @@ export type CaseMaxOrderByAggregateInput = {
   clinicalMode?: Prisma.SortOrder
   clinicalRulesVersion?: Prisma.SortOrder
   awaitingReviewAt?: Prisma.SortOrder
+  closeAttemptCount?: Prisma.SortOrder
+  closeNextAttemptAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   clientDraftId?: Prisma.SortOrder
   clinicalRevision?: Prisma.SortOrder
@@ -744,6 +791,8 @@ export type CaseMinOrderByAggregateInput = {
   clinicalMode?: Prisma.SortOrder
   clinicalRulesVersion?: Prisma.SortOrder
   awaitingReviewAt?: Prisma.SortOrder
+  closeAttemptCount?: Prisma.SortOrder
+  closeNextAttemptAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   clientDraftId?: Prisma.SortOrder
   clinicalRevision?: Prisma.SortOrder
@@ -754,6 +803,7 @@ export type CaseMinOrderByAggregateInput = {
 }
 
 export type CaseSumOrderByAggregateInput = {
+  closeAttemptCount?: Prisma.SortOrder
   clinicalRevision?: Prisma.SortOrder
   eventRevision?: Prisma.SortOrder
   relationalRevision?: Prisma.SortOrder
@@ -1083,6 +1133,8 @@ export type CaseCreateWithoutUserInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1117,6 +1169,8 @@ export type CaseUncheckedCreateWithoutUserInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1157,6 +1211,8 @@ export type CaseCreateWithoutCreatedByInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1191,6 +1247,8 @@ export type CaseUncheckedCreateWithoutCreatedByInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1253,6 +1311,8 @@ export type CaseScalarWhereInput = {
   clinicalMode?: Prisma.EnumClinicalModeFilter<"Case"> | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.StringNullableFilter<"Case"> | string | null
   awaitingReviewAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
+  closeAttemptCount?: Prisma.IntFilter<"Case"> | number
+  closeNextAttemptAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"Case"> | Date | string | null
   clientDraftId?: Prisma.StringNullableFilter<"Case"> | string | null
   clinicalRevision?: Prisma.IntFilter<"Case"> | number
@@ -1287,6 +1347,8 @@ export type CaseCreateWithoutInstitutionInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1321,6 +1383,8 @@ export type CaseUncheckedCreateWithoutInstitutionInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1377,6 +1441,8 @@ export type CaseCreateWithoutLockInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1412,6 +1478,8 @@ export type CaseUncheckedCreateWithoutLockInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1457,6 +1525,8 @@ export type CaseUpdateWithoutLockInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1492,6 +1562,8 @@ export type CaseUncheckedUpdateWithoutLockInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1521,6 +1593,8 @@ export type CaseCreateWithoutTransfersInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1556,6 +1630,8 @@ export type CaseUncheckedCreateWithoutTransfersInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1601,6 +1677,8 @@ export type CaseUpdateWithoutTransfersInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1636,6 +1714,8 @@ export type CaseUncheckedUpdateWithoutTransfersInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1665,6 +1745,8 @@ export type CaseCreateWithoutFieldStatusesInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1700,6 +1782,8 @@ export type CaseUncheckedCreateWithoutFieldStatusesInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1745,6 +1829,8 @@ export type CaseUpdateWithoutFieldStatusesInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1780,6 +1866,8 @@ export type CaseUncheckedUpdateWithoutFieldStatusesInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1809,6 +1897,8 @@ export type CaseCreateWithoutFieldChangesInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1844,6 +1934,8 @@ export type CaseUncheckedCreateWithoutFieldChangesInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1889,6 +1981,8 @@ export type CaseUpdateWithoutFieldChangesInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1924,6 +2018,8 @@ export type CaseUncheckedUpdateWithoutFieldChangesInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1953,6 +2049,8 @@ export type CaseCreateWithoutFinalizationsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -1988,6 +2086,8 @@ export type CaseUncheckedCreateWithoutFinalizationsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2033,6 +2133,8 @@ export type CaseUpdateWithoutFinalizationsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2068,6 +2170,8 @@ export type CaseUncheckedUpdateWithoutFinalizationsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2097,6 +2201,8 @@ export type CaseCreateWithoutEventsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2132,6 +2238,8 @@ export type CaseUncheckedCreateWithoutEventsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2177,6 +2285,8 @@ export type CaseUpdateWithoutEventsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2212,6 +2322,8 @@ export type CaseUncheckedUpdateWithoutEventsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2241,6 +2353,8 @@ export type CaseCreateWithoutPreopInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2276,6 +2390,8 @@ export type CaseUncheckedCreateWithoutPreopInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2321,6 +2437,8 @@ export type CaseUpdateWithoutPreopInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2356,6 +2474,8 @@ export type CaseUncheckedUpdateWithoutPreopInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2385,6 +2505,8 @@ export type CaseCreateWithoutIntraopInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2420,6 +2542,8 @@ export type CaseUncheckedCreateWithoutIntraopInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2465,6 +2589,8 @@ export type CaseUpdateWithoutIntraopInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2500,6 +2626,8 @@ export type CaseUncheckedUpdateWithoutIntraopInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2529,6 +2657,8 @@ export type CaseCreateWithoutPostopInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2564,6 +2694,8 @@ export type CaseUncheckedCreateWithoutPostopInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2609,6 +2741,8 @@ export type CaseUpdateWithoutPostopInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2644,6 +2778,8 @@ export type CaseUncheckedUpdateWithoutPostopInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2673,6 +2809,8 @@ export type CaseCreateWithoutClinicalCalculationsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2708,6 +2846,8 @@ export type CaseUncheckedCreateWithoutClinicalCalculationsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2753,6 +2893,8 @@ export type CaseUpdateWithoutClinicalCalculationsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2788,6 +2930,8 @@ export type CaseUncheckedUpdateWithoutClinicalCalculationsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2817,6 +2961,8 @@ export type CaseCreateWithoutComplicationsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2852,6 +2998,8 @@ export type CaseUncheckedCreateWithoutComplicationsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2897,6 +3045,8 @@ export type CaseUpdateWithoutComplicationsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2932,6 +3082,8 @@ export type CaseUncheckedUpdateWithoutComplicationsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2961,6 +3113,8 @@ export type CaseCreateWithoutSelectionsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -2996,6 +3150,8 @@ export type CaseUncheckedCreateWithoutSelectionsInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -3041,6 +3197,8 @@ export type CaseUpdateWithoutSelectionsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3076,6 +3234,8 @@ export type CaseUncheckedUpdateWithoutSelectionsInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3107,6 +3267,8 @@ export type CaseCreateManyUserInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -3127,6 +3289,8 @@ export type CaseCreateManyCreatedByInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -3145,6 +3309,8 @@ export type CaseUpdateWithoutUserInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3179,6 +3345,8 @@ export type CaseUncheckedUpdateWithoutUserInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3211,6 +3379,8 @@ export type CaseUncheckedUpdateManyWithoutUserInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3229,6 +3399,8 @@ export type CaseUpdateWithoutCreatedByInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3263,6 +3435,8 @@ export type CaseUncheckedUpdateWithoutCreatedByInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3295,6 +3469,8 @@ export type CaseUncheckedUpdateManyWithoutCreatedByInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3315,6 +3491,8 @@ export type CaseCreateManyInstitutionInput = {
   clinicalMode?: $Enums.ClinicalMode
   clinicalRulesVersion?: string | null
   awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
   finalizedAt?: Date | string | null
   clientDraftId?: string | null
   clinicalRevision?: number
@@ -3333,6 +3511,8 @@ export type CaseUpdateWithoutInstitutionInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3367,6 +3547,8 @@ export type CaseUncheckedUpdateWithoutInstitutionInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3399,6 +3581,8 @@ export type CaseUncheckedUpdateManyWithoutInstitutionInput = {
   clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
@@ -3514,6 +3698,8 @@ export type CaseSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   clinicalMode?: boolean
   clinicalRulesVersion?: boolean
   awaitingReviewAt?: boolean
+  closeAttemptCount?: boolean
+  closeNextAttemptAt?: boolean
   finalizedAt?: boolean
   clientDraftId?: boolean
   clinicalRevision?: boolean
@@ -3551,6 +3737,8 @@ export type CaseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   clinicalMode?: boolean
   clinicalRulesVersion?: boolean
   awaitingReviewAt?: boolean
+  closeAttemptCount?: boolean
+  closeNextAttemptAt?: boolean
   finalizedAt?: boolean
   clientDraftId?: boolean
   clinicalRevision?: boolean
@@ -3575,6 +3763,8 @@ export type CaseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   clinicalMode?: boolean
   clinicalRulesVersion?: boolean
   awaitingReviewAt?: boolean
+  closeAttemptCount?: boolean
+  closeNextAttemptAt?: boolean
   finalizedAt?: boolean
   clientDraftId?: boolean
   clinicalRevision?: boolean
@@ -3599,6 +3789,8 @@ export type CaseSelectScalar = {
   clinicalMode?: boolean
   clinicalRulesVersion?: boolean
   awaitingReviewAt?: boolean
+  closeAttemptCount?: boolean
+  closeNextAttemptAt?: boolean
   finalizedAt?: boolean
   clientDraftId?: boolean
   clinicalRevision?: boolean
@@ -3608,7 +3800,7 @@ export type CaseSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researchId" | "caseCode" | "notes" | "userId" | "createdById" | "institutionId" | "status" | "clinicalMode" | "clinicalRulesVersion" | "awaitingReviewAt" | "finalizedAt" | "clientDraftId" | "clinicalRevision" | "eventRevision" | "relationalRevision" | "createdAt" | "updatedAt", ExtArgs["result"]["case"]>
+export type CaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "researchId" | "caseCode" | "notes" | "userId" | "createdById" | "institutionId" | "status" | "clinicalMode" | "clinicalRulesVersion" | "awaitingReviewAt" | "closeAttemptCount" | "closeNextAttemptAt" | "finalizedAt" | "clientDraftId" | "clinicalRevision" | "eventRevision" | "relationalRevision" | "createdAt" | "updatedAt", ExtArgs["result"]["case"]>
 export type CaseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -3679,6 +3871,22 @@ export type $CasePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * from this one server timestamp rather than a per-browser local clock.
      */
     awaitingReviewAt: Date | null
+    /**
+     * When the automatic-closure sweep may next consider this case, and how
+     * many times it has already tried and been refused.
+     * 
+     * The sweep takes the oldest 25 expired cases each run. A case it cannot
+     * close stays AWAITING_REVIEW with the same awaitingReviewAt, so without
+     * these it was selected again on every run for ever -- and twenty-five such
+     * cases at the front of the queue meant the twenty-sixth was never examined
+     * at all, however complete it was. One ward's incomplete paperwork could
+     * silently stop automatic closure for the whole hospital.
+     * 
+     * Null means no backoff is in effect: never attempted, or attempted and
+     * closed. Cleared if the case leaves AWAITING_REVIEW and returns.
+     */
+    closeAttemptCount: number
+    closeNextAttemptAt: Date | null
     finalizedAt: Date | null
     clientDraftId: string | null
     clinicalRevision: number
@@ -4135,6 +4343,8 @@ export interface CaseFieldRefs {
   readonly clinicalMode: Prisma.FieldRef<"Case", 'ClinicalMode'>
   readonly clinicalRulesVersion: Prisma.FieldRef<"Case", 'String'>
   readonly awaitingReviewAt: Prisma.FieldRef<"Case", 'DateTime'>
+  readonly closeAttemptCount: Prisma.FieldRef<"Case", 'Int'>
+  readonly closeNextAttemptAt: Prisma.FieldRef<"Case", 'DateTime'>
   readonly finalizedAt: Prisma.FieldRef<"Case", 'DateTime'>
   readonly clientDraftId: Prisma.FieldRef<"Case", 'String'>
   readonly clinicalRevision: Prisma.FieldRef<"Case", 'Int'>

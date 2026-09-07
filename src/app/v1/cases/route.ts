@@ -14,7 +14,7 @@ import { corsHeaders } from "@/lib/cors"
 import { z } from "zod"
 import { decidePediatricWrite } from "@/lib/pediatric-mode"
 import { dashboardCaseCounts } from "@/lib/dashboard-case-counts"
-import { evaluatePostopReadiness } from "@lospor/core/clinical-validation"
+import { evaluateCaseFinalization } from "@lospor/core/clinical-validation"
 import { findCasesByPriority } from "@/lib/priority-case-list"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
@@ -121,14 +121,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(piiErrorBody(piiError), { status: 400 })
     }
 
-    // Postop *presence* is not postop *completeness* -- the same distinction
-    // PATCH /cases/:id's DO NOT comment explains. A single-field postop object
-    // must not start the 30-minute closure countdown before the record would
-    // even pass finalize's own readiness gate. Evaluated on the mapped data
-    // about to be created, not a DB round-trip: there is no existing row yet
-    // for a brand-new case, so the mapped payload already is the full record.
-    const postopReady = postop ? evaluatePostopReadiness(mapPostop(postop)).valid : false
-    const status = postopReady ? "AWAITING_REVIEW" : intraop ? "IN_PROGRESS" : "DRAFT"
+    // Finalize's whole gate, not postop's part of it. Postop completeness
+    // alone let a case created with a complete postop but an empty
+    // preoperative assessment -- or none at all -- open directly into
+    // AWAITING_REVIEW, start the 30-minute closure countdown, and then be
+    // refused by finalization for the preop and intraop it never had.
+    //
+    // Evaluated on the mapped payload rather than a DB round-trip because
+    // there is no row yet: for a brand-new case the payload IS the record.
+    // evaluateCaseReadiness covers the same ground for every later transition,
+    // where a row does exist.
+    const readyToClose = postop
+      ? evaluateCaseFinalization({
+          preop: mapPreop(mappedPreop),
+          intraop: intraop ? mapIntraop(intraop) : null,
+          postop: mapPostop(postop),
+        }).valid
+      : false
+    const status = readyToClose ? "AWAITING_REVIEW" : intraop ? "IN_PROGRESS" : "DRAFT"
     // The rare direct-create-with-postop path is still a genuine transition
     // into AWAITING_REVIEW -- see the same anchor set in PATCH /cases/:id.
     const awaitingReviewAt = status === "AWAITING_REVIEW" ? new Date() : null

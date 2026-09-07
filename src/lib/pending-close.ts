@@ -21,10 +21,18 @@ import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
  * Two rules it must not break:
  *
  *  - **An incomplete case is never closed.** Finalization gates on complete
- *    documentation, and an expired window does not make a case ready. Blocked
- *    cases are counted and left; they close on a later sweep once whatever is
- *    missing is filled in. A case nobody ever completes is scanned forever,
- *    which is cheap and correct.
+ *    documentation, and an expired window does not make a case ready. A
+ *    blocked case backs off and is retried later, once whatever is missing has
+ *    had time to be filled in.
+ *
+ *    That backoff is not politeness, it is the whole correctness of the job.
+ *    This scan is bounded and ordered oldest-first, so a case that can never
+ *    close used to be re-selected on every run for ever -- and twenty-five of
+ *    them at the head of the queue meant the twenty-sixth was never examined
+ *    at all, however complete it was. One ward's unfinished paperwork could
+ *    silently stop automatic closure for the entire hospital, with nothing
+ *    anywhere saying so. This comment previously called that "cheap and
+ *    correct"; it was true of one case and false of the queue.
  *  - **The assignee signs it.** Letting the window run out is their decision as
  *    much as pressing Close Now, so the attestation carries their id -- under
  *    its own audit action, so the log can still tell an automatic close from a
@@ -36,6 +44,43 @@ export type PendingCloseSweep = {
   closed: number
   blocked: number
   failed: number
+}
+
+const CLOSE_BACKOFF_BASE_MS = 15 * 60 * 1000
+const CLOSE_BACKOFF_MAX_MS = 24 * 60 * 60 * 1000
+
+/**
+ * How long a case that could not be closed waits before the sweep looks again.
+ *
+ * Exponential from fifteen minutes to a day. The lower bound is set by what is
+ * actually being waited for -- a human finishing the documentation, which does
+ * not happen in seconds -- and the upper bound keeps a case that was completed
+ * overnight from waiting days for its next look.
+ *
+ * No jitter, unlike the ingest backoff in Central: these run in one sequential
+ * sweep against one database rather than as competing workers, so a thundering
+ * herd is not the failure mode here.
+ */
+export function closeBackoffMs(attemptCount: number): number {
+  const attempt = Math.max(1, attemptCount)
+  return Math.min(CLOSE_BACKOFF_MAX_MS, CLOSE_BACKOFF_BASE_MS * 2 ** (attempt - 1))
+}
+
+/**
+ * Records a refused attempt and pushes the case past the next few sweeps.
+ *
+ * Guarded on the status still being AWAITING_REVIEW: if a client finalised or
+ * unfinalised the case between the scan and here, this must not write a
+ * backoff onto whatever it has become.
+ */
+async function deferCase(caseId: string, attemptCount: number, now: Date): Promise<void> {
+  await prisma.case.updateMany({
+    where: { id: caseId, status: "AWAITING_REVIEW" },
+    data: {
+      closeAttemptCount: attemptCount + 1,
+      closeNextAttemptAt: new Date(now.getTime() + closeBackoffMs(attemptCount + 1)),
+    },
+  })
 }
 
 export async function closeExpiredPendingCases(
@@ -51,8 +96,15 @@ export async function closeExpiredPendingCases(
     where: {
       status: "AWAITING_REVIEW",
       awaitingReviewAt: { not: null, lte: cutoff },
+      // Cases still backing off from a refused attempt are not candidates.
+      // This is what lets the scan reach past them; without it the oldest
+      // unclosable cases occupy every slot on every run.
+      OR: [
+        { closeNextAttemptAt: null },
+        { closeNextAttemptAt: { lte: now } },
+      ],
     },
-    select: { id: true, userId: true, status: true },
+    select: { id: true, userId: true, status: true, closeAttemptCount: true },
     orderBy: { awaitingReviewAt: "asc" },
     take: limit,
   })
@@ -82,11 +134,18 @@ export async function closeExpiredPendingCases(
         continue
       }
       if (outcome.ok) sweep.closed += 1
-      else sweep.blocked += 1
+      else {
+        sweep.blocked += 1
+        await deferCase(candidate.id, candidate.closeAttemptCount, now)
+      }
     } catch (error) {
       // One case failing must not stop the sweep: the next one may be fine, and
       // this runs unattended.
       sweep.failed += 1
+      // Backed off like a blocked one. A case that throws every time -- a
+      // relational reconcile that always fails on its data -- would otherwise
+      // hold its slot exactly as an incomplete one did.
+      await deferCase(candidate.id, candidate.closeAttemptCount, now).catch(() => {})
       const reason = error instanceof CaseFinalizationStepError ? error.step : "transaction"
       console.error("[pending-close] could not close case", candidate.id, reason, error)
     }

@@ -1,5 +1,36 @@
 # Changelog - LOSPOR API
 
+## [9.9.4] - 2026-09-07
+
+### Fixed
+
+- **The review countdown could start on a case that could never be closed.**
+  `POST /v1/cases/:id/submit-for-review` and case creation both gated on
+  `evaluatePostopReadiness`, which asks only for a complete Aldrete score and a
+  disposition, while finalization asks for the five preoperative sections, an
+  intraoperative record with both times and a technique, and the postop. So a
+  case with a four-field preop and no intraoperative record at all could enter
+  `AWAITING_REVIEW` and promise a closure that could not happen. The comment on
+  the route claimed the two checks were the same; they were not, and the only
+  way to keep that claim honest is for there to be one. Both entry points now
+  call `evaluateCaseReadiness`, the same evaluation finalization performs, and a
+  refusal returns 422 with the blocking issues named.
+
+- **Cases that could not be closed wedged automatic closure for everyone.** The
+  sweep takes the twenty-five oldest `AWAITING_REVIEW` cases, oldest first, and
+  a refused case kept its `awaitingReviewAt` — so it was re-selected on every
+  run for ever. Twenty-five such cases at the head of the queue meant the
+  twenty-sixth was never examined: one ward's unfinished paperwork could stop
+  automatic closure for the whole hospital, silently. A refusal now defers the
+  case with an exponential backoff (15 minutes, doubling, capped at a day), and
+  resubmitting it clears the backoff.
+
+### Added
+
+- `Case.closeAttemptCount` and `Case.closeNextAttemptAt`, with an index on
+  `(status, awaitingReviewAt, closeNextAttemptAt)` for the sweep's query.
+  Migration `20260907190000_case_close_attempt_backoff`.
+
 ## [9.9.3] - 2026-09-07
 
 ### Changed

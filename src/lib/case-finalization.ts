@@ -53,26 +53,23 @@ export class CaseFinalizationStepError extends Error {
 }
 
 /**
- * Runs inside a caller-held case lock. `actorUserId` is the case's assignee,
- * always -- for a manual finalize it is also who signs the attestation, but
- * for an automatic close (`options.automatic`) the actor recorded against
- * the audit row and the finalization snapshot is `AUTO_CLOSE_SYSTEM_ACTOR_ID`
- * instead: a timer closing a case because nobody touched it for thirty
- * minutes is not the same fact as that person actively attesting to it, and
- * the audit trail should not read as if it were. `actorUserId` is still kept,
- * as `assignedUserId` in the audit detail, so who was responsible at the time
- * is never lost.
+ * Whether a case is complete enough to close, read the way finalization reads
+ * it.
+ *
+ * Exported so the review route asks this exact question rather than its own
+ * approximation of it. It previously asked `evaluatePostopReadiness`, which
+ * looks only at the Aldrete components and the disposition -- so a case with
+ * an empty preoperative assessment and no intraoperative record at all could
+ * enter AWAITING_REVIEW, start the thirty-minute closure countdown, and then
+ * be refused by the very check the countdown exists to run. The comment there
+ * claimed the two were the same check. They were not, and the only way to
+ * keep that claim honest is for there to be one.
+ *
+ * The whole preoperative record is read deliberately: selecting the fields the
+ * validator happens to consult today would drift the moment core changes what
+ * "complete" means.
  */
-export async function finalizeCaseWithinTransaction(
-  tx: Db,
-  caseId: string,
-  actorUserId: string,
-  options: { currentStatus: string; automatic?: boolean },
-): Promise<FinalizeOutcome> {
-  const signedBy = options.automatic ? AUTO_CLOSE_SYSTEM_ACTOR_ID : actorUserId
-  // The whole record, deliberately. Selecting only the fields the validator
-  // happens to read today would drift the moment core changes what "complete"
-  // means, and a partial draft would finalise through the API.
+export async function evaluateCaseReadiness(tx: Db, caseId: string) {
   const preop = await tx.preoperativeAssessment.findUnique({ where: { caseId } })
   const intraop = await tx.intraoperativeRecord.findUnique({
     where: { caseId },
@@ -96,8 +93,28 @@ export async function finalizeCaseWithinTransaction(
       disposition: true,
     },
   })
+  return evaluateCaseFinalization({ preop, intraop, postop })
+}
 
-  const readiness = evaluateCaseFinalization({ preop, intraop, postop })
+/**
+ * Runs inside a caller-held case lock. `actorUserId` is the case's assignee,
+ * always -- for a manual finalize it is also who signs the attestation, but
+ * for an automatic close (`options.automatic`) the actor recorded against
+ * the audit row and the finalization snapshot is `AUTO_CLOSE_SYSTEM_ACTOR_ID`
+ * instead: a timer closing a case because nobody touched it for thirty
+ * minutes is not the same fact as that person actively attesting to it, and
+ * the audit trail should not read as if it were. `actorUserId` is still kept,
+ * as `assignedUserId` in the audit detail, so who was responsible at the time
+ * is never lost.
+ */
+export async function finalizeCaseWithinTransaction(
+  tx: Db,
+  caseId: string,
+  actorUserId: string,
+  options: { currentStatus: string; automatic?: boolean },
+): Promise<FinalizeOutcome> {
+  const signedBy = options.automatic ? AUTO_CLOSE_SYSTEM_ACTOR_ID : actorUserId
+  const readiness = await evaluateCaseReadiness(tx, caseId)
   if (!readiness.valid) {
     return { ok: false, blockers: readiness.issues.filter(issue => issue.severity === "error") }
   }
