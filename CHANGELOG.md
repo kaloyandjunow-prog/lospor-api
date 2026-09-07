@@ -1,5 +1,14 @@
 # Changelog - LOSPOR API
 
+## [9.9.2] - 2026-09-07
+
+### Changed
+
+- Version only, to keep the api/web/pwa set on one number. The PWA needed
+  9.9.2 to serve correctly where it is mounted under a path prefix; the three
+  are released together and share request contracts, so they move together.
+  No API change.
+
 ## [9.9.1] - 2026-09-07
 
 ### Fixed
