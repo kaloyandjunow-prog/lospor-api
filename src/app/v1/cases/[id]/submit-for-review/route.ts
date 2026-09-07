@@ -4,7 +4,7 @@ import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
 import { logAuditInTransaction } from "@/lib/audit"
-import { evaluatePostopReadiness } from "@lospor/core/clinical-validation"
+import { evaluateCaseReadiness } from "@/lib/case-finalization"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -17,11 +17,14 @@ export async function OPTIONS(req: NextRequest) {
  * into AWAITING_REVIEW, pressed from the button that takes both web and
  * mobile from the postop form to the case summary.
  *
- * This replaced an automatic promotion that fired the instant a merged
- * postop record satisfied `evaluatePostopReadiness`, wherever that completion
- * happened to occur -- an autosave mid-scoring, not a clinician's decision.
- * The check itself is unchanged and still the same one finalize() applies;
- * only when it runs has moved, from "on every postop write" to "when asked".
+ * This replaced an automatic promotion that fired the instant a merged postop
+ * record looked complete, wherever that happened to occur -- an autosave
+ * mid-scoring, not a clinician's decision.
+ *
+ * It now runs finalize's own gate, via the function finalize itself calls.
+ * That was previously claimed and not true: this asked only whether postop
+ * was complete, so a case with an empty preoperative assessment could enter
+ * AWAITING_REVIEW and start a countdown it could never satisfy.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
@@ -55,19 +58,33 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         )
       }
 
-      const postop = await tx.postoperativeRecord.findUnique({ where: { caseId: id } })
-      const readiness = evaluatePostopReadiness(postop)
+      // The same question finalize asks, asked of the same record -- not an
+      // approximation of it. Checking postop alone let a case with an empty
+      // preoperative assessment and no intraoperative record start the
+      // thirty-minute countdown and then be refused by the check that
+      // countdown exists to run.
+      const readiness = await evaluateCaseReadiness(tx, id)
       if (!readiness.valid) {
+        const blockers = readiness.issues.filter(issue => issue.severity === "error")
         return NextResponse.json({
-          error: "Cannot submit for review: postoperative documentation is incomplete",
-          blockers: readiness.issues.map(issue => ({ code: issue.code, path: issue.path })),
+          error: "Cannot submit for review: this case is not complete enough to close",
+          blockers: blockers.map(issue => ({ code: issue.code, path: issue.path })),
         }, { status: 422 })
       }
 
       const awaitingReviewAt = new Date()
       await tx.case.update({
         where: { id },
-        data: { status: "AWAITING_REVIEW", awaitingReviewAt },
+        data: {
+          status: "AWAITING_REVIEW",
+          awaitingReviewAt,
+          // A fresh submission is a fresh answer to the question the sweep
+          // asks, so any backoff from a previously refused close is cleared --
+          // otherwise a case that was fixed and resubmitted would still sit
+          // out the wait its incomplete version earned.
+          closeAttemptCount: 0,
+          closeNextAttemptAt: null,
+        },
       })
       await logAuditInTransaction(tx, userId, "CASE_SUBMITTED_FOR_REVIEW", id, {
         from: caseRecord.status,

@@ -32,6 +32,33 @@ const MINIMAL_PREOP = {
   weightKg: 75,
 }
 
+const COMPLETE_POSTOP = {
+  aldreteActivity: 2, aldreteRespiration: 2, aldreteCirculation: 2,
+  aldreteConsciousness: 2, aldreteSpO2: 2, disposition: "WARD",
+}
+
+// A case that could genuinely be closed: the five preoperative sections
+// finalization requires, and an intraoperative record with both times and a
+// technique. Creating a case directly in AWAITING_REVIEW is rare, but when it
+// happens it has to clear the same bar every other route into that state does.
+const COMPLETE_PREOP = {
+  ...MINIMAL_PREOP,
+  // The array form, not the plain strings: mapPreop derives the legacy
+  // `diagnosis`/`plannedProcedure` columns from these and overwrites whatever
+  // strings the payload carried, so a fixture using strings alone maps to an
+  // empty case-details section.
+  diagnoses: [{ label: "Cholelithiasis" }],
+  procedures: [{ label: "Laparoscopic cholecystectomy" }],
+  bpSystolic: 128, bpDiastolic: 76, heartRate: 72, respiratoryRate: 14,
+  mallampati: "II", asaScore: "II",
+}
+
+const COMPLETE_INTRAOP = {
+  startedAt: "2026-09-07T08:00:00.000Z",
+  endedAt: "2026-09-07T09:30:00.000Z",
+  techniques: ["GENERAL"],
+}
+
 function makeRequest(body: Record<string, unknown>, idempotencyKey?: string) {
   const headers: Record<string, string> = { "Content-Type": "application/json" }
   if (idempotencyKey) headers["X-Idempotency-Key"] = idempotencyKey
@@ -131,13 +158,30 @@ describe("POST /api/cases", () => {
     )
   })
 
-  it("promotes to AWAITING_REVIEW when the postop object is genuinely complete", async () => {
+  // This test used to assert the opposite, and in doing so documented a defect
+  // as intended behaviour: a complete recovery score beside a four-field preop
+  // and no intraoperative record at all opened straight into AWAITING_REVIEW.
+  // That started the thirty-minute closure countdown on a case finalization
+  // would refuse for the preop and intraop it never had -- a promise of a
+  // closure that could not happen, on a case nobody was still looking at.
+  it("does not promote a complete postop when the rest of the case is not complete", async () => {
     const res = await POST(makeRequest({
       preop: MINIMAL_PREOP,
-      postop: {
-        aldreteActivity: 2, aldreteRespiration: 2, aldreteCirculation: 2,
-        aldreteConsciousness: 2, aldreteSpO2: 2, disposition: "WARD",
-      },
+      postop: COMPLETE_POSTOP,
+    }))
+    expect(res.status).toBe(201)
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "DRAFT", awaitingReviewAt: null }),
+      }),
+    )
+  })
+
+  it("promotes to AWAITING_REVIEW only when the whole case could be closed", async () => {
+    const res = await POST(makeRequest({
+      preop: COMPLETE_PREOP,
+      intraop: COMPLETE_INTRAOP,
+      postop: COMPLETE_POSTOP,
     }))
     expect(res.status).toBe(201)
     expect(createMock).toHaveBeenCalledWith(

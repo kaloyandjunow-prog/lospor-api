@@ -279,6 +279,8 @@ export const CaseScalarFieldEnum = {
   clinicalMode: 'clinicalMode',
   clinicalRulesVersion: 'clinicalRulesVersion',
   awaitingReviewAt: 'awaitingReviewAt',
+  closeAttemptCount: 'closeAttemptCount',
+  closeNextAttemptAt: 'closeNextAttemptAt',
   finalizedAt: 'finalizedAt',
   clientDraftId: 'clientDraftId',
   clinicalRevision: 'clinicalRevision',

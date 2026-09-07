@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const getAuthUserMock  = vi.fn()
 const findUniqueMock   = vi.fn()
 const findPostopMock   = vi.fn()
+const findPreopMock    = vi.fn()
+const findIntraopMock  = vi.fn()
 const updateMock       = vi.fn()
 const canAccessCaseMock = vi.fn()
 const logAuditMock     = vi.fn()
@@ -22,6 +24,8 @@ vi.mock("@/lib/clinical-transaction", () => ({
     operation({
       case: { findUnique: findUniqueMock, update: updateMock },
       postoperativeRecord: { findUnique: findPostopMock },
+      preoperativeAssessment: { findUnique: findPreopMock },
+      intraoperativeRecord: { findUnique: findIntraopMock },
     })),
 }))
 vi.mock("@/lib/access-control", () => ({ canWriteCaseWithOwnerFallback: canAccessCaseMock }))
@@ -30,6 +34,26 @@ vi.mock("@/lib/audit", () => ({ logAuditInTransaction: logAuditMock }))
 const COMPLETE_POSTOP = {
   aldreteActivity: 2, aldreteRespiration: 2, aldreteCirculation: 2,
   aldreteConsciousness: 2, aldreteSpO2: 2, disposition: "WARD",
+}
+
+// This route asks finalize's own question now, so a fixture that satisfies it
+// has to be a case that could genuinely be closed -- not merely one with a
+// filled-in recovery score. Everything below is what
+// evaluatePreopSectionCompletion requires of the five sections it treats as
+// mandatory, plus the intraoperative record finalization insists on.
+const COMPLETE_PREOP = {
+  ageYears: 54, sex: "FEMALE", heightCm: 168, weightKg: 74,
+  diagnosis: "Cholelithiasis", plannedProcedure: "Laparoscopic cholecystectomy",
+  bpSystolic: 128, bpDiastolic: 76, heartRate: 72, respiratoryRate: 14,
+  mallampati: "II", asaScore: "II",
+}
+
+const COMPLETE_INTRAOP = {
+  id: "intraop-1",
+  startedAt: new Date("2026-09-07T08:00:00.000Z"),
+  endedAt: new Date("2026-09-07T09:30:00.000Z"),
+  startTime: null, endTime: null,
+  techniques: ["GENERAL"],
 }
 
 function makeRequest(caseId = "case-1") {
@@ -47,6 +71,8 @@ describe("POST /api/cases/:id/submit-for-review", () => {
       userId: "user-1", status: "IN_PROGRESS", institutionId: "inst-1", clinicalMode: "ADULT", awaitingReviewAt: null,
     })
     findPostopMock.mockResolvedValue(COMPLETE_POSTOP)
+    findPreopMock.mockResolvedValue(COMPLETE_PREOP)
+    findIntraopMock.mockResolvedValue(COMPLETE_INTRAOP)
     updateMock.mockResolvedValue({})
     const mod = await import("@/app/v1/cases/[id]/submit-for-review/route")
     POST = mod.POST
@@ -77,6 +103,42 @@ describe("POST /api/cases/:id/submit-for-review", () => {
     const body = await res.json()
     expect(body.blockers).toBeDefined()
     expect(updateMock).not.toHaveBeenCalled()
+  })
+
+  // The bug this endpoint shipped with: it asked only whether postop was
+  // complete, so a case with an empty preoperative assessment entered
+  // AWAITING_REVIEW, started the thirty-minute countdown, and was then refused
+  // by finalization for the preop it never had. The countdown promised a
+  // closure that could not happen, and the case sat there until someone
+  // noticed.
+  it("refuses a complete postop when the preoperative assessment is not complete", async () => {
+    findPreopMock.mockResolvedValue({ ageYears: 54 }) // demographics alone
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.blockers.some((b: { code: string }) => b.code === "incomplete_preop")).toBe(true)
+    expect(updateMock).not.toHaveBeenCalled()
+  })
+
+  // An absent intraoperative record reports the times it cannot produce rather
+  // than a single "missing_intraop" -- the clinician is told what to fill in.
+  it("refuses a complete postop when there is no intraoperative record", async () => {
+    findIntraopMock.mockResolvedValue(null)
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    const codes = body.blockers.map((b: { code: string }) => b.code)
+    expect(codes).toContain("missing_start_time")
+    expect(codes).toContain("missing_end_time")
+    expect(updateMock).not.toHaveBeenCalled()
+  })
+
+  it("clears any backoff from a previously refused automatic close", async () => {
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ closeAttemptCount: 0, closeNextAttemptAt: null }),
+    }))
   })
 
   it("refuses a case that has not started intraop (still DRAFT)", async () => {
