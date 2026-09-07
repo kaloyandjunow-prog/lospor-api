@@ -34,7 +34,6 @@ import {
   RESEARCH_SUMMARY_SELECT,
   mapResearchSummary,
 } from "./mappers"
-import { OMOP_COLUMNS } from "@/lib/omop-columns"
 
 const EXPORT_PAGE_SIZE = 250
 const EXPORT_LEASE_MS = 5 * 60 * 1000

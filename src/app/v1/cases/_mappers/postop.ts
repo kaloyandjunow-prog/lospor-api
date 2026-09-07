@@ -1,6 +1,5 @@
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePostopPatch } from "@lospor/core/case-payloads"
-import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import { aldreteTotal as coreAldreteTotal } from "@lospor/core/postop"
 import { copyKey, safeEnum, toFloatOrNull, toIntOrNull } from "./shared"
 
