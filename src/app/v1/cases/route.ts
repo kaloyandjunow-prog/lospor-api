@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
+import type { Prisma } from "@/generated/prisma/client"
 import { mapPreop, mapIntraop, mapPostop } from "./_mappers"
 import { logAudit } from "@/lib/audit"
 import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
@@ -12,6 +13,9 @@ import { generateCaseCode, isPrismaUniqueError } from "@/lib/case-code"
 import { corsHeaders } from "@/lib/cors"
 import { z } from "zod"
 import { decidePediatricWrite } from "@/lib/pediatric-mode"
+import { dashboardCaseCounts } from "@/lib/dashboard-case-counts"
+import { evaluatePostopReadiness } from "@lospor/core/clinical-validation"
+import { findCasesByPriority } from "@/lib/priority-case-list"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -117,7 +121,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(piiErrorBody(piiError), { status: 400 })
     }
 
-    const status = postop ? "AWAITING_REVIEW" : intraop ? "IN_PROGRESS" : "DRAFT"
+    // Postop *presence* is not postop *completeness* -- the same distinction
+    // PATCH /cases/:id's DO NOT comment explains. A single-field postop object
+    // must not start the 30-minute closure countdown before the record would
+    // even pass finalize's own readiness gate. Evaluated on the mapped data
+    // about to be created, not a DB round-trip: there is no existing row yet
+    // for a brand-new case, so the mapped payload already is the full record.
+    const postopReady = postop ? evaluatePostopReadiness(mapPostop(postop)).valid : false
+    const status = postopReady ? "AWAITING_REVIEW" : intraop ? "IN_PROGRESS" : "DRAFT"
+    // The rare direct-create-with-postop path is still a genuine transition
+    // into AWAITING_REVIEW -- see the same anchor set in PATCH /cases/:id.
+    const awaitingReviewAt = status === "AWAITING_REVIEW" ? new Date() : null
 
     let caseRecord
     for (let attempt = 0; ; attempt++) {
@@ -129,6 +143,7 @@ export async function POST(req: NextRequest) {
             userId,
             createdById: userId,
             status,
+            awaitingReviewAt,
             institutionId: user.institutionId ?? null,
             caseCode: await generateCaseCode(userId, prisma),
             ...(idempotencyKey ? { clientDraftId: idempotencyKey } : {}),
@@ -187,31 +202,39 @@ export async function GET(req: NextRequest) {
   // Item 28: Pagination — accept optional ?skip and ?take; cap take at 200 per request
   const url = new URL(req.url)
   const skipRaw = Number(url.searchParams.get("skip") ?? "0")
-  const skip = Number.isFinite(skipRaw) ? Math.max(0, skipRaw) : 0
+  // Math.trunc, not just Math.max: a fractional skip/take (e.g. "1.5" from a
+  // hand-built query string) is finite and would otherwise reach Prisma
+  // unrounded, which rejects a non-integer skip/take with a 500.
+  const skip = Number.isFinite(skipRaw) ? Math.trunc(Math.max(0, skipRaw)) : 0
   const takeRaw = Number(url.searchParams.get("take") ?? "50")
   // Number("abc") is NaN, and Math.min/max propagate it straight into Prisma,
   // which throws — a 500 from a malformed query string.
-  const take = Number.isFinite(takeRaw) ? Math.min(200, Math.max(1, takeRaw)) : 50
+  const take = Number.isFinite(takeRaw) ? Math.trunc(Math.min(200, Math.max(1, takeRaw))) : 50
 
-  const [cases, total] = await Promise.all([
-    prisma.case.findMany({
-      where,
-      include: {
-        preop:  { select: { diagnosis: true, plannedProcedure: true, ageYears: true, ageValue: true, ageUnit: true, sex: true, asaScore: true } },
-        postop: { select: { disposition: true, aldreteTotal: true } },
-        intraop: { select: { monthYear: true, durationMinutes: true, endTime: true } },
-        user: { select: { name: true } },
-        transfers: {
-          where: { status: "PENDING" },
-          select: { id: true },
-          take: 1,
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take,
-    }),
+  const include = {
+    preop:  { select: { diagnosis: true, plannedProcedure: true, ageYears: true, ageValue: true, ageUnit: true, sex: true, asaScore: true } },
+    postop: { select: { disposition: true, aldreteTotal: true } },
+    intraop: { select: { monthYear: true, durationMinutes: true, endTime: true } },
+    user: { select: { name: true } },
+    transfers: {
+      where: { status: "PENDING" as const },
+      // toUserId lets a client tell "a handover addressed to me" apart from
+      // "any pending handover on a case I can otherwise see" -- the same
+      // distinction dashboardCaseCounts's `handovers` figure now makes.
+      select: { id: true, toUserId: true },
+      take: 1,
+    },
+  } satisfies Prisma.CaseInclude
+
+  const [cases, total, counts] = await Promise.all([
+    // Ordered by clinical urgency (AWAITING_REVIEW, IN_PROGRESS, DRAFT,
+    // COMPLETE), not creation date or the status enum's own declared order --
+    // see priority-case-list.ts. A dashboard capped at `take` rows must never
+    // let the case closest to auto-closing scroll off the end behind a pile
+    // of drafts or older finished cases.
+    findCasesByPriority(where, include, skip, take),
     prisma.case.count({ where }),
+    dashboardCaseCounts(where, user.id),
   ])
 
   return NextResponse.json({
@@ -222,5 +245,9 @@ export async function GET(req: NextRequest) {
     total,
     skip,
     take,
+    // True counts over the whole accessible set, not derived from the page
+    // above: a dashboard stat tile must not read "50" for "today" just
+    // because the page happened to be capped at 50.
+    counts,
   })
 }

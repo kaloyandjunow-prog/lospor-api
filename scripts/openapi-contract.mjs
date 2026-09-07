@@ -1106,6 +1106,7 @@ add("POST", "/v1/cases/{id}/calculations", "Recompute and accept a pediatric cal
   result: ref("PediatricCalculation"),
   errors: [400, 401, 403, 404, 409, 422, 500],
 })
+add("POST", "/v1/cases/{id}/submit-for-review", "Submit a case's postoperative record for review, starting the auto-close countdown", { parameters: [id], result: ref("JsonObject") })
 add("POST", "/v1/cases/{id}/finalize", "Finalize a case and create its immutable snapshot", { parameters: [id], result: ref("CaseDetail") })
 add("POST", "/v1/cases/{id}/unfinalize", "Resume editing a finalized case", { parameters: [id], result: ref("CaseDetail") })
 
@@ -1282,6 +1283,12 @@ add("GET", "/v1/internal/option-library-snapshot", "Read the signed option-libra
   tag: "internal",
 })
 add("GET", "/v1/internal/purge-deleted", "Purge accounts past the retention period", {
+  parameters: [header("x-cron-secret", { type: "string" }), header("authorization", { type: "string" })],
+  result: ref("JsonObject"),
+  stability: "internal",
+  tag: "internal",
+})
+add("GET", "/v1/internal/close-expired-cases", "Close cases whose review window elapsed", {
   parameters: [header("x-cron-secret", { type: "string" }), header("authorization", { type: "string" })],
   result: ref("JsonObject"),
   stability: "internal",

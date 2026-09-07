@@ -1,4 +1,16 @@
 import { randomUUID } from "node:crypto"
+// Who may see and change a ruleset lives in ./preset-access; the error it
+// throws in ./errors, so those helpers need not import this module back.
+import {
+  allowedManagementScopes,
+  assertCanEditPreset,
+  assertScopeOwner,
+  canReadPreset,
+  defaultManagementScope,
+  resolveManagementScope,
+} from "./preset-access"
+import { ClinicalRuleServiceError } from "./errors"
+export { ClinicalRuleServiceError } from "./errors"
 import {
   FIXED_EQUIPMENT_RULE_REJECTION_MESSAGE,
   clinicalPresetRulesToEffective,
@@ -177,87 +189,6 @@ function normalizeKey(value: string): string {
     throw new ClinicalRuleServiceError(400, "Ruleset key must contain 1-80 letters, numbers or underscores")
   }
   return key
-}
-
-function allowedManagementScopes(actor: Pick<AuthUser, "role" | "institutionId">): ClinicalPresetScope[] {
-  if (actor.role === "ADMIN") return ["PLATFORM", "USER"]
-  if (actor.role === "HEAD_OF_DEPT" && actor.institutionId) {
-    return ["INSTITUTION", "USER"]
-  }
-  return ["USER"]
-}
-
-function defaultManagementScope(actor: Pick<AuthUser, "role" | "institutionId">): ClinicalPresetScope {
-  return allowedManagementScopes(actor)[0]!
-}
-
-function resolveManagementScope(
-  actor: Pick<AuthUser, "role" | "institutionId">,
-  requestedScope?: ClinicalPresetScope | null,
-): ClinicalPresetScope {
-  const scope = requestedScope ?? defaultManagementScope(actor)
-  if (!allowedManagementScopes(actor).includes(scope)) {
-    throw new ClinicalRuleServiceError(403, "The requested clinical ruleset scope is not manageable by this account")
-  }
-  return scope
-}
-
-function assertScopeOwner(input: {
-  actor: AuthUser
-  scope: ClinicalPresetScope
-  ownerInstitutionId: string | null
-  ownerUserId: string | null
-}) {
-  if (input.scope === "PLATFORM") {
-    if (input.actor.role !== "ADMIN") {
-      throw new ClinicalRuleServiceError(403, "Platform administrator required")
-    }
-    return
-  }
-  if (input.scope === "INSTITUTION") {
-    if (!input.ownerInstitutionId) {
-      throw new ClinicalRuleServiceError(400, "Institution is required")
-    }
-    if (
-      input.actor.role !== "HEAD_OF_DEPT"
-      || input.actor.institutionId !== input.ownerInstitutionId
-    ) {
-      throw new ClinicalRuleServiceError(403, "Head of department required")
-    }
-    return
-  }
-  if (!input.ownerUserId || input.ownerUserId !== input.actor.id) {
-    throw new ClinicalRuleServiceError(403, "Personal rulesets belong to the current user")
-  }
-}
-
-function assertCanEditPreset(actor: AuthUser, preset: {
-  scope: ClinicalPresetScope
-  ownerInstitutionId: string | null
-  ownerUserId: string | null
-}) {
-  assertScopeOwner({
-    actor,
-    scope: preset.scope,
-    ownerInstitutionId: preset.ownerInstitutionId,
-    ownerUserId: preset.ownerUserId,
-  })
-}
-
-function canReadPreset(actor: AuthUser, preset: {
-  scope: ClinicalPresetScope
-  status: string
-  ownerInstitutionId: string | null
-  ownerUserId: string | null
-}): boolean {
-  if (preset.scope === "PLATFORM") {
-    return actor.role === "ADMIN" || preset.status === "PUBLISHED"
-  }
-  if (preset.scope === "INSTITUTION") {
-    return preset.ownerInstitutionId === actor.institutionId
-      && (actor.role === "HEAD_OF_DEPT" || preset.status === "PUBLISHED")
-  }
-  return preset.ownerUserId === actor.id
 }
 
 async function requirePreset(presetId: string): Promise<PresetWithDetails> {
@@ -1240,13 +1171,3 @@ export async function clearClinicalRulesetSelection(input: {
   })
 }
 
-export class ClinicalRuleServiceError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-    readonly issues?: unknown,
-  ) {
-    super(message)
-    this.name = "ClinicalRuleServiceError"
-  }
-}

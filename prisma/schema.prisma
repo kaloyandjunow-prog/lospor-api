@@ -272,6 +272,11 @@ model Case {
   status               CaseStatus   @default(DRAFT)
   clinicalMode         ClinicalMode @default(ADULT)
   clinicalRulesVersion String?
+  /// Set once, the moment status first transitions to AWAITING_REVIEW (never
+  /// touched by a later edit that keeps it there). Anchors the pending-close
+  /// countdown so any client, on any device, computes the same remaining time
+  /// from this one server timestamp rather than a per-browser local clock.
+  awaitingReviewAt     DateTime?
   finalizedAt          DateTime?
   clientDraftId        String?
   clinicalRevision     Int          @default(0)

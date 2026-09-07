@@ -112,6 +112,41 @@ describe("POST /api/cases", () => {
     )
   })
 
+  // A postop object being present is not the same as postop being complete --
+  // see the same DO NOT comment in _patch-status.ts. Before this fix, sending
+  // any postop object at all -- even one field -- promoted straight to
+  // AWAITING_REVIEW and started the 30-minute closure countdown on a record
+  // that would not pass finalize's own readiness gate.
+  it("does not promote to AWAITING_REVIEW on an incomplete postop object", async () => {
+    const res = await POST(makeRequest({
+      preop: MINIMAL_PREOP,
+      intraop: {},
+      postop: { aldreteActivity: 2 }, // one of five Aldrete components, no disposition
+    }))
+    expect(res.status).toBe(201)
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "IN_PROGRESS", awaitingReviewAt: null }),
+      }),
+    )
+  })
+
+  it("promotes to AWAITING_REVIEW when the postop object is genuinely complete", async () => {
+    const res = await POST(makeRequest({
+      preop: MINIMAL_PREOP,
+      postop: {
+        aldreteActivity: 2, aldreteRespiration: 2, aldreteCirculation: 2,
+        aldreteConsciousness: 2, aldreteSpO2: 2, disposition: "WARD",
+      },
+    }))
+    expect(res.status).toBe(201)
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "AWAITING_REVIEW" }),
+      }),
+    )
+  })
+
   it("returns 400 when preop is missing", async () => {
     const res = await POST(makeRequest({ intraop: {} }))
     expect(res.status).toBe(400)

@@ -644,43 +644,23 @@ async function writeArtifact(
   }
 }
 
-export type OmopTableName = Exclude<keyof OmopBundle, "metadata">
+// CSV emission moved to ./omop-csv -- pure text, no database, no streams.
+// Re-exported here because callers and the regression test already import it
+// from this module.
+export {
+  OMOP_TABLES,
+  omopCsvColumns,
+  omopCsvHeaderLine,
+  omopCsvValueLine,
+  type OmopTableName,
+} from "./omop-csv"
 
-const OMOP_TABLES: OmopTableName[] = [
-  "person",
-  "observation_period",
-  "visit_occurrence",
-  "condition_occurrence",
-  "drug_exposure",
-  "measurement",
-  "procedure_occurrence",
-  "observation",
-]
-
-// The column set now lives in one place, imported by every serializer; see
-// lib/omop-columns.ts for why.
-
-/**
- * The header line and the value lines are produced from one list, so a header
- * can never describe a column the rows do not carry, or omit one they do.
- * Exported for the regression test, which asserts against the text a researcher
- * actually downloads rather than against the declaration above.
- */
-export function omopCsvHeaderLine(table: OmopTableName): string {
-  return `${OMOP_COLUMNS[table].join(",")}\n`
-}
-
-export function omopCsvValueLine(
-  table: OmopTableName,
-  row: Record<string, unknown>,
-): string {
-  return `${OMOP_COLUMNS[table].map(column => csvEscape(row[column])).join(",")}\n`
-}
-
-/** The declared column set, for tests that hold it against the mapper output. */
-export function omopCsvColumns(table: OmopTableName): readonly string[] {
-  return OMOP_COLUMNS[table]
-}
+import {
+  OMOP_TABLES,
+  omopCsvHeaderLine,
+  omopCsvValueLine,
+  type OmopTableName,
+} from "./omop-csv"
 
 function omopExportContext(
   record: ClaimedExport,

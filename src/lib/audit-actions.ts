@@ -77,7 +77,12 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "CASE_CREATE", category: "CASE", labels: { bg: "Създаден случай", en: "Case created" } },
   { code: "CASE_UPDATE", category: "CASE", labels: { bg: "Обновен случай", en: "Case updated" } },
   { code: "CASE_DELETE", category: "CASE", labels: { bg: "Изтрит случай", en: "Case deleted" } },
+  { code: "CASE_SUBMITTED_FOR_REVIEW", category: "CASE", labels: { bg: "Случаят е предаден за преглед", en: "Case submitted for review" } },
   { code: "CASE_FINALIZED", category: "CASE", labels: { bg: "Финализиран случай", en: "Case finalised" } },
+  // Its own code, not a detail flag on CASE_FINALIZED: a case closed because
+  // its review window elapsed was attested by nobody pressing anything, and an
+  // audit trail that cannot tell the two apart cannot answer that question.
+  { code: "CASE_AUTO_FINALIZED", category: "CASE", labels: { bg: "Автоматично финализиран случай след изтичане на срока за преглед", en: "Case finalised automatically when the review window elapsed" } },
   { code: "CASE_UNFINALIZED", category: "CASE", labels: { bg: "Отменено финализиране на случай", en: "Case finalisation reversed" } },
   { code: "CASE_CONFLICT_OVERRIDE", category: "CASE", labels: { bg: "Преодолян конфликт при запис", en: "Save conflict overridden" } },
   { code: "CASE_EVENT_ADD", category: "CASE", labels: { bg: "Добавено събитие към случай", en: "Case event added" } },
