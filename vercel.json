@@ -8,6 +8,10 @@
     {
       "path": "/v1/internal/research-exports/process",
       "schedule": "10 3 * * *"
+    },
+    {
+      "path": "/v1/internal/close-expired-cases",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

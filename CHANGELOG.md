@@ -1,5 +1,109 @@
 # Changelog - LOSPOR API
 
+## [9.9.0] - 2026-09-07
+
+### Changed
+
+- **Depends on Core 9.9.0.**
+
+- **AWAITING_REVIEW is reached only through the clinician's own action, never
+  by autosave.** `POST /v1/cases/:id/submit-for-review` is new: it runs the
+  same postop-completeness check `finalize()` applies and, only if it
+  passes, promotes the case and stamps `awaitingReviewAt`. It is idempotent —
+  revisiting the summary does not restart the countdown. Both `POST
+  /v1/cases` and `PATCH /v1/cases/:id` used to promote a case to
+  AWAITING_REVIEW the moment a merged postop record happened to become
+  complete — on the create path that meant a single-field postop object sent
+  at creation, and on the patch path it meant whichever autosave completed
+  the last Aldrete field, starting the 30-minute closure countdown before
+  the clinician had said they were finished. `AWAITING_REVIEW` is also now
+  rejected from the generic `PATCH` body schema, the same way `COMPLETE`
+  already was, so a client cannot request the transition directly and skip
+  the check.
+
+- **An automatic closure is attributed to the system, not the assignee.**
+  `finalizeCaseWithinTransaction`'s audit row and finalization snapshot now
+  record `"System (automatic closure)"` as the actor when the pending-close
+  sweep closes a case, with the assignee kept alongside as `assignedUserId`
+  in the audit detail. Previously the assignee's own id was recorded as the
+  actor, distinguished only by the audit action name — legally and
+  audit-wise ambiguous, since the record read the same whether that
+  clinician had pressed Finalize themselves or had gone home an hour
+  earlier.
+
+- **`/v1/cases` orders by clinical urgency, not creation date or the status
+  enum's declared order.** A dashboard capped at `take` rows now sees
+  AWAITING_REVIEW cases first, then IN_PROGRESS, then DRAFT, then COMPLETE
+  last — computed tier-by-tier (`priority-case-list.ts`) rather than a
+  single `orderBy`, since Postgres only sorts an enum column forward or
+  backward by its declared ordinal and no such ordinal matches this
+  priority. `skip`/`take` are honoured across the whole sequence, not reset
+  per tier.
+
+- **`/v1/cases` returns true dashboard counts (`counts`), not counts derived
+  from the returned page.** `dashboardCaseCounts` computes "today", "this
+  month", "active", "drafts", "awaiting postop", "complete" and "ICU" over
+  the whole accessible set by querying the database directly, and
+  "handovers" as pending transfers addressed to the requesting user
+  specifically (matching `/v1/cases/transfers/pending`'s own default),
+  independent of the case-access `where` clause. Both dashboards previously
+  computed every one of these by filtering whatever page happened to be
+  loaded, so a clinic with more cases than that page's `take` saw
+  understated numbers, and "handovers" mixed together outgoing transfers,
+  incoming ones, and — for an admin/HOD — transfers between two other people
+  entirely.
+
+- **`skip`/`take` are truncated to integers** before reaching Prisma, which
+  rejects a non-integer value with a 500; a fractional query string (`"1.5"`)
+  is finite and previously passed the existing range check unrounded.
+
+### Added
+
+- **`GET /v1/cases` selects `preop.ageValue`/`ageUnit`** alongside
+  `ageYears`, and **`transfers.toUserId`** alongside `transfers.id`, so
+  clients can tell a precisely-recorded infant age from an absent one, and a
+  handover addressed to the current user from any other pending transfer on
+  a visible case.
+
+### Fixed
+
+- **The EHR outbound quantity parser** (`ehr-fhir-body.ts`) now rejects a
+  `valueQuantity.value` that is not purely numeric (`"70kg"`) instead of
+  truncating it to a plausible-looking number, via a local copy of core's
+  `strictFiniteNumber` — duplicated rather than imported because the
+  appliance's vendored core tree predates this export; replace it with the
+  real import at the next re-vendor.
+- **The EHR control-plane network policy** now refuses a literal link-local
+  or cloud-metadata address (`169.254.0.0/16`, `fe80::/10`) over HTTPS
+  unconditionally, closing a gap `isPrivateHost` deliberately did not cover
+  (link-local is a different, always-forbidden category from "private",
+  which remains a legitimate destination).
+- **Two intraop-log merge bugs**: a web clinical event could be logged twice
+  under the same label at two different columns and collapse into one, and
+  a grid-vitals bridge could re-log a field a vital event had already
+  recorded at that column instead of merging only what was missing.
+- **Conflict-detection guard 1** no longer fires when the client sent a
+  usable revision instead of (or in addition to) a base timestamp, and every
+  guard now reports its own real reason (`missing_conflict_timestamp` /
+  `stale_revision` / `stale_timestamp`) instead of one guard's result
+  silently falling back to another's label.
+- **`unfinalize`** now clears `awaitingReviewAt`, so an unfinalized case does
+  not carry a stale countdown into whatever happens next.
+- A migration backfills `awaitingReviewAt` for any case that reached
+  AWAITING_REVIEW before the column existed — otherwise the pending-close
+  sweep, which requires the column to be non-null, would never have found
+  it.
+
+### Changed (OMOP export)
+
+- **`omop-mapper.ts` split from one 3,717-line file into `src/lib/omop-mapper/`**:
+  concept tables, row types, id/date helpers, quality-warning checks, and
+  seven per-domain mapping functions (person/visit, preop clinical, planned
+  procedure and medications, intraop, selections, complications, postop)
+  threaded through a shared `CaseMapperCtx`. `mapCasesToOmop` itself is now
+  521 lines of orchestration. No behavioural change — the full mapper test
+  suite (228 tests) passes unchanged before and after.
+
 ## [9.8.0] - 2026-09-06
 
 ### Changed

@@ -19,11 +19,10 @@ import { corsHeaders } from "@/lib/cors"
 import type { CaseDetail, Serialized } from "@/types/case-detail"
 import type { LegacyKeyEvents, LogEvent, ClinicalEvent } from "@/types/timetable"
 import type { CaseStatus } from "@/generated/prisma/enums"
-import {
-  INTRAOP_COLUMN_MS,
-  intraopInstantForColumn,
-} from "@lospor/core/intraop-engine"
 import { SECTION_REVISION_HEADER } from "@lospor/core/sync"
+import { detectSectionConflicts } from "./_patch-conflicts"
+import { computeNextStatus, shouldStampAwaitingReview } from "./_patch-status"
+import { bridgeGridVitalsIntoLog, mergeWebClinicalEventsIntoLog } from "./_patch-intraop-log"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import {
   CaseWriteError,
@@ -57,7 +56,11 @@ export async function OPTIONS(req: NextRequest) {
 
 const patchBodySchema = z.object({
   // "COMPLETE" is intentionally excluded — use POST /api/cases/:id/finalize instead.
-  status:      z.enum(["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW"]).optional(),
+  // "AWAITING_REVIEW" is intentionally excluded, the same as "COMPLETE" --
+  // use POST /v1/cases/:id/submit-for-review instead, which proves postop is
+  // actually complete before the transition and stamps the countdown from
+  // that action rather than from whichever autosave happened to arrive last.
+  status:      z.enum(["DRAFT", "IN_PROGRESS"]).optional(),
   notes:       z.string().max(1000).nullable().optional(),
   preop:       preopSchema.optional(),
   intraop:     intraopSchema.optional(),
@@ -259,133 +262,45 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ? { ...(preop ?? {}), clinicalMode: pediatricDecision.clinicalMode }
         : null
 
-      // Every conflict this save would hit, evaluated once.
-      //
-      // These used to be nine early returns each guarded by `!forceUpdate`, so
-      // the flag did not merely skip the 409 -- it erased any record that there
-      // had been a conflict at all. A colleague's edits were replaced with no
-      // error, no warning, and nothing afterwards to show it had happened.
-      //
-      // Collecting them first keeps the same response (the first conflict wins,
-      // in the same order) while leaving something to write down when the save
-      // proceeds anyway.
-      type DetectedConflict = {
-        section: "preop" | "postop" | "intraop"
-        reason?: "missing_conflict_timestamp"
-        serverVersion: unknown
-        clientRevision: number | null
-        clientBase: string | null
-        serverRevision: number | null
-        serverUpdatedAt: string | null
-      }
-      const conflicts: DetectedConflict[] = []
-      const at = (value: Date | null | undefined) => value?.toISOString() ?? null
-
-      // Missing-timestamp guard stays scoped to different users: clients that
-      // legitimately send no base header (fresh loads, older mobile flows) must
-      // not 409 against their own case.
-      if (differentUser && preopTouched && existing.preop && !preopBase) {
-        conflicts.push({
-          section: "preop", reason: "missing_conflict_timestamp",
-          serverVersion: existing.preop,
-          clientRevision: null, clientBase: null,
-          serverRevision: existing.preop.syncRevision, serverUpdatedAt: at(existing.preop.updatedAt),
-        })
-      }
-      if (differentUser && postop && existing.postop && !postopBase) {
-        conflicts.push({
-          section: "postop", reason: "missing_conflict_timestamp",
-          serverVersion: existing.postop,
-          clientRevision: null, clientBase: null,
-          serverRevision: existing.postop.syncRevision, serverUpdatedAt: at(existing.postop.updatedAt),
-        })
-      }
-      if (differentUser && intraop && existing.intraop && !intraopBase) {
-        conflicts.push({
-          section: "intraop", reason: "missing_conflict_timestamp",
-          serverVersion: { updatedAt: existing.intraop.updatedAt },
-          clientRevision: null, clientBase: null,
-          serverRevision: existing.intraop.syncRevision, serverUpdatedAt: at(existing.intraop.updatedAt),
-        })
-      }
-
-      // Stale-revision guard applies to EVERYONE: a client whose revision is
-      // behind the server's conflicts even for the case owner's own writes --
-      // the same user in two tabs or on two devices could otherwise silently
-      // overwrite themselves.
-      if (preopTouched && preopRevision != null && preopRevision !== "invalid" && existing.preop && existing.preop.syncRevision !== preopRevision) {
-        conflicts.push({
-          section: "preop", serverVersion: existing.preop,
-          clientRevision: preopRevision, clientBase: preopBase,
-          serverRevision: existing.preop.syncRevision, serverUpdatedAt: at(existing.preop.updatedAt),
-        })
-      }
-      if (postop && postopRevision != null && postopRevision !== "invalid" && existing.postop && existing.postop.syncRevision !== postopRevision) {
-        conflicts.push({
-          section: "postop", serverVersion: existing.postop,
-          clientRevision: postopRevision, clientBase: postopBase,
-          serverRevision: existing.postop.syncRevision, serverUpdatedAt: at(existing.postop.updatedAt),
-        })
-      }
-      if (intraop && intraopRevision != null && intraopRevision !== "invalid" && existing.intraop && existing.intraop.syncRevision !== intraopRevision) {
-        conflicts.push({
-          section: "intraop",
-          serverVersion: { updatedAt: existing.intraop.updatedAt, revision: existing.intraop.syncRevision },
-          clientRevision: intraopRevision, clientBase: intraopBase,
-          serverRevision: existing.intraop.syncRevision, serverUpdatedAt: at(existing.intraop.updatedAt),
-        })
-      }
-
-      // Stale-timestamp guard, for clients that send a base timestamp but no
-      // revision.
-      if (preopTouched && preopRevision == null && preopBase && existing.preop?.updatedAt && existing.preop.updatedAt.getTime() > new Date(preopBase).getTime()) {
-        conflicts.push({
-          section: "preop", serverVersion: existing.preop,
-          clientRevision: null, clientBase: preopBase,
-          serverRevision: existing.preop.syncRevision, serverUpdatedAt: at(existing.preop.updatedAt),
-        })
-      }
-      if (postop && postopRevision == null && postopBase && existing.postop?.updatedAt && existing.postop.updatedAt.getTime() > new Date(postopBase).getTime()) {
-        conflicts.push({
-          section: "postop", serverVersion: existing.postop,
-          clientRevision: null, clientBase: postopBase,
-          serverRevision: existing.postop.syncRevision, serverUpdatedAt: at(existing.postop.updatedAt),
-        })
-      }
-      if (intraop && intraopRevision == null && intraopBase && existing.intraop?.updatedAt && existing.intraop.updatedAt.getTime() > new Date(intraopBase).getTime()) {
-        conflicts.push({
-          section: "intraop", serverVersion: { updatedAt: existing.intraop.updatedAt },
-          clientRevision: null, clientBase: intraopBase,
-          serverRevision: existing.intraop.syncRevision, serverUpdatedAt: at(existing.intraop.updatedAt),
-        })
-      }
+      // Every conflict this save would hit, evaluated once. The rule itself
+      // lives in ./_patch-conflicts, where it is pure and testable.
+      const conflicts = detectSectionConflicts({
+        differentUser,
+        sections: {
+          preop: {
+            client: { touched: preopTouched, base: preopBase, revision: preopRevision },
+            server: existing.preop,
+            serverVersionForResponse: () => existing.preop,
+          },
+          postop: {
+            client: { touched: !!postop, base: postopBase, revision: postopRevision },
+            server: existing.postop,
+            serverVersionForResponse: () => existing.postop,
+          },
+          intraop: {
+            client: { touched: !!intraop, base: intraopBase, revision: intraopRevision },
+            server: existing.intraop,
+            // Only the stale-revision reply carries the revision; the other two
+            // guards deliberately send the timestamp alone.
+            serverVersionForResponse: guard => guard === "stale_revision"
+              ? { updatedAt: existing.intraop?.updatedAt, revision: existing.intraop?.syncRevision }
+              : { updatedAt: existing.intraop?.updatedAt },
+          },
+        },
+      })
 
       if (conflicts.length && !overrideConflict) {
         const [first] = conflicts
         return NextResponse.json({
           error: "conflict",
           section: first.section,
-          ...(first.reason ? { reason: first.reason } : {}),
+          // Every guard now sets its own reason -- see _patch-conflicts.ts --
+          // so this is never a fallback value.
+          reason: first.reason,
           serverVersion: first.serverVersion,
         }, { status: 409 })
       }
 
-    // Helper: compute the next status once, reused by both transaction and audit log
-    function computeNextStatus(currentStatus: string): CaseStatus | undefined {
-      const statusOrder: Record<string, number> = { DRAFT: 0, IN_PROGRESS: 1, AWAITING_REVIEW: 2, COMPLETE: 3 }
-      let next: CaseStatus | undefined
-      if (status !== undefined) {
-        next = status
-      } else if (intraop && currentStatus === "DRAFT" && intraop.startTime) {
-        next = "IN_PROGRESS"
-      } else if (postop && currentStatus === "IN_PROGRESS") {
-        next = "AWAITING_REVIEW"
-      }
-      if (next && statusOrder[next] !== undefined && statusOrder[currentStatus] !== undefined) {
-        if (statusOrder[next] < statusOrder[currentStatus]) next = undefined
-      }
-      return next
-    }
 
       // The parent row is locked before this fresh read. Child-table triggers
       // acquire the same lock, so revision checks and all section/event writes
@@ -432,27 +347,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if ("timetableData" in intraop && intraop.timetableData) {
         const existingKev = (existing.intraop?.keyEvents as LegacyKeyEvents | null) ?? {}
         const existingLog: LogEvent[] = Array.isArray(existingKev.log) ? existingKev.log : []
-        // Convert web-added clinicalEvents to log entries so mobile can see them
-        const webCEs: ClinicalEvent[] = (intraop.timetableData as LegacyKeyEvents)?.clinicalEvents ?? []
-        const logLabels = new Set(existingLog.filter(e => e.type === "clinical_event" || e.type === "event").map(e => e.label))
-        let mergedLog = existingLog
-        if (webCEs.length > 0 && existingLog.length > 0) {
-          const sortedLog = [...existingLog].sort((a, b) => new Date(a.ts ?? 0).getTime() - new Date(b.ts ?? 0).getTime())
-          const chartStartMs = existing.intraop?.startedAt?.getTime()
-            ?? (sortedLog[0]?.ts ? new Date(sortedLog[0].ts).getTime() : null)
-          if (chartStartMs) {
-            const newEntries: LogEvent[] = webCEs
-              .filter(ce => !logLabels.has(ce.label))
-              .map(ce => ({
-                id: `web-${ce.colIdx}-${ce.label}`,
-                ts: intraopInstantForColumn(chartStartMs, ce.colIdx).toISOString(),
-                type: "clinical_event",
-                label: ce.label,
-                color: ce.color,
-              }))
-            if (newEntries.length > 0) mergedLog = [...existingLog, ...newEntries]
-          }
-        }
+        // Web charts clinical events into a column grid with no timestamps;
+        // mobile only ever sees the log. ./_patch-intraop-log does the bridge.
+        const sortedLog = [...existingLog].sort((a, b) => new Date(a.ts ?? 0).getTime() - new Date(b.ts ?? 0).getTime())
+        const chartStartMs = existing.intraop?.startedAt?.getTime()
+          ?? (sortedLog[0]?.ts ? new Date(sortedLog[0].ts).getTime() : null)
+        const mergedLog = mergeWebClinicalEventsIntoLog(
+          existingLog,
+          (intraop.timetableData as LegacyKeyEvents)?.clinicalEvents ?? [],
+          chartStartMs ?? null,
+        )
         effectiveIntraop = { ...intraop, timetableData: { ...(intraop.timetableData as LegacyKeyEvents), log: mergedLog } }
       }
       if (existing.intraop) {
@@ -491,31 +395,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           : eventRowCount === 0
             ? snapshotLogForReconcile(keyEvents, start)
             : null
-        // Bridge grid vitals from clients that don't emit vital events yet
-        // (older cached web builds): any non-empty vitals column with no
-        // vital event in that 5-minute bucket becomes one. Without this,
-        // rebuildProjection (which rebuilds keyEvents purely from event rows)
-        // silently wipes web-typed vitals as soon as the case has any events.
+        // Vitals typed straight into the grid by older cached web builds
+        // become vital events, or rebuildProjection wipes them. See
+        // ./_patch-intraop-log.
         const gridVitals = Array.isArray(keyEvents.vitals) ? keyEvents.vitals : []
-        if (start !== null && gridVitals.length > 0 && projectedLog && projectedLog.length > 0) {
-          const vitalCols = new Set(
-            projectedLog
-              .filter(e => e.type === "vital" && typeof e.ts === "string")
-              .map(e => Math.floor((new Date(e.ts as string).getTime() - start) / INTRAOP_COLUMN_MS))
-          )
-          const bridged: LogEvent[] = []
-          gridVitals.forEach((v, col) => {
-            if (!v || typeof v !== "object") return
-            if (!Object.values(v).some(x => x != null)) return
-            if (vitalCols.has(col)) return
-            bridged.push({
-              id: `web-vital-${col}`,
-              ts: intraopInstantForColumn(start, col).toISOString(),
-              type: "vital",
-              ...v,
-            } as LogEvent)
-          })
-          if (bridged.length > 0) projectedLog = [...projectedLog, ...bridged]
+        if (projectedLog) {
+          projectedLog = bridgeGridVitalsIntoLog(projectedLog, gridVitals, start)
         }
         if (projectedLog && projectedLog.length > 0) {
           // The third write path into CaseEvent, and the one a web client uses
@@ -576,17 +461,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       })
     }
 
-    // Status transition rules:
-    //   1. Explicit status in payload -> use as-is (e.g. final submit).
-    //   2. No explicit status + intraop data + current DRAFT -> promote to IN_PROGRESS.
-    //   3. No explicit status + postop data + current IN_PROGRESS -> promote to AWAITING_REVIEW
-    //   4. Never implicitly demote a status
-    //   COMPLETE requires POST /api/cases/:id/finalize (not allowed here)
-    const finalStatus = computeNextStatus(existing.status)
+    // The transition rules live in ./_patch-status. Postop completeness is
+    // deliberately not one of them here -- see its DO NOT comment --
+    // AWAITING_REVIEW is reached only through
+    // POST /v1/cases/:id/submit-for-review.
+    const finalStatus = computeNextStatus({
+      currentStatus: existing.status,
+      requestedStatus: status,
+      intraopStarted: !!intraop?.startTime,
+    })
     if (finalStatus) {
       await tx.case.update({
         where: { id },
-        data: { status: finalStatus },
+        data: {
+          status: finalStatus,
+          ...(shouldStampAwaitingReview(existing.status, finalStatus)
+            ? { awaitingReviewAt: new Date() }
+            : {}),
+        },
       })
     }
     if (notes !== undefined) {
@@ -598,6 +490,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       where: { id },
       select: {
         updatedAt: true,
+        awaitingReviewAt: true,
         finalizedAt: true,
         clinicalRevision: true,
         eventRevision: true,
@@ -634,7 +527,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         await logAuditInTransaction(tx, userId, "CASE_CONFLICT_OVERRIDE", id, {
           sections: conflicts.map(conflict => ({
             section: conflict.section,
-            reason: conflict.reason ?? "stale_revision",
+            // Every guard sets its own reason now -- see _patch-conflicts.ts --
+            // so a stale-timestamp override is no longer audited as though it
+            // were a stale-revision one.
+            reason: conflict.reason,
             clientRevision: conflict.clientRevision,
             clientBase: conflict.clientBase,
             overriddenRevision: conflict.serverRevision,
@@ -660,6 +556,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       clinicalMode: updated?.clinicalMode,
       clinicalRulesVersion: updated?.clinicalRulesVersion,
       updatedAt: updated?.updatedAt,
+      awaitingReviewAt: updated?.awaitingReviewAt,
       finalizedAt: updated?.finalizedAt,
       clinicalRevision: updated?.clinicalRevision,
       eventRevision: updated?.eventRevision,

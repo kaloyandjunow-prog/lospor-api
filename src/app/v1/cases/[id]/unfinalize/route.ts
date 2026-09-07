@@ -47,7 +47,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
       const updated = await tx.case.update({
         where: { id },
-        data: { status: "IN_PROGRESS", finalizedAt: null },
+        // awaitingReviewAt is cleared with the rest. It anchors the
+        // pending-close countdown, and reopening a case leaves the old stamp
+        // long expired -- so the sweep that closes elapsed cases would have
+        // re-closed this one the moment it next reached AWAITING_REVIEW,
+        // against the explicit act of reopening it. The next genuine
+        // transition stamps a fresh one.
+        data: { status: "IN_PROGRESS", finalizedAt: null, awaitingReviewAt: null },
       })
       // Undoing an attestation is itself an act that has to be provable, so
       // its record commits with it rather than after the response.
