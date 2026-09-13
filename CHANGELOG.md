@@ -12,6 +12,8 @@
 
 ### Fixed
 
+- **The laboratory seed now treats Anti-Xa as explicitly uncoded.** It seeds 65 coded tests, reports one intentional exception, and lets Anti-Xa export as `LAB:Anti-Xa` with no fabricated LOINC or OMOP concept.
+
 - **ICD-10 concept seeding no longer chooses an arbitrary first OMOP target.**
   Exact active Athena source codes map only when they resolve to one distinct
   active standard concept. Intentional one-to-many `Maps to` decompositions,

@@ -503,7 +503,7 @@ model Icd10Synonym {
   @@index([icd10Code])
 }
 
-// LOINC codes for the 67-test canonical lab library (seeded once, not full LOINC import)
+// LOINC codes for coded entries in the 66-test canonical lab library (not a full LOINC import)
 model LabLoinc {
   name          String @id // exact name from lab library
   loincCode     String

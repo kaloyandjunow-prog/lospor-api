@@ -3,12 +3,8 @@
 // Idempotent: upserts by canonical lab name.
 
 import "dotenv/config"
-import { PrismaClient, Prisma } from "../src/generated/prisma/client"
+import type { PrismaClient } from "../src/generated/prisma/client"
 import { LAB_LIBRARY } from "../src/lib/labs"
-import { PrismaPg } from "@prisma/adapter-pg"
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
-const prisma = new PrismaClient({ adapter } satisfies Prisma.PrismaClientOptions)
 
 const LOINC_CODES: Record<string, string> = {
   "Haemoglobin (Hb)": "718-7",
@@ -109,12 +105,26 @@ const LOINC_CODES: Record<string, string> = {
   "IL-6": "26881-3",
 }
 
-async function main() {
-  console.log(`Seeding ${LAB_LIBRARY.length} LabLoinc entries...`)
-  let upserted = 0
+export const INTENTIONALLY_UNCODED: Readonly<Record<string, string>> = Object.freeze({
+  "Anti-Xa": "The library does not distinguish unfractionated-heparin from low-molecular-weight-heparin assays.",
+})
+
+type LabLoincWriter = Pick<PrismaClient, "labLoinc">
+type SeedLogger = Pick<Console, "log">
+
+export async function seedLabLoinc(prisma: LabLoincWriter, logger: SeedLogger = console) {
+  logger.log(`Seeding ${LAB_LIBRARY.length} LabLoinc entries...`)
+  let coded = 0
+  let intentionallyUncoded = 0
   for (const lab of LAB_LIBRARY) {
     const loincCode = LOINC_CODES[lab.name]
-    if (!loincCode) throw new Error(`Missing LOINC code for ${lab.name}`)
+    if (!loincCode) {
+      const reason = INTENTIONALLY_UNCODED[lab.name]
+      if (!reason) throw new Error(`Missing LOINC code for ${lab.name}`)
+      intentionallyUncoded++
+      logger.log(`Intentionally uncoded: ${lab.name}. ${reason}`)
+      continue
+    }
     await prisma.labLoinc.upsert({
       where: { name: lab.name },
       update: {
@@ -131,9 +141,29 @@ async function main() {
         referenceHigh: lab.refHigh ?? null,
       },
     })
-    upserted++
+    coded++
   }
-  console.log(`Done. ${upserted} rows upserted.`)
+  logger.log(`Done. ${coded} coded, ${intentionallyUncoded} intentionally uncoded.`)
+  return { coded, intentionallyUncoded }
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect())
+async function main() {
+  const { PrismaClient } = await import("../src/generated/prisma/client")
+  const { PrismaPg } = await import("@prisma/adapter-pg")
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+  const prisma = new PrismaClient({
+    adapter,
+  } satisfies import("../src/generated/prisma/client").Prisma.PrismaClientOptions)
+  try {
+    await seedLabLoinc(prisma)
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+if (require.main === module) {
+  main().catch(error => {
+    console.error(error)
+    process.exit(1)
+  })
+}

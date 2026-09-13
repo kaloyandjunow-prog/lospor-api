@@ -1276,6 +1276,38 @@ describe("laboratory results", () => {
     expect(flags).toContain("LOINC:718-7=high")
   })
 
+  it("exports intentionally uncoded Anti-Xa without a LOINC or invented concept", () => {
+    const base = completeCase() as unknown as { preop: { labRows: unknown[] } }
+    const withAntiXa = mapCasesToOmop([{
+      ...base,
+      preop: {
+        ...base.preop,
+        labRows: [{
+          test: "Anti-Xa",
+          valueNum: 0.7,
+          value: "0.7",
+          unitCanon: "IU/mL",
+          loincCode: null,
+          abnormalFlag: null,
+          referenceLow: null,
+          referenceHigh: null,
+          standardConceptId: null,
+          mappingStatus: "UNMAPPED",
+        }],
+      },
+    } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+
+    const antiXa = withAntiXa.measurement.find(m => m.measurement_source_value === "LAB:Anti-Xa")
+    expect(antiXa).toMatchObject({
+      measurement_concept_id: 0,
+      measurement_source_value: "LAB:Anti-Xa",
+      value_as_number: 0.7,
+    })
+  })
+
   it("drops a row that is neither a number nor text", () => {
     // A result with no value is not a result, and exporting an empty
     // measurement would inflate every count of tests performed.
