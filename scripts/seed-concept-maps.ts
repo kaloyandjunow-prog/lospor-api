@@ -12,9 +12,10 @@ import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/pri
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
 import path from "path"
+import { selectStandardMapResolutions, type StandardMapResolution } from "./standard-map-selection"
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
-const SOURCE_VERSION = "local-bilingual-map-v2"
+const SOURCE_VERSION = "local-bilingual-map-v3"
 
 // Patient position, from lospor-core/src/catalog/position.ts. Every option
 // category defaults to SOURCE_ONLY below -- there is no vocabulary of
@@ -373,9 +374,9 @@ async function createManyConcepts(rows: ConceptSeed[]) {
     console.log(`  concept maps inserted ${Math.min(i + insertBatchSize, rows.length)}/${rows.length}`)
   }
 
-  const mappedRows = rows.filter(row => row.mappingStatus === ConceptMappingStatus.MAPPED)
-  for (let i = 0; i < mappedRows.length; i += updateBatchSize) {
-    const batch = mappedRows.slice(i, i + updateBatchSize)
+  const generatedRows = rows
+  for (let i = 0; i < generatedRows.length; i += updateBatchSize) {
+    const batch = generatedRows.slice(i, i + updateBatchSize)
     await prisma.$executeRaw`
       UPDATE "ConceptMap" AS cm
       SET
@@ -427,10 +428,11 @@ async function createManyConcepts(rows: ConceptSeed[]) {
       WHERE
         cm."domain" = v."domain" AND
         cm."sourceVocabulary" = v."sourceVocabulary" AND
-        cm."sourceCode" = v."sourceCode"
+        cm."sourceCode" = v."sourceCode" AND
+        cm."mappingStatus" NOT IN ('MANUALLY_CURATED', 'REJECTED')
     `
     written += batch.length
-    console.log(`  mapped concept maps updated ${Math.min(i + updateBatchSize, mappedRows.length)}/${mappedRows.length}`)
+    console.log(`  generated concept maps updated ${Math.min(i + updateBatchSize, generatedRows.length)}/${generatedRows.length}`)
   }
 
   await prisma.conceptMap.updateMany({
@@ -446,15 +448,6 @@ async function createManyConcepts(rows: ConceptSeed[]) {
     },
   })
   return written
-}
-
-type StandardConcept = {
-  standardVocabulary: string
-  standardConceptId: number
-  standardLabel: string
-  mappingMethod: string
-  mappingConfidence: number
-  athenaVersion: string | null
 }
 
 async function latestAthenaVersion() {
@@ -478,10 +471,9 @@ function chunk<T>(items: T[], size: number): T[][] {
   return out
 }
 
-async function resolveStandardMap(vocabularyId: string, codes: string[], athenaVersion: string | null): Promise<Map<string, StandardConcept>> {
+async function resolveStandardMap(vocabularyId: string, codes: string[], athenaVersion: string | null): Promise<Map<string, StandardMapResolution>> {
   const uniqueCodes = [...new Set(codes.filter(Boolean))]
-  const out = new Map<string, StandardConcept>()
-  if (uniqueCodes.length === 0) return out
+  if (uniqueCodes.length === 0) return new Map()
 
   const sourceConcepts = []
   for (const codeChunk of chunk(uniqueCodes, 1000)) {
@@ -501,25 +493,9 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
     }))
   }
 
-  const nonStandardIds: number[] = []
-  const sourceById = new Map<number, { conceptCode: string }>()
-  for (const concept of sourceConcepts) {
-    if (concept.standardConcept === "S") {
-      out.set(concept.conceptCode, {
-        standardVocabulary: concept.vocabularyId,
-        standardConceptId: concept.conceptId,
-        standardLabel: concept.conceptName,
-        mappingMethod: "athena-exact-standard-code",
-        mappingConfidence: 1,
-        athenaVersion,
-      })
-    } else {
-      nonStandardIds.push(concept.conceptId)
-      sourceById.set(concept.conceptId, { conceptCode: concept.conceptCode })
-    }
-  }
-
-  if (nonStandardIds.length === 0) return out
+  const nonStandardIds = sourceConcepts
+    .filter(concept => concept.standardConcept !== "S")
+    .map(concept => concept.conceptId)
   const relationships = []
   for (const idChunk of chunk(nonStandardIds, 1000)) {
     relationships.push(...await prisma.omopConceptRelationship.findMany({
@@ -532,7 +508,7 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
     }))
   }
 
-  const targetIds = [...new Set(relationships.map(r => r.conceptId2))]
+  const targetIds = [...new Set(relationships.map(relationship => relationship.conceptId2))]
   const targets = new Map<number, { conceptId: number; conceptName: string; vocabularyId: string }>()
   for (const idChunk of chunk(targetIds, 1000)) {
     const rows = await prisma.omopConcept.findMany({
@@ -546,32 +522,28 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
     for (const row of rows) targets.set(row.conceptId, row)
   }
 
-  for (const rel of relationships) {
-    const source = sourceById.get(rel.conceptId1)
-    const target = targets.get(rel.conceptId2)
-    if (!source || !target || out.has(source.conceptCode)) continue
-    out.set(source.conceptCode, {
-      standardVocabulary: target.vocabularyId,
-      standardConceptId: target.conceptId,
-      standardLabel: target.conceptName,
-      mappingMethod: "athena-exact-code-maps-to",
-      mappingConfidence: 0.95,
-      athenaVersion,
-    })
-  }
-  return out
+  return selectStandardMapResolutions({
+    vocabularyId,
+    codes: uniqueCodes,
+    sourceConcepts,
+    relationships,
+    targets,
+    athenaVersion,
+  })
 }
-
-function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, standard: StandardConcept | undefined): ConceptSeed {
-  if (!standard) {
+function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, resolution: StandardMapResolution | undefined): ConceptSeed {
+  if (!resolution || resolution.kind === "source-only") {
     return {
       ...seed,
       mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
-      mappingMethod: "source-code-preserved",
+      mappingMethod: resolution?.mappingMethod ?? "source-code-preserved",
       mappingConfidence: null,
       reviewed: false,
+      mappingNotes: resolution?.mappingNotes,
+      athenaVersion: resolution?.athenaVersion,
     }
   }
+  const standard = resolution.standard
   return {
     ...seed,
     standardVocabulary: standard.standardVocabulary,
@@ -584,7 +556,6 @@ function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, standard: Standa
     athenaVersion: standard.athenaVersion,
   }
 }
-
 async function main() {
   let count = 0
   const seeds: ConceptSeed[] = []

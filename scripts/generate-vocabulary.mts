@@ -18,7 +18,7 @@ import path from "node:path"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../src/generated/prisma/client"
 
-const VOCABULARY_VERSION = "2026-08-06"
+const VOCABULARY_VERSION = "2026-09-13"
 const CORE_VOCABULARY_DIR = path.resolve("../lospor-core/src/vocabulary")
 
 type PcsEntry = { code: string; description: string; group: string; domain: string }

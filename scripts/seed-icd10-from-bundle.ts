@@ -9,12 +9,9 @@
 // deployment where the table is empty the dropdown returns nothing, and an
 // empty dropdown reads as "no such code" rather than "nothing is loaded".
 //
-// A hospital appliance is the first deployment where that is the day-one state:
-// it seeds the Core option catalog at install and nothing else, because ICD, ATC
-// and the OMOP concept tables come from a licensed package the operator imports
-// separately. Meanwhile the appliance already ships all 16,175 of these codes
-// inside vendored Core, for the phone's offline search. The data was in the box;
-// only the database could not see it.
+// The appliance seeds its searchable ICD-10 table from the same complete Core
+// bundle used by the phone offline. Both surfaces must expose the same codes
+// and labels, including the active NHIS CL011 additions.
 //
 // Seeding rather than teaching the route a fallback keeps one code path. A
 // fallback branch would execute only where the database is empty, which is
@@ -22,35 +19,37 @@
 //
 // Usage: npx tsx scripts/seed-icd10-from-bundle.ts
 //
-// Insert-only, deliberately. If an institution has imported its approved
-// vocabulary, those rows carry labels this bundle does not have, and a reseed on
-// the next update must not overwrite them. Existing codes are left exactly as
-// they are; only codes absent from the table are added. The bundle is a floor,
-// never a correction.
+// The bundle is authoritative for codes it contains. Re-running this seed
+// inserts missing codes and reconciles differing labels; unrelated local codes
+// remain untouched. Historical case labels are stored in case data, not read
+// through this lookup table.
 
 import "dotenv/config"
 import { icd10Rows, VOCABULARY_VERSION } from "@lospor/core/vocabulary"
-import type { PrismaClient } from "../src/generated/prisma/client"
+import { Prisma, type PrismaClient } from "../src/generated/prisma/client"
 
 const BATCH = 1000
 
 export async function seedIcd10FromBundle(
   prisma: PrismaClient,
-): Promise<{ bundled: number; alreadyPresent: number; inserted: number; version: string }> {
+): Promise<{ bundled: number; alreadyPresent: number; inserted: number; updated: number; version: string }> {
   const rows = icd10Rows()
-  const existing = new Set(
-    (await prisma.icd10Code.findMany({ select: { code: true } })).map(r => r.code),
+  const existing = new Map(
+    (await prisma.icd10Code.findMany({ select: { code: true, labelEn: true, labelBg: true } }))
+      .map(row => [row.code, row]),
   )
 
-  const missing = rows
-    .filter(row => !existing.has(row.code))
-    .map(row => ({
-      code: row.code,
-      labelEn: row.labelEn,
-      // The bundle stores an empty string where a chapter or block has no
-      // Bulgarian rubric; the column is nullable and should say so.
-      labelBg: row.labelBg ? row.labelBg : null,
-    }))
+  const normalized = rows.map(row => ({
+    code: row.code,
+    labelEn: row.labelEn,
+    // Navigation rows without a Bulgarian rubric use SQL NULL, not "".
+    labelBg: row.labelBg || null,
+  }))
+  const missing = normalized.filter(row => !existing.has(row.code))
+  const changed = normalized.filter(row => {
+    const current = existing.get(row.code)
+    return current && (current.labelEn !== row.labelEn || current.labelBg !== row.labelBg)
+  })
 
   let inserted = 0
   for (let i = 0; i < missing.length; i += BATCH) {
@@ -61,10 +60,26 @@ export async function seedIcd10FromBundle(
     inserted += count
   }
 
+  let updated = 0
+  for (let i = 0; i < changed.length; i += BATCH) {
+    const batch = changed.slice(i, i + BATCH)
+    updated += await prisma.$executeRaw`
+      UPDATE "Icd10Code" AS target
+      SET "labelEn" = source."labelEn", "labelBg" = source."labelBg"
+      FROM (VALUES ${Prisma.join(batch.map(row => Prisma.sql`(
+        ${row.code}, ${row.labelEn}, ${row.labelBg}
+      )`))}) AS source("code", "labelEn", "labelBg")
+      WHERE target."code" = source."code"
+        AND (target."labelEn", target."labelBg")
+          IS DISTINCT FROM (source."labelEn", source."labelBg")
+    `
+  }
+
   return {
     bundled: rows.length,
     alreadyPresent: existing.size,
     inserted,
+    updated,
     version: VOCABULARY_VERSION,
   }
 }
@@ -78,17 +93,11 @@ async function main() {
   } satisfies import("../src/generated/prisma/client").Prisma.PrismaClientOptions)
   try {
     const result = await seedIcd10FromBundle(prisma)
-    if (result.inserted === 0) {
-      console.log(
-        `ICD-10 already present: ${result.alreadyPresent} codes in the database, `
-        + `${result.bundled} in bundle ${result.version}. Nothing inserted.`,
-      )
-    } else {
-      console.log(
-        `ICD-10 seeded from bundle ${result.version}: inserted ${result.inserted}, `
-        + `left ${result.alreadyPresent} existing codes untouched.`,
-      )
-    }
+    console.log(
+      `ICD-10 synchronized from bundle ${result.version}: ${result.bundled} bundled, `
+      + `${result.inserted} inserted, ${result.updated} labels updated, `
+      + `${result.alreadyPresent} previously present.`,
+    )
   } finally {
     await prisma.$disconnect()
   }

@@ -1,5 +1,25 @@
 # Changelog - LOSPOR API
 
+## [Unreleased]
+
+### Added
+
+- Added a reviewable NHIS CL011 merge utility that updates the shared Core ICD-10 bundle from a normalized official snapshot without committing the source workbook.
+
+### Changed
+
+- The ICD-10 bootstrap seed now synchronizes the complete shared Core bundle into the API database, keeping server search and offline clients on the same codes and authoritative labels.
+
+### Fixed
+
+- **ICD-10 concept seeding no longer chooses an arbitrary first OMOP target.**
+  Exact active Athena source codes map only when they resolve to one distinct
+  active standard concept. Intentional one-to-many `Maps to` decompositions,
+  source concepts without a target, and NHIS extensions absent from Athena stay
+  explicit `SOURCE_ONLY` rows with the Athena version and reason recorded.
+  Reseeding clears stale automatic mappings while preserving `MANUALLY_CURATED`
+  and `REJECTED` review decisions.
+
 ## [9.9.5] - 2026-09-07
 
 ### Fixed
