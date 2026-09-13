@@ -5,6 +5,52 @@ import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
 import { pediatricCaseFixture } from "./fixtures/pediatric-case"
 
 describe("mapCasesToOmop", () => {
+  it("exports an imported lab under its NHIS source key while retaining its LOINC concept", () => {
+    const source = completeCase()
+    Object.assign(source.preop.labRows[0], {
+      sourceVocabulary: "NHIS_CL024",
+      sourceCode: "03-019-00",
+      loincCode: "2951-2",
+      standardConceptId: 3019550,
+      mappingStatus: "MANUALLY_CURATED",
+    })
+    const result = mapCasesToOmop([source as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+
+    expect(result.measurement).toContainEqual(expect.objectContaining({
+      measurement_source_value: "NHIS_CL024:03-019-00",
+      measurement_concept_id: 3019550,
+    }))
+  })
+
+  it("keeps the reported unit when a source-only result cannot be canonicalized", () => {
+    const source = completeCase()
+    Object.assign(source.preop.labRows[0], {
+      test: "D-dimer",
+      valueNum: 0.5,
+      value: "0.5",
+      unit: "ug/mL",
+      unitCanon: null,
+      loincCode: null,
+      sourceVocabulary: "NHIS_CL024",
+      sourceCode: "00-00E-00",
+      standardConceptId: null,
+      mappingStatus: "SOURCE_ONLY",
+    })
+    const result = mapCasesToOmop([source as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+
+    expect(result.measurement).toContainEqual(expect.objectContaining({
+      measurement_source_value: "NHIS_CL024:00-00E-00",
+      measurement_concept_id: 0,
+      unit_concept_id: 0,
+      unit_source_value: "ug/mL",
+    }))
+  })
   it("exports finalized relational rows into OMOP CDM tables", () => {
     const bundle = mapCasesToOmop([completeCase() as never], {
       userId: "admin-1",

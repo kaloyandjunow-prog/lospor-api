@@ -37,6 +37,8 @@ function makeDb(caseRow: Record<string, unknown>) {
         { domain: "condition", sourceVocabulary: "ICD10", sourceCode: "K35", standardConceptId: 12345, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "APPY", standardConceptId: 23456, mappingStatus: "MAPPED" },
         { domain: "measurement", sourceVocabulary: "LOINC", sourceCode: "718-7", standardConceptId: 3000963, mappingStatus: "MAPPED" },
+        { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "03-019-00", standardConceptId: 3019550, mappingStatus: "MANUALLY_CURATED" },
+        { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "00-00E-00", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
         { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "IJ", standardConceptId: 433590, mappingStatus: "MAPPED" },
       ]),
@@ -44,6 +46,7 @@ function makeDb(caseRow: Record<string, unknown>) {
     labLoinc: {
       findMany: vi.fn().mockResolvedValue([
         { name: "Hemoglobin", loincCode: "718-7", unitCanon: "g/L", referenceLow: 120, referenceHigh: 160 },
+        { name: "D-dimer", loincCode: "48065-7", unitCanon: "mg/L FEU", referenceLow: null, referenceHigh: 0.5 },
       ]),
     },
     preopDiagnosis: delegate(),
@@ -382,6 +385,47 @@ describe("syncCaseRelational", () => {
     expect(db.clinicalFieldStatus.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(db.clinicalFieldStatus.createMany.mock.invocationCallOrder[0])
   })
 
+  it("persists both NHIS and LOINC identifiers without inventing one for source-only assays", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    ;(row.preop as unknown as { labResults: Record<string, unknown>[] }).labResults = [
+      {
+        test: "Sodium (Na⁺)", value: "140", unit: "mmol/L", source: "import",
+        sourceVocabulary: "NHIS_CL024", sourceCode: "03-019-00", loincCode: "2951-2",
+      },
+      {
+        test: "D-dimer", value: "7", unit: "ng/L", source: "import",
+        sourceVocabulary: "NHIS_CL024", sourceCode: "00-00E-00", loincCode: null,
+        unconverted: true,
+      },
+    ]
+    row.intraop.labResults = []
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.labResult.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          test: "Sodium (Na⁺)",
+          sourceVocabulary: "NHIS_CL024",
+          sourceCode: "03-019-00",
+          loincCode: "2951-2",
+          standardConceptId: 3019550,
+          mappingStatus: "MANUALLY_CURATED",
+        }),
+        expect.objectContaining({
+          test: "D-dimer",
+          sourceVocabulary: "NHIS_CL024",
+          sourceCode: "00-00E-00",
+          loincCode: null,
+          standardConceptId: null,
+          mappingStatus: "SOURCE_ONLY",
+          unitCanon: null,
+        }),
+      ],
+    })
+  })
   it("does not append stale rows when sections are empty", async () => {
     const { syncCaseRelational } = await import("@/lib/relational-sync")
     const row = makeCaseRow()

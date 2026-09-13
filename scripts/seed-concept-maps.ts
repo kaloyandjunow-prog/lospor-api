@@ -13,9 +13,10 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
 import path from "path"
 import { selectStandardMapResolutions, type StandardMapResolution } from "./standard-map-selection"
+import { NHIS_CL024_LAB_CONCEPT_MAPS } from "./nhis-cl024-lab-mappings"
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
-const SOURCE_VERSION = "local-bilingual-map-v3"
+const SOURCE_VERSION = "local-bilingual-map-v4"
 
 // Patient position, from lospor-core/src/catalog/position.ts. Every option
 // category defaults to SOURCE_ONLY below -- there is no vocabulary of
@@ -590,6 +591,55 @@ async function main() {
     }, labStandards.get(lab.loincCode)))
   }
 
+  // NHIS CL024 is a local source vocabulary. Each of these 50 rows was
+  // clinically reviewed; the target is resolved from the installed Athena
+  // LOINC vocabulary so this seed never hard-codes an ID from one snapshot.
+  const nhisLoincCodes = NHIS_CL024_LAB_CONCEPT_MAPS
+    .map(mapping => mapping.loincCode)
+    .filter((code): code is string => code !== null)
+  const nhisLabStandards = await resolveStandardMap("LOINC", nhisLoincCodes, athenaVersion)
+  for (const mapping of NHIS_CL024_LAB_CONCEPT_MAPS) {
+    const base = {
+      domain: "measurement",
+      sourceVocabulary: "NHIS_CL024",
+      sourceCode: mapping.sourceCode,
+      sourceLabelEn: mapping.sourceLabelEn,
+      sourceLabelBg: mapping.sourceLabelBg,
+      reviewed: true,
+      mappingNotes: `NHIS CL024 1.5.27 clinical review: ${mapping.relationship}`,
+      athenaVersion,
+    }
+    if (mapping.loincCode === null) {
+      seeds.push({
+        ...base,
+        mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+        mappingMethod: "clinician-reviewed-source-only",
+      })
+      continue
+    }
+
+    const resolution = nhisLabStandards.get(mapping.loincCode)
+    if (!resolution || resolution.kind === "source-only") {
+      seeds.push({
+        ...base,
+        mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+        mappingMethod: "reviewed-target-missing-from-athena",
+        mappingNotes: `${base.mappingNotes}; approved LOINC ${mapping.loincCode} was not resolvable in the installed Athena vocabulary`,
+      })
+      continue
+    }
+
+    seeds.push({
+      ...base,
+      standardVocabulary: resolution.standard.standardVocabulary,
+      standardConceptId: resolution.standard.standardConceptId,
+      standardLabel: resolution.standard.standardLabel,
+      mappingStatus: ConceptMappingStatus.MANUALLY_CURATED,
+      mappingMethod: "clinician-reviewed-nhis-cl024-to-loinc",
+      mappingConfidence: 1,
+      mappingNotes: `${base.mappingNotes}; approved LOINC ${mapping.loincCode}`,
+    })
+  }
   const icd = await prisma.icd10Code.findMany()
   const icdStandards = await resolveStandardMap("ICD10", icd.map(c => c.code), athenaVersion)
   for (const code of icd) {

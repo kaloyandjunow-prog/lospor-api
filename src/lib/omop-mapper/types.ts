@@ -237,8 +237,11 @@ export interface OmopLabRow {
   test: string
   valueNum: number | null
   value: string | null
+  unit?: string | null
   unitCanon: string | null
   loincCode: string | null
+  sourceVocabulary?: string | null
+  sourceCode?: string | null
   abnormalFlag: string | null
   /**
    * When the specimen was drawn. Carried by LabResult all along and thrown

@@ -337,6 +337,11 @@ async function labRowsWithLoinc(
     .filter((l: JsonItem) => l && l.test != null)
     .map((l: JsonItem, i: number) => {
       const loinc = loincMap.get(String(l.test))
+      const hasImportedLoinc = Object.prototype.hasOwnProperty.call(l, "loincCode")
+      const loincCode = hasImportedLoinc ? str(l.loincCode) : loinc?.loincCode ?? null
+      const sourceVocabulary = str(l.sourceVocabulary)
+      const sourceCode = str(l.sourceCode)
+      const unitCanon = l.unconverted === true ? null : loinc?.unitCanon ?? null
       const valueNum = flt(l?.value)
       // The laboratory's own range where it stated one; the catalogue only as
       // a fallback. A flag computed against a range the result was not read
@@ -350,8 +355,8 @@ async function labRowsWithLoinc(
         value:        str(l?.value),
         valueNum,
         unit:         str(l?.unit),
-        unitCanon:    loinc?.unitCanon ?? null,
-        loincCode:    loinc?.loincCode ?? null,
+        unitCanon,
+        loincCode,
         referenceLow:  range.referenceLow,
         referenceHigh: range.referenceHigh,
         criticalLow:   range.criticalLow,
@@ -359,7 +364,12 @@ async function labRowsWithLoinc(
         abnormalFlag,
         takenAt:      isoDate(l?.takenAt),
         source:       str(l?.source) ?? "manual",
-        ...concept(concepts, "measurement", "LOINC", loinc?.loincCode ?? null),
+        ...concept(
+          concepts,
+          "measurement",
+          sourceVocabulary && sourceCode ? sourceVocabulary : loincCode ? "LOINC" : null,
+          sourceVocabulary && sourceCode ? sourceCode : loincCode,
+        ),
         sourceVersion: SYNC_SOURCE_VERSION,
         ordinal: i,
       }
