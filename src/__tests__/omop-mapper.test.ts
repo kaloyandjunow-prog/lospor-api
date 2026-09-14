@@ -2398,6 +2398,57 @@ describe("fluid and premedication administration as procedure facts", () => {
     expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")).toHaveLength(0)
   })
 
+  it("exports each blood unit as its product and its transfusion, never as a drug", () => {
+    const c = completeCase() as unknown as { events: Record<string, unknown>[]; intraop: Record<string, unknown> }
+    c.intraop.bloodMl = 800
+    c.events = [
+      {
+        type: "fluid_start", timestamp: new Date("2026-06-01T09:10:00Z"), label: "Packed red blood cells (PRBC)",
+        volume: "300", fluidId: "bl-1", fluidCategory: "Blood products",
+        metadataJson: { name: "Packed red blood cells (PRBC)" },
+        // What an event saved before the fluid table carries: B05AX01's
+        // concept, a technetium tracer. The export must not repeat it.
+        atcCode: "B05AX01", standardConceptId: 702006, mappingStatus: "MAPPED",
+      },
+      {
+        type: "fluid_end", timestamp: new Date("2026-06-01T10:40:00Z"), fluidId: "bl-1", metadataJson: {},
+      },
+      {
+        type: "fluid_start", timestamp: new Date("2026-06-01T09:30:00Z"), label: "Cell salvage / autologous blood",
+        volume: "500", fluidId: "bl-2", fluidCategory: "Blood products",
+        metadataJson: { name: "Cell salvage / autologous blood" }, atcCode: null,
+      },
+    ]
+    const b = mapCasesToOmop([c as never])
+
+    expect(b.drug_exposure.filter(r => String(r.drug_source_value).includes("PRBC"))).toHaveLength(0)
+    expect(b.drug_exposure.some(r => r.drug_concept_id === 702006)).toBe(false)
+    expect(b.device_exposure.filter(r => String(r.device_source_value).startsWith("INTRAOP_BLOOD:"))
+      .map(r => [r.device_concept_id, r.device_exposure_start_date, r.device_exposure_end_date]))
+      .toEqual([[4336080, "2026-06-01", "2026-06-01"]])
+    expect(b.procedure_occurrence.filter(r => String(r.procedure_source_value).startsWith("INTRAOP_BLOOD:"))
+      .map(r => [r.procedure_concept_id, r.procedure_datetime]))
+      .toEqual([[4323715, "2026-06-01T09:10:00.000Z"], [4037780, "2026-06-01T09:30:00.000Z"]])
+    expect(b.observation.filter(r => r.observation_source_value === "LOSPOR:BLOOD_PRODUCT_UNIT_ML")
+      .map(r => [r.value_as_string, r.value_as_number]))
+      .toEqual([["Packed red blood cells (PRBC)", 300], ["Cell salvage / autologous blood", 500]])
+    // Each unit already carries its transfusion, so the case total adds none.
+    expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")).toHaveLength(0)
+  })
+
+  it("exports a catalogue fluid under the concept stored when it was saved", () => {
+    const c = completeCase() as unknown as { events: Record<string, unknown>[] }
+    c.events = [{
+      type: "fluid_start", timestamp: new Date("2026-06-01T08:40:00Z"), label: "Saline",
+      volume: "250", fluidId: "fl-3", fluidCategory: "Crystalloids", concentration: "3%",
+      metadataJson: { name: "Saline" }, atcCode: "B05BB01",
+      standardConceptId: 42482740, mappingStatus: "MANUALLY_CURATED",
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure.find(r => String(r.drug_source_value).includes("Saline"))
+
+    expect([row?.drug_concept_id, row?.dose_value]).toEqual([42482740, 250])
+  })
+
   it("never codes crystalloids, because no concept names the pooled total honestly", () => {
     // Every candidate either asserts a specific fluid (Hartmann's, dextrose,
     // saline) this pooled figure does not distinguish, or is generic enough

@@ -1,4 +1,4 @@
-import { intraopAtcCode } from "@lospor/core/catalog"
+import { intraopAtcCode, intraopFluidConcept } from "@lospor/core/catalog"
 import { vocabularyForSystem } from "@lospor/core/code-systems"
 import { isExactProcedure, procedureGroupOf, PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
 import { parsePremedicationEntries, type PremedicationPhase } from "@lospor/core/premedication"
@@ -180,6 +180,12 @@ const asString = (value: unknown): string | null => typeof value === "string" &&
  * row stays uncoded. A code found this way is written onto the event as well,
  * so the export's drug_source_value carries it and a later re-resolution can
  * use it directly.
+ *
+ * A fluid is looked up in the hand-checked fluid table first. Its ATC code is
+ * shared -- saline, Hartmann's and Plasma-Lyte are all B05BB01 -- so only the
+ * name and strength say which clinical drug the bag was. A blood product gets
+ * its product concept here; the export writes it as a device with its
+ * transfusion.
  */
 export async function resolveDrugExposureConcepts(db: Db, events: MutableEvent[]): Promise<void> {
   const kinds = new Set<string>(DRUG_EXPOSURE_EVENT_TYPES)
@@ -190,7 +196,12 @@ export async function resolveDrugExposureConcepts(db: Db, events: MutableEvent[]
     // nonsense key and quietly return no concept.
     const label = asString(event.name) ?? asString(event.label)
     const atcCode = asString(event.atcCode) ?? intraopAtcCode(label) ?? null
-    const resolved = await resolveDrugConcept(db, atcCode, asString(event.inn), label)
+    const fluid = event.type === "fluid_start"
+      ? intraopFluidConcept({ name: label, concentration: asString(event.concentration), category: asString(event.category) })
+      : undefined
+    const resolved = fluid
+      ? { standardConceptId: fluid.conceptId, mappingStatus: "MANUALLY_CURATED" as const }
+      : await resolveDrugConcept(db, atcCode, asString(event.inn), label)
     Object.assign(event, {
       ...(atcCode && !asString(event.atcCode) ? { atcCode } : {}),
       standardConceptId: resolved.standardConceptId,

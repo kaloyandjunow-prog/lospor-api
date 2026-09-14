@@ -1253,7 +1253,9 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Total blood products administered intraoperatively. Same "
       + "pattern as colloidsMl: the volume stays uncoded, and a positive total "
       + "also emits procedure_occurrence 4024656 (Transfusion of blood "
-      + "product) as a separate fact. A recorded 0 emits neither row.",
+      + "product) as a separate fact -- but only for a record with no blood "
+      + "units charted one by one, since each of those carries its own "
+      + "transfusion row. A recorded 0 emits neither row.",
     unit: "mL",
     type: "integer",
     allowedValues: "0–20000",
@@ -2140,9 +2142,32 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "4.4.0",
   },
   {
+    name: "event.fluid",
+    exportName: "drug_exposure.drug_concept_id, or device_exposure + procedure_occurrence (INTRAOP_BLOOD:)",
+    meaning: "The research concept of a catalogue fluid, from a hand-checked table "
+      + "in lospor-core (catalog/fluid-concepts.ts) rather than from its ATC code, "
+      + "which several fluids share: saline, Hartmann's, Plasma-Lyte and Ringer's "
+      + "acetate are all B05BB01. A fluid is stamped at save with the RxNorm "
+      + "clinical drug at its strength (saline 0.9% and 3% differ), mapping status "
+      + "MANUALLY_CURATED. A blood product is not a drug in OMOP: each unit "
+      + "exports as a device_exposure row with its Device-domain product concept "
+      + "and a procedure_occurrence row with the transfusion of it, both with "
+      + "source value INTRAOP_BLOOD:<name>, and no drug_exposure row. Cell "
+      + "salvage has no product concept and exports as the autotransfusion "
+      + "procedure alone. The unit's volume has no column in either table and "
+      + "leaves as observation LOSPOR:BLOOD_PRODUCT_UNIT_ML (value_as_string the "
+      + "product, value_as_number the mL). An event saved before the table "
+      + "carried B05AX01's concept, a technetium tracer; the export codes blood "
+      + "products from the table by name so that concept never leaves.",
+    type: "string",
+    missingnessRule: "A fluid name the table does not know, or a strength it has no concept for, falls back to the ATC code and usually exports as concept 0 with the name in drug_source_value",
+    sourceTable: "CaseEvent", sourceColumn: "label",
+    versionIntroduced: "4.4.0",
+  },
+  {
     name: "event.volume",
     exportName: "drug_exposure.dose_value (for fluid_start events)",
-    meaning: "The volume a fluid was charted at, and the dose figure for a fluid row.",
+    meaning: "The volume a fluid was charted at, and the dose figure for a fluid row. For a blood unit, observation.value_as_number (LOSPOR:BLOOD_PRODUCT_UNIT_ML).",
     type: "string",
     missingnessRule: "Absent on every event that is not a fluid start. A genuinely zero volume survives as 0 rather than collapsing into no-dose-recorded",
     sourceTable: "CaseEvent", sourceColumn: "volume",
@@ -2172,7 +2197,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     name: "event.fluidCategory",
     exportName: "(not exported)",
     exported: false,
-    meaning: "Crystalloid, colloid or blood product, as charted. Selected and never read: the fluid totals are computed and exported separately, and the fluid itself exports by name and concept rather than by category.",
+    meaning: "Crystalloid, colloid or blood product, as charted. Not exported itself; it tells the export that a fluid is a blood product, which then leaves as a device and a transfusion rather than a drug. The fluid totals are computed and exported separately.",
     type: "string",
     missingnessRule: "Never present in the export. The column is selected out of the database and discarded, so its contents say nothing about what a researcher will receive",
     sourceTable: "CaseEvent", sourceColumn: "fluidCategory",
