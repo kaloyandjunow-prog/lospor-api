@@ -1,5 +1,6 @@
 import type { CaseMapperCtx } from "../case-context"
 import type { CaseRow } from "../types"
+import { premedicationDate, premedicationPhaseOf } from "@lospor/core/premedication"
 import {
   AIRWAY_ACTS, AIRWAY_ACT_CONCEPTS, AIRWAY_DEVICE_CONCEPTS, AIRWAY_TOOL_CONCEPTS,
   TECHNIQUE_CONCEPTS, TECHNIQUE_PARENT, VENTILATION_MODE_CONCEPTS, VITAL_CONCEPTS,
@@ -582,10 +583,14 @@ export function mapIntraopToOmop(
   for (const prem of ia.premedicationRows ?? []) {
     ctx.trackMapping(prem.mappingStatus)
     const dose = numOrNull(prem.dose)
+    // No clock time, only when relative to the operation: the day before is
+    // D-1, the morning before surgery is D. Earlier records said "evening".
+    const phase = premedicationPhaseOf(prem.phase)
+    const givenOn = phase ? premedicationDate(ctx.startDate, phase) ?? ctx.startDate : ctx.startDate
     ctx.drugs.push({
       drug_exposure_id: nextId(), person_id: ctx.personId,
       drug_concept_id: prem.standardConceptId ?? 0,
-      drug_exposure_start_date: ctx.startDate,
+      drug_exposure_start_date: givenOn,
       // A single administration, not an interval: no end to record.
       drug_exposure_end_date: null,
       // 32818, EHR administration record -- see the intraop site for why
@@ -608,7 +613,7 @@ export function mapIntraopToOmop(
       route_source_value: prem.route,
       visit_occurrence_id: ctx.visitId,
     })
-    ctx.sourceObservation("LOSPOR:PREMEDICATION_PHASE", prem.phase, ctx.startDate)
+    ctx.sourceObservation("LOSPOR:PREMEDICATION_PHASE", phase ?? prem.phase, givenOn)
     // 4169397, Premedication for anesthetic procedure. A fact alongside
     // the drug row above, not a replacement for it: the drug row says
     // which substance and dose, this says the clinical act of
@@ -618,7 +623,7 @@ export function mapIntraopToOmop(
       procedure_occurrence_id:   nextId(),
       person_id:                 ctx.personId,
       procedure_concept_id:      4169397,
-      procedure_date:            ctx.startDate,
+      procedure_date:            givenOn,
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,

@@ -2344,8 +2344,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "premedication",
     exportName: "observation.value_as_string (LOSPOR:PREMEDICATION_PHASE) + procedure_occurrence.procedure_concept_id",
-    meaning: "Premedication recorded for the case, by phase (evening before "
-      + "or morning of surgery). Each row also emits a procedure_occurrence "
+    meaning: "Premedication recorded for the case, by phase: DAY_BEFORE (the "
+      + "day before surgery; earlier records said evening) or MORNING (the morning "
+      + "before surgery). A premedication has no clock time, so drug_exposure_start_date "
+      + "and the phase observation are dated D-1 for DAY_BEFORE and D for MORNING. Each row also emits a procedure_occurrence "
       + "fact, 4169397 (Premedication for anesthetic procedure) -- the phase "
       + "observation says when, the drug_exposure row (see premedicationRows) "
       + "says what, and this says the clinical act itself occurred.",
@@ -2359,7 +2361,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     exportName: "drug_exposure.drug_concept_id (via ATC→OMOP map)",
     meaning: "The premedication drug itself, as an administration -- the phase "
       + "entry above records when, this records what and gives it a coded "
-      + "concept where an ATC code resolves one. drug_type_concept_id is "
+      + "concept where an ATC code resolves one. Each entry is read into the "
+      + "catalogue drug (inn), its WHO ATC code, dose with unit, and route; the "
+      + "ATC code maps to the standard RxNorm ingredient (bundled with the release). "
+      + "An entry naming no catalogue drug, and Insulin and sodium citrate, stay "
+      + "uncoded (concept 0). drug_type_concept_id is "
       + "32818 (EHR administration record), the same as an intraop dose,  "
       + "because both are witnessed administrations rather than a patient's "
       + "self-reported history; drug_source_value carries a PREMED: prefix so "

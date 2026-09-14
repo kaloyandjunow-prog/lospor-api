@@ -1,6 +1,7 @@
 import { intraopAtcCode } from "@lospor/core/catalog"
 import { vocabularyForSystem } from "@lospor/core/code-systems"
 import { isExactProcedure, procedureGroupOf, PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
+import { parsePremedicationEntries, type PremedicationPhase } from "@lospor/core/premedication"
 import { getLabSeverity, parseLabValue } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
@@ -509,30 +510,34 @@ function complicationRows(caseId: string, section: "intraop" | "postop", raw: un
   })
 }
 
-function premedRows(intraopId: string, caseId: string, phase: "evening" | "morning", raw: unknown, concepts: Map<string, ConceptInfo>) {
+/**
+ * A phase's premedication as coded drugs.
+ *
+ * Each entry reads back into the catalogue drug, its ATC code, dose, unit and
+ * route (@lospor/core/premedication), so the drug maps through ATC to its
+ * standard concept exactly as an intraoperative dose does. It used to be looked
+ * up as the whole line of text ("Midazolam 7.5 mg PO"), which matched nothing,
+ * and every premedication exported concept 0. An entry naming no catalogue drug
+ * keeps its text and stays uncoded.
+ */
+function premedRows(intraopId: string, caseId: string, phase: PremedicationPhase, raw: unknown, concepts: Map<string, ConceptInfo>) {
   if (typeof raw !== "string" || !raw.trim()) return []
-  const doseRe = /(\d+(?:\.\d+)?)\s*(mcg|mg|g|ml|mL|iu|IU|units?|tabs?|puffs?)/i
-  const routeRe = /\b(PO|IV|IM|SC|SL|PR|INH|oral|intravenous|intramuscular|subcutaneous)\b/i
-  return raw
-    .split(/[;\n]+/)
-    .map(s => s.trim())
-    .filter(Boolean)
-    .map((entry, i) => {
-      const doseMatch = entry.match(doseRe)
-      const routeMatch = entry.match(routeRe)
-      return {
-        intraopId,
-        caseId,
-        phase,
-        nameRaw: entry,
-        dose: doseMatch ? `${doseMatch[1]} ${doseMatch[2]}` : null,
-        route: routeMatch ? routeMatch[1].toUpperCase() : null,
-        ...concept(concepts, "drug", "LOSPOR_DRUG_RAW", entry),
-        source: SYNC_SOURCE,
-        sourceVersion: SYNC_SOURCE_VERSION,
-        ordinal: i,
-      }
-    })
+  return parsePremedicationEntries(raw, phase).map((item, i) => ({
+    intraopId,
+    caseId,
+    phase: item.phase,
+    nameRaw: item.entry,
+    inn: item.drug,
+    atcCode: item.atcCode,
+    dose: item.dose != null && item.unit ? `${item.dose} ${item.unit}` : null,
+    route: item.route,
+    ...(item.atcCode
+      ? concept(concepts, "drug", "ATC", item.atcCode)
+      : concept(concepts, "drug", "LOSPOR_DRUG_RAW", item.drug ?? item.entry)),
+    source: SYNC_SOURCE,
+    sourceVersion: SYNC_SOURCE_VERSION,
+    ordinal: i,
+  }))
 }
 
 function selectionRows(caseId: string, section: string, category: string, json: unknown, concepts: Map<string, ConceptInfo>) {
@@ -819,8 +824,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     await db.vascularAccess.createMany({ data: vascularRows(it.id, caseId, it.vascularAccesses, concepts) })
     await db.premedicationAdministration.deleteMany({ where: { intraopId: it.id } })
     await db.premedicationAdministration.createMany({ data: [
-      ...premedRows(it.id, caseId, "evening", it.premedicationEvening, concepts),
-      ...premedRows(it.id, caseId, "morning", it.premedicationMorning, concepts),
+      ...premedRows(it.id, caseId, "DAY_BEFORE", it.premedicationEvening, concepts),
+      ...premedRows(it.id, caseId, "MORNING", it.premedicationMorning, concepts),
     ] })
     await db.caseComplication.deleteMany({ where: { caseId, section: "intraop" } })
     await db.caseComplication.createMany({ data: complicationRows(caseId, "intraop", it.complications, concepts) })

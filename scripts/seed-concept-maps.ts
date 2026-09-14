@@ -6,7 +6,7 @@
  * mapping. Without Athena imported, rows remain explicit SOURCE_ONLY maps.
  */
 import "dotenv/config"
-import { INTRAOP_DRUG_CODE_ENTRIES } from "@lospor/core/catalog"
+import { INTRAOP_DRUG_CODE_ENTRIES, PREMED_ATC_CODES } from "@lospor/core/catalog"
 import { ALL_COMPLICATIONS } from "@lospor/core/complications"
 import { PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
@@ -764,9 +764,14 @@ async function main() {
   // catalog itself, so the mapping of what is given during a case is reviewable
   // as a whole list rather than one discovered row at a time.
   const atcCodes = new Set(atc.map(code => code.code))
-  const catalogAtc = INTRAOP_DRUG_CODE_ENTRIES
+  // Premedication drugs are catalogue drugs too, coded by their ATC.
+  const catalogAtc = [
+    ...INTRAOP_DRUG_CODE_ENTRIES,
+    ...Object.entries(PREMED_ATC_CODES).map(([name, atcCode]) => ({ name, atcCode })),
+  ]
     .filter((entry): entry is { name: string; atcCode: string } => !!entry.atcCode)
     .filter(entry => !atcCodes.has(entry.atcCode))
+    .filter((entry, index, all) => all.findIndex(other => other.atcCode === entry.atcCode) === index)
   const catalogAtcStandards = await resolveStandardMap("ATC", catalogAtc.map(e => e.atcCode), athenaVersion)
   for (const entry of catalogAtc) {
     seeds.push(withStandard({

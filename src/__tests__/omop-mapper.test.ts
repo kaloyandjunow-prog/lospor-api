@@ -219,7 +219,8 @@ describe("mapCasesToOmop", () => {
     // scale concept with the class as a coded answer, asserted above.
     expect(bundle.observation).toEqual(expect.arrayContaining([
       expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
+      // Stored as "evening" by earlier records, exported under the phase name.
+      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "DAY_BEFORE", value_as_number: null }),
       // The fixture's monitoring selection (ECG) is no longer here: its
       // curated concept is Procedure-domain, so it now reaches
       // PROCEDURE_OCCURRENCE instead (asserted in "uses the reviewed concept
@@ -2339,6 +2340,20 @@ describe("a recorded dose of zero survives, the same way a recorded volume of ze
       .find(r => String(r.drug_source_value).includes("Test fluid"))
 
     expect(row?.dose_value).toBe(0)
+  })
+
+  it("dates a premedication the day before surgery as D-1, and one the morning before as D", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.premedicationRows = [
+      { phase: "DAY_BEFORE", nameRaw: "Lorazepam 1 mg PO", inn: "Lorazepam", atcCode: "N05BA06", dose: "1 mg", route: "PO", standardConceptId: 19019113, mappingStatus: "MAPPED", ordinal: 0 },
+      { phase: "MORNING", nameRaw: "Midazolam 7.5 mg PO", inn: "Midazolam", atcCode: "N05CD08", dose: "7.5 mg", route: "PO", standardConceptId: 708298, mappingStatus: "MAPPED", ordinal: 1 },
+    ]
+    const drugs = mapCasesToOmop([c as never]).drug_exposure.filter(r => String(r.drug_source_value).startsWith("PREMED:"))
+
+    expect(drugs.map(r => [r.drug_concept_id, r.drug_exposure_start_date, r.dose_value])).toEqual([
+      [19019113, "2026-05-31", 1],
+      [708298, "2026-06-01", 7.5],
+    ])
   })
 
   it("keeps a zero premedication dose", () => {

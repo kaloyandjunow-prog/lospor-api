@@ -43,6 +43,7 @@ function makeDb(caseRow: Record<string, unknown>) {
         { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "03-019-00", standardConceptId: 3019550, mappingStatus: "MANUALLY_CURATED" },
         { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "00-00E-00", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
         { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905, mappingStatus: "MAPPED" },
+        { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N05CD08", standardConceptId: 708298, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "IJ", standardConceptId: 433590, mappingStatus: "MAPPED" },
       ]),
     },
@@ -483,6 +484,30 @@ describe("syncCaseRelational", () => {
       data: [
         expect.objectContaining({ sourceCode: "E11.2", standardConceptId: null, standardConceptIds: [201826, 443731], mappingStatus: "MAPPED" }),
         expect.objectContaining({ sourceCode: "K35", standardConceptId: 12345, standardConceptIds: [] }),
+      ],
+    })
+  })
+
+  it("codes each premedication as its drug, under the day it was given", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    row.intraop.premedicationEvening = "N/A"
+    row.intraop.premedicationMorning = "Midazolam 7.5 mg Buccal; Sodium citrate 30 mL PO" as never
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.premedicationAdministration.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          phase: "MORNING", nameRaw: "Midazolam 7.5 mg Buccal", inn: "Midazolam", atcCode: "N05CD08",
+          dose: "7.5 mg", route: "Buccal", sourceVocabulary: "ATC", sourceCode: "N05CD08", standardConceptId: 708298, mappingStatus: "MAPPED",
+        }),
+        // Uncoded on purpose: its only ATC code is an irrigation solution.
+        expect.objectContaining({
+          phase: "MORNING", inn: "Sodium citrate", atcCode: null, dose: "30 mL", route: "PO",
+          sourceVocabulary: "LOSPOR_DRUG_RAW", sourceCode: "Sodium citrate", standardConceptId: null,
+        }),
       ],
     })
   })

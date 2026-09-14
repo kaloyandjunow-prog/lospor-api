@@ -19,7 +19,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import readline from "node:readline"
-import { CLINICAL_CATALOG, INTRAOP_DRUG_CODE_ENTRIES } from "@lospor/core/catalog"
+import { CLINICAL_CATALOG, INTRAOP_DRUG_CODE_ENTRIES, PREMED_ATC_CODES } from "@lospor/core/catalog"
 
 const argument = (name: string) => {
   const index = process.argv.indexOf(name)
@@ -46,6 +46,7 @@ const catalogAtc = JSON.stringify(CLINICAL_CATALOG).match(/"atcCode":"([A-Z][0-9
   ?.map(match => match.slice(11, -1)) ?? []
 const atcCodes = new Set([
   ...INTRAOP_DRUG_CODE_ENTRIES.map(entry => entry.atcCode).filter((code): code is string => !!code),
+  ...Object.values(PREMED_ATC_CODES),
   ...catalogAtc,
 ])
 
