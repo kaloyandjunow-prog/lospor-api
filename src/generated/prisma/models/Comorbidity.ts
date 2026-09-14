@@ -28,11 +28,13 @@ export type AggregateComorbidity = {
 
 export type ComorbidityAvgAggregateOutputType = {
   standardConceptId: number | null
+  standardConceptIds: number | null
   ordinal: number | null
 }
 
 export type ComorbiditySumAggregateOutputType = {
   standardConceptId: number | null
+  standardConceptIds: number[]
   ordinal: number | null
 }
 
@@ -91,6 +93,7 @@ export type ComorbidityCountAggregateOutputType = {
   sourceVocabulary: number
   sourceCode: number
   standardConceptId: number
+  standardConceptIds: number
   mappingStatus: number
   source: number
   clinicalSource: number
@@ -103,11 +106,13 @@ export type ComorbidityCountAggregateOutputType = {
 
 export type ComorbidityAvgAggregateInputType = {
   standardConceptId?: true
+  standardConceptIds?: true
   ordinal?: true
 }
 
 export type ComorbiditySumAggregateInputType = {
   standardConceptId?: true
+  standardConceptIds?: true
   ordinal?: true
 }
 
@@ -166,6 +171,7 @@ export type ComorbidityCountAggregateInputType = {
   sourceVocabulary?: true
   sourceCode?: true
   standardConceptId?: true
+  standardConceptIds?: true
   mappingStatus?: true
   source?: true
   clinicalSource?: true
@@ -274,6 +280,7 @@ export type ComorbidityGroupByOutputType = {
   sourceVocabulary: string | null
   sourceCode: string | null
   standardConceptId: number | null
+  standardConceptIds: number[]
   mappingStatus: $Enums.ConceptMappingStatus
   source: string
   clinicalSource: string | null
@@ -318,6 +325,7 @@ export type ComorbidityWhereInput = {
   sourceVocabulary?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"Comorbidity"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Comorbidity">
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"Comorbidity"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"Comorbidity"> | string
   clinicalSource?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
@@ -340,6 +348,7 @@ export type ComorbidityOrderByWithRelationInput = {
   sourceVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceCode?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
   clinicalSource?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -365,6 +374,7 @@ export type ComorbidityWhereUniqueInput = Prisma.AtLeast<{
   sourceVocabulary?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"Comorbidity"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Comorbidity">
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"Comorbidity"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"Comorbidity"> | string
   clinicalSource?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
@@ -387,6 +397,7 @@ export type ComorbidityOrderByWithAggregationInput = {
   sourceVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceCode?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
   clinicalSource?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -416,6 +427,7 @@ export type ComorbidityScalarWhereWithAggregatesInput = {
   sourceVocabulary?: Prisma.StringNullableWithAggregatesFilter<"Comorbidity"> | string | null
   sourceCode?: Prisma.StringNullableWithAggregatesFilter<"Comorbidity"> | string | null
   standardConceptId?: Prisma.IntNullableWithAggregatesFilter<"Comorbidity"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Comorbidity">
   mappingStatus?: Prisma.EnumConceptMappingStatusWithAggregatesFilter<"Comorbidity"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringWithAggregatesFilter<"Comorbidity"> | string
   clinicalSource?: Prisma.StringNullableWithAggregatesFilter<"Comorbidity"> | string | null
@@ -436,6 +448,7 @@ export type ComorbidityCreateInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ComorbidityCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -458,6 +471,7 @@ export type ComorbidityUncheckedCreateInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ComorbidityCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -478,6 +492,7 @@ export type ComorbidityUpdateInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ComorbidityUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -500,6 +515,7 @@ export type ComorbidityUncheckedUpdateInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ComorbidityUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -521,6 +537,7 @@ export type ComorbidityCreateManyInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ComorbidityCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -541,6 +558,7 @@ export type ComorbidityUpdateManyMutationInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ComorbidityUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -562,6 +580,7 @@ export type ComorbidityUncheckedUpdateManyInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ComorbidityUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -593,6 +612,7 @@ export type ComorbidityCountOrderByAggregateInput = {
   sourceVocabulary?: Prisma.SortOrder
   sourceCode?: Prisma.SortOrder
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
   clinicalSource?: Prisma.SortOrder
@@ -603,6 +623,7 @@ export type ComorbidityCountOrderByAggregateInput = {
 
 export type ComorbidityAvgOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   ordinal?: Prisma.SortOrder
 }
 
@@ -650,6 +671,7 @@ export type ComorbidityMinOrderByAggregateInput = {
 
 export type ComorbiditySumOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   ordinal?: Prisma.SortOrder
 }
 
@@ -695,6 +717,15 @@ export type ComorbidityUncheckedUpdateManyWithoutPreopNestedInput = {
   deleteMany?: Prisma.ComorbidityScalarWhereInput | Prisma.ComorbidityScalarWhereInput[]
 }
 
+export type ComorbidityCreatestandardConceptIdsInput = {
+  set: number[]
+}
+
+export type ComorbidityUpdatestandardConceptIdsInput = {
+  set?: number[]
+  push?: number | number[]
+}
+
 export type ComorbidityCreateWithoutPreopInput = {
   id?: string
   caseId: string
@@ -707,6 +738,7 @@ export type ComorbidityCreateWithoutPreopInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ComorbidityCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -727,6 +759,7 @@ export type ComorbidityUncheckedCreateWithoutPreopInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ComorbidityCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -777,6 +810,7 @@ export type ComorbidityScalarWhereInput = {
   sourceVocabulary?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"Comorbidity"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Comorbidity">
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"Comorbidity"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"Comorbidity"> | string
   clinicalSource?: Prisma.StringNullableFilter<"Comorbidity"> | string | null
@@ -797,6 +831,7 @@ export type ComorbidityCreateManyPreopInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ComorbidityCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -817,6 +852,7 @@ export type ComorbidityUpdateWithoutPreopInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ComorbidityUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -837,6 +873,7 @@ export type ComorbidityUncheckedUpdateWithoutPreopInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ComorbidityUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -857,6 +894,7 @@ export type ComorbidityUncheckedUpdateManyWithoutPreopInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ComorbidityUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -880,6 +918,7 @@ export type ComorbiditySelect<ExtArgs extends runtime.Types.Extensions.InternalA
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -902,6 +941,7 @@ export type ComorbiditySelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -924,6 +964,7 @@ export type ComorbiditySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -946,6 +987,7 @@ export type ComorbiditySelectScalar = {
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -954,7 +996,7 @@ export type ComorbiditySelectScalar = {
   createdAt?: boolean
 }
 
-export type ComorbidityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "preopId" | "caseId" | "label" | "labelEn" | "labelBg" | "code" | "icd10Code" | "system" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "mappingStatus" | "source" | "clinicalSource" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["comorbidity"]>
+export type ComorbidityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "preopId" | "caseId" | "label" | "labelEn" | "labelBg" | "code" | "icd10Code" | "system" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "standardConceptIds" | "mappingStatus" | "source" | "clinicalSource" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["comorbidity"]>
 export type ComorbidityInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   preop?: boolean | Prisma.PreoperativeAssessmentDefaultArgs<ExtArgs>
 }
@@ -983,6 +1025,13 @@ export type $ComorbidityPayload<ExtArgs extends runtime.Types.Extensions.Interna
     sourceVocabulary: string | null
     sourceCode: string | null
     standardConceptId: number | null
+    /**
+     * Every standard concept, when the source code maps to several (an ICD-10
+     * combination code such as E11.2, diabetes with a kidney complication):
+     * standardConceptId is then null and the export writes one row per id.
+     * Empty otherwise.
+     */
+    standardConceptIds: number[]
     mappingStatus: $Enums.ConceptMappingStatus
     source: string
     clinicalSource: string | null
@@ -1425,6 +1474,7 @@ export interface ComorbidityFieldRefs {
   readonly sourceVocabulary: Prisma.FieldRef<"Comorbidity", 'String'>
   readonly sourceCode: Prisma.FieldRef<"Comorbidity", 'String'>
   readonly standardConceptId: Prisma.FieldRef<"Comorbidity", 'Int'>
+  readonly standardConceptIds: Prisma.FieldRef<"Comorbidity", 'Int[]'>
   readonly mappingStatus: Prisma.FieldRef<"Comorbidity", 'ConceptMappingStatus'>
   readonly source: Prisma.FieldRef<"Comorbidity", 'String'>
   readonly clinicalSource: Prisma.FieldRef<"Comorbidity", 'String'>

@@ -36,6 +36,8 @@ export type StandardMapResolution =
         | "athena-multiple-standard-targets"
       mappingNotes: string
       athenaVersion: string | null
+      /** Present for athena-multiple-standard-targets: every distinct target, ascending. */
+      targetIds?: number[]
     }
 
 type SelectionInput = {
@@ -121,6 +123,7 @@ export function selectStandardMapResolutions(input: SelectionInput): Map<string,
         mappingMethod: "athena-multiple-standard-targets",
         mappingNotes: `Athena supplies ${targetIds.length} distinct active standard targets (${targetIds.join(", ")}); no target was selected.`,
         athenaVersion: input.athenaVersion,
+        targetIds,
       })
     } else {
       resolutions.set(code, { kind: "mapped", standard: [...candidates.values()][0] })

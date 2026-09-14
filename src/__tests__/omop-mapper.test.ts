@@ -1388,6 +1388,29 @@ describe("vascular access", () => {
   })
 })
 
+describe("an ICD-10 code OMOP decomposes into several concepts", () => {
+  it("becomes one condition row per concept, sharing the ICD-10 source value", () => {
+    const base = completeCase() as unknown as { preop: { diagnoses: Record<string, unknown>[]; comorbidityRows?: Record<string, unknown>[] } }
+    const bundle = mapCasesToOmop([{
+      ...base,
+      preop: {
+        ...base.preop,
+        diagnoses: [{
+          code: "E11.2", label: "Type 2 diabetes with kidney complications", labelEn: "Type 2 diabetes with kidney complications", labelBg: null,
+          sourceVocabulary: "ICD10", sourceCode: "E11.2", standardConceptId: null, standardConceptIds: [201826, 443731],
+          mappingStatus: "MAPPED", ordinal: 0,
+        }],
+      },
+    } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const rows = bundle.condition_occurrence.filter(row => String(row.condition_source_value).startsWith("ICD10:E11.2"))
+    expect(rows.map(row => row.condition_concept_id)).toEqual([201826, 443731])
+    expect(new Set(rows.map(row => row.condition_source_value)).size).toBe(1)
+  })
+})
+
 describe("mapping summary provenance", () => {
   const summaryFor = (mappingStatus: string) => {
     const base = completeCase() as unknown as { preop: { diagnoses: Record<string, unknown>[] } }

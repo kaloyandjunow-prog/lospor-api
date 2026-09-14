@@ -644,6 +644,11 @@ model ConceptMap {
   sourceLabelBg      String?
   standardVocabulary String?
   standardConceptId  Int?
+  /// Every standard concept, when the source code maps to several (an ICD-10
+  /// combination code such as E11.2, diabetes with a kidney complication):
+  /// standardConceptId is then null and the export writes one row per id.
+  /// Empty otherwise.
+  standardConceptIds Int[]              @default([])
   standardLabel      String?
   mappingStatus      ConceptMappingStatus @default(SOURCE_ONLY)
   sourceVersion      String?
@@ -1634,6 +1639,11 @@ model PreopDiagnosis {
   sourceVocabulary  String?
   sourceCode        String?
   standardConceptId Int?
+  /// Every standard concept, when the source code maps to several (an ICD-10
+  /// combination code such as E11.2, diabetes with a kidney complication):
+  /// standardConceptId is then null and the export writes one row per id.
+  /// Empty otherwise.
+  standardConceptIds Int[]              @default([])
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
   source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
   clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
@@ -1688,6 +1698,11 @@ model Comorbidity {
   sourceVocabulary  String?
   sourceCode        String?
   standardConceptId Int?
+  /// Every standard concept, when the source code maps to several (an ICD-10
+  /// combination code such as E11.2, diabetes with a kidney complication):
+  /// standardConceptId is then null and the export writes one row per id.
+  /// Empty otherwise.
+  standardConceptIds Int[]              @default([])
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
   source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
   clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.

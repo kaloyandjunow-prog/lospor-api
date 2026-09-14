@@ -29,7 +29,7 @@ describe("Athena standard-map selection", () => {
     })
   })
 
-  it("keeps a multi-target mapping source-only instead of selecting the first", () => {
+  it("never selects the first of several targets, and hands every one back for a caller that can hold them", () => {
     const result = selectStandardMapResolutions({
       vocabularyId: "ICD10",
       codes: ["B20"],
@@ -47,6 +47,8 @@ describe("Athena standard-map selection", () => {
       mappingMethod: "athena-multiple-standard-targets",
       mappingNotes: "Athena supplies 2 distinct active standard targets (11, 12); no target was selected.",
       athenaVersion: version,
+      // Conditions export one row per target; other domains keep it source-only.
+      targetIds: [11, 12],
     })
   })
 

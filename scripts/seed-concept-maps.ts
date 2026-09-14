@@ -297,6 +297,8 @@ type ConceptSeed = {
   sourceLabelBg?: string | null
   standardVocabulary?: string | null
   standardConceptId?: number | null
+  /** Conditions whose code maps to several standard concepts (see ConceptMap). */
+  standardConceptIds?: number[]
   standardLabel?: string | null
   mappingStatus: ConceptMappingStatus
   mappingMethod?: string | null
@@ -320,6 +322,7 @@ async function upsertConcept(row: ConceptSeed) {
       sourceLabelBg: row.sourceLabelBg ?? null,
       standardVocabulary: row.standardVocabulary ?? null,
       standardConceptId: row.standardConceptId ?? null,
+      standardConceptIds: row.standardConceptIds ?? [],
       standardLabel: row.standardLabel ?? null,
       mappingStatus: row.mappingStatus,
       sourceVersion: SOURCE_VERSION,
@@ -361,6 +364,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
       sourceLabelBg: row.sourceLabelBg ?? null,
       standardVocabulary: row.standardVocabulary ?? null,
       standardConceptId: row.standardConceptId ?? null,
+      standardConceptIds: row.standardConceptIds ?? [],
       standardLabel: row.standardLabel ?? null,
       mappingStatus: row.mappingStatus,
       sourceVersion: SOURCE_VERSION,
@@ -386,6 +390,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
         "sourceLabelBg" = v."sourceLabelBg",
         "standardVocabulary" = v."standardVocabulary",
         "standardConceptId" = v."standardConceptId"::integer,
+        "standardConceptIds" = v."standardConceptIds"::integer[],
         "standardLabel" = v."standardLabel",
         "mappingStatus" = v."mappingStatus"::"ConceptMappingStatus",
         "sourceVersion" = ${SOURCE_VERSION},
@@ -403,6 +408,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
         ${row.sourceLabelBg ?? null},
         ${row.standardVocabulary ?? null},
         ${row.standardConceptId ?? null},
+        ${`{${(row.standardConceptIds ?? []).join(",")}}`},
         ${row.standardLabel ?? null},
         ${row.mappingStatus},
         ${row.mappingMethod ?? null},
@@ -419,6 +425,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
         "sourceLabelBg",
         "standardVocabulary",
         "standardConceptId",
+        "standardConceptIds",
         "standardLabel",
         "mappingStatus",
         "mappingMethod",
@@ -645,9 +652,11 @@ async function main() {
   const icdStandards = await resolveStandardMap("ICD10", icd.map(c => c.code), athenaVersion)
   // The bundled research numbers (src/data/icd10-omop.json, OMOP ids only, no
   // SNOMED content; built by generate-icd10-omop.mts), for a site that has not
-  // imported Athena. The rule is the one resolveStandardMap applies: exactly one
-  // standard target maps, several stay source-only, an absent code stays
-  // source-only.
+  // imported Athena. One standard target maps. Several targets -- a combination
+  // code OMOP decomposes, E11.2 into diabetes and a kidney disorder -- map to all
+  // of them, and the export writes a condition row for each (decided 14 Sep
+  // 2026). A code Athena does not hold, such as an NHIS national extension,
+  // stays source-only: it takes no number from its parent (decided 14 Sep 2026).
   const icdPack = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "src", "data", "icd10-omop.json"), "utf8"),
   ) as { source: string; defaultVocabulary: string; maps: Record<string, number[]>; vocabularies: Record<string, string> }
@@ -658,8 +667,9 @@ async function main() {
       return {
         kind: "source-only",
         mappingMethod: "athena-multiple-standard-targets",
-        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")}); no target was selected.`,
+        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")}).`,
         athenaVersion: icdPack.source,
+        targetIds: ids,
       }
     }
     return { kind: "mapped", standard: {
@@ -674,13 +684,30 @@ async function main() {
   }
   for (const code of icd) {
     const athenaResolution = icdStandards.get(code.code)
-    seeds.push(withStandard({
+    const resolution = athenaResolution?.kind === "mapped" || athenaResolution?.targetIds?.length
+      ? athenaResolution
+      : bundledIcdStandard(code.code) ?? athenaResolution
+    const base = {
       domain: "condition",
       sourceVocabulary: "ICD10",
       sourceCode: code.code,
       sourceLabelEn: code.labelEn,
       sourceLabelBg: code.labelBg,
-    }, athenaResolution?.kind === "mapped" ? athenaResolution : bundledIcdStandard(code.code) ?? athenaResolution))
+    }
+    const several = resolution?.kind === "source-only" ? resolution.targetIds ?? [] : []
+    seeds.push(several.length > 1 ? {
+      ...base,
+      standardVocabulary: icdPack.vocabularies[String(several[0])] ?? icdPack.defaultVocabulary,
+      standardConceptId: null,
+      standardConceptIds: several,
+      standardLabel: null,
+      mappingStatus: ConceptMappingStatus.MAPPED,
+      mappingMethod: "athena-multiple-standard-targets",
+      mappingConfidence: 0.95,
+      reviewed: false,
+      mappingNotes: `OMOP decomposes this code into ${several.length} standard concepts; the export writes one condition row for each.`,
+      athenaVersion: resolution?.kind === "source-only" ? resolution.athenaVersion : null,
+    } : withStandard(base, resolution))
   }
 
   const atc = await prisma.atc.findMany()

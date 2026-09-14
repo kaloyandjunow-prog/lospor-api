@@ -483,6 +483,7 @@ export type CaseRow = {
       sourceVocabulary?: string | null
       sourceCode?: string | null
       standardConceptId?: number | null
+      standardConceptIds?: number[]
       mappingStatus?: string
       ordinal: number
     }[]
@@ -506,6 +507,7 @@ export type CaseRow = {
       sourceVocabulary?: string | null
       sourceCode?: string | null
       standardConceptId?: number | null
+      standardConceptIds?: number[]
       mappingStatus?: string
       ordinal: number
     }[]

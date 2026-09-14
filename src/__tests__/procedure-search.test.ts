@@ -103,3 +103,18 @@ describe("the bundled ICD-10-PCS research codes", () => {
     expect(Object.values(pack.mapsTo).every(target => target.vocabulary.startsWith("RxNorm"))).toBe(true)
   })
 })
+
+describe("operations suggested by a hospital code", () => {
+  it("come first and are marked", async () => {
+    getAuthUserMock.mockResolvedValue({ id: "user-1" })
+    const { GET: CODES } = await import("@/app/v1/search/procedures/codes/route")
+    const body = await (await CODES(new NextRequest(
+      "http://localhost/v1/search/procedures/codes?group=Cholecystectomy&suggested=0FT44ZZ,0FB44ZZ",
+    ))).json() as { codes: { code: string; suggested?: boolean }[] }
+    expect(body.codes.slice(0, 3)).toEqual([
+      expect.objectContaining({ code: "0FB44ZZ", suggested: true }),
+      expect.objectContaining({ code: "0FT44ZZ", suggested: true }),
+      expect.not.objectContaining({ suggested: true }),
+    ])
+  })
+})

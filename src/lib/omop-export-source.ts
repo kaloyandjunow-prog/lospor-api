@@ -178,7 +178,7 @@ export const CASE_SELECT = {
       diagnoses: {
         select: {
           code: true, label: true, labelEn: true, labelBg: true,
-          sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, ordinal: true,
+          sourceVocabulary: true, sourceCode: true, standardConceptId: true, standardConceptIds: true, mappingStatus: true, ordinal: true,
         },
         orderBy: { ordinal: "asc" },
       },
@@ -192,7 +192,7 @@ export const CASE_SELECT = {
       comorbidityRows: {
         select: {
           label: true, labelEn: true, labelBg: true, code: true, icd10Code: true,
-          sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, ordinal: true,
+          sourceVocabulary: true, sourceCode: true, standardConceptId: true, standardConceptIds: true, mappingStatus: true, ordinal: true,
         },
         orderBy: { ordinal: "asc" },
       },

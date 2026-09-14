@@ -35,6 +35,7 @@ function makeDb(caseRow: Record<string, unknown>) {
     conceptMap: {
       findMany: vi.fn().mockResolvedValue([
         { domain: "condition", sourceVocabulary: "ICD10", sourceCode: "K35", standardConceptId: 12345, mappingStatus: "MAPPED" },
+        { domain: "condition", sourceVocabulary: "ICD10", sourceCode: "E11.2", standardConceptId: null, standardConceptIds: [201826, 443731], mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "APPY", standardConceptId: 23456, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "ICD10PCS", sourceCode: "0FT44ZZ", standardConceptId: 2753505, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_PROCEDURE_GROUP", sourceCode: "Cholecystectomy", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
@@ -428,7 +429,7 @@ describe("syncCaseRelational", () => {
       ],
     })
   })
-  it("codes an exact operation by ICD-10-PCS and a group alone by its name", async () => {
+  it("codes an exact operation by ICD-10-PCS, a group alone by its name, and an import by its vocabulary", async () => {
     const { syncCaseRelational } = await import("@/lib/relational-sync")
     const row = makeCaseRow()
     row.preop.proceduresJson = [
@@ -438,6 +439,10 @@ describe("syncCaseRelational", () => {
         sub: "0FT44ZZ · Resection of Gallbladder, Percutaneous Endoscopic Approach", source: "manual",
       },
       { label: "Cholecystectomy", code: "Cholecystectomy", system: "LOSPOR_PROCEDURE_GROUP", group: "Cholecystectomy", source: "manual" },
+      {
+        label: "Cholecystectomy", group: "Cholecystectomy", code: "30445-00", system: "urn:bg:ksmp", sourceVocabulary: "KSMP",
+        sourceLabel: "Лапароскопска холецистектомия", suggestedCodes: ["0FB44ZZ", "0FT44ZZ"], source: "import",
+      },
     ] as never
     const db = makeDb(row)
 
@@ -454,6 +459,30 @@ describe("syncCaseRelational", () => {
           code: "Cholecystectomy", group: "Cholecystectomy",
           sourceVocabulary: "LOSPOR_PROCEDURE_GROUP", sourceCode: "Cholecystectomy", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
         }),
+        // An imported КСМП code is filed as КСМП, with the group it was crosswalked to.
+        expect.objectContaining({
+          code: "30445-00", group: "Cholecystectomy", clinicalSource: "import",
+          sourceVocabulary: "KSMP", sourceCode: "30445-00", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
+        }),
+      ],
+    })
+  })
+
+  it("keeps every concept of a diagnosis OMOP decomposes, and none for a plain one", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    row.preop.diagnosesJson = [
+      { code: "E11.2", label: "Type 2 diabetes with kidney complications", system: "ICD-10" },
+      { code: "K35", label: "Acute appendicitis", system: "ICD10" },
+    ] as never
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.preopDiagnosis.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({ sourceCode: "E11.2", standardConceptId: null, standardConceptIds: [201826, 443731], mappingStatus: "MAPPED" }),
+        expect.objectContaining({ sourceCode: "K35", standardConceptId: 12345, standardConceptIds: [] }),
       ],
     })
   })

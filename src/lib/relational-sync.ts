@@ -51,6 +51,9 @@ type ConceptInfo = {
   mappingStatus: MappingStatus
 }
 
+/** Conditions only: a source code OMOP decomposes into several concepts. */
+const conditionConceptIds = new Map<string, number[]>()
+
 let conceptCache: Map<string, ConceptInfo> | null = null
 
 function conceptKey(domain: string, sourceVocabulary: string, sourceCode: string) {
@@ -61,8 +64,14 @@ async function getConceptMap(db: Db) {
   if (conceptCache) return conceptCache
   const rows = await db.conceptMap.findMany({
     where: { active: true },
-    select: { domain: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true },
+    select: { domain: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, standardConceptIds: true, mappingStatus: true },
   })
+  conditionConceptIds.clear()
+  for (const r of rows) {
+    if (r.domain === "condition" && r.standardConceptIds?.length) {
+      conditionConceptIds.set(conceptKey(r.domain, r.sourceVocabulary, r.sourceCode), r.standardConceptIds)
+    }
+  }
   conceptCache = new Map(rows.map(r => [conceptKey(r.domain, r.sourceVocabulary, r.sourceCode), {
     sourceVocabulary: r.sourceVocabulary,
     sourceCode: r.sourceCode,
@@ -93,6 +102,23 @@ function concept(
     return { ...found, standardConceptId: null }
   }
   return found
+}
+
+/**
+ * A condition's concept, with every id when OMOP decomposes its code.
+ *
+ * Kept to the two condition tables, which are the only ones with the column.
+ */
+function conditionConcept(
+  concepts: Map<string, ConceptInfo>,
+  sourceVocabulary: string | null | undefined,
+  sourceCode: string | null | undefined,
+): ConceptInfo & { standardConceptIds: number[] } {
+  const found = concept(concepts, "condition", sourceVocabulary, sourceCode)
+  const ids = sourceVocabulary && sourceCode && found.mappingStatus !== "REJECTED"
+    ? conditionConceptIds.get(conceptKey("condition", sourceVocabulary, sourceCode)) ?? []
+    : []
+  return { ...found, standardConceptIds: ids }
 }
 
 /**
@@ -261,7 +287,7 @@ function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts:
     // send SNOMED where our own forms send ICD-10. Absent means our forms, so
     // ICD-10 stands; unrecognised is passed through and simply will not match,
     // which is safer than looking a code up in a vocabulary it never came from.
-    ...concept(concepts, "condition", vocabularyForSystem(str(d?.system), "ICD10"), str(d?.sub ?? d?.code)),
+    ...conditionConcept(concepts, vocabularyForSystem(str(d?.system), "ICD10"), str(d?.sub ?? d?.code)),
     source: SYNC_SOURCE,
     // Clinical provenance (who/what recorded this item) is a different fact
     // from `source` above, which is sync-audit metadata hard-coded to
@@ -288,6 +314,11 @@ function procedureSource(p: JsonItem): { vocabulary: string; code: string | null
     const group = procedureGroupOf(p)
     return { vocabulary: PROCEDURE_GROUP_SYSTEM, code: group, group }
   }
+  // An imported code names the vocabulary it belongs to ("KSMP"), which the
+  // hospital's own address cannot be trusted to say, and the group it was
+  // crosswalked to.
+  const declared = str(p?.sourceVocabulary)
+  if (declared && str(p?.code)) return { vocabulary: declared, code: str(p.code), group: procedureGroupOf(p) }
   return { vocabulary: str(p?.domain) ?? "LOSPOR_PROCEDURE", code: str(p?.sub ?? p?.code), group: str(p?.group) }
 }
 
@@ -325,7 +356,7 @@ function comorbidityRows(preopId: string, caseId: string, json: unknown, concept
       icd10Code,
       system:   str(c?.system),
       // Same reasoning as diagnosisRows above.
-      ...concept(concepts, "condition", vocabularyForSystem(str(c?.system), "ICD10"), icd10Code ?? rawCode),
+      ...conditionConcept(concepts, vocabularyForSystem(str(c?.system), "ICD10"), icd10Code ?? rawCode),
       source: SYNC_SOURCE,
       // See diagnosisRows: `source` is sync-audit metadata, not who/what
       // recorded the item, so clinical provenance gets its own column.
