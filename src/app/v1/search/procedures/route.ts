@@ -15,7 +15,15 @@ let cache: PCSEntry[] | null = null
 function loadData(): PCSEntry[] {
   if (cache) return cache
   const filePath = path.join(process.cwd(), "src", "data", "pcs.json")
-  cache = JSON.parse(fs.readFileSync(filePath, "utf8")) as PCSEntry[]
+  const rows = JSON.parse(fs.readFileSync(filePath, "utf8")) as PCSEntry[]
+  // Bulgarian words for each group, from the national procedure names that
+  // crosswalk to it, so a clinician can search in Bulgarian. Every row of a
+  // group shares the one string, as the offline copy's single row does.
+  const bg = JSON.parse(fs.readFileSync(
+    path.join(process.cwd(), "src", "data", "procedure-terms-bg.json"),
+    "utf8",
+  )) as { terms: Record<string, string> }
+  cache = rows.map(row => bg.terms[row.group] ? { ...row, terms: bg.terms[row.group] } : row)
   return cache
 }
 

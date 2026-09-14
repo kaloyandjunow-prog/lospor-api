@@ -34,4 +34,12 @@ describe("procedure search", () => {
       domain: "Gastrointestinal System Procedures",
     }))
   })
+
+  it("finds a procedure group by its Bulgarian name", async () => {
+    const response = await GET(new NextRequest(
+      "http://localhost/v1/search/procedures?q=%D0%A5%D0%BE%D0%BB%D0%B5%D1%86%D0%B8%D1%81%D1%82%D0%B5%D0%BA%D1%82%D0%BE%D0%BC%D0%B8%D1%8F",
+    ))
+    const results = await response.json() as Array<{ group: string }>
+    expect(results.map(row => row.group)).toContain("Cholecystectomy")
+  })
 })

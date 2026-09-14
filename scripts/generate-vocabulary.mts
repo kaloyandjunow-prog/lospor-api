@@ -69,6 +69,10 @@ export const ICD10_ROW_COUNT = ${rows.length}
 function procedures(): string {
   const file = path.join(process.cwd(), "src", "data", "pcs.json")
   const data = JSON.parse(fs.readFileSync(file, "utf8")) as PcsEntry[]
+  const bg = JSON.parse(fs.readFileSync(
+    path.join(process.cwd(), "src", "data", "procedure-terms-bg.json"),
+    "utf8",
+  )) as { terms: Record<string, string> }
 
   // One representative per group, first in file order — which is exactly the
   // tie-break the API's scorer applies when no code matches the query.
@@ -85,6 +89,11 @@ function procedures(): string {
     for (const word of entry.description.toLowerCase().split(/[^a-z0-9]+/)) {
       if (word.length > 2) group.words.add(word)
     }
+  }
+  // The Bulgarian words the online search attaches to the same groups.
+  for (const [key, group] of byGroup) {
+    const words = Object.entries(bg.terms).find(([name]) => name.toLowerCase().trim() === key)?.[1]
+    for (const word of words?.split(" ") ?? []) if (word) group.words.add(word)
   }
   const rows = [...byGroup.values()].sort((a, b) => a.entry.group.localeCompare(b.entry.group))
   const tuples = rows.map(({ entry, words }) => JSON.stringify([
@@ -140,18 +149,25 @@ export const VOCABULARY_VERSION = "${VOCABULARY_VERSION}"
 `
 }
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
-})
-
 fs.mkdirSync(CORE_VOCABULARY_DIR, { recursive: true })
-fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "icd10.ts"), await icd10(prisma), "utf8")
-fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedures.ts"), procedures(), "utf8")
-fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "index.ts"), index(), "utf8")
 
-for (const name of ["icd10.ts", "procedures.ts", "index.ts"]) {
+// `--procedures-only` rebuilds procedures.ts from pcs.json and the Bulgarian
+// terms without a database, and leaves icd10.ts and index.ts as committed.
+const proceduresOnly = process.argv.includes("--procedures-only")
+const written = proceduresOnly ? ["procedures.ts"] : ["icd10.ts", "procedures.ts", "index.ts"]
+if (proceduresOnly) {
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedures.ts"), procedures(), "utf8")
+} else {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+  })
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "icd10.ts"), await icd10(prisma), "utf8")
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedures.ts"), procedures(), "utf8")
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "index.ts"), index(), "utf8")
+  await prisma.$disconnect()
+}
+
+for (const name of written) {
   const bytes = fs.statSync(path.join(CORE_VOCABULARY_DIR, name)).size
   console.log(`${name.padEnd(16)} ${(bytes / 1024).toFixed(0)} KB`)
 }
-
-await prisma.$disconnect()

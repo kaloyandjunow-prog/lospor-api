@@ -4,6 +4,7 @@
 
 ### Added
 
+- **Procedure search in Bulgarian.** Each procedure group carries the words of the Bulgarian procedure names (КСМП 2020, NCPHA) that crosswalk to it, so "холецистектомия" finds Cholecystectomy online and in the offline copy. `generate-vocabulary.mts --procedures-only` rebuilds the offline procedures without a database.
 - Added a reviewable NHIS CL011 merge utility that updates the shared Core ICD-10 bundle from a normalized official snapshot without committing the source workbook.
 
 ### Changed
