@@ -36,3 +36,26 @@ describe("the bundled ICD-10 research numbers", () => {
     expect([...words].filter(word => !allowed.has(word))).toEqual([])
   })
 })
+
+describe("the bundled laboratory and drug research numbers", () => {
+  const labDrug = JSON.parse(fs.readFileSync("src/data/lab-drug-omop.json", "utf8")) as {
+    source: string
+    loinc: Record<string, number>
+    atc: Record<string, number[]>
+  }
+
+  it("give every LOINC code LOSPOR records its OMOP concept", () => {
+    expect(labDrug.source).toMatch(/^OHDSI Athena, LOINC /)
+    // Haemoglobin, and the vital signs the exporter writes.
+    expect(labDrug.loinc["718-7"]).toBe(3000963)
+    expect(labDrug.loinc["8480-6"]).toBe(3004249)
+    expect(Object.keys(labDrug.loinc).length).toBeGreaterThan(85)
+  })
+
+  it("give catalogue drugs the standard RxNorm concepts their ATC code maps to", () => {
+    // Diazepam.
+    expect(labDrug.atc["N05BA01"]?.length).toBe(1)
+    expect(Object.keys(labDrug.atc).length).toBeGreaterThan(190)
+    expect(Object.values(labDrug.atc).every(ids => ids.every(id => Number.isSafeInteger(id) && id > 0))).toBe(true)
+  })
+})

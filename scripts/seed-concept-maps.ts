@@ -588,6 +588,41 @@ async function main() {
     count++
   }
 
+  // The bundled laboratory and drug numbers (src/data/lab-drug-omop.json, from
+  // Athena; generate-lab-drug-omop.mts), for a site without an Athena import.
+  // A site's imported Athena still wins where it resolves a code.
+  const labDrugPack = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "lab-drug-omop.json"), "utf8"),
+  ) as { source: string; loinc: Record<string, number>; atc: Record<string, number[]> }
+  const withBundled = (
+    athenaResolution: StandardMapResolution | undefined,
+    bundled: StandardMapResolution | undefined,
+  ) => athenaResolution?.kind === "mapped" ? athenaResolution : bundled ?? athenaResolution
+  const bundledLoinc = (code: string | null | undefined, label: string): StandardMapResolution | undefined => {
+    const id = code ? labDrugPack.loinc[code] : undefined
+    return id ? { kind: "mapped", standard: {
+      standardVocabulary: "LOINC", standardConceptId: id, standardLabel: label,
+      mappingMethod: "bundled-loinc-standard", mappingConfidence: 1, athenaVersion: labDrugPack.source,
+    } } : undefined
+  }
+  const bundledAtc = (code: string, label: string): StandardMapResolution | undefined => {
+    const ids = labDrugPack.atc[code]
+    if (!ids?.length) return undefined
+    if (ids.length > 1) {
+      return {
+        kind: "source-only",
+        mappingMethod: "athena-multiple-standard-targets",
+        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")}); no target was selected.`,
+        athenaVersion: labDrugPack.source,
+        targetIds: ids,
+      }
+    }
+    return { kind: "mapped", standard: {
+      standardVocabulary: "RxNorm", standardConceptId: ids[0], standardLabel: label,
+      mappingMethod: "bundled-atc-maps-to", mappingConfidence: 0.95, athenaVersion: labDrugPack.source,
+    } }
+  }
+
   const labs = await prisma.labLoinc.findMany()
   const labStandards = await resolveStandardMap("LOINC", labs.map(l => l.loincCode), athenaVersion)
   for (const lab of labs) {
@@ -596,7 +631,7 @@ async function main() {
       sourceVocabulary: "LOINC",
       sourceCode: lab.loincCode,
       sourceLabelEn: lab.name,
-    }, labStandards.get(lab.loincCode)))
+    }, withBundled(labStandards.get(lab.loincCode), bundledLoinc(lab.loincCode, lab.name))))
   }
 
   // NHIS CL024 is a local source vocabulary. Each of these 50 rows was
@@ -626,7 +661,7 @@ async function main() {
       continue
     }
 
-    const resolution = nhisLabStandards.get(mapping.loincCode)
+    const resolution = withBundled(nhisLabStandards.get(mapping.loincCode), bundledLoinc(mapping.loincCode, mapping.sourceLabelEn))
     if (!resolution || resolution.kind === "source-only") {
       seeds.push({
         ...base,
@@ -718,7 +753,7 @@ async function main() {
       sourceVocabulary: "ATC",
       sourceCode: code.code,
       sourceLabelEn: code.name,
-    }, atcStandards.get(code.code)))
+    }, withBundled(atcStandards.get(code.code), bundledAtc(code.code, code.name))))
   }
 
   // Intraoperative drugs, infusions, fluids and volatile agents. These are the
@@ -739,7 +774,7 @@ async function main() {
       sourceVocabulary: "ATC",
       sourceCode: entry.atcCode,
       sourceLabelEn: entry.name,
-    }, catalogAtcStandards.get(entry.atcCode)))
+    }, withBundled(catalogAtcStandards.get(entry.atcCode), bundledAtc(entry.atcCode, entry.name))))
   }
 
   // The raw-name fallback. `resolveDrugConcept` reaches for this only when an

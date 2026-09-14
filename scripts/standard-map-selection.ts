@@ -21,7 +21,7 @@ export type StandardConceptMapping = {
   standardVocabulary: string
   standardConceptId: number
   standardLabel: string
-  mappingMethod: "athena-exact-standard-code" | "athena-exact-code-maps-to" | "bundled-icd10pcs-standard" | "bundled-icd10pcs-maps-to" | "bundled-icd10-maps-to"
+  mappingMethod: "athena-exact-standard-code" | "athena-exact-code-maps-to" | "bundled-icd10pcs-standard" | "bundled-icd10pcs-maps-to" | "bundled-icd10-maps-to" | "bundled-loinc-standard" | "bundled-atc-maps-to"
   mappingConfidence: number
   athenaVersion: string | null
 }

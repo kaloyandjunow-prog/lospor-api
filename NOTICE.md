@@ -58,6 +58,10 @@ The OMOP standardized vocabularies are not part of this repository. Each site
 downloads them from OHDSI Athena (https://athena.ohdsi.org) under the licences
 Athena presents for each vocabulary, and imports them itself.
 
+`src/data/lab-drug-omop.json` holds the OMOP concept ids of the LOINC codes LOSPOR
+records and of the RxNorm ingredients its catalogue ATC codes map to, from the
+same Athena download: identifiers only.
+
 `src/data/icd10-omop.json` holds, for each ICD-10 code, the OMOP concept ids
 Athena maps it to. These are integers assigned by OHDSI; the file contains no
 SNOMED CT codes, names or descriptions.
