@@ -2,6 +2,16 @@ import { describe, it, expect } from "vitest"
 import { mapPreop, mapPreopUpdate, mapPostopUpdate } from "@/app/v1/cases/_mappers"
 
 describe("mapPreop", () => {
+  it("names a chosen exact operation in the planned-procedure line the printed sheet shows", () => {
+    const result = mapPreop({
+      procedures: [
+        { label: "Cholecystectomy", code: "0FT44ZZ", system: "ICD-10-PCS", group: "Cholecystectomy", description: "Resection of Gallbladder, Percutaneous Endoscopic Approach" },
+        { label: "Appendectomy", code: "Appendectomy", system: "LOSPOR_PROCEDURE_GROUP", group: "Appendectomy" },
+      ],
+    })
+    expect(result.plannedProcedure).toBe("Cholecystectomy: Resection of Gallbladder, Percutaneous Endoscopic Approach [0FT44ZZ]; Appendectomy")
+  })
+
   it("uses null (not 0) for missing biometrics", () => {
     const result = mapPreop({})
     expect(result.ageYears).toBeNull()

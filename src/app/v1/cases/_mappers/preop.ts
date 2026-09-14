@@ -1,3 +1,4 @@
+import { plannedProcedureText } from "@lospor/core/procedure-codes"
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePreopPatch } from "@lospor/core/case-payloads"
 import { calcApfel, calcRCRI, calcStopBang } from "@lospor/core/scores"
@@ -158,7 +159,8 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
 
     // Legacy string columns (kept for backward compatibility)
     diagnosis:        diagnosesArr.map(t => t.label).join("; ") || "",
-    plannedProcedure: proceduresArr.map(t => t.label).join("; ") || "",
+    // Names a chosen exact operation, so the record and printed sheet show it.
+    plannedProcedure: plannedProcedureText(proceduresArr) || "",
     // Item 26: JSON columns for structured diagnoses/procedures — use Prisma.JsonNull (not undefined) so Prisma clears the column when array is empty
     diagnosesJson:    diagnosesArr.length > 0 ? diagnosesArr : Prisma.JsonNull,
     proceduresJson:   proceduresArr.length > 0 ? proceduresArr : Prisma.JsonNull,

@@ -149,12 +149,81 @@ export const VOCABULARY_VERSION = "${VOCABULARY_VERSION}"
 `
 }
 
+/**
+ * Every ICD-10-PCS operation, for choosing the exact one with no network.
+ *
+ * A separate module from the group search so it is loaded only when a
+ * clinician opens a group's operation list offline. Group, section and each
+ * comma-separated description part are stored once and referenced by index,
+ * which halves the module: ICD-10-PCS descriptions are built from a small set
+ * of repeated phrases ("Percutaneous Endoscopic Approach").
+ */
+function procedureCodes(): string {
+  const file = path.join(process.cwd(), "src", "data", "pcs.json")
+  const data = JSON.parse(fs.readFileSync(file, "utf8")) as PcsEntry[]
+  const indexOf = <T,>(values: Map<T, number>, value: T) => {
+    if (!values.has(value)) values.set(value, values.size)
+    return values.get(value)!
+  }
+  const groups = new Map<string, number>()
+  const domains = new Map<string, number>()
+  const parts = new Map<string, number>()
+  const rows = [...data].sort((a, b) => a.code.localeCompare(b.code)).map(entry => JSON.stringify([
+    entry.code,
+    indexOf(groups, entry.group),
+    indexOf(domains, entry.domain),
+    entry.description.split(", ").map(part => indexOf(parts, part)),
+  ]))
+  const list = (values: Map<string, number>) => [...values.keys()].map(value => `  ${JSON.stringify(value)},`).join("\n")
+
+  return `${header(`${data.length} ICD-10-PCS operations in ${groups.size} procedure groups.`)}
+import type { ProcedureSearchRow } from "../search"
+
+const GROUPS: readonly string[] = [
+${list(groups)}
+]
+
+const DOMAINS: readonly string[] = [
+${list(domains)}
+]
+
+const PARTS: readonly string[] = [
+${list(parts)}
+]
+
+/** [code, group index, section index, description part indexes]. */
+const ROWS: readonly [string, number, number, number[]][] = [
+${rows.map(row => `  ${row},`).join("\n")}
+]
+
+export const PROCEDURE_CODE_COUNT = ROWS.length
+
+/** The operations of one group, as the online list returns them. Empty for an unknown group. */
+export function procedureCodeRowsForGroup(group: string): ProcedureSearchRow[] {
+  const wanted = group.trim().toLowerCase()
+  const groupIndex = GROUPS.findIndex(name => name.toLowerCase() === wanted)
+  if (groupIndex < 0) return []
+  return ROWS
+    .filter(row => row[1] === groupIndex)
+    .map(([code, groupAt, domainAt, description]) => ({
+      code,
+      group: GROUPS[groupAt],
+      domain: DOMAINS[domainAt],
+      description: description.map(part => PARTS[part]).join(", "),
+    }))
+}
+`
+}
+
 fs.mkdirSync(CORE_VOCABULARY_DIR, { recursive: true })
 
-// `--procedures-only` rebuilds procedures.ts from pcs.json and the Bulgarian
+// `--procedures-only` rebuilds procedures.ts and procedure-codes.ts from pcs.json and the Bulgarian
 // terms without a database, and leaves icd10.ts and index.ts as committed.
 const proceduresOnly = process.argv.includes("--procedures-only")
-const written = proceduresOnly ? ["procedures.ts"] : ["icd10.ts", "procedures.ts", "index.ts"]
+const written = proceduresOnly
+  ? ["procedures.ts", "procedure-codes.ts"]
+  : ["icd10.ts", "procedures.ts", "procedure-codes.ts", "index.ts"]
+fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedure-codes.ts"), procedureCodes(), "utf8")
 if (proceduresOnly) {
   fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedures.ts"), procedures(), "utf8")
 } else {
