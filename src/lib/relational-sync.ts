@@ -1,5 +1,6 @@
 import { intraopAtcCode } from "@lospor/core/catalog"
 import { vocabularyForSystem } from "@lospor/core/code-systems"
+import { isExactProcedure, procedureGroupOf, PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
 import { getLabSeverity, parseLabValue } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
@@ -273,21 +274,41 @@ function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts:
   }))
 }
 
+/**
+ * What a stored procedure is coded as.
+ *
+ * An exact operation is its ICD-10-PCS code, a standard OMOP procedure concept.
+ * A group chosen on its own is the group, under LOSPOR's group vocabulary: it
+ * names no operation, so it takes no procedure concept. Anything older keeps
+ * the reading it always had.
+ */
+function procedureSource(p: JsonItem): { vocabulary: string; code: string | null; group: string | null } {
+  if (isExactProcedure(p)) return { vocabulary: "ICD10PCS", code: str(p.code), group: procedureGroupOf(p) }
+  if (p?.system === PROCEDURE_GROUP_SYSTEM) {
+    const group = procedureGroupOf(p)
+    return { vocabulary: PROCEDURE_GROUP_SYSTEM, code: group, group }
+  }
+  return { vocabulary: str(p?.domain) ?? "LOSPOR_PROCEDURE", code: str(p?.sub ?? p?.code), group: str(p?.group) }
+}
+
 function procedureRows(preopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {
-  return arr(json).map((p: JsonItem, i: number) => ({
+  return arr(json).map((p: JsonItem, i: number) => {
+    const source = procedureSource(p)
+    return {
     preopId, caseId,
-    code:        str(p?.sub ?? p?.code),
-    group:       str(p?.group),
+    code:        source.code,
+    group:       source.group,
     domain:      str(p?.domain),
     description: str(p?.description ?? p?.label),
-    ...concept(concepts, "procedure", str(p?.domain) ?? "LOSPOR_PROCEDURE", str(p?.sub ?? p?.code)),
+    ...concept(concepts, "procedure", source.vocabulary, source.code),
     source: SYNC_SOURCE,
     // See diagnosisRows: `source` is sync-audit metadata, not who/what
     // recorded the item, so clinical provenance gets its own column.
     clinicalSource: str(p?.source),
     sourceVersion: SYNC_SOURCE_VERSION,
     ordinal: i,
-  }))
+    }
+  })
 }
 
 function comorbidityRows(preopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {

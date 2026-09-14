@@ -2006,10 +2006,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "preop.proceduresJson",
     exportName: "procedure_occurrence.procedure_concept_id (via PreopProcedure)",
-    meaning: "The coded planned procedures as stored on the assessment, one entry per procedure.",
+    meaning: "The coded planned procedures as stored on the assessment, one entry per procedure. An entry is either a procedure group alone (system LOSPOR_PROCEDURE_GROUP; procedure_source_value PROCEDURE:LOSPOR_PROCEDURE_GROUP:<group>, procedure_concept_id 0, because a group names no single operation) or the exact operation the clinician chose inside it (system ICD-10-PCS; procedure_source_value PROCEDURE:ICD10PCS:<code>, procedure_concept_id the standard ICD10PCS concept, or its RxNorm target for a drug administration).",
     type: "json",
-    missingnessRule: "Empty = no coded procedure was recorded, and the free-text procedure above is exported instead if there is one",
-    derivationRule: "Each entry becomes one PreopProcedure mirror row and then one PROCEDURE_OCCURRENCE",
+    missingnessRule: "Empty = no coded procedure was recorded, and the free-text procedure above is exported instead if there is one. procedure_concept_id 0 = a group without an exact operation, or an operation with no bundled standard concept",
+    derivationRule: "Each entry becomes one PreopProcedure mirror row and then one PROCEDURE_OCCURRENCE. ICD-10-PCS concept ids ship with the release (src/data/icd10pcs-omop.json, from OHDSI Athena); entries saved before exact operations existed keep the reading they were stored with",
     sourceTable: "PreoperativeAssessment", sourceColumn: "proceduresJson",
     versionIntroduced: "4.3.0",
   },

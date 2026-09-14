@@ -8,6 +8,7 @@
 import "dotenv/config"
 import { INTRAOP_DRUG_CODE_ENTRIES } from "@lospor/core/catalog"
 import { ALL_COMPLICATIONS } from "@lospor/core/complications"
+import { PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
@@ -724,29 +725,71 @@ async function main() {
     })
   }
 
-  // Procedures. The catalogue is a static ICD-10-PCS file rather than a table,
-  // and it was the one vocabulary this script never seeded -- so every planned
-  // procedure fell through `concept()` to an implicit SOURCE_ONLY with no row
-  // behind it. The mapping existed only as an absence: nothing to audit,
-  // nothing to review, and nothing for a later Athena import to fill in.
+  // Procedures. An exact operation is stored as its ICD-10-PCS code (see
+  // @lospor/core/procedure-codes), and relational-sync looks it up under
+  // ICD10PCS. ICD-10-PCS is public domain and its concepts are standard OMOP
+  // procedures, so the release bundles their ids (src/data/icd10pcs-omop.json,
+  // built from Athena by generate-icd10pcs-omop.mts): a site has research codes
+  // for exact operations without importing anything. A site that has imported
+  // an Athena release with ICD10PCS resolves against that instead.
   //
-  // The key must match what relational-sync writes, which uses the entry's
-  // `domain` as the source vocabulary and falls back to LOSPOR_PROCEDURE.
-  //
-  // Standard resolution is attempted against ICD10PCS. That vocabulary is not
-  // in the local Athena import today, so these stay SOURCE_ONLY; when it is
-  // imported, re-running this script fills them in without touching any case.
+  // A group chosen on its own names no operation, so its rows stay source-only;
+  // they exist so the whole procedure vocabulary is reviewable in one table.
   const pcs = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "src", "data", "pcs.json"), "utf8"),
   ) as { code: string; description?: string; group?: string; domain?: string }[]
+  const pcsPack = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "icd10pcs-omop.json"), "utf8"),
+  ) as {
+    source: string
+    standardVocabulary: string
+    concepts: Record<string, number>
+    mapsTo: Record<string, { conceptId: number; vocabulary: string }>
+  }
   const pcsStandards = await resolveStandardMap("ICD10PCS", pcs.map(p => p.code), athenaVersion)
+  const bundledPcsStandard = (proc: { code: string; description?: string }): StandardMapResolution | undefined => {
+    const own = pcsPack.concepts[proc.code]
+    if (own) {
+      return { kind: "mapped", standard: {
+        standardVocabulary: pcsPack.standardVocabulary,
+        standardConceptId: own,
+        standardLabel: proc.description ?? proc.code,
+        mappingMethod: "bundled-icd10pcs-standard",
+        mappingConfidence: 1,
+        athenaVersion: pcsPack.source,
+      } }
+    }
+    const mapped = pcsPack.mapsTo[proc.code]
+    return mapped ? { kind: "mapped", standard: {
+      standardVocabulary: mapped.vocabulary,
+      standardConceptId: mapped.conceptId,
+      standardLabel: proc.description ?? proc.code,
+      mappingMethod: "bundled-icd10pcs-maps-to",
+      mappingConfidence: 0.95,
+      athenaVersion: pcsPack.source,
+    } } : undefined
+  }
   for (const proc of pcs) {
     seeds.push(withStandard({
       domain: "procedure",
-      sourceVocabulary: proc.domain || "LOSPOR_PROCEDURE",
+      sourceVocabulary: "ICD10PCS",
       sourceCode: proc.code,
-      sourceLabelEn: proc.group || proc.description || proc.code,
-    }, pcsStandards.get(proc.code)))
+      sourceLabelEn: proc.description || proc.group || proc.code,
+    }, pcsStandards.get(proc.code)?.kind === "mapped"
+      ? pcsStandards.get(proc.code)
+      : bundledPcsStandard(proc) ?? pcsStandards.get(proc.code)))
+  }
+  for (const group of new Set(pcs.map(proc => proc.group).filter((group): group is string => !!group))) {
+    seeds.push({
+      domain: "procedure",
+      sourceVocabulary: PROCEDURE_GROUP_SYSTEM,
+      sourceCode: group,
+      sourceLabelEn: group,
+      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+      mappingMethod: "source-code-preserved",
+      reviewed: false,
+      mappingNotes: "A procedure group names no single operation; the exact ICD-10-PCS operation carries the research code.",
+    })
   }
 
   const curatedByCategory = new Map<string, Map<string, { conceptId: number; label: string }>>([

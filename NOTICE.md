@@ -26,6 +26,11 @@ Classifications Software Refined for ICD-10-PCS procedures (PRCCSR) v2025.1,
 Healthcare Cost and Utilization Project (HCUP), Agency for Healthcare Research
 and Quality (https://hcup-us.ahrq.gov).
 
+`src/data/icd10pcs-omop.json` holds the OMOP concept ids of those ICD-10-PCS codes
+(and the RxNorm concept a few drug-administration codes map to), taken from the
+OHDSI Standardized Vocabularies downloaded from Athena (https://athena.ohdsi.org).
+It holds identifiers only, no SNOMED CT content.
+
 `src/data/procedure-terms-bg.json` holds words from the Bulgarian
 Classification of Medical Procedures (КСМП, 2020, updated 17.02.2026), National
 Centre of Public Health and Analyses (НЦОЗА, https://ncpha.government.bg),

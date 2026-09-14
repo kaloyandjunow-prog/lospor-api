@@ -36,6 +36,8 @@ function makeDb(caseRow: Record<string, unknown>) {
       findMany: vi.fn().mockResolvedValue([
         { domain: "condition", sourceVocabulary: "ICD10", sourceCode: "K35", standardConceptId: 12345, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "APPY", standardConceptId: 23456, mappingStatus: "MAPPED" },
+        { domain: "procedure", sourceVocabulary: "ICD10PCS", sourceCode: "0FT44ZZ", standardConceptId: 2753505, mappingStatus: "MAPPED" },
+        { domain: "procedure", sourceVocabulary: "LOSPOR_PROCEDURE_GROUP", sourceCode: "Cholecystectomy", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
         { domain: "measurement", sourceVocabulary: "LOINC", sourceCode: "718-7", standardConceptId: 3000963, mappingStatus: "MAPPED" },
         { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "03-019-00", standardConceptId: 3019550, mappingStatus: "MANUALLY_CURATED" },
         { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "00-00E-00", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
@@ -426,6 +428,36 @@ describe("syncCaseRelational", () => {
       ],
     })
   })
+  it("codes an exact operation by ICD-10-PCS and a group alone by its name", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    row.preop.proceduresJson = [
+      {
+        label: "Cholecystectomy", code: "0FT44ZZ", system: "ICD-10-PCS", group: "Cholecystectomy",
+        domain: "Hepatobiliary System and Pancreas", description: "Resection of Gallbladder, Percutaneous Endoscopic Approach",
+        sub: "0FT44ZZ · Resection of Gallbladder, Percutaneous Endoscopic Approach", source: "manual",
+      },
+      { label: "Cholecystectomy", code: "Cholecystectomy", system: "LOSPOR_PROCEDURE_GROUP", group: "Cholecystectomy", source: "manual" },
+    ] as never
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.preopProcedure.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          code: "0FT44ZZ", group: "Cholecystectomy",
+          description: "Resection of Gallbladder, Percutaneous Endoscopic Approach",
+          sourceVocabulary: "ICD10PCS", sourceCode: "0FT44ZZ", standardConceptId: 2753505, mappingStatus: "MAPPED",
+        }),
+        expect.objectContaining({
+          code: "Cholecystectomy", group: "Cholecystectomy",
+          sourceVocabulary: "LOSPOR_PROCEDURE_GROUP", sourceCode: "Cholecystectomy", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
+        }),
+      ],
+    })
+  })
+
   it("does not append stale rows when sections are empty", async () => {
     const { syncCaseRelational } = await import("@/lib/relational-sync")
     const row = makeCaseRow()
