@@ -58,6 +58,10 @@ The OMOP standardized vocabularies are not part of this repository. Each site
 downloads them from OHDSI Athena (https://athena.ohdsi.org) under the licences
 Athena presents for each vocabulary, and imports them itself.
 
+`src/data/icd10-omop.json` holds, for each ICD-10 code, the OMOP concept ids
+Athena maps it to. These are integers assigned by OHDSI; the file contains no
+SNOMED CT codes, names or descriptions.
+
 The concept-map seed names a small number of SNOMED CT concept identifiers for
 curated mappings. SNOMED CT® is a registered trademark of SNOMED International,
 which licenses its use; in countries that are not SNOMED International members

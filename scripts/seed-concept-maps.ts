@@ -550,7 +550,7 @@ function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, resolution: Stan
     ...seed,
     standardVocabulary: standard.standardVocabulary,
     standardConceptId: standard.standardConceptId,
-    standardLabel: standard.standardLabel,
+    standardLabel: standard.standardLabel || null,
     mappingStatus: ConceptMappingStatus.MAPPED,
     mappingMethod: standard.mappingMethod,
     mappingConfidence: standard.mappingConfidence,
@@ -643,14 +643,44 @@ async function main() {
   }
   const icd = await prisma.icd10Code.findMany()
   const icdStandards = await resolveStandardMap("ICD10", icd.map(c => c.code), athenaVersion)
+  // The bundled research numbers (src/data/icd10-omop.json, OMOP ids only, no
+  // SNOMED content; built by generate-icd10-omop.mts), for a site that has not
+  // imported Athena. The rule is the one resolveStandardMap applies: exactly one
+  // standard target maps, several stay source-only, an absent code stays
+  // source-only.
+  const icdPack = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "icd10-omop.json"), "utf8"),
+  ) as { source: string; defaultVocabulary: string; maps: Record<string, number[]>; vocabularies: Record<string, string> }
+  const bundledIcdStandard = (code: string): StandardMapResolution | undefined => {
+    const ids = icdPack.maps[code]
+    if (!ids?.length) return undefined
+    if (ids.length > 1) {
+      return {
+        kind: "source-only",
+        mappingMethod: "athena-multiple-standard-targets",
+        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")}); no target was selected.`,
+        athenaVersion: icdPack.source,
+      }
+    }
+    return { kind: "mapped", standard: {
+      standardVocabulary: icdPack.vocabularies[String(ids[0])] ?? icdPack.defaultVocabulary,
+      standardConceptId: ids[0],
+      // A number only: the bundle carries no SNOMED description.
+      standardLabel: "",
+      mappingMethod: "bundled-icd10-maps-to",
+      mappingConfidence: 0.95,
+      athenaVersion: icdPack.source,
+    } }
+  }
   for (const code of icd) {
+    const athenaResolution = icdStandards.get(code.code)
     seeds.push(withStandard({
       domain: "condition",
       sourceVocabulary: "ICD10",
       sourceCode: code.code,
       sourceLabelEn: code.labelEn,
       sourceLabelBg: code.labelBg,
-    }, icdStandards.get(code.code)))
+    }, athenaResolution?.kind === "mapped" ? athenaResolution : bundledIcdStandard(code.code) ?? athenaResolution))
   }
 
   const atc = await prisma.atc.findMany()

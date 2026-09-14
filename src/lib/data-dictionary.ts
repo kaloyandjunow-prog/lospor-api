@@ -1989,7 +1989,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "The coded preoperative diagnoses as stored on the assessment: one entry per diagnosis, each carrying the vocabulary and code the clinician picked.",
     type: "json",
     missingnessRule: "Empty = no coded diagnosis was recorded, and the free-text diagnosis above is exported instead if there is one",
-    derivationRule: "Each entry becomes one PreopDiagnosis mirror row, and each mirror row becomes one CONDITION_OCCURRENCE. The mirror is what the export reads; this is where the value comes from",
+    derivationRule: "Each entry becomes one PreopDiagnosis mirror row, and each mirror row becomes one CONDITION_OCCURRENCE. The mirror is what the export reads; this is where the value comes from. condition_concept_id is the standard concept (SNOMED CT or OMOP Extension) Athena maps the ICD-10 code to: from the site's imported Athena, or else from the OMOP ids bundled with the release (src/data/icd10-omop.json). A code Athena maps to several concepts, or does not hold (the NHIS national extensions), exports 0 with its ICD-10 code in condition_source_value",
     sourceTable: "PreoperativeAssessment", sourceColumn: "diagnosesJson",
     versionIntroduced: "4.3.0",
   },
