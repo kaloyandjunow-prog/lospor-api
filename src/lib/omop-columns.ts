@@ -76,7 +76,10 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   device_exposure: [
     "device_exposure_id", "person_id", "device_concept_id",
     "device_exposure_start_date", "device_exposure_end_date",
-    "device_type_concept_id", "device_source_value", "visit_occurrence_id",
+    // quantity and its unit: a blood unit's volume in mL (exchange contract
+    // 2.5.0). Empty for an airway device.
+    "device_type_concept_id", "quantity", "device_source_value", "visit_occurrence_id",
+    "unit_concept_id", "unit_source_value",
   ],
   observation: [
     "observation_id", "person_id", "observation_concept_id", "observation_date",

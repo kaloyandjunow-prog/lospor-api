@@ -2424,14 +2424,16 @@ describe("fluid and premedication administration as procedure facts", () => {
     expect(b.drug_exposure.filter(r => String(r.drug_source_value).includes("PRBC"))).toHaveLength(0)
     expect(b.drug_exposure.some(r => r.drug_concept_id === 702006)).toBe(false)
     expect(b.device_exposure.filter(r => String(r.device_source_value).startsWith("INTRAOP_BLOOD:"))
-      .map(r => [r.device_concept_id, r.device_exposure_start_date, r.device_exposure_end_date]))
-      .toEqual([[4336080, "2026-06-01", "2026-06-01"]])
+      .map(r => [r.device_concept_id, r.device_exposure_start_date, r.device_exposure_end_date,
+        r.quantity, r.unit_concept_id, r.unit_source_value]))
+      .toEqual([[4336080, "2026-06-01", "2026-06-01", 300, 8587, "mL"]])
     expect(b.procedure_occurrence.filter(r => String(r.procedure_source_value).startsWith("INTRAOP_BLOOD:"))
       .map(r => [r.procedure_concept_id, r.procedure_datetime]))
       .toEqual([[4323715, "2026-06-01T09:10:00.000Z"], [4037780, "2026-06-01T09:30:00.000Z"]])
+    // Only cell salvage, which has no product row to hold its volume.
     expect(b.observation.filter(r => r.observation_source_value === "LOSPOR:BLOOD_PRODUCT_UNIT_ML")
       .map(r => [r.value_as_string, r.value_as_number]))
-      .toEqual([["Packed red blood cells (PRBC)", 300], ["Cell salvage / autologous blood", 500]])
+      .toEqual([["Cell salvage / autologous blood", 500]])
     // Each unit already carries its transfusion, so the case total adds none.
     expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")).toHaveLength(0)
   })

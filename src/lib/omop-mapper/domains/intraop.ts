@@ -58,8 +58,11 @@ export function mapIntraopToOmop(
       device_exposure_start_date: ctx.startDate,
       device_exposure_end_date:   ctx.endDate,
       device_type_concept_id:     32817,
+      quantity:                   null,
       device_source_value:        "AIRWAY_DEVICE:" + device,
       visit_occurrence_id:        ctx.visitId,
+      unit_concept_id:            null,
+      unit_source_value:          null,
     })
   }
 
@@ -77,8 +80,11 @@ export function mapIntraopToOmop(
       device_exposure_start_date: ctx.startDate,
       device_exposure_end_date:   ctx.endDate,
       device_type_concept_id:     32817,
+      quantity:                   null,
       device_source_value:        "AIRWAY_TOOL:" + tool,
       visit_occurrence_id:        ctx.visitId,
+      unit_concept_id:            null,
+      unit_source_value:          null,
     })
   }
   // 4337615, Orotracheal fiberoptic intubation. This field sits in the
@@ -492,13 +498,16 @@ export function mapIntraopToOmop(
     // concept comes from the fluid table by name rather than from the stored
     // event: an event saved before the table existed carries the concept its
     // ATC code resolved to, and B05AX01 resolves to a technetium tracer.
-    // The volume has no column in either table, so it travels beside them.
+    // The unit's volume sits on the product row as its quantity in mL. Cell
+    // salvage has no product row, and PROCEDURE_OCCURRENCE no volume, so its
+    // volume travels beside the procedure as an observation.
     if (ev.type === "fluid_start") {
       const fluidName = (meta.name as string | undefined) ?? ev.label ?? null
       const fluid = intraopFluidConcept({ name: fluidName, concentration: ev.concentration, category: ev.fluidCategory })
       if (fluid && fluid.table !== "drug") {
         const givenOn = isoDate(ev.timestamp)
         const source = `INTRAOP_BLOOD:${fluidName}`
+        const volume = numOrNull(ev.volume)
         if (fluid.table === "device") {
           ctx.devices.push({
             device_exposure_id:         nextId(),
@@ -507,8 +516,12 @@ export function mapIntraopToOmop(
             device_exposure_start_date: givenOn,
             device_exposure_end_date:   endFor(ev, index) ?? givenOn,
             device_type_concept_id:     32817,
+            // The CDM column is an integer, and a unit is charted in whole mL.
+            quantity:                   volume == null ? null : Math.round(volume),
             device_source_value:        source,
             visit_occurrence_id:        ctx.visitId,
+            unit_concept_id:            volume == null ? null : 8587,
+            unit_source_value:          volume == null ? null : "mL",
           })
         }
         ctx.procedures.push({
@@ -523,8 +536,9 @@ export function mapIntraopToOmop(
           procedure_source_value:    source,
           visit_occurrence_id:       ctx.visitId,
         })
-        const volume = numOrNull(ev.volume)
-        if (volume != null) ctx.sourceObservation("LOSPOR:BLOOD_PRODUCT_UNIT_ML", fluidName, givenOn, volume)
+        if (fluid.table === "procedure" && volume != null) {
+          ctx.sourceObservation("LOSPOR:BLOOD_PRODUCT_UNIT_ML", fluidName, givenOn, volume)
+        }
         bloodUnitRows++
         continue
       }

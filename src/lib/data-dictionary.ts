@@ -2154,9 +2154,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "and a procedure_occurrence row with the transfusion of it, both with "
       + "source value INTRAOP_BLOOD:<name>, and no drug_exposure row. Cell "
       + "salvage has no product concept and exports as the autotransfusion "
-      + "procedure alone. The unit's volume has no column in either table and "
-      + "leaves as observation LOSPOR:BLOOD_PRODUCT_UNIT_ML (value_as_string the "
-      + "product, value_as_number the mL). An event saved before the table "
+      + "procedure alone. The unit's volume is the product row's quantity, with "
+      + "unit_concept_id 8587 (mL) and unit_source_value mL (exchange contract "
+      + "2.5.0); for cell salvage, which has no product row, it leaves as "
+      + "observation LOSPOR:BLOOD_PRODUCT_UNIT_ML (value_as_string the product, "
+      + "value_as_number the mL). An event saved before the table "
       + "carried B05AX01's concept, a technetium tracer; the export codes blood "
       + "products from the table by name so that concept never leaves.",
     type: "string",
@@ -2167,7 +2169,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "event.volume",
     exportName: "drug_exposure.dose_value (for fluid_start events)",
-    meaning: "The volume a fluid was charted at, and the dose figure for a fluid row. For a blood unit, observation.value_as_number (LOSPOR:BLOOD_PRODUCT_UNIT_ML).",
+    meaning: "The volume a fluid was charted at, and the dose figure for a fluid row. For a blood unit, device_exposure.quantity in mL; for cell salvage, observation.value_as_number (LOSPOR:BLOOD_PRODUCT_UNIT_ML).",
     type: "string",
     missingnessRule: "Absent on every event that is not a fluid start. A genuinely zero volume survives as 0 rather than collapsing into no-dose-recorded",
     sourceTable: "CaseEvent", sourceColumn: "volume",

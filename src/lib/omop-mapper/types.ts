@@ -91,8 +91,12 @@ export interface OmopDevice {
   device_exposure_start_date: string | null
   device_exposure_end_date: string | null
   device_type_concept_id: number
+  /** How much was given -- a blood unit's volume. Null for an airway device. */
+  quantity: number | null
   device_source_value: string | null
   visit_occurrence_id: number
+  unit_concept_id: number | null
+  unit_source_value: string | null
 }
 
 export interface OmopCareSite {
