@@ -1,5 +1,11 @@
 # Changelog - LOSPOR API
 
+## [9.10.1] - 2026-09-15
+
+### Fixed
+
+- **The E2E admin test account had no case-inspection or export access.** `scripts/seed-e2e-user.ts` gave it aggregate query only, the same as any ADMIN gets implicitly; inspection, export and OMOP export still come only from an explicit `ResearchAccessGrant`, same as everyone else, and this account never received one. Test-tooling only — no production behavior changes.
+
 ## [9.10.0] - 2026-09-15
 
 ### Added
