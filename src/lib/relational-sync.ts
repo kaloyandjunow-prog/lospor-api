@@ -1,7 +1,10 @@
-import { intraopAtcCode } from "@lospor/core/catalog"
+import { intraopAtcCode, intraopFluidConcept } from "@lospor/core/catalog"
 import { vocabularyForSystem } from "@lospor/core/code-systems"
+import { isExactProcedure, procedureGroupOf, PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
+import { parsePremedicationEntries, type PremedicationPhase } from "@lospor/core/premedication"
 import { getLabSeverity, parseLabValue } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
+import { normalizeAtcCode } from "@/lib/atc"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
 // Mirror the JSON clinical arrays into queryable research rows.
@@ -50,6 +53,9 @@ type ConceptInfo = {
   mappingStatus: MappingStatus
 }
 
+/** Conditions only: a source code OMOP decomposes into several concepts. */
+const conditionConceptIds = new Map<string, number[]>()
+
 let conceptCache: Map<string, ConceptInfo> | null = null
 
 function conceptKey(domain: string, sourceVocabulary: string, sourceCode: string) {
@@ -60,8 +66,14 @@ async function getConceptMap(db: Db) {
   if (conceptCache) return conceptCache
   const rows = await db.conceptMap.findMany({
     where: { active: true },
-    select: { domain: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true },
+    select: { domain: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, standardConceptIds: true, mappingStatus: true },
   })
+  conditionConceptIds.clear()
+  for (const r of rows) {
+    if (r.domain === "condition" && r.standardConceptIds?.length) {
+      conditionConceptIds.set(conceptKey(r.domain, r.sourceVocabulary, r.sourceCode), r.standardConceptIds)
+    }
+  }
   conceptCache = new Map(rows.map(r => [conceptKey(r.domain, r.sourceVocabulary, r.sourceCode), {
     sourceVocabulary: r.sourceVocabulary,
     sourceCode: r.sourceCode,
@@ -92,6 +104,23 @@ function concept(
     return { ...found, standardConceptId: null }
   }
   return found
+}
+
+/**
+ * A condition's concept, with every id when OMOP decomposes its code.
+ *
+ * Kept to the two condition tables, which are the only ones with the column.
+ */
+function conditionConcept(
+  concepts: Map<string, ConceptInfo>,
+  sourceVocabulary: string | null | undefined,
+  sourceCode: string | null | undefined,
+): ConceptInfo & { standardConceptIds: number[] } {
+  const found = concept(concepts, "condition", sourceVocabulary, sourceCode)
+  const ids = sourceVocabulary && sourceCode && found.mappingStatus !== "REJECTED"
+    ? conditionConceptIds.get(conceptKey("condition", sourceVocabulary, sourceCode)) ?? []
+    : []
+  return { ...found, standardConceptIds: ids }
 }
 
 /**
@@ -152,6 +181,12 @@ const asString = (value: unknown): string | null => typeof value === "string" &&
  * row stays uncoded. A code found this way is written onto the event as well,
  * so the export's drug_source_value carries it and a later re-resolution can
  * use it directly.
+ *
+ * A fluid is looked up in the hand-checked fluid table first. Its ATC code is
+ * shared -- saline, Hartmann's and Plasma-Lyte are all B05BB01 -- so only the
+ * name and strength say which clinical drug the bag was. A blood product gets
+ * its product concept here; the export writes it as a device with its
+ * transfusion.
  */
 export async function resolveDrugExposureConcepts(db: Db, events: MutableEvent[]): Promise<void> {
   const kinds = new Set<string>(DRUG_EXPOSURE_EVENT_TYPES)
@@ -162,7 +197,12 @@ export async function resolveDrugExposureConcepts(db: Db, events: MutableEvent[]
     // nonsense key and quietly return no concept.
     const label = asString(event.name) ?? asString(event.label)
     const atcCode = asString(event.atcCode) ?? intraopAtcCode(label) ?? null
-    const resolved = await resolveDrugConcept(db, atcCode, asString(event.inn), label)
+    const fluid = event.type === "fluid_start"
+      ? intraopFluidConcept({ name: label, concentration: asString(event.concentration), category: asString(event.category) })
+      : undefined
+    const resolved = fluid
+      ? { standardConceptId: fluid.conceptId, mappingStatus: "MANUALLY_CURATED" as const }
+      : await resolveDrugConcept(db, atcCode, asString(event.inn), label)
     Object.assign(event, {
       ...(atcCode && !asString(event.atcCode) ? { atcCode } : {}),
       standardConceptId: resolved.standardConceptId,
@@ -260,7 +300,7 @@ function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts:
     // send SNOMED where our own forms send ICD-10. Absent means our forms, so
     // ICD-10 stands; unrecognised is passed through and simply will not match,
     // which is safer than looking a code up in a vocabulary it never came from.
-    ...concept(concepts, "condition", vocabularyForSystem(str(d?.system), "ICD10"), str(d?.sub ?? d?.code)),
+    ...conditionConcept(concepts, vocabularyForSystem(str(d?.system), "ICD10"), str(d?.sub ?? d?.code)),
     source: SYNC_SOURCE,
     // Clinical provenance (who/what recorded this item) is a different fact
     // from `source` above, which is sync-audit metadata hard-coded to
@@ -273,21 +313,46 @@ function diagnosisRows(preopId: string, caseId: string, json: unknown, concepts:
   }))
 }
 
+/**
+ * What a stored procedure is coded as.
+ *
+ * An exact operation is its ICD-10-PCS code, a standard OMOP procedure concept.
+ * A group chosen on its own is the group, under LOSPOR's group vocabulary: it
+ * names no operation, so it takes no procedure concept. Anything older keeps
+ * the reading it always had.
+ */
+function procedureSource(p: JsonItem): { vocabulary: string; code: string | null; group: string | null } {
+  if (isExactProcedure(p)) return { vocabulary: "ICD10PCS", code: str(p.code), group: procedureGroupOf(p) }
+  if (p?.system === PROCEDURE_GROUP_SYSTEM) {
+    const group = procedureGroupOf(p)
+    return { vocabulary: PROCEDURE_GROUP_SYSTEM, code: group, group }
+  }
+  // An imported code names the vocabulary it belongs to ("KSMP"), which the
+  // hospital's own address cannot be trusted to say, and the group it was
+  // crosswalked to.
+  const declared = str(p?.sourceVocabulary)
+  if (declared && str(p?.code)) return { vocabulary: declared, code: str(p.code), group: procedureGroupOf(p) }
+  return { vocabulary: str(p?.domain) ?? "LOSPOR_PROCEDURE", code: str(p?.sub ?? p?.code), group: str(p?.group) }
+}
+
 function procedureRows(preopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {
-  return arr(json).map((p: JsonItem, i: number) => ({
+  return arr(json).map((p: JsonItem, i: number) => {
+    const source = procedureSource(p)
+    return {
     preopId, caseId,
-    code:        str(p?.sub ?? p?.code),
-    group:       str(p?.group),
+    code:        source.code,
+    group:       source.group,
     domain:      str(p?.domain),
     description: str(p?.description ?? p?.label),
-    ...concept(concepts, "procedure", str(p?.domain) ?? "LOSPOR_PROCEDURE", str(p?.sub ?? p?.code)),
+    ...concept(concepts, "procedure", source.vocabulary, source.code),
     source: SYNC_SOURCE,
     // See diagnosisRows: `source` is sync-audit metadata, not who/what
     // recorded the item, so clinical provenance gets its own column.
     clinicalSource: str(p?.source),
     sourceVersion: SYNC_SOURCE_VERSION,
     ordinal: i,
-  }))
+    }
+  })
 }
 
 function comorbidityRows(preopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {
@@ -304,7 +369,7 @@ function comorbidityRows(preopId: string, caseId: string, json: unknown, concept
       icd10Code,
       system:   str(c?.system),
       // Same reasoning as diagnosisRows above.
-      ...concept(concepts, "condition", vocabularyForSystem(str(c?.system), "ICD10"), icd10Code ?? rawCode),
+      ...conditionConcept(concepts, vocabularyForSystem(str(c?.system), "ICD10"), icd10Code ?? rawCode),
       source: SYNC_SOURCE,
       // See diagnosisRows: `source` is sync-audit metadata, not who/what
       // recorded the item, so clinical provenance gets its own column.
@@ -337,6 +402,11 @@ async function labRowsWithLoinc(
     .filter((l: JsonItem) => l && l.test != null)
     .map((l: JsonItem, i: number) => {
       const loinc = loincMap.get(String(l.test))
+      const hasImportedLoinc = Object.prototype.hasOwnProperty.call(l, "loincCode")
+      const loincCode = hasImportedLoinc ? str(l.loincCode) : loinc?.loincCode ?? null
+      const sourceVocabulary = str(l.sourceVocabulary)
+      const sourceCode = str(l.sourceCode)
+      const unitCanon = l.unconverted === true ? null : loinc?.unitCanon ?? null
       const valueNum = flt(l?.value)
       // The laboratory's own range where it stated one; the catalogue only as
       // a fallback. A flag computed against a range the result was not read
@@ -350,8 +420,8 @@ async function labRowsWithLoinc(
         value:        str(l?.value),
         valueNum,
         unit:         str(l?.unit),
-        unitCanon:    loinc?.unitCanon ?? null,
-        loincCode:    loinc?.loincCode ?? null,
+        unitCanon,
+        loincCode,
         referenceLow:  range.referenceLow,
         referenceHigh: range.referenceHigh,
         criticalLow:   range.criticalLow,
@@ -359,7 +429,12 @@ async function labRowsWithLoinc(
         abnormalFlag,
         takenAt:      isoDate(l?.takenAt),
         source:       str(l?.source) ?? "manual",
-        ...concept(concepts, "measurement", "LOINC", loinc?.loincCode ?? null),
+        ...concept(
+          concepts,
+          "measurement",
+          sourceVocabulary && sourceCode ? sourceVocabulary : loincCode ? "LOINC" : null,
+          sourceVocabulary && sourceCode ? sourceCode : loincCode,
+        ),
         sourceVersion: SYNC_SOURCE_VERSION,
         ordinal: i,
       }
@@ -384,7 +459,8 @@ function medicationRows(preopId: string, caseId: string, json: unknown, kind: "C
   return arr(json)
     .filter((m: JsonItem) => m && (m.label || m.name || m.inn))
     .map((m: JsonItem, i: number) => {
-      const atc = str(m.atc ?? m.atcCode)
+      const rawAtc = str(m.atc ?? m.atcCode)
+      const atc = normalizeAtcCode(rawAtc)
       const inn = str(m.inn)
       const mapped = atc
         ? concept(concepts, "drug", "ATC", atc)
@@ -394,7 +470,7 @@ function medicationRows(preopId: string, caseId: string, json: unknown, kind: "C
         kind,
         nameRaw:   String(m.label ?? m.name ?? m.inn ?? ""),
         inn,
-        atcCode:   atc,
+        atcCode:   atc ?? rawAtc,
         dose:      str(m.dose),
         route:     str(m.route),
         frequency: str(m.frequency),
@@ -447,30 +523,34 @@ function complicationRows(caseId: string, section: "intraop" | "postop", raw: un
   })
 }
 
-function premedRows(intraopId: string, caseId: string, phase: "evening" | "morning", raw: unknown, concepts: Map<string, ConceptInfo>) {
+/**
+ * A phase's premedication as coded drugs.
+ *
+ * Each entry reads back into the catalogue drug, its ATC code, dose, unit and
+ * route (@lospor/core/premedication), so the drug maps through ATC to its
+ * standard concept exactly as an intraoperative dose does. It used to be looked
+ * up as the whole line of text ("Midazolam 7.5 mg PO"), which matched nothing,
+ * and every premedication exported concept 0. An entry naming no catalogue drug
+ * keeps its text and stays uncoded.
+ */
+function premedRows(intraopId: string, caseId: string, phase: PremedicationPhase, raw: unknown, concepts: Map<string, ConceptInfo>) {
   if (typeof raw !== "string" || !raw.trim()) return []
-  const doseRe = /(\d+(?:\.\d+)?)\s*(mcg|mg|g|ml|mL|iu|IU|units?|tabs?|puffs?)/i
-  const routeRe = /\b(PO|IV|IM|SC|SL|PR|INH|oral|intravenous|intramuscular|subcutaneous)\b/i
-  return raw
-    .split(/[;\n]+/)
-    .map(s => s.trim())
-    .filter(Boolean)
-    .map((entry, i) => {
-      const doseMatch = entry.match(doseRe)
-      const routeMatch = entry.match(routeRe)
-      return {
-        intraopId,
-        caseId,
-        phase,
-        nameRaw: entry,
-        dose: doseMatch ? `${doseMatch[1]} ${doseMatch[2]}` : null,
-        route: routeMatch ? routeMatch[1].toUpperCase() : null,
-        ...concept(concepts, "drug", "LOSPOR_DRUG_RAW", entry),
-        source: SYNC_SOURCE,
-        sourceVersion: SYNC_SOURCE_VERSION,
-        ordinal: i,
-      }
-    })
+  return parsePremedicationEntries(raw, phase).map((item, i) => ({
+    intraopId,
+    caseId,
+    phase: item.phase,
+    nameRaw: item.entry,
+    inn: item.drug,
+    atcCode: item.atcCode,
+    dose: item.dose != null && item.unit ? `${item.dose} ${item.unit}` : null,
+    route: item.route,
+    ...(item.atcCode
+      ? concept(concepts, "drug", "ATC", item.atcCode)
+      : concept(concepts, "drug", "LOSPOR_DRUG_RAW", item.drug ?? item.entry)),
+    source: SYNC_SOURCE,
+    sourceVersion: SYNC_SOURCE_VERSION,
+    ordinal: i,
+  }))
 }
 
 function selectionRows(caseId: string, section: string, category: string, json: unknown, concepts: Map<string, ConceptInfo>) {
@@ -757,8 +837,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     await db.vascularAccess.createMany({ data: vascularRows(it.id, caseId, it.vascularAccesses, concepts) })
     await db.premedicationAdministration.deleteMany({ where: { intraopId: it.id } })
     await db.premedicationAdministration.createMany({ data: [
-      ...premedRows(it.id, caseId, "evening", it.premedicationEvening, concepts),
-      ...premedRows(it.id, caseId, "morning", it.premedicationMorning, concepts),
+      ...premedRows(it.id, caseId, "DAY_BEFORE", it.premedicationEvening, concepts),
+      ...premedRows(it.id, caseId, "MORNING", it.premedicationMorning, concepts),
     ] })
     await db.caseComplication.deleteMany({ where: { caseId, section: "intraop" } })
     await db.caseComplication.createMany({ data: complicationRows(caseId, "intraop", it.complications, concepts) })

@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@lospor/core"],
   serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   outputFileTracingIncludes: {
-    "/v1/search/procedures": ["./src/data/pcs.json"],
+    "/v1/search/procedures": ["./src/data/pcs.json", "./src/data/procedure-terms-bg.json"],
+    "/v1/search/procedures/codes": ["./src/data/pcs.json", "./src/data/procedure-terms-bg.json"],
     "/v1/search/drugs": ["./src/data/drugs.json"],
   },
   poweredByHeader: false,

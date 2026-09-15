@@ -4,6 +4,7 @@ import { logAudit } from "@/lib/audit"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { canWriteCase } from "@/lib/access-control"
 import { fetchMistralChatCompletions } from "@/lib/mistral"
+import { DEFAULT_VISION_MODEL } from "@/lib/mistral-models"
 import { prisma } from "@/lib/prisma"
 import { rateLimit } from "@/lib/rate-limit"
 import { clinicalAiRefusal } from "@/lib/deployment-capabilities"
@@ -81,9 +82,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const res = await fetchMistralChatCompletions(MISTRAL_API_KEY, {
       // Pinned, not floating. Everything else in the appliance is fixed to a
       // digest or checksum; "mistral-small-latest" let one clinical behaviour
-      // change without a release, and it read the same env var as read-labs
-      // while defaulting to a different model.
-      model: process.env.MISTRAL_VISION_MODEL ?? "pixtral-12b-2409",
+      // change without a release. The default itself was also stale:
+      // pixtral-12b-2409 was retired, so this failed the moment a key was
+      // configured -- see src/lib/mistral-models.ts.
+      model: process.env.MISTRAL_VISION_MODEL ?? DEFAULT_VISION_MODEL,
       messages: [
         {
           role: "user",

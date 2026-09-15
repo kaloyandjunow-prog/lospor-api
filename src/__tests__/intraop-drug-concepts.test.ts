@@ -73,7 +73,9 @@ describe("intraoperative drug concepts", () => {
     expect(sevoflurane.atcCode).toBe("N01AB08")
     expect(sevoflurane.standardConceptId).toBe(19039298)
     expect(hes.atcCode).toBe("B05AA07")
-    expect(hes.standardConceptId).toBe(19077117)
+    // The hand-checked fluid table, at the catalogue's default 10%.
+    expect(hes.standardConceptId).toBe(40161356)
+    expect(hes.mappingStatus).toBe("MANUALLY_CURATED")
   })
 
   it("keeps a code the client did send", async () => {
@@ -103,28 +105,49 @@ describe("intraoperative drug concepts", () => {
     expect(infusion.standardConceptId).toBe(bolus.standardConceptId)
   })
 
-  it("records a real code with no concept behind it as source-only, not as mapped", async () => {
-    // Hartmann's is B05BB01, which is correct and which OMOP has no standard
-    // concept for. The honest export says so; it does not reach for a
-    // neighbouring code that happens to have one.
-    const [hartmanns] = await resolve([
+  it("tells apart the fluids that share an ATC code", async () => {
+    // Hartmann's, saline and Plasma-Lyte are all B05BB01, which has no single
+    // OMOP concept. The fluid table names each by what is in the bag.
+    const [hartmanns, hypertonic, plasmaLyte] = await resolve([
       { type: "fluid_start", name: "Lactated Ringer's / Hartmann's", volume: 1000 },
+      { type: "fluid_start", name: "Saline", concentration: "3%", volume: 250 },
+      { type: "fluid_start", name: "Plasma-Lyte", volume: 500 },
     ])
     expect(hartmanns.atcCode).toBe("B05BB01")
-    expect(hartmanns.standardConceptId).toBeNull()
-    expect(hartmanns.mappingStatus).toBe("SOURCE_ONLY")
+    expect(hartmanns.standardConceptId).toBe(43027244)
+    expect(hypertonic.standardConceptId).toBe(42482740)
+    expect(plasmaLyte.standardConceptId).toBe(19131116)
+  })
+
+  it("records a real code with no concept behind it as source-only, not as mapped", async () => {
+    // B05BB01 is correct and OMOP has no standard concept for it. A fluid the
+    // table does not know says so; it does not reach for a neighbouring code.
+    const [custom] = await resolve([
+      { type: "fluid_start", name: "Custom balanced solution", atcCode: "B05BB01", volume: 1000 },
+    ])
+    expect(custom.standardConceptId).toBeNull()
+    expect(custom.mappingStatus).toBe("SOURCE_ONLY")
   })
 
   it("leaves a drug it does not recognise uncoded rather than guessing", async () => {
-    const [freeText, wholeBlood] = await resolve([
+    const [freeText] = await resolve([
       { type: "drug", name: "Something the catalog has never heard of" },
-      // A catalog entry that deliberately has no ATC code at all.
-      { type: "fluid_start", name: "Whole blood", volume: 450 },
     ])
     expect(freeText.atcCode).toBeUndefined()
     expect(freeText.standardConceptId).toBeNull()
+  })
+
+  it("codes a blood product as the product, never through its ATC code", async () => {
+    // B05AX01 maps in OMOP to a technetium red-cell tracer. Whole blood has no
+    // ATC code at all. Both are coded by the product they are.
+    const [prbc, wholeBlood] = await resolve([
+      { type: "fluid_start", name: "Packed red blood cells (PRBC)", category: "Blood products", volume: 300 },
+      { type: "fluid_start", name: "Whole blood", volume: 450 },
+    ])
+    expect(prbc.atcCode).toBe("B05AX01")
+    expect(prbc.standardConceptId).toBe(4336080)
     expect(wholeBlood.atcCode).toBeUndefined()
-    expect(wholeBlood.standardConceptId).toBeNull()
+    expect(wholeBlood.standardConceptId).toBe(4046508)
   })
 
   it("does not touch events that are not administrations", async () => {

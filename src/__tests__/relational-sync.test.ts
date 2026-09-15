@@ -35,15 +35,22 @@ function makeDb(caseRow: Record<string, unknown>) {
     conceptMap: {
       findMany: vi.fn().mockResolvedValue([
         { domain: "condition", sourceVocabulary: "ICD10", sourceCode: "K35", standardConceptId: 12345, mappingStatus: "MAPPED" },
+        { domain: "condition", sourceVocabulary: "ICD10", sourceCode: "E11.2", standardConceptId: null, standardConceptIds: [201826, 443731], mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "APPY", standardConceptId: 23456, mappingStatus: "MAPPED" },
+        { domain: "procedure", sourceVocabulary: "ICD10PCS", sourceCode: "0FT44ZZ", standardConceptId: 2753505, mappingStatus: "MAPPED" },
+        { domain: "procedure", sourceVocabulary: "LOSPOR_PROCEDURE_GROUP", sourceCode: "Cholecystectomy", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
         { domain: "measurement", sourceVocabulary: "LOINC", sourceCode: "718-7", standardConceptId: 3000963, mappingStatus: "MAPPED" },
+        { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "03-019-00", standardConceptId: 3019550, mappingStatus: "MANUALLY_CURATED" },
+        { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "00-00E-00", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
         { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905, mappingStatus: "MAPPED" },
+        { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N05CD08", standardConceptId: 708298, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "IJ", standardConceptId: 433590, mappingStatus: "MAPPED" },
       ]),
     },
     labLoinc: {
       findMany: vi.fn().mockResolvedValue([
         { name: "Hemoglobin", loincCode: "718-7", unitCanon: "g/L", referenceLow: 120, referenceHigh: 160 },
+        { name: "D-dimer", loincCode: "48065-7", unitCanon: "mg/L FEU", referenceLow: null, referenceHigh: 0.5 },
       ]),
     },
     preopDiagnosis: delegate(),
@@ -380,6 +387,129 @@ describe("syncCaseRelational", () => {
     })
     expect(db.preopDiagnosis.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(db.preopDiagnosis.createMany.mock.invocationCallOrder[0])
     expect(db.clinicalFieldStatus.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(db.clinicalFieldStatus.createMany.mock.invocationCallOrder[0])
+  })
+
+  it("persists both NHIS and LOINC identifiers without inventing one for source-only assays", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    ;(row.preop as unknown as { labResults: Record<string, unknown>[] }).labResults = [
+      {
+        test: "Sodium (Na⁺)", value: "140", unit: "mmol/L", source: "import",
+        sourceVocabulary: "NHIS_CL024", sourceCode: "03-019-00", loincCode: "2951-2",
+      },
+      {
+        test: "D-dimer", value: "7", unit: "ng/L", source: "import",
+        sourceVocabulary: "NHIS_CL024", sourceCode: "00-00E-00", loincCode: null,
+        unconverted: true,
+      },
+    ]
+    row.intraop.labResults = []
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.labResult.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          test: "Sodium (Na⁺)",
+          sourceVocabulary: "NHIS_CL024",
+          sourceCode: "03-019-00",
+          loincCode: "2951-2",
+          standardConceptId: 3019550,
+          mappingStatus: "MANUALLY_CURATED",
+        }),
+        expect.objectContaining({
+          test: "D-dimer",
+          sourceVocabulary: "NHIS_CL024",
+          sourceCode: "00-00E-00",
+          loincCode: null,
+          standardConceptId: null,
+          mappingStatus: "SOURCE_ONLY",
+          unitCanon: null,
+        }),
+      ],
+    })
+  })
+  it("codes an exact operation by ICD-10-PCS, a group alone by its name, and an import by its vocabulary", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    row.preop.proceduresJson = [
+      {
+        label: "Cholecystectomy", code: "0FT44ZZ", system: "ICD-10-PCS", group: "Cholecystectomy",
+        domain: "Hepatobiliary System and Pancreas", description: "Resection of Gallbladder, Percutaneous Endoscopic Approach",
+        sub: "0FT44ZZ · Resection of Gallbladder, Percutaneous Endoscopic Approach", source: "manual",
+      },
+      { label: "Cholecystectomy", code: "Cholecystectomy", system: "LOSPOR_PROCEDURE_GROUP", group: "Cholecystectomy", source: "manual" },
+      {
+        label: "Cholecystectomy", group: "Cholecystectomy", code: "30445-00", system: "urn:bg:ksmp", sourceVocabulary: "KSMP",
+        sourceLabel: "Лапароскопска холецистектомия", suggestedCodes: ["0FB44ZZ", "0FT44ZZ"], source: "import",
+      },
+    ] as never
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.preopProcedure.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          code: "0FT44ZZ", group: "Cholecystectomy",
+          description: "Resection of Gallbladder, Percutaneous Endoscopic Approach",
+          sourceVocabulary: "ICD10PCS", sourceCode: "0FT44ZZ", standardConceptId: 2753505, mappingStatus: "MAPPED",
+        }),
+        expect.objectContaining({
+          code: "Cholecystectomy", group: "Cholecystectomy",
+          sourceVocabulary: "LOSPOR_PROCEDURE_GROUP", sourceCode: "Cholecystectomy", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
+        }),
+        // An imported КСМП code is filed as КСМП, with the group it was crosswalked to.
+        expect.objectContaining({
+          code: "30445-00", group: "Cholecystectomy", clinicalSource: "import",
+          sourceVocabulary: "KSMP", sourceCode: "30445-00", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
+        }),
+      ],
+    })
+  })
+
+  it("keeps every concept of a diagnosis OMOP decomposes, and none for a plain one", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    row.preop.diagnosesJson = [
+      { code: "E11.2", label: "Type 2 diabetes with kidney complications", system: "ICD-10" },
+      { code: "K35", label: "Acute appendicitis", system: "ICD10" },
+    ] as never
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.preopDiagnosis.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({ sourceCode: "E11.2", standardConceptId: null, standardConceptIds: [201826, 443731], mappingStatus: "MAPPED" }),
+        expect.objectContaining({ sourceCode: "K35", standardConceptId: 12345, standardConceptIds: [] }),
+      ],
+    })
+  })
+
+  it("codes each premedication as its drug, under the day it was given", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    row.intraop.premedicationEvening = "N/A"
+    row.intraop.premedicationMorning = "Midazolam 7.5 mg Buccal; Sodium citrate 30 mL PO" as never
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.premedicationAdministration.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          phase: "MORNING", nameRaw: "Midazolam 7.5 mg Buccal", inn: "Midazolam", atcCode: "N05CD08",
+          dose: "7.5 mg", route: "Buccal", sourceVocabulary: "ATC", sourceCode: "N05CD08", standardConceptId: 708298, mappingStatus: "MAPPED",
+        }),
+        // Uncoded on purpose: its only ATC code is an irrigation solution.
+        expect.objectContaining({
+          phase: "MORNING", inn: "Sodium citrate", atcCode: null, dose: "30 mL", route: "PO",
+          sourceVocabulary: "LOSPOR_DRUG_RAW", sourceCode: "Sodium citrate", standardConceptId: null,
+        }),
+      ],
+    })
   })
 
   it("does not append stale rows when sections are empty", async () => {

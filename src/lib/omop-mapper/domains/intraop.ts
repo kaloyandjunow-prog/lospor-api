@@ -1,5 +1,7 @@
 import type { CaseMapperCtx } from "../case-context"
 import type { CaseRow } from "../types"
+import { intraopFluidConcept } from "@lospor/core/catalog"
+import { premedicationDate, premedicationPhaseOf } from "@lospor/core/premedication"
 import {
   AIRWAY_ACTS, AIRWAY_ACT_CONCEPTS, AIRWAY_DEVICE_CONCEPTS, AIRWAY_TOOL_CONCEPTS,
   TECHNIQUE_CONCEPTS, TECHNIQUE_PARENT, VENTILATION_MODE_CONCEPTS, VITAL_CONCEPTS,
@@ -56,8 +58,11 @@ export function mapIntraopToOmop(
       device_exposure_start_date: ctx.startDate,
       device_exposure_end_date:   ctx.endDate,
       device_type_concept_id:     32817,
+      quantity:                   null,
       device_source_value:        "AIRWAY_DEVICE:" + device,
       visit_occurrence_id:        ctx.visitId,
+      unit_concept_id:            null,
+      unit_source_value:          null,
     })
   }
 
@@ -75,8 +80,11 @@ export function mapIntraopToOmop(
       device_exposure_start_date: ctx.startDate,
       device_exposure_end_date:   ctx.endDate,
       device_type_concept_id:     32817,
+      quantity:                   null,
       device_source_value:        "AIRWAY_TOOL:" + tool,
       visit_occurrence_id:        ctx.visitId,
+      unit_concept_id:            null,
+      unit_source_value:          null,
     })
   }
   // 4337615, Orotracheal fiberoptic intubation. This field sits in the
@@ -374,6 +382,10 @@ export function mapIntraopToOmop(
     return null
   }
 
+  // Blood given unit by unit. Counted so the case-total transfusion row below
+  // is only written for a record that has no per-unit rows to say it better.
+  let bloodUnitRows = 0
+
   for (const [index, ev] of ordered.entries()) {
     if (ev.type === "vital") {
       const eventVitals: [keyof typeof VITAL_CONCEPTS, number | null | undefined, string | null | undefined][] = [
@@ -480,6 +492,57 @@ export function mapIntraopToOmop(
     if (ev.type !== "drug" && ev.type !== "agent_start"
       && ev.type !== "infusion_start" && ev.type !== "fluid_start") continue
     const meta = (ev.metadataJson ?? {}) as Record<string, unknown>
+    // A blood product is not a drug in OMOP. The unit is a Device-domain
+    // product and giving it is a procedure, so it leaves as both, and cell
+    // salvage, which has no product concept, as the procedure alone. The
+    // concept comes from the fluid table by name rather than from the stored
+    // event: an event saved before the table existed carries the concept its
+    // ATC code resolved to, and B05AX01 resolves to a technetium tracer.
+    // The unit's volume sits on the product row as its quantity in mL. Cell
+    // salvage has no product row, and PROCEDURE_OCCURRENCE no volume, so its
+    // volume travels beside the procedure as an observation.
+    if (ev.type === "fluid_start") {
+      const fluidName = (meta.name as string | undefined) ?? ev.label ?? null
+      const fluid = intraopFluidConcept({ name: fluidName, concentration: ev.concentration, category: ev.fluidCategory })
+      if (fluid && fluid.table !== "drug") {
+        const givenOn = isoDate(ev.timestamp)
+        const source = `INTRAOP_BLOOD:${fluidName}`
+        const volume = numOrNull(ev.volume)
+        if (fluid.table === "device") {
+          ctx.devices.push({
+            device_exposure_id:         nextId(),
+            person_id:                  ctx.personId,
+            device_concept_id:          fluid.conceptId,
+            device_exposure_start_date: givenOn,
+            device_exposure_end_date:   endFor(ev, index) ?? givenOn,
+            device_type_concept_id:     32817,
+            // The CDM column is an integer, and a unit is charted in whole mL.
+            quantity:                   volume == null ? null : Math.round(volume),
+            device_source_value:        source,
+            visit_occurrence_id:        ctx.visitId,
+            unit_concept_id:            volume == null ? null : 8587,
+            unit_source_value:          volume == null ? null : "mL",
+          })
+        }
+        ctx.procedures.push({
+          procedure_occurrence_id:   nextId(),
+          person_id:                 ctx.personId,
+          procedure_concept_id:      fluid.table === "device" ? fluid.transfusionConceptId : fluid.conceptId,
+          procedure_date:            givenOn,
+          procedure_datetime:        ev.timestamp.toISOString(),
+          procedure_type_concept_id: 32817,
+          modifier_concept_id:       0,
+          modifier_source_value:     null,
+          procedure_source_value:    source,
+          visit_occurrence_id:       ctx.visitId,
+        })
+        if (fluid.table === "procedure" && volume != null) {
+          ctx.sourceObservation("LOSPOR:BLOOD_PRODUCT_UNIT_ML", fluidName, givenOn, volume)
+        }
+        bloodUnitRows++
+        continue
+      }
+    }
     const doseSource = ev.type === "infusion_start" ? ev.rate
       : ev.type === "fluid_start" ? ev.volume
         : meta.dose
@@ -582,10 +645,14 @@ export function mapIntraopToOmop(
   for (const prem of ia.premedicationRows ?? []) {
     ctx.trackMapping(prem.mappingStatus)
     const dose = numOrNull(prem.dose)
+    // No clock time, only when relative to the operation: the day before is
+    // D-1, the morning before surgery is D. Earlier records said "evening".
+    const phase = premedicationPhaseOf(prem.phase)
+    const givenOn = phase ? premedicationDate(ctx.startDate, phase) ?? ctx.startDate : ctx.startDate
     ctx.drugs.push({
       drug_exposure_id: nextId(), person_id: ctx.personId,
       drug_concept_id: prem.standardConceptId ?? 0,
-      drug_exposure_start_date: ctx.startDate,
+      drug_exposure_start_date: givenOn,
       // A single administration, not an interval: no end to record.
       drug_exposure_end_date: null,
       // 32818, EHR administration record -- see the intraop site for why
@@ -608,7 +675,7 @@ export function mapIntraopToOmop(
       route_source_value: prem.route,
       visit_occurrence_id: ctx.visitId,
     })
-    ctx.sourceObservation("LOSPOR:PREMEDICATION_PHASE", prem.phase, ctx.startDate)
+    ctx.sourceObservation("LOSPOR:PREMEDICATION_PHASE", phase ?? prem.phase, givenOn)
     // 4169397, Premedication for anesthetic procedure. A fact alongside
     // the drug row above, not a replacement for it: the drug row says
     // which substance and dose, this says the clinical act of
@@ -618,7 +685,7 @@ export function mapIntraopToOmop(
       procedure_occurrence_id:   nextId(),
       person_id:                 ctx.personId,
       procedure_concept_id:      4169397,
-      procedure_date:            ctx.startDate,
+      procedure_date:            givenOn,
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -768,7 +835,9 @@ export function mapIntraopToOmop(
   if (administrationOccurred(ia.colloidsMl)) {
     emitAdministration("LOSPOR:COLLOID_ADMINISTRATION", 44790654)
   }
-  if (administrationOccurred(ia.bloodMl)) {
+  // Only for a record with no units of its own, such as an older case that
+  // kept the total alone: otherwise each unit already has its transfusion.
+  if (bloodUnitRows === 0 && administrationOccurred(ia.bloodMl)) {
     emitAdministration("LOSPOR:BLOOD_PRODUCT_TRANSFUSION", 4024656)
   }
   // 3014315, unqualified. Not the 1-hour or 8-hour variants, which assert

@@ -70,6 +70,55 @@ describe("preopSchema", () => {
     }
   })
 
+  it("keeps imported source and standard codes on a lab result", () => {
+    const result = preopSchema.safeParse({
+      labResults: [{
+        test: "Sodium (Na⁺)",
+        value: "140",
+        unit: "mmol/L",
+        source: "import",
+        sourceVocabulary: "NHIS_CL024",
+        sourceCode: "03-019-00",
+        loincCode: "2951-2",
+        takenAt: null,
+        reportedTest: "Натрий",
+        reportedValue: "140",
+        reportedUnit: "mmol/L",
+        refLow: 136,
+        refHigh: 145,
+        criticalLow: 120,
+        criticalHigh: 160,
+      }],
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.labResults?.[0]).toMatchObject({
+        sourceVocabulary: "NHIS_CL024",
+        sourceCode: "03-019-00",
+        loincCode: "2951-2",
+        takenAt: null,
+        reportedTest: "Натрий",
+        refLow: 136,
+        criticalHigh: 160,
+      })
+    }
+  })
+
+  it("keeps an explicit null LOINC for a reviewed source-only assay", () => {
+    const result = preopSchema.parse({
+      labResults: [{
+        test: "D-dimer",
+        value: "7",
+        sourceVocabulary: "NHIS_CL024",
+        sourceCode: "00-00E-00",
+        loincCode: null,
+        reportedUnit: "ug/mL",
+        unconverted: true,
+      }],
+    })
+    expect(result.labResults?.[0]).toHaveProperty("loincCode", null)
+    expect(result.labResults?.[0]).toMatchObject({ reportedUnit: "ug/mL", unconverted: true })
+  })
   it("rejects a lab result source outside the closed provenance set", () => {
     const result = preopSchema.safeParse({
       labResults: [{ test: "Hemoglobin", value: "180", source: "made-up" }],

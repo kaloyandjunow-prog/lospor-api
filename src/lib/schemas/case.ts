@@ -80,7 +80,19 @@ const labResultsSchema = z.array(z.object({
   unit:  z.string().optional(),
   flag:  z.string().optional(),
   source: z.enum(["manual", "ai-scan", "import"]).optional(),
-  takenAt: z.string().optional(),
+  takenAt: z.string().nullable().optional(),
+  reportedTest: z.string().optional(),
+  reportedValue: z.string().optional(),
+  reportedUnit: z.string().optional(),
+  sourceVocabulary: z.string().optional(),
+  sourceCode: z.string().optional(),
+  loincCode: z.string().nullable().optional(),
+  refLow: z.number().optional(),
+  refHigh: z.number().optional(),
+  criticalLow: z.number().optional(),
+  criticalHigh: z.number().optional(),
+  unconverted: z.literal(true).optional(),
+  unsupported: z.literal(true).optional(),
 })).optional()
 
 export const preopSchema = z.object({

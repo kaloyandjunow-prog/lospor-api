@@ -5,6 +5,52 @@ import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
 import { pediatricCaseFixture } from "./fixtures/pediatric-case"
 
 describe("mapCasesToOmop", () => {
+  it("exports an imported lab under its NHIS source key while retaining its LOINC concept", () => {
+    const source = completeCase()
+    Object.assign(source.preop.labRows[0], {
+      sourceVocabulary: "NHIS_CL024",
+      sourceCode: "03-019-00",
+      loincCode: "2951-2",
+      standardConceptId: 3019550,
+      mappingStatus: "MANUALLY_CURATED",
+    })
+    const result = mapCasesToOmop([source as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+
+    expect(result.measurement).toContainEqual(expect.objectContaining({
+      measurement_source_value: "NHIS_CL024:03-019-00",
+      measurement_concept_id: 3019550,
+    }))
+  })
+
+  it("keeps the reported unit when a source-only result cannot be canonicalized", () => {
+    const source = completeCase()
+    Object.assign(source.preop.labRows[0], {
+      test: "D-dimer",
+      valueNum: 0.5,
+      value: "0.5",
+      unit: "ug/mL",
+      unitCanon: null,
+      loincCode: null,
+      sourceVocabulary: "NHIS_CL024",
+      sourceCode: "00-00E-00",
+      standardConceptId: null,
+      mappingStatus: "SOURCE_ONLY",
+    })
+    const result = mapCasesToOmop([source as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+
+    expect(result.measurement).toContainEqual(expect.objectContaining({
+      measurement_source_value: "NHIS_CL024:00-00E-00",
+      measurement_concept_id: 0,
+      unit_concept_id: 0,
+      unit_source_value: "ug/mL",
+    }))
+  })
   it("exports finalized relational rows into OMOP CDM tables", () => {
     const bundle = mapCasesToOmop([completeCase() as never], {
       userId: "admin-1",
@@ -173,7 +219,8 @@ describe("mapCasesToOmop", () => {
     // scale concept with the class as a coded answer, asserted above.
     expect(bundle.observation).toEqual(expect.arrayContaining([
       expect.objectContaining({ observation_source_value: "LOSPOR:CARRIER_GAS", value_as_string: "AIR/O2", value_as_number: null }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "evening", value_as_number: null }),
+      // Stored as "evening" by earlier records, exported under the phase name.
+      expect.objectContaining({ observation_source_value: "LOSPOR:PREMEDICATION_PHASE", value_as_string: "DAY_BEFORE", value_as_number: null }),
       // The fixture's monitoring selection (ECG) is no longer here: its
       // curated concept is Procedure-domain, so it now reaches
       // PROCEDURE_OCCURRENCE instead (asserted in "uses the reviewed concept
@@ -1276,6 +1323,38 @@ describe("laboratory results", () => {
     expect(flags).toContain("LOINC:718-7=high")
   })
 
+  it("exports intentionally uncoded Anti-Xa without a LOINC or invented concept", () => {
+    const base = completeCase() as unknown as { preop: { labRows: unknown[] } }
+    const withAntiXa = mapCasesToOmop([{
+      ...base,
+      preop: {
+        ...base.preop,
+        labRows: [{
+          test: "Anti-Xa",
+          valueNum: 0.7,
+          value: "0.7",
+          unitCanon: "IU/mL",
+          loincCode: null,
+          abnormalFlag: null,
+          referenceLow: null,
+          referenceHigh: null,
+          standardConceptId: null,
+          mappingStatus: "UNMAPPED",
+        }],
+      },
+    } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+
+    const antiXa = withAntiXa.measurement.find(m => m.measurement_source_value === "LAB:Anti-Xa")
+    expect(antiXa).toMatchObject({
+      measurement_concept_id: 0,
+      measurement_source_value: "LAB:Anti-Xa",
+      value_as_number: 0.7,
+    })
+  })
+
   it("drops a row that is neither a number nor text", () => {
     // A result with no value is not a result, and exporting an empty
     // measurement would inflate every count of tests performed.
@@ -1307,6 +1386,29 @@ describe("vascular access", () => {
     expect(obs("LOSPOR:VASCULAR_ACCESS_LUMENS")[0]?.value_as_number).toBe(2)
     expect(obs("LOSPOR:VASCULAR_ACCESS_PREEXISTING")[0]?.value_as_string)
       .toBe("Internal jugular=true")
+  })
+})
+
+describe("an ICD-10 code OMOP decomposes into several concepts", () => {
+  it("becomes one condition row per concept, sharing the ICD-10 source value", () => {
+    const base = completeCase() as unknown as { preop: { diagnoses: Record<string, unknown>[]; comorbidityRows?: Record<string, unknown>[] } }
+    const bundle = mapCasesToOmop([{
+      ...base,
+      preop: {
+        ...base.preop,
+        diagnoses: [{
+          code: "E11.2", label: "Type 2 diabetes with kidney complications", labelEn: "Type 2 diabetes with kidney complications", labelBg: null,
+          sourceVocabulary: "ICD10", sourceCode: "E11.2", standardConceptId: null, standardConceptIds: [201826, 443731],
+          mappingStatus: "MAPPED", ordinal: 0,
+        }],
+      },
+    } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    const rows = bundle.condition_occurrence.filter(row => String(row.condition_source_value).startsWith("ICD10:E11.2"))
+    expect(rows.map(row => row.condition_concept_id)).toEqual([201826, 443731])
+    expect(new Set(rows.map(row => row.condition_source_value)).size).toBe(1)
   })
 })
 
@@ -2240,6 +2342,20 @@ describe("a recorded dose of zero survives, the same way a recorded volume of ze
     expect(row?.dose_value).toBe(0)
   })
 
+  it("dates a premedication the day before surgery as D-1, and one the morning before as D", () => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.premedicationRows = [
+      { phase: "DAY_BEFORE", nameRaw: "Lorazepam 1 mg PO", inn: "Lorazepam", atcCode: "N05BA06", dose: "1 mg", route: "PO", standardConceptId: 19019113, mappingStatus: "MAPPED", ordinal: 0 },
+      { phase: "MORNING", nameRaw: "Midazolam 7.5 mg PO", inn: "Midazolam", atcCode: "N05CD08", dose: "7.5 mg", route: "PO", standardConceptId: 708298, mappingStatus: "MAPPED", ordinal: 1 },
+    ]
+    const drugs = mapCasesToOmop([c as never]).drug_exposure.filter(r => String(r.drug_source_value).startsWith("PREMED:"))
+
+    expect(drugs.map(r => [r.drug_concept_id, r.drug_exposure_start_date, r.dose_value])).toEqual([
+      [19019113, "2026-05-31", 1],
+      [708298, "2026-06-01", 7.5],
+    ])
+  })
+
   it("keeps a zero premedication dose", () => {
     const c = completeCase() as unknown as { intraop: Record<string, unknown> }
     c.intraop.premedicationRows = [{
@@ -2280,6 +2396,59 @@ describe("fluid and premedication administration as procedure facts", () => {
 
     expect(proc(b, "LOSPOR:COLLOID_ADMINISTRATION")).toHaveLength(0)
     expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")).toHaveLength(0)
+  })
+
+  it("exports each blood unit as its product and its transfusion, never as a drug", () => {
+    const c = completeCase() as unknown as { events: Record<string, unknown>[]; intraop: Record<string, unknown> }
+    c.intraop.bloodMl = 800
+    c.events = [
+      {
+        type: "fluid_start", timestamp: new Date("2026-06-01T09:10:00Z"), label: "Packed red blood cells (PRBC)",
+        volume: "300", fluidId: "bl-1", fluidCategory: "Blood products",
+        metadataJson: { name: "Packed red blood cells (PRBC)" },
+        // What an event saved before the fluid table carries: B05AX01's
+        // concept, a technetium tracer. The export must not repeat it.
+        atcCode: "B05AX01", standardConceptId: 702006, mappingStatus: "MAPPED",
+      },
+      {
+        type: "fluid_end", timestamp: new Date("2026-06-01T10:40:00Z"), fluidId: "bl-1", metadataJson: {},
+      },
+      {
+        type: "fluid_start", timestamp: new Date("2026-06-01T09:30:00Z"), label: "Cell salvage / autologous blood",
+        volume: "500", fluidId: "bl-2", fluidCategory: "Blood products",
+        metadataJson: { name: "Cell salvage / autologous blood" }, atcCode: null,
+      },
+    ]
+    const b = mapCasesToOmop([c as never])
+
+    expect(b.drug_exposure.filter(r => String(r.drug_source_value).includes("PRBC"))).toHaveLength(0)
+    expect(b.drug_exposure.some(r => r.drug_concept_id === 702006)).toBe(false)
+    expect(b.device_exposure.filter(r => String(r.device_source_value).startsWith("INTRAOP_BLOOD:"))
+      .map(r => [r.device_concept_id, r.device_exposure_start_date, r.device_exposure_end_date,
+        r.quantity, r.unit_concept_id, r.unit_source_value]))
+      .toEqual([[4336080, "2026-06-01", "2026-06-01", 300, 8587, "mL"]])
+    expect(b.procedure_occurrence.filter(r => String(r.procedure_source_value).startsWith("INTRAOP_BLOOD:"))
+      .map(r => [r.procedure_concept_id, r.procedure_datetime]))
+      .toEqual([[4323715, "2026-06-01T09:10:00.000Z"], [4037780, "2026-06-01T09:30:00.000Z"]])
+    // Only cell salvage, which has no product row to hold its volume.
+    expect(b.observation.filter(r => r.observation_source_value === "LOSPOR:BLOOD_PRODUCT_UNIT_ML")
+      .map(r => [r.value_as_string, r.value_as_number]))
+      .toEqual([["Cell salvage / autologous blood", 500]])
+    // Each unit already carries its transfusion, so the case total adds none.
+    expect(proc(b, "LOSPOR:BLOOD_PRODUCT_TRANSFUSION")).toHaveLength(0)
+  })
+
+  it("exports a catalogue fluid under the concept stored when it was saved", () => {
+    const c = completeCase() as unknown as { events: Record<string, unknown>[] }
+    c.events = [{
+      type: "fluid_start", timestamp: new Date("2026-06-01T08:40:00Z"), label: "Saline",
+      volume: "250", fluidId: "fl-3", fluidCategory: "Crystalloids", concentration: "3%",
+      metadataJson: { name: "Saline" }, atcCode: "B05BB01",
+      standardConceptId: 42482740, mappingStatus: "MANUALLY_CURATED",
+    }]
+    const row = mapCasesToOmop([c as never]).drug_exposure.find(r => String(r.drug_source_value).includes("Saline"))
+
+    expect([row?.drug_concept_id, row?.dose_value]).toEqual([42482740, 250])
   })
 
   it("never codes crystalloids, because no concept names the pooled total honestly", () => {

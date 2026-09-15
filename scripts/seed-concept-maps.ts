@@ -6,15 +6,19 @@
  * mapping. Without Athena imported, rows remain explicit SOURCE_ONLY maps.
  */
 import "dotenv/config"
-import { INTRAOP_DRUG_CODE_ENTRIES } from "@lospor/core/catalog"
+import { INTRAOP_DRUG_CODE_ENTRIES, PREMED_ATC_CODES } from "@lospor/core/catalog"
 import { ALL_COMPLICATIONS } from "@lospor/core/complications"
+import { PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
 import path from "path"
+import { selectStandardMapResolutions, type StandardMapResolution } from "./standard-map-selection"
+import { NHIS_CL024_LAB_CONCEPT_MAPS } from "./nhis-cl024-lab-mappings"
+import { normalizeAtcCode } from "../src/lib/atc"
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
-const SOURCE_VERSION = "local-bilingual-map-v2"
+const SOURCE_VERSION = "local-bilingual-map-v4"
 
 // Patient position, from lospor-core/src/catalog/position.ts. Every option
 // category defaults to SOURCE_ONLY below -- there is no vocabulary of
@@ -294,6 +298,8 @@ type ConceptSeed = {
   sourceLabelBg?: string | null
   standardVocabulary?: string | null
   standardConceptId?: number | null
+  /** Conditions whose code maps to several standard concepts (see ConceptMap). */
+  standardConceptIds?: number[]
   standardLabel?: string | null
   mappingStatus: ConceptMappingStatus
   mappingMethod?: string | null
@@ -317,6 +323,7 @@ async function upsertConcept(row: ConceptSeed) {
       sourceLabelBg: row.sourceLabelBg ?? null,
       standardVocabulary: row.standardVocabulary ?? null,
       standardConceptId: row.standardConceptId ?? null,
+      standardConceptIds: row.standardConceptIds ?? [],
       standardLabel: row.standardLabel ?? null,
       mappingStatus: row.mappingStatus,
       sourceVersion: SOURCE_VERSION,
@@ -358,6 +365,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
       sourceLabelBg: row.sourceLabelBg ?? null,
       standardVocabulary: row.standardVocabulary ?? null,
       standardConceptId: row.standardConceptId ?? null,
+      standardConceptIds: row.standardConceptIds ?? [],
       standardLabel: row.standardLabel ?? null,
       mappingStatus: row.mappingStatus,
       sourceVersion: SOURCE_VERSION,
@@ -373,9 +381,9 @@ async function createManyConcepts(rows: ConceptSeed[]) {
     console.log(`  concept maps inserted ${Math.min(i + insertBatchSize, rows.length)}/${rows.length}`)
   }
 
-  const mappedRows = rows.filter(row => row.mappingStatus === ConceptMappingStatus.MAPPED)
-  for (let i = 0; i < mappedRows.length; i += updateBatchSize) {
-    const batch = mappedRows.slice(i, i + updateBatchSize)
+  const generatedRows = rows
+  for (let i = 0; i < generatedRows.length; i += updateBatchSize) {
+    const batch = generatedRows.slice(i, i + updateBatchSize)
     await prisma.$executeRaw`
       UPDATE "ConceptMap" AS cm
       SET
@@ -383,6 +391,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
         "sourceLabelBg" = v."sourceLabelBg",
         "standardVocabulary" = v."standardVocabulary",
         "standardConceptId" = v."standardConceptId"::integer,
+        "standardConceptIds" = v."standardConceptIds"::integer[],
         "standardLabel" = v."standardLabel",
         "mappingStatus" = v."mappingStatus"::"ConceptMappingStatus",
         "sourceVersion" = ${SOURCE_VERSION},
@@ -400,6 +409,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
         ${row.sourceLabelBg ?? null},
         ${row.standardVocabulary ?? null},
         ${row.standardConceptId ?? null},
+        ${`{${(row.standardConceptIds ?? []).join(",")}}`},
         ${row.standardLabel ?? null},
         ${row.mappingStatus},
         ${row.mappingMethod ?? null},
@@ -416,6 +426,7 @@ async function createManyConcepts(rows: ConceptSeed[]) {
         "sourceLabelBg",
         "standardVocabulary",
         "standardConceptId",
+        "standardConceptIds",
         "standardLabel",
         "mappingStatus",
         "mappingMethod",
@@ -427,10 +438,11 @@ async function createManyConcepts(rows: ConceptSeed[]) {
       WHERE
         cm."domain" = v."domain" AND
         cm."sourceVocabulary" = v."sourceVocabulary" AND
-        cm."sourceCode" = v."sourceCode"
+        cm."sourceCode" = v."sourceCode" AND
+        cm."mappingStatus" NOT IN ('MANUALLY_CURATED', 'REJECTED')
     `
     written += batch.length
-    console.log(`  mapped concept maps updated ${Math.min(i + updateBatchSize, mappedRows.length)}/${mappedRows.length}`)
+    console.log(`  generated concept maps updated ${Math.min(i + updateBatchSize, generatedRows.length)}/${generatedRows.length}`)
   }
 
   await prisma.conceptMap.updateMany({
@@ -446,15 +458,6 @@ async function createManyConcepts(rows: ConceptSeed[]) {
     },
   })
   return written
-}
-
-type StandardConcept = {
-  standardVocabulary: string
-  standardConceptId: number
-  standardLabel: string
-  mappingMethod: string
-  mappingConfidence: number
-  athenaVersion: string | null
 }
 
 async function latestAthenaVersion() {
@@ -478,10 +481,9 @@ function chunk<T>(items: T[], size: number): T[][] {
   return out
 }
 
-async function resolveStandardMap(vocabularyId: string, codes: string[], athenaVersion: string | null): Promise<Map<string, StandardConcept>> {
+async function resolveStandardMap(vocabularyId: string, codes: string[], athenaVersion: string | null): Promise<Map<string, StandardMapResolution>> {
   const uniqueCodes = [...new Set(codes.filter(Boolean))]
-  const out = new Map<string, StandardConcept>()
-  if (uniqueCodes.length === 0) return out
+  if (uniqueCodes.length === 0) return new Map()
 
   const sourceConcepts = []
   for (const codeChunk of chunk(uniqueCodes, 1000)) {
@@ -501,25 +503,9 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
     }))
   }
 
-  const nonStandardIds: number[] = []
-  const sourceById = new Map<number, { conceptCode: string }>()
-  for (const concept of sourceConcepts) {
-    if (concept.standardConcept === "S") {
-      out.set(concept.conceptCode, {
-        standardVocabulary: concept.vocabularyId,
-        standardConceptId: concept.conceptId,
-        standardLabel: concept.conceptName,
-        mappingMethod: "athena-exact-standard-code",
-        mappingConfidence: 1,
-        athenaVersion,
-      })
-    } else {
-      nonStandardIds.push(concept.conceptId)
-      sourceById.set(concept.conceptId, { conceptCode: concept.conceptCode })
-    }
-  }
-
-  if (nonStandardIds.length === 0) return out
+  const nonStandardIds = sourceConcepts
+    .filter(concept => concept.standardConcept !== "S")
+    .map(concept => concept.conceptId)
   const relationships = []
   for (const idChunk of chunk(nonStandardIds, 1000)) {
     relationships.push(...await prisma.omopConceptRelationship.findMany({
@@ -532,7 +518,7 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
     }))
   }
 
-  const targetIds = [...new Set(relationships.map(r => r.conceptId2))]
+  const targetIds = [...new Set(relationships.map(relationship => relationship.conceptId2))]
   const targets = new Map<number, { conceptId: number; conceptName: string; vocabularyId: string }>()
   for (const idChunk of chunk(targetIds, 1000)) {
     const rows = await prisma.omopConcept.findMany({
@@ -546,37 +532,33 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
     for (const row of rows) targets.set(row.conceptId, row)
   }
 
-  for (const rel of relationships) {
-    const source = sourceById.get(rel.conceptId1)
-    const target = targets.get(rel.conceptId2)
-    if (!source || !target || out.has(source.conceptCode)) continue
-    out.set(source.conceptCode, {
-      standardVocabulary: target.vocabularyId,
-      standardConceptId: target.conceptId,
-      standardLabel: target.conceptName,
-      mappingMethod: "athena-exact-code-maps-to",
-      mappingConfidence: 0.95,
-      athenaVersion,
-    })
-  }
-  return out
+  return selectStandardMapResolutions({
+    vocabularyId,
+    codes: uniqueCodes,
+    sourceConcepts,
+    relationships,
+    targets,
+    athenaVersion,
+  })
 }
-
-function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, standard: StandardConcept | undefined): ConceptSeed {
-  if (!standard) {
+function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, resolution: StandardMapResolution | undefined): ConceptSeed {
+  if (!resolution || resolution.kind === "source-only") {
     return {
       ...seed,
       mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
-      mappingMethod: "source-code-preserved",
+      mappingMethod: resolution?.mappingMethod ?? "source-code-preserved",
       mappingConfidence: null,
       reviewed: false,
+      mappingNotes: resolution?.mappingNotes,
+      athenaVersion: resolution?.athenaVersion,
     }
   }
+  const standard = resolution.standard
   return {
     ...seed,
     standardVocabulary: standard.standardVocabulary,
     standardConceptId: standard.standardConceptId,
-    standardLabel: standard.standardLabel,
+    standardLabel: standard.standardLabel || null,
     mappingStatus: ConceptMappingStatus.MAPPED,
     mappingMethod: standard.mappingMethod,
     mappingConfidence: standard.mappingConfidence,
@@ -584,7 +566,6 @@ function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, standard: Standa
     athenaVersion: standard.athenaVersion,
   }
 }
-
 async function main() {
   let count = 0
   const seeds: ConceptSeed[] = []
@@ -608,6 +589,41 @@ async function main() {
     count++
   }
 
+  // The bundled laboratory and drug numbers (src/data/lab-drug-omop.json, from
+  // Athena; generate-lab-drug-omop.mts), for a site without an Athena import.
+  // A site's imported Athena still wins where it resolves a code.
+  const labDrugPack = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "lab-drug-omop.json"), "utf8"),
+  ) as { source: string; loinc: Record<string, number>; atc: Record<string, number[]> }
+  const withBundled = (
+    athenaResolution: StandardMapResolution | undefined,
+    bundled: StandardMapResolution | undefined,
+  ) => athenaResolution?.kind === "mapped" ? athenaResolution : bundled ?? athenaResolution
+  const bundledLoinc = (code: string | null | undefined, label: string): StandardMapResolution | undefined => {
+    const id = code ? labDrugPack.loinc[code] : undefined
+    return id ? { kind: "mapped", standard: {
+      standardVocabulary: "LOINC", standardConceptId: id, standardLabel: label,
+      mappingMethod: "bundled-loinc-standard", mappingConfidence: 1, athenaVersion: labDrugPack.source,
+    } } : undefined
+  }
+  const bundledAtc = (code: string, label: string): StandardMapResolution | undefined => {
+    const ids = labDrugPack.atc[code]
+    if (!ids?.length) return undefined
+    if (ids.length > 1) {
+      return {
+        kind: "source-only",
+        mappingMethod: "athena-multiple-standard-targets",
+        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")}); no target was selected.`,
+        athenaVersion: labDrugPack.source,
+        targetIds: ids,
+      }
+    }
+    return { kind: "mapped", standard: {
+      standardVocabulary: "RxNorm", standardConceptId: ids[0], standardLabel: label,
+      mappingMethod: "bundled-atc-maps-to", mappingConfidence: 0.95, athenaVersion: labDrugPack.source,
+    } }
+  }
+
   const labs = await prisma.labLoinc.findMany()
   const labStandards = await resolveStandardMap("LOINC", labs.map(l => l.loincCode), athenaVersion)
   for (const lab of labs) {
@@ -616,19 +632,118 @@ async function main() {
       sourceVocabulary: "LOINC",
       sourceCode: lab.loincCode,
       sourceLabelEn: lab.name,
-    }, labStandards.get(lab.loincCode)))
+    }, withBundled(labStandards.get(lab.loincCode), bundledLoinc(lab.loincCode, lab.name))))
   }
 
+  // NHIS CL024 is a local source vocabulary. Each of these 50 rows was
+  // clinically reviewed; the target is resolved from the installed Athena
+  // LOINC vocabulary so this seed never hard-codes an ID from one snapshot.
+  const nhisLoincCodes = NHIS_CL024_LAB_CONCEPT_MAPS
+    .map(mapping => mapping.loincCode)
+    .filter((code): code is string => code !== null)
+  const nhisLabStandards = await resolveStandardMap("LOINC", nhisLoincCodes, athenaVersion)
+  for (const mapping of NHIS_CL024_LAB_CONCEPT_MAPS) {
+    const base = {
+      domain: "measurement",
+      sourceVocabulary: "NHIS_CL024",
+      sourceCode: mapping.sourceCode,
+      sourceLabelEn: mapping.sourceLabelEn,
+      sourceLabelBg: mapping.sourceLabelBg,
+      reviewed: true,
+      mappingNotes: `NHIS CL024 1.5.27 clinical review: ${mapping.relationship}`,
+      athenaVersion,
+    }
+    if (mapping.loincCode === null) {
+      seeds.push({
+        ...base,
+        mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+        mappingMethod: "clinician-reviewed-source-only",
+      })
+      continue
+    }
+
+    const resolution = withBundled(nhisLabStandards.get(mapping.loincCode), bundledLoinc(mapping.loincCode, mapping.sourceLabelEn))
+    if (!resolution || resolution.kind === "source-only") {
+      seeds.push({
+        ...base,
+        mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+        mappingMethod: "reviewed-target-missing-from-athena",
+        mappingNotes: `${base.mappingNotes}; approved LOINC ${mapping.loincCode} was not resolvable in the installed Athena vocabulary`,
+      })
+      continue
+    }
+
+    seeds.push({
+      ...base,
+      standardVocabulary: resolution.standard.standardVocabulary,
+      standardConceptId: resolution.standard.standardConceptId,
+      standardLabel: resolution.standard.standardLabel,
+      mappingStatus: ConceptMappingStatus.MANUALLY_CURATED,
+      mappingMethod: "clinician-reviewed-nhis-cl024-to-loinc",
+      mappingConfidence: 1,
+      mappingNotes: `${base.mappingNotes}; approved LOINC ${mapping.loincCode}`,
+    })
+  }
   const icd = await prisma.icd10Code.findMany()
   const icdStandards = await resolveStandardMap("ICD10", icd.map(c => c.code), athenaVersion)
+  // The bundled research numbers (src/data/icd10-omop.json, OMOP ids only, no
+  // SNOMED content; built by generate-icd10-omop.mts), for a site that has not
+  // imported Athena. One standard target maps. Several targets -- a combination
+  // code OMOP decomposes, E11.2 into diabetes and a kidney disorder -- map to all
+  // of them, and the export writes a condition row for each (decided 14 Sep
+  // 2026). A code Athena does not hold, such as an NHIS national extension,
+  // stays source-only: it takes no number from its parent (decided 14 Sep 2026).
+  const icdPack = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "icd10-omop.json"), "utf8"),
+  ) as { source: string; defaultVocabulary: string; maps: Record<string, number[]>; vocabularies: Record<string, string> }
+  const bundledIcdStandard = (code: string): StandardMapResolution | undefined => {
+    const ids = icdPack.maps[code]
+    if (!ids?.length) return undefined
+    if (ids.length > 1) {
+      return {
+        kind: "source-only",
+        mappingMethod: "athena-multiple-standard-targets",
+        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")}).`,
+        athenaVersion: icdPack.source,
+        targetIds: ids,
+      }
+    }
+    return { kind: "mapped", standard: {
+      standardVocabulary: icdPack.vocabularies[String(ids[0])] ?? icdPack.defaultVocabulary,
+      standardConceptId: ids[0],
+      // A number only: the bundle carries no SNOMED description.
+      standardLabel: "",
+      mappingMethod: "bundled-icd10-maps-to",
+      mappingConfidence: 0.95,
+      athenaVersion: icdPack.source,
+    } }
+  }
   for (const code of icd) {
-    seeds.push(withStandard({
+    const athenaResolution = icdStandards.get(code.code)
+    const resolution = athenaResolution?.kind === "mapped" || athenaResolution?.targetIds?.length
+      ? athenaResolution
+      : bundledIcdStandard(code.code) ?? athenaResolution
+    const base = {
       domain: "condition",
       sourceVocabulary: "ICD10",
       sourceCode: code.code,
       sourceLabelEn: code.labelEn,
       sourceLabelBg: code.labelBg,
-    }, icdStandards.get(code.code)))
+    }
+    const several = resolution?.kind === "source-only" ? resolution.targetIds ?? [] : []
+    seeds.push(several.length > 1 ? {
+      ...base,
+      standardVocabulary: icdPack.vocabularies[String(several[0])] ?? icdPack.defaultVocabulary,
+      standardConceptId: null,
+      standardConceptIds: several,
+      standardLabel: null,
+      mappingStatus: ConceptMappingStatus.MAPPED,
+      mappingMethod: "athena-multiple-standard-targets",
+      mappingConfidence: 0.95,
+      reviewed: false,
+      mappingNotes: `OMOP decomposes this code into ${several.length} standard concepts; the export writes one condition row for each.`,
+      athenaVersion: resolution?.kind === "source-only" ? resolution.athenaVersion : null,
+    } : withStandard(base, resolution))
   }
 
   const atc = await prisma.atc.findMany()
@@ -639,7 +754,7 @@ async function main() {
       sourceVocabulary: "ATC",
       sourceCode: code.code,
       sourceLabelEn: code.name,
-    }, atcStandards.get(code.code)))
+    }, withBundled(atcStandards.get(code.code), bundledAtc(code.code, code.name))))
   }
 
   // Intraoperative drugs, infusions, fluids and volatile agents. These are the
@@ -650,9 +765,14 @@ async function main() {
   // catalog itself, so the mapping of what is given during a case is reviewable
   // as a whole list rather than one discovered row at a time.
   const atcCodes = new Set(atc.map(code => code.code))
-  const catalogAtc = INTRAOP_DRUG_CODE_ENTRIES
+  // Premedication drugs are catalogue drugs too, coded by their ATC.
+  const catalogAtc = [
+    ...INTRAOP_DRUG_CODE_ENTRIES,
+    ...Object.entries(PREMED_ATC_CODES).map(([name, atcCode]) => ({ name, atcCode })),
+  ]
     .filter((entry): entry is { name: string; atcCode: string } => !!entry.atcCode)
     .filter(entry => !atcCodes.has(entry.atcCode))
+    .filter((entry, index, all) => all.findIndex(other => other.atcCode === entry.atcCode) === index)
   const catalogAtcStandards = await resolveStandardMap("ATC", catalogAtc.map(e => e.atcCode), athenaVersion)
   for (const entry of catalogAtc) {
     seeds.push(withStandard({
@@ -660,7 +780,33 @@ async function main() {
       sourceVocabulary: "ATC",
       sourceCode: entry.atcCode,
       sourceLabelEn: entry.name,
-    }, catalogAtcStandards.get(entry.atcCode)))
+    }, withBundled(catalogAtcStandards.get(entry.atcCode), bundledAtc(entry.atcCode, entry.name))))
+  }
+
+  // The Bulgarian drug list (src/data/drugs.json): the codes of the home
+  // medications and allergies a clinician picks. Like the catalogue block, it
+  // covers a site without an Athena import, where the Atc table is empty and
+  // every home medication would otherwise export concept 0. Labelled with the
+  // code's most frequent INN in the list.
+  const seededAtc = new Set([...atcCodes, ...catalogAtc.map(entry => entry.atcCode)])
+  const drugListInn = new Map<string, Map<string, number>>()
+  for (const drug of JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "drugs.json"), "utf8")) as { inn: string; atc: string }[]) {
+    const code = normalizeAtcCode(drug.atc)
+    if (!code || seededAtc.has(code)) continue
+    const names = drugListInn.get(code) ?? new Map<string, number>()
+    const inn = drug.inn.trim()
+    if (inn) names.set(inn, (names.get(inn) ?? 0) + 1)
+    drugListInn.set(code, names)
+  }
+  const drugListStandards = await resolveStandardMap("ATC", [...drugListInn.keys()], athenaVersion)
+  for (const [code, names] of drugListInn) {
+    const label = [...names].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? code
+    seeds.push(withStandard({
+      domain: "drug",
+      sourceVocabulary: "ATC",
+      sourceCode: code,
+      sourceLabelEn: label,
+    }, withBundled(drugListStandards.get(code), bundledAtc(code, label))))
   }
 
   // The raw-name fallback. `resolveDrugConcept` reaches for this only when an
@@ -703,29 +849,71 @@ async function main() {
     })
   }
 
-  // Procedures. The catalogue is a static ICD-10-PCS file rather than a table,
-  // and it was the one vocabulary this script never seeded -- so every planned
-  // procedure fell through `concept()` to an implicit SOURCE_ONLY with no row
-  // behind it. The mapping existed only as an absence: nothing to audit,
-  // nothing to review, and nothing for a later Athena import to fill in.
+  // Procedures. An exact operation is stored as its ICD-10-PCS code (see
+  // @lospor/core/procedure-codes), and relational-sync looks it up under
+  // ICD10PCS. ICD-10-PCS is public domain and its concepts are standard OMOP
+  // procedures, so the release bundles their ids (src/data/icd10pcs-omop.json,
+  // built from Athena by generate-icd10pcs-omop.mts): a site has research codes
+  // for exact operations without importing anything. A site that has imported
+  // an Athena release with ICD10PCS resolves against that instead.
   //
-  // The key must match what relational-sync writes, which uses the entry's
-  // `domain` as the source vocabulary and falls back to LOSPOR_PROCEDURE.
-  //
-  // Standard resolution is attempted against ICD10PCS. That vocabulary is not
-  // in the local Athena import today, so these stay SOURCE_ONLY; when it is
-  // imported, re-running this script fills them in without touching any case.
+  // A group chosen on its own names no operation, so its rows stay source-only;
+  // they exist so the whole procedure vocabulary is reviewable in one table.
   const pcs = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "src", "data", "pcs.json"), "utf8"),
   ) as { code: string; description?: string; group?: string; domain?: string }[]
+  const pcsPack = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "src", "data", "icd10pcs-omop.json"), "utf8"),
+  ) as {
+    source: string
+    standardVocabulary: string
+    concepts: Record<string, number>
+    mapsTo: Record<string, { conceptId: number; vocabulary: string }>
+  }
   const pcsStandards = await resolveStandardMap("ICD10PCS", pcs.map(p => p.code), athenaVersion)
+  const bundledPcsStandard = (proc: { code: string; description?: string }): StandardMapResolution | undefined => {
+    const own = pcsPack.concepts[proc.code]
+    if (own) {
+      return { kind: "mapped", standard: {
+        standardVocabulary: pcsPack.standardVocabulary,
+        standardConceptId: own,
+        standardLabel: proc.description ?? proc.code,
+        mappingMethod: "bundled-icd10pcs-standard",
+        mappingConfidence: 1,
+        athenaVersion: pcsPack.source,
+      } }
+    }
+    const mapped = pcsPack.mapsTo[proc.code]
+    return mapped ? { kind: "mapped", standard: {
+      standardVocabulary: mapped.vocabulary,
+      standardConceptId: mapped.conceptId,
+      standardLabel: proc.description ?? proc.code,
+      mappingMethod: "bundled-icd10pcs-maps-to",
+      mappingConfidence: 0.95,
+      athenaVersion: pcsPack.source,
+    } } : undefined
+  }
   for (const proc of pcs) {
     seeds.push(withStandard({
       domain: "procedure",
-      sourceVocabulary: proc.domain || "LOSPOR_PROCEDURE",
+      sourceVocabulary: "ICD10PCS",
       sourceCode: proc.code,
-      sourceLabelEn: proc.group || proc.description || proc.code,
-    }, pcsStandards.get(proc.code)))
+      sourceLabelEn: proc.description || proc.group || proc.code,
+    }, pcsStandards.get(proc.code)?.kind === "mapped"
+      ? pcsStandards.get(proc.code)
+      : bundledPcsStandard(proc) ?? pcsStandards.get(proc.code)))
+  }
+  for (const group of new Set(pcs.map(proc => proc.group).filter((group): group is string => !!group))) {
+    seeds.push({
+      domain: "procedure",
+      sourceVocabulary: PROCEDURE_GROUP_SYSTEM,
+      sourceCode: group,
+      sourceLabelEn: group,
+      mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+      mappingMethod: "source-code-preserved",
+      reviewed: false,
+      mappingNotes: "A procedure group names no single operation; the exact ICD-10-PCS operation carries the research code.",
+    })
   }
 
   const curatedByCategory = new Map<string, Map<string, { conceptId: number; label: string }>>([

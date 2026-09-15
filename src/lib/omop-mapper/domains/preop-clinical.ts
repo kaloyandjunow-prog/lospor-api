@@ -9,6 +9,15 @@ import { isoDate } from "../date-helpers"
 import { nextId } from "../ids"
 
 /** Preoperative vitals, labs, comorbidities, diagnoses, risk scores and findings. */
+/**
+ * One condition row per standard concept. OMOP decomposes some ICD-10
+ * combination codes (E11.2: type 2 diabetes, and a kidney disorder due to it),
+ * and the OMOP way to record that is a row for each, sharing the source value.
+ */
+function conditionConceptIds(row: { standardConceptId?: number | null; standardConceptIds?: number[] }): number[] {
+  return row.standardConceptIds?.length ? row.standardConceptIds : [row.standardConceptId ?? 0]
+}
+
 export function mapPreopClinicalToOmop(
   ctx: CaseMapperCtx,
   c: CaseRow,
@@ -146,15 +155,17 @@ export function mapPreopClinicalToOmop(
   // ── Comorbidities -> CONDITION_OCCURRENCE ─────────────────────────────
   for (const co of preop.comorbidityRows ?? []) {
     ctx.trackMapping(co.mappingStatus)
-    ctx.conditions.push({
-      condition_occurrence_id:    nextId(),
-      person_id:                 ctx.personId,
-      condition_concept_id:      co.standardConceptId ?? 0,
-      condition_start_date:      isoDate(c.createdAt),
-      condition_type_concept_id: 32817,
-      condition_source_value:    ctx.sourceValue("COMORBIDITY", co.sourceVocabulary, co.sourceCode, co.labelEn ?? co.labelBg ?? co.label),
-      visit_occurrence_id:       ctx.visitId,
-    })
+    for (const conceptId of conditionConceptIds(co)) {
+      ctx.conditions.push({
+        condition_occurrence_id:    nextId(),
+        person_id:                 ctx.personId,
+        condition_concept_id:      conceptId,
+        condition_start_date:      isoDate(c.createdAt),
+        condition_type_concept_id: 32817,
+        condition_source_value:    ctx.sourceValue("COMORBIDITY", co.sourceVocabulary, co.sourceCode, co.labelEn ?? co.labelBg ?? co.label),
+        visit_occurrence_id:       ctx.visitId,
+      })
+    }
   }
 
   // Primary diagnosis -> CONDITION_OCCURRENCE
@@ -162,15 +173,17 @@ export function mapPreopClinicalToOmop(
   if (diagRows.length > 0) {
     for (const diag of diagRows) {
       ctx.trackMapping(diag.mappingStatus)
-      ctx.conditions.push({
-        condition_occurrence_id:    nextId(),
-        person_id:                 ctx.personId,
-        condition_concept_id:      diag.standardConceptId ?? 0,
-        condition_start_date:      isoDate(c.createdAt),
-        condition_type_concept_id: 32817,
-        condition_source_value:    ctx.sourceValue("DIAGNOSIS", diag.sourceVocabulary, diag.sourceCode, diag.labelEn ?? diag.labelBg ?? diag.label),
-        visit_occurrence_id:       ctx.visitId,
-      })
+      for (const conceptId of conditionConceptIds(diag)) {
+        ctx.conditions.push({
+          condition_occurrence_id:    nextId(),
+          person_id:                 ctx.personId,
+          condition_concept_id:      conceptId,
+          condition_start_date:      isoDate(c.createdAt),
+          condition_type_concept_id: 32817,
+          condition_source_value:    ctx.sourceValue("DIAGNOSIS", diag.sourceVocabulary, diag.sourceCode, diag.labelEn ?? diag.labelBg ?? diag.label),
+          visit_occurrence_id:       ctx.visitId,
+        })
+      }
     }
   } else if (preop.diagnosis) {
     ctx.conditions.push({

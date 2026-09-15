@@ -7,54 +7,58 @@ const runPostgres = process.env.LOSPOR_POSTGRES_INTEGRATION === "true"
 if (runPostgres && !process.env.DATABASE_URL) loadDotenv({ quiet: true })
 
 // The bundle seed exists so a deployment with no imported vocabulary can still
-// code a diagnosis. The property that matters most is not that it inserts —
-// it is that it refuses to overwrite. An institution that has imported its
-// approved package holds labels this bundle does not have, and an update that
-// reseeded over them would quietly replace curated terminology with generic
-// terminology, in a table nothing else validates against.
+// code a diagnosis. The database and offline clients are seeded from one
+// authoritative bundle, so rerunning the seed must also reconcile stale labels.
 describe.skipIf(!runPostgres)("ICD-10 bundle seed", () => {
   let prisma: typeof import("@/lib/prisma").prisma
   let seedIcd10FromBundle: typeof import("../../scripts/seed-icd10-from-bundle").seedIcd10FromBundle
 
-  // A code no ICD-10 vocabulary contains, so this test never collides with real
-  // rows and can be removed again without touching seeded data.
-  const importedCode = "ZZ99.7"
-  const importedLabelEn = "Institution-approved label that must survive"
-  const importedLabelBg = "Одобрено от институцията"
+  const bundledCode = "K80"
+  const staleLabelEn = "Stale label"
+  const staleLabelBg = "Остаряло наименование"
 
   beforeAll(async () => {
     ;({ prisma } = await import("@/lib/prisma"))
     ;({ seedIcd10FromBundle } = await import("../../scripts/seed-icd10-from-bundle"))
-    await prisma.icd10Code.deleteMany({ where: { code: importedCode } })
   })
 
   afterAll(async () => {
-    await prisma.icd10Code.deleteMany({ where: { code: importedCode } })
+    await seedIcd10FromBundle(prisma)
   })
 
-  it("leaves an already-imported code exactly as the institution imported it", async () => {
-    await prisma.icd10Code.create({
-      data: { code: importedCode, labelEn: importedLabelEn, labelBg: importedLabelBg },
+  // Each of these seeds all 39,613 bundled codes at least once. That comfortably
+  // clears Vitest's default 5000ms on a normal run, but not always on a loaded
+  // CI runner — it isn't a hang, just real bulk-upsert work against a real
+  // Postgres, so the fix is a longer budget, not a shorter bundle.
+  const SEED_TIMEOUT_MS = 20_000
+
+  it("restores authoritative labels for a bundled code", async () => {
+    await prisma.icd10Code.upsert({
+      where: { code: bundledCode },
+      create: { code: bundledCode, labelEn: staleLabelEn, labelBg: staleLabelBg },
+      update: { labelEn: staleLabelEn, labelBg: staleLabelBg },
     })
 
-    await seedIcd10FromBundle(prisma)
+    const result = await seedIcd10FromBundle(prisma)
 
-    const after = await prisma.icd10Code.findUnique({ where: { code: importedCode } })
-    expect(after?.labelEn).toBe(importedLabelEn)
-    expect(after?.labelBg).toBe(importedLabelBg)
-  })
+    const after = await prisma.icd10Code.findUnique({ where: { code: bundledCode } })
+    expect(result.updated).toBeGreaterThan(0)
+    expect(after?.labelEn).not.toBe(staleLabelEn)
+    expect(after?.labelBg).not.toBe(staleLabelBg)
+  }, SEED_TIMEOUT_MS)
 
   it("is idempotent: a second run inserts nothing", async () => {
     await seedIcd10FromBundle(prisma)
     const second = await seedIcd10FromBundle(prisma)
     expect(second.inserted).toBe(0)
-  })
+    expect(second.updated).toBe(0)
+  }, SEED_TIMEOUT_MS)
 
   it("reports the bundle version it seeded from", async () => {
     const result = await seedIcd10FromBundle(prisma)
     expect(result.version).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-    expect(result.bundled).toBeGreaterThan(10000)
-  })
+    expect(result.bundled).toBe(39_613)
+  }, SEED_TIMEOUT_MS)
 
   it("makes the codes the search route reads actually present", async () => {
     await seedIcd10FromBundle(prisma)
@@ -66,5 +70,5 @@ describe.skipIf(!runPostgres)("ICD-10 bundle seed", () => {
     })
     expect(found.length).toBeGreaterThan(0)
     expect(found[0].labelEn.length).toBeGreaterThan(0)
-  })
+  }, SEED_TIMEOUT_MS)
 })

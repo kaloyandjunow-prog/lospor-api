@@ -92,8 +92,9 @@ export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
         volume: 500, fluidCategory: "CRYSTALLOID", metadataJson: { name: "Ringer lactate" },
         // B05BB01 is a real, correctly-resolved ATC code with no OMOP standard
         // concept behind it -- SOURCE_ONLY, verified against the live
-        // ConceptMap, not a gap in this fixture. Left uncoded on purpose: this
-        // is the honest state, not something to "fix".
+        // ConceptMap. "Ringer lactate" is not the catalogue's name for the
+        // fluid, so the hand-checked fluid table does not code it either: the
+        // state of a fluid typed by name, left uncoded on purpose.
         atcCode: "B05BB01", standardConceptId: null, mappingStatus: "SOURCE_ONLY",
       },
       {

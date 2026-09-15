@@ -28,11 +28,13 @@ export type AggregateConceptMap = {
 
 export type ConceptMapAvgAggregateOutputType = {
   standardConceptId: number | null
+  standardConceptIds: number | null
   mappingConfidence: number | null
 }
 
 export type ConceptMapSumAggregateOutputType = {
   standardConceptId: number | null
+  standardConceptIds: number[]
   mappingConfidence: number | null
 }
 
@@ -93,6 +95,7 @@ export type ConceptMapCountAggregateOutputType = {
   sourceLabelBg: number
   standardVocabulary: number
   standardConceptId: number
+  standardConceptIds: number
   standardLabel: number
   mappingStatus: number
   sourceVersion: number
@@ -112,11 +115,13 @@ export type ConceptMapCountAggregateOutputType = {
 
 export type ConceptMapAvgAggregateInputType = {
   standardConceptId?: true
+  standardConceptIds?: true
   mappingConfidence?: true
 }
 
 export type ConceptMapSumAggregateInputType = {
   standardConceptId?: true
+  standardConceptIds?: true
   mappingConfidence?: true
 }
 
@@ -177,6 +182,7 @@ export type ConceptMapCountAggregateInputType = {
   sourceLabelBg?: true
   standardVocabulary?: true
   standardConceptId?: true
+  standardConceptIds?: true
   standardLabel?: true
   mappingStatus?: true
   sourceVersion?: true
@@ -288,6 +294,7 @@ export type ConceptMapGroupByOutputType = {
   sourceLabelBg: string | null
   standardVocabulary: string | null
   standardConceptId: number | null
+  standardConceptIds: number[]
   standardLabel: string | null
   mappingStatus: $Enums.ConceptMappingStatus
   sourceVersion: string | null
@@ -335,6 +342,7 @@ export type ConceptMapWhereInput = {
   sourceLabelBg?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
   standardVocabulary?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"ConceptMap"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"ConceptMap">
   standardLabel?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"ConceptMap"> | $Enums.ConceptMappingStatus
   sourceVersion?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
@@ -359,6 +367,7 @@ export type ConceptMapOrderByWithRelationInput = {
   sourceLabelBg?: Prisma.SortOrderInput | Prisma.SortOrder
   standardVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   standardLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   sourceVersion?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -387,6 +396,7 @@ export type ConceptMapWhereUniqueInput = Prisma.AtLeast<{
   sourceLabelBg?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
   standardVocabulary?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"ConceptMap"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"ConceptMap">
   standardLabel?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"ConceptMap"> | $Enums.ConceptMappingStatus
   sourceVersion?: Prisma.StringNullableFilter<"ConceptMap"> | string | null
@@ -411,6 +421,7 @@ export type ConceptMapOrderByWithAggregationInput = {
   sourceLabelBg?: Prisma.SortOrderInput | Prisma.SortOrder
   standardVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   standardLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   sourceVersion?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -443,6 +454,7 @@ export type ConceptMapScalarWhereWithAggregatesInput = {
   sourceLabelBg?: Prisma.StringNullableWithAggregatesFilter<"ConceptMap"> | string | null
   standardVocabulary?: Prisma.StringNullableWithAggregatesFilter<"ConceptMap"> | string | null
   standardConceptId?: Prisma.IntNullableWithAggregatesFilter<"ConceptMap"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"ConceptMap">
   standardLabel?: Prisma.StringNullableWithAggregatesFilter<"ConceptMap"> | string | null
   mappingStatus?: Prisma.EnumConceptMappingStatusWithAggregatesFilter<"ConceptMap"> | $Enums.ConceptMappingStatus
   sourceVersion?: Prisma.StringNullableWithAggregatesFilter<"ConceptMap"> | string | null
@@ -467,6 +479,7 @@ export type ConceptMapCreateInput = {
   sourceLabelBg?: string | null
   standardVocabulary?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ConceptMapCreatestandardConceptIdsInput | number[]
   standardLabel?: string | null
   mappingStatus?: $Enums.ConceptMappingStatus
   sourceVersion?: string | null
@@ -491,6 +504,7 @@ export type ConceptMapUncheckedCreateInput = {
   sourceLabelBg?: string | null
   standardVocabulary?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ConceptMapCreatestandardConceptIdsInput | number[]
   standardLabel?: string | null
   mappingStatus?: $Enums.ConceptMappingStatus
   sourceVersion?: string | null
@@ -515,6 +529,7 @@ export type ConceptMapUpdateInput = {
   sourceLabelBg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ConceptMapUpdatestandardConceptIdsInput | number[]
   standardLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -539,6 +554,7 @@ export type ConceptMapUncheckedUpdateInput = {
   sourceLabelBg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ConceptMapUpdatestandardConceptIdsInput | number[]
   standardLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -563,6 +579,7 @@ export type ConceptMapCreateManyInput = {
   sourceLabelBg?: string | null
   standardVocabulary?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.ConceptMapCreatestandardConceptIdsInput | number[]
   standardLabel?: string | null
   mappingStatus?: $Enums.ConceptMappingStatus
   sourceVersion?: string | null
@@ -587,6 +604,7 @@ export type ConceptMapUpdateManyMutationInput = {
   sourceLabelBg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ConceptMapUpdatestandardConceptIdsInput | number[]
   standardLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -611,6 +629,7 @@ export type ConceptMapUncheckedUpdateManyInput = {
   sourceLabelBg?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.ConceptMapUpdatestandardConceptIdsInput | number[]
   standardLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -624,6 +643,14 @@ export type ConceptMapUncheckedUpdateManyInput = {
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type IntNullableListFilter<$PrismaModel = never> = {
+  equals?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
+  has?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
+  hasEvery?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  hasSome?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
 }
 
 export type ConceptMapDomainSourceVocabularySourceCodeCompoundUniqueInput = {
@@ -641,6 +668,7 @@ export type ConceptMapCountOrderByAggregateInput = {
   sourceLabelBg?: Prisma.SortOrder
   standardVocabulary?: Prisma.SortOrder
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   standardLabel?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   sourceVersion?: Prisma.SortOrder
@@ -658,6 +686,7 @@ export type ConceptMapCountOrderByAggregateInput = {
 
 export type ConceptMapAvgOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingConfidence?: Prisma.SortOrder
 }
 
@@ -711,7 +740,17 @@ export type ConceptMapMinOrderByAggregateInput = {
 
 export type ConceptMapSumOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingConfidence?: Prisma.SortOrder
+}
+
+export type ConceptMapCreatestandardConceptIdsInput = {
+  set: number[]
+}
+
+export type ConceptMapUpdatestandardConceptIdsInput = {
+  set?: number[]
+  push?: number | number[]
 }
 
 export type EnumConceptMappingStatusFieldUpdateOperationsInput = {
@@ -729,6 +768,7 @@ export type ConceptMapSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   sourceLabelBg?: boolean
   standardVocabulary?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   standardLabel?: boolean
   mappingStatus?: boolean
   sourceVersion?: boolean
@@ -753,6 +793,7 @@ export type ConceptMapSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   sourceLabelBg?: boolean
   standardVocabulary?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   standardLabel?: boolean
   mappingStatus?: boolean
   sourceVersion?: boolean
@@ -777,6 +818,7 @@ export type ConceptMapSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   sourceLabelBg?: boolean
   standardVocabulary?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   standardLabel?: boolean
   mappingStatus?: boolean
   sourceVersion?: boolean
@@ -801,6 +843,7 @@ export type ConceptMapSelectScalar = {
   sourceLabelBg?: boolean
   standardVocabulary?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   standardLabel?: boolean
   mappingStatus?: boolean
   sourceVersion?: boolean
@@ -816,7 +859,7 @@ export type ConceptMapSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ConceptMapOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "domain" | "sourceVocabulary" | "sourceCode" | "sourceLabelEn" | "sourceLabelBg" | "standardVocabulary" | "standardConceptId" | "standardLabel" | "mappingStatus" | "sourceVersion" | "mappingMethod" | "mappingConfidence" | "reviewed" | "reviewedBy" | "reviewedAt" | "mappingNotes" | "athenaVersion" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["conceptMap"]>
+export type ConceptMapOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "domain" | "sourceVocabulary" | "sourceCode" | "sourceLabelEn" | "sourceLabelBg" | "standardVocabulary" | "standardConceptId" | "standardConceptIds" | "standardLabel" | "mappingStatus" | "sourceVersion" | "mappingMethod" | "mappingConfidence" | "reviewed" | "reviewedBy" | "reviewedAt" | "mappingNotes" | "athenaVersion" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["conceptMap"]>
 
 export type $ConceptMapPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ConceptMap"
@@ -830,6 +873,13 @@ export type $ConceptMapPayload<ExtArgs extends runtime.Types.Extensions.Internal
     sourceLabelBg: string | null
     standardVocabulary: string | null
     standardConceptId: number | null
+    /**
+     * Every standard concept, when the source code maps to several (an ICD-10
+     * combination code such as E11.2, diabetes with a kidney complication):
+     * standardConceptId is then null and the export writes one row per id.
+     * Empty otherwise.
+     */
+    standardConceptIds: number[]
     standardLabel: string | null
     mappingStatus: $Enums.ConceptMappingStatus
     sourceVersion: string | null
@@ -1274,6 +1324,7 @@ export interface ConceptMapFieldRefs {
   readonly sourceLabelBg: Prisma.FieldRef<"ConceptMap", 'String'>
   readonly standardVocabulary: Prisma.FieldRef<"ConceptMap", 'String'>
   readonly standardConceptId: Prisma.FieldRef<"ConceptMap", 'Int'>
+  readonly standardConceptIds: Prisma.FieldRef<"ConceptMap", 'Int[]'>
   readonly standardLabel: Prisma.FieldRef<"ConceptMap", 'String'>
   readonly mappingStatus: Prisma.FieldRef<"ConceptMap", 'ConceptMappingStatus'>
   readonly sourceVersion: Prisma.FieldRef<"ConceptMap", 'String'>

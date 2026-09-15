@@ -18,7 +18,7 @@ import path from "node:path"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../src/generated/prisma/client"
 
-const VOCABULARY_VERSION = "2026-08-06"
+const VOCABULARY_VERSION = "2026-09-13"
 const CORE_VOCABULARY_DIR = path.resolve("../lospor-core/src/vocabulary")
 
 type PcsEntry = { code: string; description: string; group: string; domain: string }
@@ -69,6 +69,10 @@ export const ICD10_ROW_COUNT = ${rows.length}
 function procedures(): string {
   const file = path.join(process.cwd(), "src", "data", "pcs.json")
   const data = JSON.parse(fs.readFileSync(file, "utf8")) as PcsEntry[]
+  const bg = JSON.parse(fs.readFileSync(
+    path.join(process.cwd(), "src", "data", "procedure-terms-bg.json"),
+    "utf8",
+  )) as { terms: Record<string, string> }
 
   // One representative per group, first in file order — which is exactly the
   // tie-break the API's scorer applies when no code matches the query.
@@ -85,6 +89,11 @@ function procedures(): string {
     for (const word of entry.description.toLowerCase().split(/[^a-z0-9]+/)) {
       if (word.length > 2) group.words.add(word)
     }
+  }
+  // The Bulgarian words the online search attaches to the same groups.
+  for (const [key, group] of byGroup) {
+    const words = Object.entries(bg.terms).find(([name]) => name.toLowerCase().trim() === key)?.[1]
+    for (const word of words?.split(" ") ?? []) if (word) group.words.add(word)
   }
   const rows = [...byGroup.values()].sort((a, b) => a.entry.group.localeCompare(b.entry.group))
   const tuples = rows.map(({ entry, words }) => JSON.stringify([
@@ -140,18 +149,94 @@ export const VOCABULARY_VERSION = "${VOCABULARY_VERSION}"
 `
 }
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
-})
+/**
+ * Every ICD-10-PCS operation, for choosing the exact one with no network.
+ *
+ * A separate module from the group search so it is loaded only when a
+ * clinician opens a group's operation list offline. Group, section and each
+ * comma-separated description part are stored once and referenced by index,
+ * which halves the module: ICD-10-PCS descriptions are built from a small set
+ * of repeated phrases ("Percutaneous Endoscopic Approach").
+ */
+function procedureCodes(): string {
+  const file = path.join(process.cwd(), "src", "data", "pcs.json")
+  const data = JSON.parse(fs.readFileSync(file, "utf8")) as PcsEntry[]
+  const indexOf = <T,>(values: Map<T, number>, value: T) => {
+    if (!values.has(value)) values.set(value, values.size)
+    return values.get(value)!
+  }
+  const groups = new Map<string, number>()
+  const domains = new Map<string, number>()
+  const parts = new Map<string, number>()
+  const rows = [...data].sort((a, b) => a.code.localeCompare(b.code)).map(entry => JSON.stringify([
+    entry.code,
+    indexOf(groups, entry.group),
+    indexOf(domains, entry.domain),
+    entry.description.split(", ").map(part => indexOf(parts, part)),
+  ]))
+  const list = (values: Map<string, number>) => [...values.keys()].map(value => `  ${JSON.stringify(value)},`).join("\n")
+
+  return `${header(`${data.length} ICD-10-PCS operations in ${groups.size} procedure groups.`)}
+import type { ProcedureSearchRow } from "../search"
+
+const GROUPS: readonly string[] = [
+${list(groups)}
+]
+
+const DOMAINS: readonly string[] = [
+${list(domains)}
+]
+
+const PARTS: readonly string[] = [
+${list(parts)}
+]
+
+/** [code, group index, section index, description part indexes]. */
+const ROWS: readonly [string, number, number, number[]][] = [
+${rows.map(row => `  ${row},`).join("\n")}
+]
+
+export const PROCEDURE_CODE_COUNT = ROWS.length
+
+/** The operations of one group, as the online list returns them. Empty for an unknown group. */
+export function procedureCodeRowsForGroup(group: string): ProcedureSearchRow[] {
+  const wanted = group.trim().toLowerCase()
+  const groupIndex = GROUPS.findIndex(name => name.toLowerCase() === wanted)
+  if (groupIndex < 0) return []
+  return ROWS
+    .filter(row => row[1] === groupIndex)
+    .map(([code, groupAt, domainAt, description]) => ({
+      code,
+      group: GROUPS[groupAt],
+      domain: DOMAINS[domainAt],
+      description: description.map(part => PARTS[part]).join(", "),
+    }))
+}
+`
+}
 
 fs.mkdirSync(CORE_VOCABULARY_DIR, { recursive: true })
-fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "icd10.ts"), await icd10(prisma), "utf8")
-fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedures.ts"), procedures(), "utf8")
-fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "index.ts"), index(), "utf8")
 
-for (const name of ["icd10.ts", "procedures.ts", "index.ts"]) {
+// `--procedures-only` rebuilds procedures.ts and procedure-codes.ts from pcs.json and the Bulgarian
+// terms without a database, and leaves icd10.ts and index.ts as committed.
+const proceduresOnly = process.argv.includes("--procedures-only")
+const written = proceduresOnly
+  ? ["procedures.ts", "procedure-codes.ts"]
+  : ["icd10.ts", "procedures.ts", "procedure-codes.ts", "index.ts"]
+fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedure-codes.ts"), procedureCodes(), "utf8")
+if (proceduresOnly) {
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedures.ts"), procedures(), "utf8")
+} else {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+  })
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "icd10.ts"), await icd10(prisma), "utf8")
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "procedures.ts"), procedures(), "utf8")
+  fs.writeFileSync(path.join(CORE_VOCABULARY_DIR, "index.ts"), index(), "utf8")
+  await prisma.$disconnect()
+}
+
+for (const name of written) {
   const bytes = fs.statSync(path.join(CORE_VOCABULARY_DIR, name)).size
   console.log(`${name.padEnd(16)} ${(bytes / 1024).toFixed(0)} KB`)
 }
-
-await prisma.$disconnect()

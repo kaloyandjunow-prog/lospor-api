@@ -305,7 +305,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         // dipstick -- was dropped with no trace that it had been recorded.
         if (lab.valueNum == null && !lab.value) continue
         trackMapping(lab.mappingStatus)
-        const labSource = lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`
+        const labSource = lab.sourceVocabulary && lab.sourceCode
+          ? `${lab.sourceVocabulary}:${lab.sourceCode}`
+          : lab.loincCode ? `LOINC:${lab.loincCode}` : `LAB:${lab.test}`
         // The draw time when there is one. Falling back to the record's date
         // for every row was the old behaviour, and it made a result drawn days
         // before surgery indistinguishable from one drawn during it -- fatal
@@ -326,7 +328,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
           value_as_number:             lab.valueNum,
           value_as_concept_id: null,
           unit_concept_id:             lab.unitCanon ? LAB_UNIT_CONCEPTS[lab.unitCanon] ?? 0 : 0,
-          unit_source_value:           lab.unitCanon ?? null,
+          unit_source_value:           lab.unitCanon ?? lab.unit ?? null,
           measurement_source_value:    labSource,
           // The value as the lab reported it. For a numeric result this is the
           // unparsed original; for a qualitative one it is the only value there

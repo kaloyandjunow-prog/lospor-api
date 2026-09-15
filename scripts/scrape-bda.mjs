@@ -35,6 +35,15 @@ async function fetchText(url) {
   }
 }
 
+// The register prints substance codes as "L01BC 2"; every ATC table spells it
+// L01BC02. Same rule as src/lib/atc.ts normalizeAtcCode.
+function canonicalAtc(value) {
+  const text = value.toUpperCase();
+  const spaced = text.match(/^([A-Z]\d{2}[A-Z]{2})\s*(\d{1,2})$/);
+  if (spaced) return spaced[1] + spaced[2].padStart(2, "0");
+  return /^[A-Z](?:\d{2}(?:[A-Z](?:[A-Z])?)?)?$/.test(text) ? text : "";
+}
+
 function parseDrugPage(html) {
   // Strip tags → lines
   const lines = html
@@ -97,7 +106,7 @@ function parseDrugPage(html) {
     inn:      inn.trim(),
     form:     form.trim(),
     strength: (englishPart || name).trim(),
-    atc:      atc.trim(),
+    atc:      canonicalAtc(atc.trim()),
   };
 }
 

@@ -1,5 +1,39 @@
 # Changelog - LOSPOR API
 
+## [Unreleased]
+
+### Added
+
+- **IV fluids and blood products export coded.** `fluid_start` events are stamped at save from core's hand-checked fluid table (`MANUALLY_CURATED`), so saline, Hartmann's, Plasma-Lyte, Ringer's acetate, the dextrose mixes and lipid emulsion stop exporting concept 0, and each strength of saline, HES and mannitol has its own clinical drug. Each blood unit now exports as a `device_exposure` product row and a `procedure_occurrence` transfusion row (`INTRAOP_BLOOD:`), with its volume as the device row's `quantity` in mL (`unit_concept_id` 8587; new `device_exposure` columns `quantity`, `unit_concept_id`, `unit_source_value`, matching exchange contract 2.5.0), instead of a drug row; packed red cells previously exported B05AX01's concept, a technetium tracer. Cell salvage exports as the autotransfusion procedure, its volume in observation `LOSPOR:BLOOD_PRODUCT_UNIT_ML`. The case-total transfusion row is written only when no units were charted.
+- **Premedication exports as coded drugs.** Each premedication entry is mirrored as its catalogue drug with WHO ATC code, dose, unit and route instead of one uncodable line of text, so it maps through ATC to its RxNorm concept (added to `lab-drug-omop.json`: 224 of 231 catalogue ATC codes). Phases are DAY_BEFORE, dated D-1, and MORNING, dated D; records saved with "evening" read as DAY_BEFORE.
+- **Research numbers for labs and drugs without a terminology import.** `src/data/lab-drug-omop.json` (Athena LOINC 2.82, ATC 2026-02-01, RxNorm 20260601; `scripts/generate-lab-drug-omop.mts` rebuilds it) gives all 92 LOINC codes LOSPOR records their concept and 198 of 205 catalogue ATC codes their standard RxNorm targets. `seed-concept-maps` falls back to it for lab, NHIS CL024 and catalogue drug rows, so labs and catalogue drugs export a standard concept on every site; Athena, when imported, still wins.
+- **One condition row per concept.** An ICD-10 code OMOP decomposes into several standard concepts (E11.2: type 2 diabetes, and a kidney disorder due to it) used to export `condition_concept_id` 0. `ConceptMap`, `PreopDiagnosis` and `Comorbidity` gain `standardConceptIds` (migration `20260914130000_condition_concept_ids`), the concept map seed fills it from Athena or the bundled numbers, and the OMOP export writes one condition row per concept with the same source value.
+- **Imported procedures in the research copy and the operation list.** A procedure imported with a declared `sourceVocabulary` (КСМП) is mirrored under that vocabulary with its crosswalked group, instead of `LOSPOR_PROCEDURE` with no group. `/v1/search/procedures/codes` takes `suggested=` and lists those operations first, marked.
+- **Research numbers for diagnoses without a terminology import.** `src/data/icd10-omop.json` (from Athena ICD10 2021 Release; `scripts/generate-icd10-omop.mts` rebuilds it) holds, for 15,774 of LOSPOR's ICD-10 codes, the OMOP concept ids they map to, and nothing else: no SNOMED CT codes or descriptions. `seed-concept-maps` uses it where no Athena is imported, so 13,204 codes export `condition_concept_id` on every site. Codes mapping to several concepts (2,570) map to all of them, and the NHIS national extensions (23,438) stay source-only rather than borrowing their parent's concept.
+- **Exact planned operations.** `GET /v1/search/procedures/codes?group=&q=` lists the ICD-10-PCS operations inside a procedure group (up to 200, with the total), narrowed by the clinician's words; "laparoscopic" reads as ICD-10-PCS's "percutaneous endoscopic". An operation chosen there is mirrored under `ICD10PCS` with its standard OMOP concept, a group chosen alone under `LOSPOR_PROCEDURE_GROUP` with none. The concept ids ship in `src/data/icd10pcs-omop.json` (81,902 standard and 195 RxNorm, from Athena ICD10PCS 2027; `scripts/generate-icd10pcs-omop.mts` rebuilds it), so `seed-concept-maps` gives every site research codes for exact operations without a terminology import.
+- **`NOTICE.md`** names the owners of the reference data in this repository, including the LOINC copyright notice its licence requires, and states that OMOP vocabularies are imported by each site from Athena.
+- **Procedure search in Bulgarian.** Each procedure group carries the words of the Bulgarian procedure names (КСМП 2020, NCPHA) that crosswalk to it, so "холецистектомия" finds Cholecystectomy online and in the offline copy. `generate-vocabulary.mts --procedures-only` rebuilds the offline procedures without a database.
+- Added a reviewable NHIS CL011 merge utility that updates the shared Core ICD-10 bundle from a normalized official snapshot without committing the source workbook.
+
+### Changed
+
+- The ICD-10 bootstrap seed now synchronizes the complete shared Core bundle into the API database, keeping server search and offline clients on the same codes and authoritative labels.
+
+### Fixed
+
+- **Home medications and allergies picked from the drug list had no usable ATC code.** `src/data/drugs.json`, scraped from the BDA register, stored every substance code as the register prints it ("L01BC 2", not L01BC02), so no concept map row could ever match and each one exported concept 0, with or without a terminology import. The list is repaired (3,431 codes), `normalizeAtcCode` (`src/lib/atc.ts`) repairs the spelling wherever a code arrives (drug search, the preop medication mirror, the Drug seed, the scraper), and `lab-drug-omop.json` now also carries the drug list's codes: 961 of its 1,107 codes resolve in Athena, 883 to a single RxNorm ingredient. `seed-concept-maps` seeds those codes, so 2,938 of 3,525 coded drug-list entries export a standard concept on every site. Combination codes with several ingredients stay source-only, as before. Already saved cases keep what they stored.
+- **Drug search without a Drug table returned no ATC code to the web form.** The drugs.json fallback returned `atc` only, while the web and mobile forms read `atcCode`; both are now returned.
+- **Diagnosis search matched English synonyms only after a terminology import.** `src/data/icd10-synonyms.json` (142,221 ICD-10-CM descriptions for 9,667 ICD-10 codes, Athena ICD10CM FY2027; `scripts/generate-icd10-synonyms.mts` rebuilds it) is loaded by `seed-icd10-from-bundle.ts` into `Icd10Synonym` under `bundle-` ids. Once a terminology import has written its own synonyms, the bundled rows are removed and the imported ones left untouched.
+- **The laboratory seed now treats Anti-Xa as explicitly uncoded.** It seeds 65 coded tests, reports one intentional exception, and lets Anti-Xa export as `LAB:Anti-Xa` with no fabricated LOINC or OMOP concept.
+
+- **ICD-10 concept seeding no longer chooses an arbitrary first OMOP target.**
+  Exact active Athena source codes map only when they resolve to one distinct
+  active standard concept. Intentional one-to-many `Maps to` decompositions,
+  source concepts without a target, and NHIS extensions absent from Athena stay
+  explicit `SOURCE_ONLY` rows with the Athena version and reason recorded.
+  Reseeding clears stale automatic mappings while preserving `MANUALLY_CURATED`
+  and `REJECTED` review decisions.
+
 ## [9.9.5] - 2026-09-07
 
 ### Fixed

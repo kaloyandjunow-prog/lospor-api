@@ -5225,6 +5225,67 @@
         }
       }
     },
+    "/v1/search/procedures/codes": {
+      "get": {
+        "operationId": "get_v1_search_procedures_codes",
+        "summary": "List the exact ICD-10-PCS operations inside one procedure group",
+        "tags": [
+          "search"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/search/drugs": {
       "get": {
         "operationId": "get_v1_search_drugs",

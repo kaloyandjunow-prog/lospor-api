@@ -1253,7 +1253,9 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "Total blood products administered intraoperatively. Same "
       + "pattern as colloidsMl: the volume stays uncoded, and a positive total "
       + "also emits procedure_occurrence 4024656 (Transfusion of blood "
-      + "product) as a separate fact. A recorded 0 emits neither row.",
+      + "product) as a separate fact -- but only for a record with no blood "
+      + "units charted one by one, since each of those carries its own "
+      + "transfusion row. A recorded 0 emits neither row.",
     unit: "mL",
     type: "integer",
     allowedValues: "0–20000",
@@ -1989,7 +1991,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     meaning: "The coded preoperative diagnoses as stored on the assessment: one entry per diagnosis, each carrying the vocabulary and code the clinician picked.",
     type: "json",
     missingnessRule: "Empty = no coded diagnosis was recorded, and the free-text diagnosis above is exported instead if there is one",
-    derivationRule: "Each entry becomes one PreopDiagnosis mirror row, and each mirror row becomes one CONDITION_OCCURRENCE. The mirror is what the export reads; this is where the value comes from",
+    derivationRule: "Each entry becomes one PreopDiagnosis mirror row, and each mirror row becomes one CONDITION_OCCURRENCE. The mirror is what the export reads; this is where the value comes from. condition_concept_id is the standard concept (SNOMED CT or OMOP Extension) Athena maps the ICD-10 code to: from the site's imported Athena, or else from the OMOP ids bundled with the release (src/data/icd10-omop.json). A code Athena maps to several concepts exports one row per concept; a code Athena does not hold (the NHIS national extensions) exports 0 with its ICD-10 code in condition_source_value, and takes no concept from its parent code",
     sourceTable: "PreoperativeAssessment", sourceColumn: "diagnosesJson",
     versionIntroduced: "4.3.0",
   },
@@ -2006,10 +2008,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "preop.proceduresJson",
     exportName: "procedure_occurrence.procedure_concept_id (via PreopProcedure)",
-    meaning: "The coded planned procedures as stored on the assessment, one entry per procedure.",
+    meaning: "The coded planned procedures as stored on the assessment, one entry per procedure. An entry is either a procedure group alone (system LOSPOR_PROCEDURE_GROUP; procedure_source_value PROCEDURE:LOSPOR_PROCEDURE_GROUP:<group>, procedure_concept_id 0, because a group names no single operation) or the exact operation the clinician chose inside it (system ICD-10-PCS; procedure_source_value PROCEDURE:ICD10PCS:<code>, procedure_concept_id the standard ICD10PCS concept, or its RxNorm target for a drug administration).",
     type: "json",
-    missingnessRule: "Empty = no coded procedure was recorded, and the free-text procedure above is exported instead if there is one",
-    derivationRule: "Each entry becomes one PreopProcedure mirror row and then one PROCEDURE_OCCURRENCE",
+    missingnessRule: "Empty = no coded procedure was recorded, and the free-text procedure above is exported instead if there is one. procedure_concept_id 0 = a group without an exact operation, or an operation with no bundled standard concept",
+    derivationRule: "Each entry becomes one PreopProcedure mirror row and then one PROCEDURE_OCCURRENCE. An imported hospital code (e.g. КСМП) is mirrored under the vocabulary it declares (sourceVocabulary KSMP, procedure_concept_id 0) until the clinician chooses its exact ICD-10-PCS operation. ICD-10-PCS concept ids ship with the release (src/data/icd10pcs-omop.json, from OHDSI Athena); entries saved before exact operations existed keep the reading they were stored with",
     sourceTable: "PreoperativeAssessment", sourceColumn: "proceduresJson",
     versionIntroduced: "4.3.0",
   },
@@ -2140,9 +2142,34 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "4.4.0",
   },
   {
+    name: "event.fluid",
+    exportName: "drug_exposure.drug_concept_id, or device_exposure + procedure_occurrence (INTRAOP_BLOOD:)",
+    meaning: "The research concept of a catalogue fluid, from a hand-checked table "
+      + "in lospor-core (catalog/fluid-concepts.ts) rather than from its ATC code, "
+      + "which several fluids share: saline, Hartmann's, Plasma-Lyte and Ringer's "
+      + "acetate are all B05BB01. A fluid is stamped at save with the RxNorm "
+      + "clinical drug at its strength (saline 0.9% and 3% differ), mapping status "
+      + "MANUALLY_CURATED. A blood product is not a drug in OMOP: each unit "
+      + "exports as a device_exposure row with its Device-domain product concept "
+      + "and a procedure_occurrence row with the transfusion of it, both with "
+      + "source value INTRAOP_BLOOD:<name>, and no drug_exposure row. Cell "
+      + "salvage has no product concept and exports as the autotransfusion "
+      + "procedure alone. The unit's volume is the product row's quantity, with "
+      + "unit_concept_id 8587 (mL) and unit_source_value mL (exchange contract "
+      + "2.5.0); for cell salvage, which has no product row, it leaves as "
+      + "observation LOSPOR:BLOOD_PRODUCT_UNIT_ML (value_as_string the product, "
+      + "value_as_number the mL). An event saved before the table "
+      + "carried B05AX01's concept, a technetium tracer; the export codes blood "
+      + "products from the table by name so that concept never leaves.",
+    type: "string",
+    missingnessRule: "A fluid name the table does not know, or a strength it has no concept for, falls back to the ATC code and usually exports as concept 0 with the name in drug_source_value",
+    sourceTable: "CaseEvent", sourceColumn: "label",
+    versionIntroduced: "4.4.0",
+  },
+  {
     name: "event.volume",
     exportName: "drug_exposure.dose_value (for fluid_start events)",
-    meaning: "The volume a fluid was charted at, and the dose figure for a fluid row.",
+    meaning: "The volume a fluid was charted at, and the dose figure for a fluid row. For a blood unit, device_exposure.quantity in mL; for cell salvage, observation.value_as_number (LOSPOR:BLOOD_PRODUCT_UNIT_ML).",
     type: "string",
     missingnessRule: "Absent on every event that is not a fluid start. A genuinely zero volume survives as 0 rather than collapsing into no-dose-recorded",
     sourceTable: "CaseEvent", sourceColumn: "volume",
@@ -2172,7 +2199,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     name: "event.fluidCategory",
     exportName: "(not exported)",
     exported: false,
-    meaning: "Crystalloid, colloid or blood product, as charted. Selected and never read: the fluid totals are computed and exported separately, and the fluid itself exports by name and concept rather than by category.",
+    meaning: "Crystalloid, colloid or blood product, as charted. Not exported itself; it tells the export that a fluid is a blood product, which then leaves as a device and a transfusion rather than a drug. The fluid totals are computed and exported separately.",
     type: "string",
     missingnessRule: "Never present in the export. The column is selected out of the database and discarded, so its contents say nothing about what a researcher will receive",
     sourceTable: "CaseEvent", sourceColumn: "fluidCategory",
@@ -2344,8 +2371,10 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "premedication",
     exportName: "observation.value_as_string (LOSPOR:PREMEDICATION_PHASE) + procedure_occurrence.procedure_concept_id",
-    meaning: "Premedication recorded for the case, by phase (evening before "
-      + "or morning of surgery). Each row also emits a procedure_occurrence "
+    meaning: "Premedication recorded for the case, by phase: DAY_BEFORE (the "
+      + "day before surgery; earlier records said evening) or MORNING (the morning "
+      + "before surgery). A premedication has no clock time, so drug_exposure_start_date "
+      + "and the phase observation are dated D-1 for DAY_BEFORE and D for MORNING. Each row also emits a procedure_occurrence "
       + "fact, 4169397 (Premedication for anesthetic procedure) -- the phase "
       + "observation says when, the drug_exposure row (see premedicationRows) "
       + "says what, and this says the clinical act itself occurred.",
@@ -2359,7 +2388,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     exportName: "drug_exposure.drug_concept_id (via ATC→OMOP map)",
     meaning: "The premedication drug itself, as an administration -- the phase "
       + "entry above records when, this records what and gives it a coded "
-      + "concept where an ATC code resolves one. drug_type_concept_id is "
+      + "concept where an ATC code resolves one. Each entry is read into the "
+      + "catalogue drug (inn), its WHO ATC code, dose with unit, and route; the "
+      + "ATC code maps to the standard RxNorm ingredient (bundled with the release). "
+      + "An entry naming no catalogue drug, and Insulin and sodium citrate, stay "
+      + "uncoded (concept 0). drug_type_concept_id is "
       + "32818 (EHR administration record), the same as an intraop dose,  "
       + "because both are witnessed administrations rather than a patient's "
       + "self-reported history; drug_source_value carries a PREMED: prefix so "
@@ -2613,7 +2646,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "diagnosis.standardConceptId",
     exportName: "condition_occurrence.condition_concept_id",
-    meaning: "OMOP standard concept ID for the diagnosis (SNOMED preferred)",
+    meaning: "OMOP standard concept ID for the diagnosis (SNOMED preferred). When OMOP decomposes the ICD-10 code into several concepts (E11.2: type 2 diabetes, and a kidney disorder due to it), the diagnosis exports one condition_occurrence row per concept, all with the same condition_source_value; PreopDiagnosis.standardConceptIds holds them and standardConceptId is null",
     unit: "OMOP concept_id",
     type: "concept_id",
     missingnessRule: "0 = no confident OMOP mapping; source vocabulary row preserved",

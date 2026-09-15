@@ -1155,6 +1155,7 @@ add("GET", "/v1/cases/{id}/pdf", "Download a case PDF", {
 
 add("GET", "/v1/search/icd10", "Search ICD-10 diagnoses", { parameters: [query("q", { type: "string" }, true), query("locale", { type: "string", enum: ["en", "bg"], default: "en" })], result: arrayOf("SearchResult") })
 add("GET", "/v1/search/procedures", "Search procedure terminology", { parameters: [query("q", { type: "string" }, true)], result: arrayOf("SearchResult") })
+add("GET", "/v1/search/procedures/codes", "List the exact ICD-10-PCS operations inside one procedure group", { parameters: [query("group", { type: "string" }, true), query("q", { type: "string" })], result: ref("JsonObject"), errors: [400, 401] })
 add("GET", "/v1/search/drugs", "Search medication terminology", { parameters: [query("q", { type: "string" }, true)], result: arrayOf("SearchResult") })
 add("GET", "/v1/library/{category}", "Read an option-library category", { parameters: [pathParameter("category")], result: arrayOf("LibraryOption") })
 add("GET", "/v1/clinical/pediatric/rules", "Read pediatric capabilities, reviewed rules, and unavailable calculators", { result: ref("JsonObject"), tag: "clinical" })

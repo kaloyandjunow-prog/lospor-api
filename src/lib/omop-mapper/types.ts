@@ -91,8 +91,12 @@ export interface OmopDevice {
   device_exposure_start_date: string | null
   device_exposure_end_date: string | null
   device_type_concept_id: number
+  /** How much was given -- a blood unit's volume. Null for an airway device. */
+  quantity: number | null
   device_source_value: string | null
   visit_occurrence_id: number
+  unit_concept_id: number | null
+  unit_source_value: string | null
 }
 
 export interface OmopCareSite {
@@ -237,8 +241,11 @@ export interface OmopLabRow {
   test: string
   valueNum: number | null
   value: string | null
+  unit?: string | null
   unitCanon: string | null
   loincCode: string | null
+  sourceVocabulary?: string | null
+  sourceCode?: string | null
   abnormalFlag: string | null
   /**
    * When the specimen was drawn. Carried by LabResult all along and thrown
@@ -480,6 +487,7 @@ export type CaseRow = {
       sourceVocabulary?: string | null
       sourceCode?: string | null
       standardConceptId?: number | null
+      standardConceptIds?: number[]
       mappingStatus?: string
       ordinal: number
     }[]
@@ -503,6 +511,7 @@ export type CaseRow = {
       sourceVocabulary?: string | null
       sourceCode?: string | null
       standardConceptId?: number | null
+      standardConceptIds?: number[]
       mappingStatus?: string
       ordinal: number
     }[]
