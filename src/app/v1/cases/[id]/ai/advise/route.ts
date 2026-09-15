@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { rateLimit } from "@/lib/rate-limit"
 import { logAudit } from "@/lib/audit"
 import { fetchMistralChatCompletions } from "@/lib/mistral"
+import { DEFAULT_ADVISOR_MODEL } from "@/lib/mistral-models"
 import { redactText } from "@/lib/pii-check"
 import { corsHeaders } from "@/lib/cors"
 import { SYSTEM_PROMPT, buildPatientSummary } from "@/lib/ai-advisor"
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   let mistralRes: Response
   try {
     mistralRes = await fetchMistralChatCompletions(apiKey, {
-      model: process.env.MISTRAL_MODEL ?? "open-mistral-7b",
+      model: process.env.MISTRAL_MODEL ?? DEFAULT_ADVISOR_MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `Please analyse this patient's pre-operative data:\n\n${patientSummary}` },

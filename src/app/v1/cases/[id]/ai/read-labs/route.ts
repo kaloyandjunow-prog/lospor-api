@@ -5,6 +5,7 @@ import { logAudit } from "@/lib/audit"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { canWriteCase } from "@/lib/access-control"
 import { fetchMistralChatCompletions } from "@/lib/mistral"
+import { DEFAULT_VISION_MODEL } from "@/lib/mistral-models"
 import { prisma } from "@/lib/prisma"
 import { rateLimit } from "@/lib/rate-limit"
 import { corsHeaders } from "@/lib/cors"
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const timeout = setTimeout(() => controller.abort(), MISTRAL_TIMEOUT_MS)
   try {
     mistralRes = await fetchMistralChatCompletions(MISTRAL_API_KEY, {
-      model: process.env.MISTRAL_VISION_MODEL ?? "pixtral-12b-2409",
+      model: process.env.MISTRAL_VISION_MODEL ?? DEFAULT_VISION_MODEL,
       messages: [{
         role: "user",
         content: [
