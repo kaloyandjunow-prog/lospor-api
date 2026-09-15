@@ -1,6 +1,6 @@
 # Changelog - LOSPOR API
 
-## [Unreleased]
+## [9.10.0] - 2026-09-15
 
 ### Added
 
@@ -25,6 +25,7 @@
 - **Drug search without a Drug table returned no ATC code to the web form.** The drugs.json fallback returned `atc` only, while the web and mobile forms read `atcCode`; both are now returned.
 - **Diagnosis search matched English synonyms only after a terminology import.** `src/data/icd10-synonyms.json` (142,221 ICD-10-CM descriptions for 9,667 ICD-10 codes, Athena ICD10CM FY2027; `scripts/generate-icd10-synonyms.mts` rebuilds it) is loaded by `seed-icd10-from-bundle.ts` into `Icd10Synonym` under `bundle-` ids. Once a terminology import has written its own synonyms, the bundled rows are removed and the imported ones left untouched.
 - **The laboratory seed now treats Anti-Xa as explicitly uncoded.** It seeds 65 coded tests, reports one intentional exception, and lets Anti-Xa export as `LAB:Anti-Xa` with no fabricated LOINC or OMOP concept.
+- **Every AI feature failed as soon as a Mistral key was configured.** The advisor, lab-photo reading and vitals-scan reading defaulted to `open-mistral-7b` and `pixtral-12b-2409`, both retired by Mistral (30 March 2025, 31 December 2025) before this repository ever shipped a key. `src/lib/mistral-models.ts` gives the four routes dated, current defaults, matching the values the Hospital appliance already carries in its own `external-ai-models.ts`.
 
 - **ICD-10 concept seeding no longer chooses an arbitrary first OMOP target.**
   Exact active Athena source codes map only when they resolve to one distinct
