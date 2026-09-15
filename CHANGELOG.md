@@ -21,6 +21,9 @@
 
 ### Fixed
 
+- **Home medications and allergies picked from the drug list had no usable ATC code.** `src/data/drugs.json`, scraped from the BDA register, stored every substance code as the register prints it ("L01BC 2", not L01BC02), so no concept map row could ever match and each one exported concept 0, with or without a terminology import. The list is repaired (3,431 codes), `normalizeAtcCode` (`src/lib/atc.ts`) repairs the spelling wherever a code arrives (drug search, the preop medication mirror, the Drug seed, the scraper), and `lab-drug-omop.json` now also carries the drug list's codes: 961 of its 1,107 codes resolve in Athena, 883 to a single RxNorm ingredient. `seed-concept-maps` seeds those codes, so 2,938 of 3,525 coded drug-list entries export a standard concept on every site. Combination codes with several ingredients stay source-only, as before. Already saved cases keep what they stored.
+- **Drug search without a Drug table returned no ATC code to the web form.** The drugs.json fallback returned `atc` only, while the web and mobile forms read `atcCode`; both are now returned.
+- **Diagnosis search matched English synonyms only after a terminology import.** `src/data/icd10-synonyms.json` (142,221 ICD-10-CM descriptions for 9,667 ICD-10 codes, Athena ICD10CM FY2027; `scripts/generate-icd10-synonyms.mts` rebuilds it) is loaded by `seed-icd10-from-bundle.ts` into `Icd10Synonym` under `bundle-` ids. Once a terminology import has written its own synonyms, the bundled rows are removed and the imported ones left untouched.
 - **The laboratory seed now treats Anti-Xa as explicitly uncoded.** It seeds 65 coded tests, reports one intentional exception, and lets Anti-Xa export as `LAB:Anti-Xa` with no fabricated LOINC or OMOP concept.
 
 - **ICD-10 concept seeding no longer chooses an arbitrary first OMOP target.**

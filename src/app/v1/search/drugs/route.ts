@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import fs from "fs"
 import path from "path"
 import { CLINICAL_SEARCH_MIN_LENGTH } from "@lospor/core/search"
+import { normalizeAtcCode } from "@/lib/atc"
 
 type Entry = { name: string; inn: string; form: string; strength: string; atc: string }
 
@@ -32,15 +33,10 @@ export async function GET(req: NextRequest) {
     take: 20,
   })
   if (dbRows.length > 0) {
-    return NextResponse.json(dbRows.slice(0, 10).map(d => ({
-      id: d.id,
-      name: d.name,
-      inn: d.inn ?? "",
-      form: d.form ?? "",
-      strength: d.strength ?? "",
-      atc: d.atcCode ?? "",
-      atcCode: d.atcCode ?? "",
-    })))
+    return NextResponse.json(dbRows.slice(0, 10).map(d => {
+      const atc = normalizeAtcCode(d.atcCode) ?? ""
+      return { id: d.id, name: d.name, inn: d.inn ?? "", form: d.form ?? "", strength: d.strength ?? "", atc, atcCode: atc }
+    }))
   }
 
   // Fallback for development databases before the Drug seed has run.
@@ -61,5 +57,9 @@ export async function GET(req: NextRequest) {
   }
 
   results.sort((a, b) => a._score - b._score)
-  return NextResponse.json(results.slice(0, 10).map(({ _score, ...e }) => e))
+  // Same shape as the database rows: the web form reads atcCode, not atc.
+  return NextResponse.json(results.slice(0, 10).map(({ _score, ...e }) => {
+    const atc = normalizeAtcCode(e.atc) ?? ""
+    return { ...e, atc, atcCode: atc }
+  }))
 }

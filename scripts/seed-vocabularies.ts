@@ -20,6 +20,7 @@ import readline from "readline"
 import { PrismaClient, Prisma } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { parseIcd10BgRows } from "../src/lib/icd10-bg-import"
+import { normalizeAtcCode } from "../src/lib/atc"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter } satisfies Prisma.PrismaClientOptions)
@@ -353,7 +354,7 @@ async function seedDrugs() {
     id: `drug-${d.name.slice(0, 80)}`,
     name: d.name,
     inn: d.inn || null,
-    atcCode: d.atc?.trim() || null,
+    atcCode: normalizeAtcCode(d.atc),
     form: d.form || null,
     strength: d.strength || null,
   }))

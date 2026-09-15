@@ -58,4 +58,16 @@ describe("the bundled laboratory and drug research numbers", () => {
     expect(Object.keys(labDrug.atc).length).toBeGreaterThan(190)
     expect(Object.values(labDrug.atc).every(ids => ids.every(id => Number.isSafeInteger(id) && id > 0))).toBe(true)
   })
+
+  it("give the drug list a clinician picks home medications from its research numbers too", () => {
+    // Metformin and bisoprolol, as the Bulgarian drug list codes them.
+    expect(labDrug.atc["A10BA02"]).toEqual([1503297])
+    expect(labDrug.atc["C07AB07"]?.length).toBe(1)
+    const drugs = JSON.parse(fs.readFileSync("src/data/drugs.json", "utf8")) as { atc: string }[]
+    const coded = drugs.filter(drug => drug.atc)
+    const mapped = coded.filter(drug => labDrug.atc[drug.atc]?.length === 1)
+    // 2,938 of 3,525 in the 2026-09-13 Athena bundle; the rest are allergen
+    // extracts, local "00" codes, retired codes and combinations.
+    expect(mapped.length / coded.length).toBeGreaterThan(0.8)
+  })
 })

@@ -13,13 +13,16 @@
  * Written to src/data/lab-drug-omop.json:
  *   loinc[code]  the concept id of every LOINC code LOSPOR records;
  *   atc[code]    the standard RxNorm/RxNorm Extension ids an ATC code maps to,
- *                ascending (the concept map applies only a single one).
+ *                ascending (the concept map applies only a single one), for
+ *                every catalogue drug and every drug in the Bulgarian drug list
+ *                (src/data/drugs.json) -- the home medications and allergies.
  */
 
 import fs from "node:fs"
 import path from "node:path"
 import readline from "node:readline"
 import { CLINICAL_CATALOG, INTRAOP_DRUG_CODE_ENTRIES, PREMED_ATC_CODES } from "@lospor/core/catalog"
+import { normalizeAtcCode } from "../src/lib/atc"
 
 const argument = (name: string) => {
   const index = process.argv.indexOf(name)
@@ -44,11 +47,15 @@ const loincCodes = new Set(LOINC_SOURCES.flatMap(file =>
 // agents, and any option (such as premedication) that names one.
 const catalogAtc = JSON.stringify(CLINICAL_CATALOG).match(/"atcCode":"([A-Z][0-9]{2}[A-Z]{2}[0-9]{2})"/g)
   ?.map(match => match.slice(11, -1)) ?? []
-const atcCodes = new Set([
+const catalogCodes = new Set([
   ...INTRAOP_DRUG_CODE_ENTRIES.map(entry => entry.atcCode).filter((code): code is string => !!code),
   ...Object.values(PREMED_ATC_CODES),
   ...catalogAtc,
 ])
+// The drug list a clinician picks home medications and allergies from.
+const drugListCodes = new Set((JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "drugs.json"), "utf8")) as { atc: string }[])
+  .map(drug => normalizeAtcCode(drug.atc)).filter((code): code is string => !!code))
+const atcCodes = new Set([...catalogCodes, ...drugListCodes])
 
 async function each(file: string, fn: (columns: string[]) => void) {
   const lines = readline.createInterface({ input: fs.createReadStream(path.join(athena!, file)), crlfDelay: Infinity })
@@ -95,5 +102,8 @@ fs.writeFileSync(path.join(process.cwd(), "src", "data", "lab-drug-omop.json"), 
   atc: sorted(atc),
 })}\n`)
 const missingLoinc = [...loincCodes].filter(code => !loinc[code])
-const missingAtc = [...atcCodes].filter(code => !atc[code])
-console.log(`LOINC ${Object.keys(loinc).length}/${loincCodes.size} (missing ${missingLoinc.join(" ") || "none"}); ATC ${Object.keys(atc).length}/${atcCodes.size} (no single RxNorm target: ${missingAtc.join(" ") || "none"})`)
+const missingAtc = [...catalogCodes].filter(code => !atc[code])
+const drugList = [...drugListCodes]
+const several = drugList.filter(code => (atc[code]?.length ?? 0) > 1).length
+const none = drugList.filter(code => !atc[code]).length
+console.log(`LOINC ${Object.keys(loinc).length}/${loincCodes.size} (missing ${missingLoinc.join(" ") || "none"}); catalogue ATC ${catalogCodes.size - missingAtc.length}/${catalogCodes.size} (no RxNorm target: ${missingAtc.join(" ") || "none"}); drug list ATC ${drugList.length - none}/${drugList.length} with a target (${several} with several, left unmapped; ${none} with none)`)

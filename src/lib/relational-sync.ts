@@ -4,6 +4,7 @@ import { isExactProcedure, procedureGroupOf, PROCEDURE_GROUP_SYSTEM } from "@los
 import { parsePremedicationEntries, type PremedicationPhase } from "@lospor/core/premedication"
 import { getLabSeverity, parseLabValue } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
+import { normalizeAtcCode } from "@/lib/atc"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
 // Mirror the JSON clinical arrays into queryable research rows.
@@ -458,7 +459,8 @@ function medicationRows(preopId: string, caseId: string, json: unknown, kind: "C
   return arr(json)
     .filter((m: JsonItem) => m && (m.label || m.name || m.inn))
     .map((m: JsonItem, i: number) => {
-      const atc = str(m.atc ?? m.atcCode)
+      const rawAtc = str(m.atc ?? m.atcCode)
+      const atc = normalizeAtcCode(rawAtc)
       const inn = str(m.inn)
       const mapped = atc
         ? concept(concepts, "drug", "ATC", atc)
@@ -468,7 +470,7 @@ function medicationRows(preopId: string, caseId: string, json: unknown, kind: "C
         kind,
         nameRaw:   String(m.label ?? m.name ?? m.inn ?? ""),
         inn,
-        atcCode:   atc,
+        atcCode:   atc ?? rawAtc,
         dose:      str(m.dose),
         route:     str(m.route),
         frequency: str(m.frequency),

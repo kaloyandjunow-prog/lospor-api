@@ -41,6 +41,11 @@ ICD-9-CM to ICD-10-PCS General Equivalence Mappings (FY2013, public domain).
 
 ## ICD-10 and NHIS nomenclatures
 
+`src/data/icd10-synonyms.json` holds ICD-10-CM code descriptions (U.S. National
+Center for Health Statistics, public domain), taken from the OHDSI Standardized
+Vocabularies downloaded from Athena and filed under the WHO ICD-10 code each one
+extends, as search words.
+
 ICD-10 is © World Health Organization. Bulgarian ICD-10 titles, national
 sub-codes and NHIS list codes (CL011, CL024) come from the nomenclatures of the
 Bulgarian National Health Information System (НЗИС), Ministry of Health of the
@@ -59,8 +64,8 @@ downloads them from OHDSI Athena (https://athena.ohdsi.org) under the licences
 Athena presents for each vocabulary, and imports them itself.
 
 `src/data/lab-drug-omop.json` holds the OMOP concept ids of the LOINC codes LOSPOR
-records and of the RxNorm ingredients its catalogue ATC codes map to, from the
-same Athena download: identifiers only.
+records and of the RxNorm ingredients the ATC codes of its catalogue and of its
+Bulgarian drug list map to, from the same Athena download: identifiers only.
 
 `src/data/icd10-omop.json` holds, for each ICD-10 code, the OMOP concept ids
 Athena maps it to. These are integers assigned by OHDSI; the file contains no

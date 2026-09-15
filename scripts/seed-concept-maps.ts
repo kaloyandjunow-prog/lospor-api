@@ -15,6 +15,7 @@ import fs from "fs"
 import path from "path"
 import { selectStandardMapResolutions, type StandardMapResolution } from "./standard-map-selection"
 import { NHIS_CL024_LAB_CONCEPT_MAPS } from "./nhis-cl024-lab-mappings"
+import { normalizeAtcCode } from "../src/lib/atc"
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) } satisfies Prisma.PrismaClientOptions)
 const SOURCE_VERSION = "local-bilingual-map-v4"
@@ -780,6 +781,32 @@ async function main() {
       sourceCode: entry.atcCode,
       sourceLabelEn: entry.name,
     }, withBundled(catalogAtcStandards.get(entry.atcCode), bundledAtc(entry.atcCode, entry.name))))
+  }
+
+  // The Bulgarian drug list (src/data/drugs.json): the codes of the home
+  // medications and allergies a clinician picks. Like the catalogue block, it
+  // covers a site without an Athena import, where the Atc table is empty and
+  // every home medication would otherwise export concept 0. Labelled with the
+  // code's most frequent INN in the list.
+  const seededAtc = new Set([...atcCodes, ...catalogAtc.map(entry => entry.atcCode)])
+  const drugListInn = new Map<string, Map<string, number>>()
+  for (const drug of JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "drugs.json"), "utf8")) as { inn: string; atc: string }[]) {
+    const code = normalizeAtcCode(drug.atc)
+    if (!code || seededAtc.has(code)) continue
+    const names = drugListInn.get(code) ?? new Map<string, number>()
+    const inn = drug.inn.trim()
+    if (inn) names.set(inn, (names.get(inn) ?? 0) + 1)
+    drugListInn.set(code, names)
+  }
+  const drugListStandards = await resolveStandardMap("ATC", [...drugListInn.keys()], athenaVersion)
+  for (const [code, names] of drugListInn) {
+    const label = [...names].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? code
+    seeds.push(withStandard({
+      domain: "drug",
+      sourceVocabulary: "ATC",
+      sourceCode: code,
+      sourceLabelEn: label,
+    }, withBundled(drugListStandards.get(code), bundledAtc(code, label))))
   }
 
   // The raw-name fallback. `resolveDrugConcept` reaches for this only when an
