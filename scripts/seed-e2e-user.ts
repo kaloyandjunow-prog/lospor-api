@@ -62,6 +62,22 @@ async function main() {
     })
     console.log(`E2E user ready: ${user.email} (id ${user.id}, institution ${inst.id})`)
 
+    // hasAdminAggregate gives every ADMIN aggregate query across the appliance
+    // implicitly, but inspection, export and OMOP export still come only from
+    // a live explicit grant -- the same rule that applies to everyone else.
+    // Without this, authenticated.spec.ts's admin-authenticated tests have no
+    // case-inspection or export access to actually exercise.
+    await prisma.researchAccessGrant.deleteMany({ where: { userId: user.id } })
+    await prisma.researchAccessGrant.create({ data: {
+      userId: user.id,
+      allInstitutions: true,
+      grantedById: user.id,
+      canInspectCases: true,
+      canExport: true,
+      canExportOmop: true,
+      expiresAt: new Date(now.getTime() + 90 * 86_400_000),
+    } })
+
     const researchEmail = E2E_RESEARCH_EMAIL.trim().toLowerCase()
     const researcher = await prisma.user.upsert({
       where: { email: researchEmail },
