@@ -26,6 +26,12 @@ describe.skipIf(!runPostgres)("ICD-10 bundle seed", () => {
     await seedIcd10FromBundle(prisma)
   })
 
+  // Each of these seeds all 39,613 bundled codes at least once. That comfortably
+  // clears Vitest's default 5000ms on a normal run, but not always on a loaded
+  // CI runner — it isn't a hang, just real bulk-upsert work against a real
+  // Postgres, so the fix is a longer budget, not a shorter bundle.
+  const SEED_TIMEOUT_MS = 20_000
+
   it("restores authoritative labels for a bundled code", async () => {
     await prisma.icd10Code.upsert({
       where: { code: bundledCode },
@@ -39,20 +45,20 @@ describe.skipIf(!runPostgres)("ICD-10 bundle seed", () => {
     expect(result.updated).toBeGreaterThan(0)
     expect(after?.labelEn).not.toBe(staleLabelEn)
     expect(after?.labelBg).not.toBe(staleLabelBg)
-  })
+  }, SEED_TIMEOUT_MS)
 
   it("is idempotent: a second run inserts nothing", async () => {
     await seedIcd10FromBundle(prisma)
     const second = await seedIcd10FromBundle(prisma)
     expect(second.inserted).toBe(0)
     expect(second.updated).toBe(0)
-  })
+  }, SEED_TIMEOUT_MS)
 
   it("reports the bundle version it seeded from", async () => {
     const result = await seedIcd10FromBundle(prisma)
     expect(result.version).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(result.bundled).toBe(39_613)
-  })
+  }, SEED_TIMEOUT_MS)
 
   it("makes the codes the search route reads actually present", async () => {
     await seedIcd10FromBundle(prisma)
@@ -64,5 +70,5 @@ describe.skipIf(!runPostgres)("ICD-10 bundle seed", () => {
     })
     expect(found.length).toBeGreaterThan(0)
     expect(found[0].labelEn.length).toBeGreaterThan(0)
-  })
+  }, SEED_TIMEOUT_MS)
 })
