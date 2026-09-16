@@ -12102,7 +12102,26 @@
             "type": "string",
             "format": "uuid"
           },
-          "details": {}
+          "details": {},
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
         },
         "required": [
           "error"

@@ -21,7 +21,7 @@ import type { LegacyKeyEvents, LogEvent } from "@/types/timetable"
 import { SECTION_REVISION_HEADER } from "@lospor/core/sync"
 import { detectSectionConflicts } from "./_patch-conflicts"
 import { computeNextStatus, shouldStampAwaitingReview } from "./_patch-status"
-import { bridgeGridVitalsIntoLog, mergeWebClinicalEventsIntoLog } from "./_patch-intraop-log"
+import { bridgeGridVitalsIntoLog, mergeWebClinicalEventsIntoLog, projectedVitalIssues } from "./_patch-intraop-log"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import {
   CaseWriteError,
@@ -34,6 +34,12 @@ import { requiresPediatricModeDecision } from "@lospor/core/pediatric"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 const REVISION_HEADER = SECTION_REVISION_HEADER
+
+function validateProjectedVitalEvents(events: LogEvent[]): void {
+  const issues = projectedVitalIssues(events)
+  if (issues.length === 0) return
+  throw new CaseRouteResponse(NextResponse.json({ error: "Invalid event", issues }, { status: 400 }))
+}
 
 function readRevision(req: NextRequest, section: keyof typeof REVISION_HEADER): number | null | "invalid" {
   const raw = req.headers.get(REVISION_HEADER[section])
@@ -402,6 +408,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           projectedLog = bridgeGridVitalsIntoLog(projectedLog, gridVitals, start)
         }
         if (projectedLog && projectedLog.length > 0) {
+          // The web timetable reconciles a complete log instead of calling the
+          // individual event endpoint. Apply the same vital contract here so a
+          // client cannot store a value the PWA would correctly refuse.
+          validateProjectedVitalEvents(projectedLog)
           // The third write path into CaseEvent, and the one a web client uses
           // most: saving the case saves the whole timetable. Without this a
           // drug charted here would store its ATC and no concept, while the

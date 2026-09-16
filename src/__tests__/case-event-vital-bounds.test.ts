@@ -24,6 +24,16 @@ describe("a charted vital has to be a possible reading", () => {
     expect(vital({ heartRate: -40 }).success).toBe(false)
   })
 
+  it("accepts unusual clinical observations that require a warning, not data loss", () => {
+    expect(vital({ systolic: 301, diastolic: 151 }).success).toBe(true)
+    expect(vital({ heartRate: 39 }).success).toBe(true)
+    expect(vital({ heartRate: 251 }).success).toBe(true)
+    expect(vital({ temp: 27 }).success).toBe(true)
+    expect(vital({ temp: 42 }).success).toBe(true)
+    expect(vital({ etco2: 95 }).success).toBe(true)
+    expect(vital({ cvp: -2 }).success).toBe(true)
+  })
+
   it("accepts the readings a clinician actually charts", () => {
     expect(vital({ bis: 38, tofRatio: 0.4, cvp: 7.4 }).success).toBe(true)
     expect(vital({ systolic: 118, diastolic: 70, heartRate: 76, spO2: 99 }).success).toBe(true)

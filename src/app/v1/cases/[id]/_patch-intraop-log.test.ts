@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { bridgeGridVitalsIntoLog, mergeWebClinicalEventsIntoLog } from "./_patch-intraop-log"
+import {
+  bridgeGridVitalsIntoLog,
+  mergeWebClinicalEventsIntoLog,
+  projectedVitalIssues,
+} from "./_patch-intraop-log"
 import type { ClinicalEvent, LogEvent } from "@/types/timetable"
 
 const START = new Date("2026-09-06T08:00:00.000Z").getTime()
@@ -8,6 +12,10 @@ const atColumn = (col: number) => new Date(START + col * COLUMN_MS).toISOString(
 
 const logged = (over: Partial<LogEvent> = {}): LogEvent => ({
   id: "e1", ts: atColumn(0), type: "clinical_event", label: "Incision", ...over,
+} as LogEvent)
+
+const event = (over: Partial<LogEvent> = {}): LogEvent => ({
+  id: "v1", ts: atColumn(0), type: "vital", ...over,
 } as LogEvent)
 
 describe("mergeWebClinicalEventsIntoLog", () => {
@@ -156,5 +164,20 @@ describe("bridgeGridVitalsIntoLog", () => {
 
   it("leaves an empty log alone", () => {
     expect(bridgeGridVitalsIntoLog([], [{ systolic: 120 }], START)).toEqual([])
+  })
+})
+
+describe("projectedVitalIssues", () => {
+  it("uses the event boundary for web full-log writes", () => {
+    expect(projectedVitalIssues([
+      event({ id: "extreme", type: "vital", systolic: 301, heartRate: 39, temp: 42 }),
+    ])).toEqual([])
+    expect(projectedVitalIssues([
+      event({ id: "bad-bis", type: "vital", bis: 101 }),
+      event({ id: "bad-tof", type: "vital", tofRatio: 1.1 }),
+    ])).toEqual(expect.arrayContaining([
+      expect.objectContaining({ eventId: "bad-bis", field: "bis" }),
+      expect.objectContaining({ eventId: "bad-tof", field: "tofRatio" }),
+    ]))
   })
 })
