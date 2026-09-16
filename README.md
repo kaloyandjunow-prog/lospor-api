@@ -1,3 +1,35 @@
+# ENGLISH BELOW
+
+# LOSPOR API — български
+
+LOSPOR API е единствената сървърна услуга, която управлява достъпа до
+PostgreSQL, Prisma миграциите, удостоверяването, електронната поща, AI
+адаптерите, генерирането на PDF, одитните записи, OMOP експорта и фоновите
+задачи. Публичният договор е версиониран под `/v1`.
+
+Услугата се използва от LOSPOR Web, LOSPOR Mobile/PWA, Database Browser и от
+съответните компоненти в LOSPOR Hospital. Тя не е потребителски интерфейс и не
+трябва да се дублира с отделна реализация на API в клиентските хранилища.
+
+Минимално локално стартиране:
+
+```bash
+npm ci
+cp .env.example .env.local
+npx prisma migrate deploy
+npm run db:seed
+npm run dev
+```
+
+Проверките за готовност са на `/health/live` и `/health/ready`. Не
+използвайте примерните настройки за продукционни среди. Подробните инструкции
+за конфигурация, сигурност, миграции, OpenAPI и тестове са в английската версия
+по-долу.
+
+---
+
+# English
+
 # LOSPOR API
 
 The LOSPOR V7 database and HTTP service. This repository is the only owner of
