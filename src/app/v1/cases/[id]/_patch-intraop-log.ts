@@ -1,5 +1,26 @@
 import { INTRAOP_COLUMN_MS, intraopInstantForColumn } from "@lospor/core/intraop-engine"
 import type { ClinicalEvent, LogEvent } from "@/types/timetable"
+import { caseEventSchema } from "@/lib/case-event-schema"
+
+export type ProjectedVitalIssue = { eventId: string; field: string; message: string }
+
+/** Apply the individual event endpoint's vital contract to full-log web writes. */
+export function projectedVitalIssues(events: LogEvent[]): ProjectedVitalIssue[] {
+  const issues: ProjectedVitalIssue[] = []
+  for (const event of events) {
+    if (event.type !== "vital") continue
+    const parsed = caseEventSchema.safeParse(event)
+    if (parsed.success) continue
+    for (const issue of parsed.error.issues) {
+      issues.push({
+        eventId: event.id ?? "",
+        field: issue.path.join("."),
+        message: issue.message,
+      })
+    }
+  }
+  return issues
+}
 
 /**
  * Turning a web-shaped timetable back into the event log both clients read.

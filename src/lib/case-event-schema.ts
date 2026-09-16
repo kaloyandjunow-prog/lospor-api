@@ -40,12 +40,14 @@ function positiveRate(value: unknown): boolean {
 function vitalFields(): Record<string, z.ZodTypeAny> {
   const fields: Record<string, z.ZodTypeAny> = {}
   for (const [name, rule] of Object.entries(INTRAOP_VITAL_RULES)) {
-    const base = rule.integer ? z.number().int() : z.number()
+    let base = rule.integer ? z.number().int() : z.number()
+    if (rule.min != null) base = base.min(rule.min)
+    if (rule.max != null) base = base.max(rule.max)
     fields[name] = z.preprocess(
       // A cleared field arrives as "" or null and means "not recorded",
       // which is not a value to validate.
       value => (value === "" || value === null ? undefined : value),
-      base.min(rule.min).max(rule.max).optional(),
+      base.optional(),
     )
   }
   return fields

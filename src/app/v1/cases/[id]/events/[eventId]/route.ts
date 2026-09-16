@@ -70,8 +70,13 @@ export async function PUT(
   let parsed: z.infer<typeof eventSchema>
   try {
     parsed = eventSchema.parse(await req.json())
-  } catch {
-    return NextResponse.json({ error: "Invalid event" }, { status: 400 })
+  } catch (error) {
+    return NextResponse.json({
+      error: "Invalid event",
+      issues: error instanceof z.ZodError
+        ? error.issues.map(issue => ({ field: issue.path.join("."), message: issue.message }))
+        : [],
+    }, { status: 400 })
   }
   const event = { ...parsed, id: eventId }
   const piiError = checkEventPII(event)

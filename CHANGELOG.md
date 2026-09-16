@@ -1,5 +1,11 @@
 # Changelog - LOSPOR API
 
+## [9.10.2] - 2026-09-16
+
+### Fixed
+
+- **Intraoperative vital writes now enforce the same safety contract everywhere.** Field-level event validation issues are returned from individual event endpoints and full-log reconciliation alike, applying core's hard device-scale checks (BIS, TOF ratio, SpO2) consistently rather than only on the path that happened to check them.
+
 ## [9.10.1] - 2026-09-15
 
 ### Fixed

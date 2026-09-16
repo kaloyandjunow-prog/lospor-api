@@ -20,6 +20,13 @@ export const schemas = {
     code: { type: "string" },
     requestId: { type: "string", format: "uuid" },
     details: {},
+    issues: {
+      type: "array",
+      items: object({
+        field: { type: "string" },
+        message: { type: "string" },
+      }, ["field", "message"]),
+    },
   }, ["error"]),
   Message: object({ message: { type: "string" }, ok: { type: "boolean" } }),
   ReadinessResponse: object({
