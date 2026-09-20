@@ -1,5 +1,11 @@
 # Changelog - LOSPOR API
 
+## [9.10.3] - 2026-09-20
+
+### Changed
+
+- **Version alignment only, no behaviour change.** The API, Web and Mobile clients are released as one set and share request contracts, and LOSPOR Hospital verifies that the three vendored versions match. Web moved to 9.10.3 for the refreshed PeriOp Laboratories mark, so API and Mobile move with it.
+
 ## [9.10.2] - 2026-09-16
 
 ### Fixed
