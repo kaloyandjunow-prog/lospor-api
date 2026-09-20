@@ -131,6 +131,57 @@ describe("/api/user preferences", () => {
     await expect(response.json()).resolves.toMatchObject({ preferredLocale: "en" })
   })
 
+  // The PWA pushes its whole preferences object, and core's ClinicalUnits has
+  // carried a fifth unit -- cvp -- since central venous pressure gained its own
+  // entry unit. unitsPatchSchema is strict and listed only four, so every
+  // preference sync from a client that knows about cvp was rejected outright:
+  // a 400 on each launch, the dirty flag never clearing, and nothing a
+  // clinician set ever reaching the server.
+  it("accepts the cvp entry unit that core's preferences carry", async () => {
+    findUniqueMock.mockResolvedValue({
+      firstName: "Ana",
+      lastName: "User",
+      title: "Dr",
+      preferences: { units: { height: "cm", cvp: "cmH2O" } },
+    })
+    updateMock.mockResolvedValue({
+      name: "Dr Ana User",
+      firstName: "Ana",
+      lastName: "User",
+      title: "Dr",
+      institution: null,
+      preferences: { units: { height: "cm", cvp: "mmHg" } },
+    })
+
+    const { PATCH } = await import("@/app/v1/user/route")
+    const response = await PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences: { units: { cvp: "mmHg" } } }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect(response.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: {
+        preferences: expect.objectContaining({
+          units: expect.objectContaining({ cvp: "mmHg" }),
+        }),
+      },
+    }))
+  })
+
+  // Still strict: an unknown unit is a typo, or a client sending a field this
+  // release does not understand, and storing it silently would make the next
+  // reader believe the appliance honours it.
+  it("still refuses a unit it does not know", async () => {
+    const { PATCH } = await import("@/app/v1/user/route")
+    const response = await PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences: { units: { nonsense: "mmHg" } } }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect(response.status).toBe(400)
+  })
+
   it("rejects invalid preference payloads", async () => {
     const { PATCH } = await import("@/app/v1/user/route")
     const response = await PATCH(new Request("http://localhost/api/user", {
