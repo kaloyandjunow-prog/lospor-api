@@ -47,6 +47,11 @@ const unitsPatchSchema = z.object({
   weight: z.enum(["kg", "lb"]).optional(),
   temperature: z.enum(["C", "F"]).optional(),
   etco2: z.enum(["mmHg", "kPa"]).optional(),
+  // Core's ClinicalUnits carries a fifth unit. This schema is strict, so
+  // omitting cvp did not ignore it -- it rejected the whole request, and a
+  // client that sends its full preferences object always sends cvp. Every
+  // preference sync from such a client failed with 400 until this line existed.
+  cvp: z.enum(["cmH2O", "mmHg"]).optional(),
 }).strict()
 
 const autoFillPatchSchema = z.object({
