@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [9.10.6] - 2026-09-23
+
+### Changed
+
+- **Shared EHR import contract aligned with Core 9.10.3.** The API release
+  carries the vital-sign and medication mapping fields used by Hospital 1.4.6
+  while preserving source codes and clinician review semantics.
+
 ## [9.10.3] - 2026-09-20
 
 ### Changed
