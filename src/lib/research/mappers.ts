@@ -138,6 +138,17 @@ export const RESEARCH_DETAIL_SELECT = {
         },
         orderBy: { ordinal: "asc" },
       },
+      assessmentAnswers: {
+        select: {
+          state: true,
+          optionKey: true,
+          profileVersion: true,
+          source: true,
+          provenance: true,
+          question: { select: { stableKey: true } },
+        },
+        orderBy: { questionId: "asc" },
+      },
       labRows: {
         select: {
           loincCode: true,
@@ -375,7 +386,16 @@ function eventLabel(event: ResearchDetailRow["events"][number]): {
   }
 }
 
-export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
+export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail & {
+  preoperativeAnswers: Array<{
+    stableKey: string
+    state: string
+    optionKey: string | null
+    profileVersion: number
+    source: string
+    provenance: unknown
+  }>
+} {
   const summary = mapResearchSummary(row)
   const startedAt = row.intraop?.startedAt?.getTime()
   const selections = (category: string) =>
@@ -423,6 +443,14 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail {
       coldsApplicable: row.preop?.coldsApplicable ?? false,
       colds: row.preop?.coldsScore ?? null,
       mappingStatus: item.mappingStatus,
+    })),
+    preoperativeAnswers: (row.preop?.assessmentAnswers ?? []).map(item => ({
+      stableKey: item.question.stableKey,
+      state: item.state,
+      optionKey: item.optionKey,
+      profileVersion: item.profileVersion,
+      source: item.source,
+      provenance: item.provenance,
     })),
     comorbidities: (row.preop?.comorbidityRows ?? []).map(item => ({
       code: item.icd10Code ?? item.code ?? item.sourceCode,

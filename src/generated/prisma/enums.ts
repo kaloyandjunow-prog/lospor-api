@@ -203,6 +203,46 @@ export const ClinicalFieldPresence = {
 export type ClinicalFieldPresence = (typeof ClinicalFieldPresence)[keyof typeof ClinicalFieldPresence]
 
 
+export const PreopProfileStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  RETIRED: 'RETIRED'
+} as const
+
+export type PreopProfileStatus = (typeof PreopProfileStatus)[keyof typeof PreopProfileStatus]
+
+
+export const PreopAnswerType = {
+  BOOLEAN: 'BOOLEAN',
+  CHOICE: 'CHOICE',
+  NUMBER: 'NUMBER',
+  TEXT: 'TEXT',
+  DATE: 'DATE'
+} as const
+
+export type PreopAnswerType = (typeof PreopAnswerType)[keyof typeof PreopAnswerType]
+
+
+export const PreopAnswerState = {
+  YES: 'YES',
+  NO: 'NO',
+  UNKNOWN: 'UNKNOWN',
+  NOT_APPLICABLE: 'NOT_APPLICABLE',
+  NOT_ASKED: 'NOT_ASKED'
+} as const
+
+export type PreopAnswerState = (typeof PreopAnswerState)[keyof typeof PreopAnswerState]
+
+
+export const PreopSuggestionStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type PreopSuggestionStatus = (typeof PreopSuggestionStatus)[keyof typeof PreopSuggestionStatus]
+
+
 export const Sex = {
   MALE: 'MALE',
   FEMALE: 'FEMALE',

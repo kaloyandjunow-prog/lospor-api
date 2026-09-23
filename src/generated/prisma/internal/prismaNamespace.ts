@@ -435,6 +435,14 @@ export const ModelName = {
   AuditLog: 'AuditLog',
   CustomTerm: 'CustomTerm',
   PreoperativeAssessment: 'PreoperativeAssessment',
+  PreopQuestionDefinition: 'PreopQuestionDefinition',
+  PreopAnswerOption: 'PreopAnswerOption',
+  PreopAssessmentProfile: 'PreopAssessmentProfile',
+  PreopCaseProfilePin: 'PreopCaseProfilePin',
+  PreopProfileQuestion: 'PreopProfileQuestion',
+  PreopAssessmentAnswer: 'PreopAssessmentAnswer',
+  PreopAssessmentSuggestion: 'PreopAssessmentSuggestion',
+  PreopAssessmentAuditEvent: 'PreopAssessmentAuditEvent',
   IntraoperativeRecord: 'IntraoperativeRecord',
   PostoperativeRecord: 'PostoperativeRecord',
   CaseClinicalCalculation: 'CaseClinicalCalculation',
@@ -474,7 +482,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopCaseProfilePin" | "preopProfileQuestion" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3290,6 +3298,598 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PreopQuestionDefinition: {
+      payload: Prisma.$PreopQuestionDefinitionPayload<ExtArgs>
+      fields: Prisma.PreopQuestionDefinitionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopQuestionDefinitionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopQuestionDefinitionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopQuestionDefinitionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopQuestionDefinitionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>
+        }
+        findMany: {
+          args: Prisma.PreopQuestionDefinitionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>[]
+        }
+        create: {
+          args: Prisma.PreopQuestionDefinitionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>
+        }
+        createMany: {
+          args: Prisma.PreopQuestionDefinitionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopQuestionDefinitionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopQuestionDefinitionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>
+        }
+        update: {
+          args: Prisma.PreopQuestionDefinitionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopQuestionDefinitionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopQuestionDefinitionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopQuestionDefinitionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopQuestionDefinitionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopQuestionDefinitionPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopQuestionDefinitionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopQuestionDefinition>
+        }
+        groupBy: {
+          args: Prisma.PreopQuestionDefinitionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopQuestionDefinitionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopQuestionDefinitionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopQuestionDefinitionCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreopAnswerOption: {
+      payload: Prisma.$PreopAnswerOptionPayload<ExtArgs>
+      fields: Prisma.PreopAnswerOptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopAnswerOptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopAnswerOptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopAnswerOptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopAnswerOptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>
+        }
+        findMany: {
+          args: Prisma.PreopAnswerOptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>[]
+        }
+        create: {
+          args: Prisma.PreopAnswerOptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>
+        }
+        createMany: {
+          args: Prisma.PreopAnswerOptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopAnswerOptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopAnswerOptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>
+        }
+        update: {
+          args: Prisma.PreopAnswerOptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopAnswerOptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopAnswerOptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopAnswerOptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopAnswerOptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAnswerOptionPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopAnswerOptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopAnswerOption>
+        }
+        groupBy: {
+          args: Prisma.PreopAnswerOptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAnswerOptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopAnswerOptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAnswerOptionCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreopAssessmentProfile: {
+      payload: Prisma.$PreopAssessmentProfilePayload<ExtArgs>
+      fields: Prisma.PreopAssessmentProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopAssessmentProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopAssessmentProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.PreopAssessmentProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopAssessmentProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>
+        }
+        findMany: {
+          args: Prisma.PreopAssessmentProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>[]
+        }
+        create: {
+          args: Prisma.PreopAssessmentProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>
+        }
+        createMany: {
+          args: Prisma.PreopAssessmentProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopAssessmentProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.PreopAssessmentProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>
+        }
+        update: {
+          args: Prisma.PreopAssessmentProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopAssessmentProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopAssessmentProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopAssessmentProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopAssessmentProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.PreopAssessmentProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopAssessmentProfile>
+        }
+        groupBy: {
+          args: Prisma.PreopAssessmentProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopAssessmentProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreopCaseProfilePin: {
+      payload: Prisma.$PreopCaseProfilePinPayload<ExtArgs>
+      fields: Prisma.PreopCaseProfilePinFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopCaseProfilePinFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopCaseProfilePinFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopCaseProfilePinFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopCaseProfilePinFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>
+        }
+        findMany: {
+          args: Prisma.PreopCaseProfilePinFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>[]
+        }
+        create: {
+          args: Prisma.PreopCaseProfilePinCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>
+        }
+        createMany: {
+          args: Prisma.PreopCaseProfilePinCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopCaseProfilePinCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopCaseProfilePinDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>
+        }
+        update: {
+          args: Prisma.PreopCaseProfilePinUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopCaseProfilePinDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopCaseProfilePinUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopCaseProfilePinUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopCaseProfilePinUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopCaseProfilePinPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopCaseProfilePinAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopCaseProfilePin>
+        }
+        groupBy: {
+          args: Prisma.PreopCaseProfilePinGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopCaseProfilePinGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopCaseProfilePinCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopCaseProfilePinCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreopProfileQuestion: {
+      payload: Prisma.$PreopProfileQuestionPayload<ExtArgs>
+      fields: Prisma.PreopProfileQuestionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopProfileQuestionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopProfileQuestionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopProfileQuestionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopProfileQuestionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>
+        }
+        findMany: {
+          args: Prisma.PreopProfileQuestionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>[]
+        }
+        create: {
+          args: Prisma.PreopProfileQuestionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>
+        }
+        createMany: {
+          args: Prisma.PreopProfileQuestionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopProfileQuestionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopProfileQuestionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>
+        }
+        update: {
+          args: Prisma.PreopProfileQuestionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopProfileQuestionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopProfileQuestionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopProfileQuestionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopProfileQuestionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopProfileQuestionPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopProfileQuestionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopProfileQuestion>
+        }
+        groupBy: {
+          args: Prisma.PreopProfileQuestionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopProfileQuestionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopProfileQuestionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopProfileQuestionCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreopAssessmentAnswer: {
+      payload: Prisma.$PreopAssessmentAnswerPayload<ExtArgs>
+      fields: Prisma.PreopAssessmentAnswerFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopAssessmentAnswerFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopAssessmentAnswerFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopAssessmentAnswerFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopAssessmentAnswerFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>
+        }
+        findMany: {
+          args: Prisma.PreopAssessmentAnswerFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>[]
+        }
+        create: {
+          args: Prisma.PreopAssessmentAnswerCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>
+        }
+        createMany: {
+          args: Prisma.PreopAssessmentAnswerCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopAssessmentAnswerCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopAssessmentAnswerDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>
+        }
+        update: {
+          args: Prisma.PreopAssessmentAnswerUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopAssessmentAnswerDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopAssessmentAnswerUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopAssessmentAnswerUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopAssessmentAnswerUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAnswerPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopAssessmentAnswerAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopAssessmentAnswer>
+        }
+        groupBy: {
+          args: Prisma.PreopAssessmentAnswerGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentAnswerGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopAssessmentAnswerCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentAnswerCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreopAssessmentSuggestion: {
+      payload: Prisma.$PreopAssessmentSuggestionPayload<ExtArgs>
+      fields: Prisma.PreopAssessmentSuggestionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopAssessmentSuggestionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopAssessmentSuggestionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopAssessmentSuggestionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopAssessmentSuggestionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>
+        }
+        findMany: {
+          args: Prisma.PreopAssessmentSuggestionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>[]
+        }
+        create: {
+          args: Prisma.PreopAssessmentSuggestionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>
+        }
+        createMany: {
+          args: Prisma.PreopAssessmentSuggestionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopAssessmentSuggestionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopAssessmentSuggestionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>
+        }
+        update: {
+          args: Prisma.PreopAssessmentSuggestionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopAssessmentSuggestionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopAssessmentSuggestionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopAssessmentSuggestionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopAssessmentSuggestionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentSuggestionPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopAssessmentSuggestionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopAssessmentSuggestion>
+        }
+        groupBy: {
+          args: Prisma.PreopAssessmentSuggestionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentSuggestionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopAssessmentSuggestionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentSuggestionCountAggregateOutputType> | number
+        }
+      }
+    }
+    PreopAssessmentAuditEvent: {
+      payload: Prisma.$PreopAssessmentAuditEventPayload<ExtArgs>
+      fields: Prisma.PreopAssessmentAuditEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopAssessmentAuditEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopAssessmentAuditEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopAssessmentAuditEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopAssessmentAuditEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>
+        }
+        findMany: {
+          args: Prisma.PreopAssessmentAuditEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>[]
+        }
+        create: {
+          args: Prisma.PreopAssessmentAuditEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>
+        }
+        createMany: {
+          args: Prisma.PreopAssessmentAuditEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopAssessmentAuditEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopAssessmentAuditEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>
+        }
+        update: {
+          args: Prisma.PreopAssessmentAuditEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopAssessmentAuditEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopAssessmentAuditEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopAssessmentAuditEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopAssessmentAuditEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopAssessmentAuditEventPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopAssessmentAuditEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopAssessmentAuditEvent>
+        }
+        groupBy: {
+          args: Prisma.PreopAssessmentAuditEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentAuditEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopAssessmentAuditEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopAssessmentAuditEventCountAggregateOutputType> | number
+        }
+      }
+    }
     IntraoperativeRecord: {
       payload: Prisma.$IntraoperativeRecordPayload<ExtArgs>
       fields: Prisma.IntraoperativeRecordFieldRefs
@@ -5770,6 +6370,140 @@ export const PreoperativeAssessmentScalarFieldEnum = {
 export type PreoperativeAssessmentScalarFieldEnum = (typeof PreoperativeAssessmentScalarFieldEnum)[keyof typeof PreoperativeAssessmentScalarFieldEnum]
 
 
+export const PreopQuestionDefinitionScalarFieldEnum = {
+  id: 'id',
+  stableKey: 'stableKey',
+  catalogVersion: 'catalogVersion',
+  section: 'section',
+  applicability: 'applicability',
+  answerType: 'answerType',
+  labelEn: 'labelEn',
+  labelBg: 'labelBg',
+  helpEn: 'helpEn',
+  helpBg: 'helpBg',
+  requiredDefault: 'requiredDefault',
+  allowUnknown: 'allowUnknown',
+  allowNotApplicable: 'allowNotApplicable',
+  conditionalRuleKey: 'conditionalRuleKey',
+  omopDomain: 'omopDomain',
+  omopConceptId: 'omopConceptId',
+  omopVocabulary: 'omopVocabulary',
+  omopSourceCode: 'omopSourceCode',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopQuestionDefinitionScalarFieldEnum = (typeof PreopQuestionDefinitionScalarFieldEnum)[keyof typeof PreopQuestionDefinitionScalarFieldEnum]
+
+
+export const PreopAnswerOptionScalarFieldEnum = {
+  id: 'id',
+  questionId: 'questionId',
+  key: 'key',
+  labelEn: 'labelEn',
+  labelBg: 'labelBg',
+  omopConceptId: 'omopConceptId',
+  omopVocabulary: 'omopVocabulary',
+  omopSourceCode: 'omopSourceCode',
+  sortOrder: 'sortOrder'
+} as const
+
+export type PreopAnswerOptionScalarFieldEnum = (typeof PreopAnswerOptionScalarFieldEnum)[keyof typeof PreopAnswerOptionScalarFieldEnum]
+
+
+export const PreopAssessmentProfileScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  catalogVersion: 'catalogVersion',
+  status: 'status',
+  publishedAt: 'publishedAt',
+  publishedById: 'publishedById',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopAssessmentProfileScalarFieldEnum = (typeof PreopAssessmentProfileScalarFieldEnum)[keyof typeof PreopAssessmentProfileScalarFieldEnum]
+
+
+export const PreopCaseProfilePinScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  profileId: 'profileId',
+  profileVersion: 'profileVersion',
+  pinnedAt: 'pinnedAt',
+  pinnedById: 'pinnedById',
+  adoptedAt: 'adoptedAt',
+  adoptedById: 'adoptedById'
+} as const
+
+export type PreopCaseProfilePinScalarFieldEnum = (typeof PreopCaseProfilePinScalarFieldEnum)[keyof typeof PreopCaseProfilePinScalarFieldEnum]
+
+
+export const PreopProfileQuestionScalarFieldEnum = {
+  profileId: 'profileId',
+  questionId: 'questionId',
+  enabled: 'enabled',
+  required: 'required',
+  sortOrder: 'sortOrder'
+} as const
+
+export type PreopProfileQuestionScalarFieldEnum = (typeof PreopProfileQuestionScalarFieldEnum)[keyof typeof PreopProfileQuestionScalarFieldEnum]
+
+
+export const PreopAssessmentAnswerScalarFieldEnum = {
+  id: 'id',
+  preopId: 'preopId',
+  questionId: 'questionId',
+  profileId: 'profileId',
+  profileVersion: 'profileVersion',
+  state: 'state',
+  optionKey: 'optionKey',
+  valueText: 'valueText',
+  valueNumber: 'valueNumber',
+  valueDate: 'valueDate',
+  source: 'source',
+  provenance: 'provenance',
+  authorId: 'authorId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PreopAssessmentAnswerScalarFieldEnum = (typeof PreopAssessmentAnswerScalarFieldEnum)[keyof typeof PreopAssessmentAnswerScalarFieldEnum]
+
+
+export const PreopAssessmentSuggestionScalarFieldEnum = {
+  id: 'id',
+  preopId: 'preopId',
+  questionId: 'questionId',
+  profileVersion: 'profileVersion',
+  proposedState: 'proposedState',
+  proposedOptionKey: 'proposedOptionKey',
+  proposedValueText: 'proposedValueText',
+  proposedValueNumber: 'proposedValueNumber',
+  linkedDiagnosisId: 'linkedDiagnosisId',
+  evidence: 'evidence',
+  ruleId: 'ruleId',
+  ruleVersion: 'ruleVersion',
+  status: 'status',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopAssessmentSuggestionScalarFieldEnum = (typeof PreopAssessmentSuggestionScalarFieldEnum)[keyof typeof PreopAssessmentSuggestionScalarFieldEnum]
+
+
+export const PreopAssessmentAuditEventScalarFieldEnum = {
+  id: 'id',
+  profileId: 'profileId',
+  caseId: 'caseId',
+  action: 'action',
+  actorId: 'actorId',
+  detail: 'detail',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopAssessmentAuditEventScalarFieldEnum = (typeof PreopAssessmentAuditEventScalarFieldEnum)[keyof typeof PreopAssessmentAuditEventScalarFieldEnum]
+
+
 export const IntraoperativeRecordScalarFieldEnum = {
   id: 'id',
   caseId: 'caseId',
@@ -6770,6 +7504,62 @@ export type ListEnumASAScoreFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'PreopAnswerType'
+ */
+export type EnumPreopAnswerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopAnswerType'>
+    
+
+
+/**
+ * Reference to a field of type 'PreopAnswerType[]'
+ */
+export type ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopAnswerType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PreopProfileStatus'
+ */
+export type EnumPreopProfileStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopProfileStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'PreopProfileStatus[]'
+ */
+export type ListEnumPreopProfileStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopProfileStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PreopAnswerState'
+ */
+export type EnumPreopAnswerStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopAnswerState'>
+    
+
+
+/**
+ * Reference to a field of type 'PreopAnswerState[]'
+ */
+export type ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopAnswerState[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PreopSuggestionStatus'
+ */
+export type EnumPreopSuggestionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopSuggestionStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'PreopSuggestionStatus[]'
+ */
+export type ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PreopSuggestionStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'AirwayDevice'
  */
 export type EnumAirwayDeviceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AirwayDevice'>
@@ -7111,6 +7901,14 @@ export type GlobalOmitConfig = {
   auditLog?: Prisma.AuditLogOmit
   customTerm?: Prisma.CustomTermOmit
   preoperativeAssessment?: Prisma.PreoperativeAssessmentOmit
+  preopQuestionDefinition?: Prisma.PreopQuestionDefinitionOmit
+  preopAnswerOption?: Prisma.PreopAnswerOptionOmit
+  preopAssessmentProfile?: Prisma.PreopAssessmentProfileOmit
+  preopCaseProfilePin?: Prisma.PreopCaseProfilePinOmit
+  preopProfileQuestion?: Prisma.PreopProfileQuestionOmit
+  preopAssessmentAnswer?: Prisma.PreopAssessmentAnswerOmit
+  preopAssessmentSuggestion?: Prisma.PreopAssessmentSuggestionOmit
+  preopAssessmentAuditEvent?: Prisma.PreopAssessmentAuditEventOmit
   intraoperativeRecord?: Prisma.IntraoperativeRecordOmit
   postoperativeRecord?: Prisma.PostoperativeRecordOmit
   caseClinicalCalculation?: Prisma.CaseClinicalCalculationOmit

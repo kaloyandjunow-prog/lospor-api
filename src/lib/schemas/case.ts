@@ -191,6 +191,20 @@ export const preopSchema = z.object({
     policyVersion: z.string().min(1),
   })).optional(),
 
+  // Definition-driven preoperative answers. The legacy wide fields above
+  // remain accepted for compatibility, but these relational answers are the
+  // authoritative 1.4.7 contract.
+  preopAnswers: z.array(z.object({
+    stableKey: z.string().min(1).max(160),
+    state: z.enum(["YES", "NO", "UNKNOWN", "NOT_APPLICABLE"]),
+    optionKey: z.string().min(1).max(80).nullable().optional(),
+    valueText: z.string().max(2000).nullable().optional(),
+    valueNumber: z.number().finite().nullable().optional(),
+    valueDate: z.string().datetime().nullable().optional(),
+  })).optional(),
+  preopProfileVersion: z.number().int().positive().optional(),
+  adoptPreopProfile: z.boolean().optional(),
+
   // Item 27: Strict lab result shape matching the lab scan extractor output
   //
   // This object is closed (no .passthrough()), and the outer preopSchema's
