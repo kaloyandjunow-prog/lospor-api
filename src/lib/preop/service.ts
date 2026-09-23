@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Prisma, PreopAnswerState, PreopProfileStatus } from "@/generated/prisma/client"
 import {
-  A3_WEIGHT_LOSS_CONCEPT_ID,
   BUNDLED_PREOP_QUESTIONS,
   DEFAULT_ENABLED_QUESTION_KEYS,
   PREOP_CATALOG_VERSION,

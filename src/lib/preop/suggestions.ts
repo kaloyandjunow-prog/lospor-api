@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Prisma, PreopAnswerState, PreopSuggestionStatus } from "@/generated/prisma/client"
-import { activePreopProfile, pinPreopProfile, type PreopProfileShape } from "./service"
+import { pinPreopProfile, type PreopProfileShape } from "./service"
 
 export const PREOP_SUGGESTION_RULE_VERSION = "1.4.7.1"
 
