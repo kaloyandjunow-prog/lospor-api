@@ -1,5 +1,20 @@
 # Changelog - LOSPOR API
 
+## [9.10.7] - 2026-09-23
+
+### Added
+
+- **Definition-driven preoperative assessment.** The API now persists the
+  appliance-wide catalog, immutable versioned profiles, case profile pins,
+  relational answers, deterministic suggestions, audit events, and the
+  approved preoperative OMOP/research export behavior for Hospital 1.4.7.
+
+### Changed
+
+- **Core 9.10.4 is the shared contract baseline.** The API release manifest
+  pins the exact Core, Web, Mobile/PWA, Browser, and Docs refs used by the
+  cross-repository release gate.
+
 ## [9.10.6] - 2026-09-23
 
 ### Changed
