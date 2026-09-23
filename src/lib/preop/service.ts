@@ -326,6 +326,7 @@ export async function savePreopAnswers(
     adoptProfile?: boolean
   },
 ) {
+  await ensureInitialPreopProfile(db, args.actorId)
   const { profile, pin } = await pinPreopProfile(db, args.caseId, args.actorId, args.requestedProfileVersion, args.adoptProfile)
   const submitted = [...legacyAnswers(args.preop ?? {}), ...(args.answers ?? [])]
   const mode = args.preop?.clinicalMode === "PEDIATRIC" || args.preop?.clinicalMode === "ADULT"
