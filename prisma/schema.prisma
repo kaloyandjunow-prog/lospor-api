@@ -300,6 +300,7 @@ model Case {
   updatedAt            DateTime     @updatedAt
 
   preop                PreoperativeAssessment?
+  preopProfilePin      PreopCaseProfilePin?
   intraop              IntraoperativeRecord?
   postop               PostoperativeRecord?
   transfers            CaseTransfer[]
@@ -1130,10 +1131,199 @@ model PreoperativeAssessment {
   comorbidityRows Comorbidity[]
   labRows         LabResult[]
   medications     Medication[]
+  assessmentAnswers     PreopAssessmentAnswer[]
+  assessmentSuggestions PreopAssessmentSuggestion[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   syncRevision Int      @default(0)
+}
+
+// ─── Definition-driven preoperative assessment ─────────────────────────────
+
+model PreopQuestionDefinition {
+  id                 String          @id @default(cuid())
+  stableKey          String          @unique
+  catalogVersion     String
+  section            String
+  applicability      String[]        @default([])
+  answerType         PreopAnswerType
+  labelEn            String
+  labelBg            String
+  helpEn             String?
+  helpBg             String?
+  requiredDefault    Boolean         @default(false)
+  allowUnknown       Boolean         @default(false)
+  allowNotApplicable Boolean         @default(false)
+  conditionalRuleKey String?
+  omopDomain         String?
+  omopConceptId      Int?
+  omopVocabulary     String?
+  omopSourceCode     String?
+  createdAt          DateTime        @default(now())
+
+  options          PreopAnswerOption[]
+  profileQuestions PreopProfileQuestion[]
+  answers          PreopAssessmentAnswer[]
+  suggestions      PreopAssessmentSuggestion[]
+
+  @@index([catalogVersion, section])
+}
+
+model PreopAnswerOption {
+  id             String                  @id @default(cuid())
+  questionId     String
+  question       PreopQuestionDefinition @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  key            String
+  labelEn        String
+  labelBg        String
+  omopConceptId  Int?
+  omopVocabulary String?
+  omopSourceCode String?
+  sortOrder      Int                     @default(0)
+  answers        PreopAssessmentAnswer[]
+
+  @@unique([questionId, key])
+  @@index([questionId, sortOrder])
+}
+
+model PreopAssessmentProfile {
+  id             String             @id @default(cuid())
+  version        Int                @unique
+  catalogVersion String
+  status         PreopProfileStatus @default(DRAFT)
+  publishedAt    DateTime?
+  publishedById  String?
+  createdAt      DateTime           @default(now())
+
+  questions   PreopProfileQuestion[]
+  casePins    PreopCaseProfilePin[]
+  auditEvents PreopAssessmentAuditEvent[]
+
+  @@index([status, version])
+}
+
+model PreopCaseProfilePin {
+  id             String                  @id @default(cuid())
+  caseId         String                  @unique
+  case           Case                    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  profileId      String                  
+  profile        PreopAssessmentProfile  @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  profileVersion Int
+  pinnedAt       DateTime                @default(now())
+  pinnedById     String?
+  adoptedAt      DateTime?
+  adoptedById    String?
+
+  @@index([profileId, profileVersion])
+}
+
+model PreopProfileQuestion {
+  profileId  String
+  profile    PreopAssessmentProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  questionId String
+  question   PreopQuestionDefinition @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  enabled    Boolean                 @default(false)
+  required   Boolean                 @default(false)
+  sortOrder  Int                     @default(0)
+
+  @@id([profileId, questionId])
+  @@index([profileId, enabled, sortOrder])
+}
+
+model PreopAssessmentAnswer {
+  id             String                   @id @default(cuid())
+  preopId        String
+  preop          PreoperativeAssessment   @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       PreopQuestionDefinition  @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  profileId      String
+  profileVersion Int
+  state          PreopAnswerState
+  optionKey      String?
+  option         PreopAnswerOption?       @relation(fields: [questionId, optionKey], references: [questionId, key], onDelete: Restrict)
+  valueText      String?
+  valueNumber    Float?
+  valueDate      DateTime?
+  source         String                   @default("clinician")
+  provenance     Json?
+  authorId       String?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  @@unique([preopId, questionId, profileVersion])
+  @@index([preopId, profileVersion])
+  @@index([questionId, state])
+}
+
+model PreopAssessmentSuggestion {
+  id                  String                   @id @default(cuid())
+  preopId             String
+  preop               PreoperativeAssessment   @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  questionId          String
+  question            PreopQuestionDefinition  @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  profileVersion      Int
+  proposedState       PreopAnswerState?
+  proposedOptionKey   String?
+  proposedValueText   String?
+  proposedValueNumber Float?
+  linkedDiagnosisId   String?
+  linkedDiagnosis     PreopDiagnosis?         @relation(fields: [linkedDiagnosisId], references: [id], onDelete: SetNull)
+  evidence            Json
+  ruleId              String
+  ruleVersion         String
+  status              PreopSuggestionStatus @default(PENDING)
+  reviewedById        String?
+  reviewedAt          DateTime?
+  createdAt           DateTime               @default(now())
+
+  @@index([preopId, status])
+  @@index([questionId, status])
+  @@index([linkedDiagnosisId])
+  @@unique([preopId, questionId, ruleId, ruleVersion])
+}
+
+model PreopAssessmentAuditEvent {
+  id        String                  @id @default(cuid())
+  profileId String?
+  profile   PreopAssessmentProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  caseId    String?
+  action    String
+  actorId    String
+  detail    Json?
+  createdAt DateTime                @default(now())
+
+  @@index([profileId, createdAt])
+  @@index([caseId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+enum PreopProfileStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum PreopAnswerType {
+  BOOLEAN
+  CHOICE
+  NUMBER
+  TEXT
+  DATE
+}
+
+enum PreopAnswerState {
+  YES
+  NO
+  UNKNOWN
+  NOT_APPLICABLE
+  NOT_ASKED
+}
+
+enum PreopSuggestionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 // ─── Intraoperative ──────────────────────────────────────────────────────────
@@ -1647,6 +1837,7 @@ model PreopDiagnosis {
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
   source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
   clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
+  suggestions       PreopAssessmentSuggestion[]
   sourceVersion     String?
   ordinal           Int                    @default(0)
   createdAt         DateTime               @default(now())

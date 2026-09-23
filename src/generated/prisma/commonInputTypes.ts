@@ -745,6 +745,91 @@ export type EnumASAScoreNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumASAScoreNullableFilter<$PrismaModel>
 }
 
+export type EnumPreopAnswerTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerType | Prisma.EnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerTypeFilter<$PrismaModel> | $Enums.PreopAnswerType
+}
+
+export type EnumPreopAnswerTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerType | Prisma.EnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerTypeWithAggregatesFilter<$PrismaModel> | $Enums.PreopAnswerType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopAnswerTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopAnswerTypeFilter<$PrismaModel>
+}
+
+export type EnumPreopProfileStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopProfileStatus | Prisma.EnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopProfileStatusFilter<$PrismaModel> | $Enums.PreopProfileStatus
+}
+
+export type EnumPreopProfileStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopProfileStatus | Prisma.EnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopProfileStatusWithAggregatesFilter<$PrismaModel> | $Enums.PreopProfileStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopProfileStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopProfileStatusFilter<$PrismaModel>
+}
+
+export type EnumPreopAnswerStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerStateFilter<$PrismaModel> | $Enums.PreopAnswerState
+}
+
+export type EnumPreopAnswerStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerStateWithAggregatesFilter<$PrismaModel> | $Enums.PreopAnswerState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopAnswerStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopAnswerStateFilter<$PrismaModel>
+}
+
+export type EnumPreopAnswerStateNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPreopAnswerStateNullableFilter<$PrismaModel> | $Enums.PreopAnswerState | null
+}
+
+export type EnumPreopSuggestionStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopSuggestionStatus | Prisma.EnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopSuggestionStatusFilter<$PrismaModel> | $Enums.PreopSuggestionStatus
+}
+
+export type EnumPreopAnswerStateNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPreopAnswerStateNullableWithAggregatesFilter<$PrismaModel> | $Enums.PreopAnswerState | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopAnswerStateNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopAnswerStateNullableFilter<$PrismaModel>
+}
+
+export type EnumPreopSuggestionStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopSuggestionStatus | Prisma.EnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopSuggestionStatusWithAggregatesFilter<$PrismaModel> | $Enums.PreopSuggestionStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopSuggestionStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopSuggestionStatusFilter<$PrismaModel>
+}
+
 export type EnumAirwayDeviceNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.AirwayDevice | Prisma.EnumAirwayDeviceFieldRefInput<$PrismaModel> | null
   in?: $Enums.AirwayDevice[] | Prisma.ListEnumAirwayDeviceFieldRefInput<$PrismaModel> | null
@@ -1617,6 +1702,91 @@ export type NestedEnumASAScoreNullableWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumASAScoreNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumASAScoreNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumPreopAnswerTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerType | Prisma.EnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerTypeFilter<$PrismaModel> | $Enums.PreopAnswerType
+}
+
+export type NestedEnumPreopAnswerTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerType | Prisma.EnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerType[] | Prisma.ListEnumPreopAnswerTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerTypeWithAggregatesFilter<$PrismaModel> | $Enums.PreopAnswerType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopAnswerTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopAnswerTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumPreopProfileStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopProfileStatus | Prisma.EnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopProfileStatusFilter<$PrismaModel> | $Enums.PreopProfileStatus
+}
+
+export type NestedEnumPreopProfileStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopProfileStatus | Prisma.EnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopProfileStatus[] | Prisma.ListEnumPreopProfileStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopProfileStatusWithAggregatesFilter<$PrismaModel> | $Enums.PreopProfileStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopProfileStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopProfileStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumPreopAnswerStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerStateFilter<$PrismaModel> | $Enums.PreopAnswerState
+}
+
+export type NestedEnumPreopAnswerStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopAnswerStateWithAggregatesFilter<$PrismaModel> | $Enums.PreopAnswerState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopAnswerStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopAnswerStateFilter<$PrismaModel>
+}
+
+export type NestedEnumPreopAnswerStateNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPreopAnswerStateNullableFilter<$PrismaModel> | $Enums.PreopAnswerState | null
+}
+
+export type NestedEnumPreopSuggestionStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopSuggestionStatus | Prisma.EnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopSuggestionStatusFilter<$PrismaModel> | $Enums.PreopSuggestionStatus
+}
+
+export type NestedEnumPreopAnswerStateNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopAnswerState | Prisma.EnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PreopAnswerState[] | Prisma.ListEnumPreopAnswerStateFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPreopAnswerStateNullableWithAggregatesFilter<$PrismaModel> | $Enums.PreopAnswerState | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopAnswerStateNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopAnswerStateNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumPreopSuggestionStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PreopSuggestionStatus | Prisma.EnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PreopSuggestionStatus[] | Prisma.ListEnumPreopSuggestionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPreopSuggestionStatusWithAggregatesFilter<$PrismaModel> | $Enums.PreopSuggestionStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPreopSuggestionStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPreopSuggestionStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumAirwayDeviceNullableFilter<$PrismaModel = never> = {

@@ -203,6 +203,19 @@ export const CASE_SELECT = {
         },
         orderBy: [{ kind: "asc" }, { ordinal: "asc" }],
       },
+      assessmentAnswers: {
+        select: {
+          state: true,
+          optionKey: true,
+          valueText: true,
+          valueNumber: true,
+          profileVersion: true,
+          source: true,
+          provenance: true,
+          question: { select: { stableKey: true, omopDomain: true, omopConceptId: true, omopSourceCode: true } },
+        },
+        orderBy: { questionId: "asc" },
+      },
     },
   },
   intraop: {

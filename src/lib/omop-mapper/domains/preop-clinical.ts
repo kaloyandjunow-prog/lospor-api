@@ -618,4 +618,39 @@ export function mapPreopClinicalToOmop(
   ctx.sourceObservation("LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", preop.unexplainedAnaesthesiaComplications,
     preopDate, null, 37017043,
     preop.unexplainedAnaesthesiaComplications ? YES_CONCEPT_ID : NO_CONCEPT_ID)
+
+  // Definition-driven 1.4.7 answers are authoritative for catalog questions.
+  // NOT_ASKED is absence, while recorded yes/no answers are observations even
+  // when the bundled question has no reviewed OMOP concept. A3 is the one
+  // approved question whose positive answer belongs in CONDITION_OCCURRENCE.
+  for (const answer of preop.assessmentAnswers ?? []) {
+    if (answer.state === "NOT_ASKED") continue
+    const source = answer.question.omopSourceCode ?? "LOSPOR:PREOP_" + answer.question.stableKey
+    const response = answer.optionKey ?? answer.valueText ?? answer.state
+    const provenance = answer.provenance && typeof answer.provenance === "object"
+      ? answer.provenance as Record<string, unknown>
+      : null
+    if (answer.question.stableKey === "A3_UNINTENTIONAL_WEIGHT_LOSS"
+      && answer.state === "YES"
+      && !provenance?.linkedDiagnosisId) {
+      ctx.conditions.push({
+        condition_occurrence_id: nextId(),
+        person_id: ctx.personId,
+        condition_concept_id: 40491502,
+        condition_start_date: preopDate,
+        condition_type_concept_id: 32817,
+        condition_source_value: source,
+        visit_occurrence_id: ctx.visitId,
+      })
+      continue
+    }
+    ctx.sourceObservation(
+      source,
+      response,
+      preopDate,
+      answer.valueNumber ?? null,
+      answer.question.omopConceptId ?? 0,
+      answer.state === "YES" ? YES_CONCEPT_ID : answer.state === "NO" ? NO_CONCEPT_ID : 0,
+    )
+  }
 }

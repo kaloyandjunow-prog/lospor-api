@@ -89,6 +89,14 @@ export const ModelName = {
   AuditLog: 'AuditLog',
   CustomTerm: 'CustomTerm',
   PreoperativeAssessment: 'PreoperativeAssessment',
+  PreopQuestionDefinition: 'PreopQuestionDefinition',
+  PreopAnswerOption: 'PreopAnswerOption',
+  PreopAssessmentProfile: 'PreopAssessmentProfile',
+  PreopCaseProfilePin: 'PreopCaseProfilePin',
+  PreopProfileQuestion: 'PreopProfileQuestion',
+  PreopAssessmentAnswer: 'PreopAssessmentAnswer',
+  PreopAssessmentSuggestion: 'PreopAssessmentSuggestion',
+  PreopAssessmentAuditEvent: 'PreopAssessmentAuditEvent',
   IntraoperativeRecord: 'IntraoperativeRecord',
   PostoperativeRecord: 'PostoperativeRecord',
   CaseClinicalCalculation: 'CaseClinicalCalculation',
@@ -794,6 +802,140 @@ export const PreoperativeAssessmentScalarFieldEnum = {
 } as const
 
 export type PreoperativeAssessmentScalarFieldEnum = (typeof PreoperativeAssessmentScalarFieldEnum)[keyof typeof PreoperativeAssessmentScalarFieldEnum]
+
+
+export const PreopQuestionDefinitionScalarFieldEnum = {
+  id: 'id',
+  stableKey: 'stableKey',
+  catalogVersion: 'catalogVersion',
+  section: 'section',
+  applicability: 'applicability',
+  answerType: 'answerType',
+  labelEn: 'labelEn',
+  labelBg: 'labelBg',
+  helpEn: 'helpEn',
+  helpBg: 'helpBg',
+  requiredDefault: 'requiredDefault',
+  allowUnknown: 'allowUnknown',
+  allowNotApplicable: 'allowNotApplicable',
+  conditionalRuleKey: 'conditionalRuleKey',
+  omopDomain: 'omopDomain',
+  omopConceptId: 'omopConceptId',
+  omopVocabulary: 'omopVocabulary',
+  omopSourceCode: 'omopSourceCode',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopQuestionDefinitionScalarFieldEnum = (typeof PreopQuestionDefinitionScalarFieldEnum)[keyof typeof PreopQuestionDefinitionScalarFieldEnum]
+
+
+export const PreopAnswerOptionScalarFieldEnum = {
+  id: 'id',
+  questionId: 'questionId',
+  key: 'key',
+  labelEn: 'labelEn',
+  labelBg: 'labelBg',
+  omopConceptId: 'omopConceptId',
+  omopVocabulary: 'omopVocabulary',
+  omopSourceCode: 'omopSourceCode',
+  sortOrder: 'sortOrder'
+} as const
+
+export type PreopAnswerOptionScalarFieldEnum = (typeof PreopAnswerOptionScalarFieldEnum)[keyof typeof PreopAnswerOptionScalarFieldEnum]
+
+
+export const PreopAssessmentProfileScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  catalogVersion: 'catalogVersion',
+  status: 'status',
+  publishedAt: 'publishedAt',
+  publishedById: 'publishedById',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopAssessmentProfileScalarFieldEnum = (typeof PreopAssessmentProfileScalarFieldEnum)[keyof typeof PreopAssessmentProfileScalarFieldEnum]
+
+
+export const PreopCaseProfilePinScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  profileId: 'profileId',
+  profileVersion: 'profileVersion',
+  pinnedAt: 'pinnedAt',
+  pinnedById: 'pinnedById',
+  adoptedAt: 'adoptedAt',
+  adoptedById: 'adoptedById'
+} as const
+
+export type PreopCaseProfilePinScalarFieldEnum = (typeof PreopCaseProfilePinScalarFieldEnum)[keyof typeof PreopCaseProfilePinScalarFieldEnum]
+
+
+export const PreopProfileQuestionScalarFieldEnum = {
+  profileId: 'profileId',
+  questionId: 'questionId',
+  enabled: 'enabled',
+  required: 'required',
+  sortOrder: 'sortOrder'
+} as const
+
+export type PreopProfileQuestionScalarFieldEnum = (typeof PreopProfileQuestionScalarFieldEnum)[keyof typeof PreopProfileQuestionScalarFieldEnum]
+
+
+export const PreopAssessmentAnswerScalarFieldEnum = {
+  id: 'id',
+  preopId: 'preopId',
+  questionId: 'questionId',
+  profileId: 'profileId',
+  profileVersion: 'profileVersion',
+  state: 'state',
+  optionKey: 'optionKey',
+  valueText: 'valueText',
+  valueNumber: 'valueNumber',
+  valueDate: 'valueDate',
+  source: 'source',
+  provenance: 'provenance',
+  authorId: 'authorId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PreopAssessmentAnswerScalarFieldEnum = (typeof PreopAssessmentAnswerScalarFieldEnum)[keyof typeof PreopAssessmentAnswerScalarFieldEnum]
+
+
+export const PreopAssessmentSuggestionScalarFieldEnum = {
+  id: 'id',
+  preopId: 'preopId',
+  questionId: 'questionId',
+  profileVersion: 'profileVersion',
+  proposedState: 'proposedState',
+  proposedOptionKey: 'proposedOptionKey',
+  proposedValueText: 'proposedValueText',
+  proposedValueNumber: 'proposedValueNumber',
+  linkedDiagnosisId: 'linkedDiagnosisId',
+  evidence: 'evidence',
+  ruleId: 'ruleId',
+  ruleVersion: 'ruleVersion',
+  status: 'status',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopAssessmentSuggestionScalarFieldEnum = (typeof PreopAssessmentSuggestionScalarFieldEnum)[keyof typeof PreopAssessmentSuggestionScalarFieldEnum]
+
+
+export const PreopAssessmentAuditEventScalarFieldEnum = {
+  id: 'id',
+  profileId: 'profileId',
+  caseId: 'caseId',
+  action: 'action',
+  actorId: 'actorId',
+  detail: 'detail',
+  createdAt: 'createdAt'
+} as const
+
+export type PreopAssessmentAuditEventScalarFieldEnum = (typeof PreopAssessmentAuditEventScalarFieldEnum)[keyof typeof PreopAssessmentAuditEventScalarFieldEnum]
 
 
 export const IntraoperativeRecordScalarFieldEnum = {

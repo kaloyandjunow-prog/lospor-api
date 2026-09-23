@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getAuthUser } from "@/lib/mobile-auth"
+import { canReadCase, canWriteCaseWithOwnerFallback } from "@/lib/access-control"
+import { prisma } from "@/lib/prisma"
+import { generatePreopSuggestions } from "@/lib/preop/suggestions"
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser(req)
+  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { id } = await params
+  const record = await prisma.case.findUnique({
+    where: { id },
+    select: { userId: true, createdById: true, institutionId: true, preop: { select: { id: true } } },
+  })
+  if (!record || !canReadCase(user, record)) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const suggestions = await prisma.preopAssessmentSuggestion.findMany({
+    where: { preopId: record.preop?.id },
+    orderBy: { createdAt: "desc" },
+    include: { question: { select: { stableKey: true, labelEn: true, labelBg: true } }, linkedDiagnosis: true },
+  })
+  return NextResponse.json(suggestions)
+}
+
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser(req)
+  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { id } = await params
+  const result = await prisma.$transaction(async tx => {
+    const record = await tx.case.findUnique({
+      where: { id },
+      select: { userId: true, createdById: true, institutionId: true, preop: { select: { id: true } } },
+    })
+    if (!record) return null
+    if (!await canWriteCaseWithOwnerFallback(tx, user, record)) return "FORBIDDEN" as const
+    if (!record.preop) return "NO_PREOP" as const
+    return generatePreopSuggestions(tx, { caseId: id, preopId: record.preop.id, actorId: user.id })
+  })
+  if (result === null) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (result === "FORBIDDEN") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (result === "NO_PREOP") return NextResponse.json({ error: "Preoperative assessment missing" }, { status: 409 })
+  return NextResponse.json(result)
+}

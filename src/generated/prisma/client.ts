@@ -263,6 +263,46 @@ export type CustomTerm = Prisma.CustomTermModel
  */
 export type PreoperativeAssessment = Prisma.PreoperativeAssessmentModel
 /**
+ * Model PreopQuestionDefinition
+ * 
+ */
+export type PreopQuestionDefinition = Prisma.PreopQuestionDefinitionModel
+/**
+ * Model PreopAnswerOption
+ * 
+ */
+export type PreopAnswerOption = Prisma.PreopAnswerOptionModel
+/**
+ * Model PreopAssessmentProfile
+ * 
+ */
+export type PreopAssessmentProfile = Prisma.PreopAssessmentProfileModel
+/**
+ * Model PreopCaseProfilePin
+ * 
+ */
+export type PreopCaseProfilePin = Prisma.PreopCaseProfilePinModel
+/**
+ * Model PreopProfileQuestion
+ * 
+ */
+export type PreopProfileQuestion = Prisma.PreopProfileQuestionModel
+/**
+ * Model PreopAssessmentAnswer
+ * 
+ */
+export type PreopAssessmentAnswer = Prisma.PreopAssessmentAnswerModel
+/**
+ * Model PreopAssessmentSuggestion
+ * 
+ */
+export type PreopAssessmentSuggestion = Prisma.PreopAssessmentSuggestionModel
+/**
+ * Model PreopAssessmentAuditEvent
+ * 
+ */
+export type PreopAssessmentAuditEvent = Prisma.PreopAssessmentAuditEventModel
+/**
  * Model IntraoperativeRecord
  * 
  */

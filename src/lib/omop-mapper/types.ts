@@ -528,6 +528,21 @@ export type CaseRow = {
       mappingStatus?: string
       ordinal: number
     }[]
+    assessmentAnswers?: {
+      state: string
+      optionKey?: string | null
+      valueText?: string | null
+      valueNumber?: number | null
+      profileVersion: number
+      source: string
+      provenance?: unknown
+      question: {
+        stableKey: string
+        omopDomain?: string | null
+        omopConceptId?: number | null
+        omopSourceCode?: string | null
+      }
+    }[]
   } | null
   intraop?: {
     // Real instants when the record has them — the only form that can be placed
