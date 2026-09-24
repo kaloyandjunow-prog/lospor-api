@@ -5,6 +5,7 @@ const findFirstMock     = vi.fn()
 const findUniqueMock    = vi.fn()
 const createMock        = vi.fn()
 const logAuditMock      = vi.fn()
+const savePreopAnswersMock = vi.fn()
 
 const caseCodeSequenceUpsertMock = vi.fn()
 
@@ -20,7 +21,13 @@ vi.mock("@/lib/prisma", () => ({
     // highest case a clinician currently owns, so that handing a case away
     // cannot lower the ceiling and reissue a number already on a chart.
     caseCodeSequence: { upsert: caseCodeSequenceUpsertMock },
+    // The case and its answer rows are created in one transaction.
+    $transaction: (run: (tx: unknown) => unknown) => run({ case: { create: createMock } }),
   },
+}))
+vi.mock("@/lib/preop/service", async importOriginal => ({
+  ...await importOriginal<typeof import("@/lib/preop/service")>(),
+  savePreopAnswers: savePreopAnswersMock,
 }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
 vi.mock("@/lib/relational-sync", () => ({ syncCaseRelationalSafe: vi.fn() }))
@@ -84,10 +91,22 @@ describe("POST /api/cases", () => {
       id: "new-case-1",
       caseCode: "2026-0001",
       status: "DRAFT",
-      preop: { updatedAt: new Date() },
+      preop: { id: "preop-1", updatedAt: new Date() },
     })
     const mod = await import("@/app/v1/cases/route")
     POST = mod.POST
+  })
+
+  it("writes the preop answers given before the case existed, with the case", async () => {
+    const answers = [{ stableKey: "A12_PACEMAKER_ICD", state: "YES", optionKey: "YES" }]
+    const res = await POST(makeRequest({ preop: { ...MINIMAL_PREOP, smoking: true, preopAnswers: answers } }))
+    expect(res.status).toBe(201)
+    expect(savePreopAnswersMock).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      caseId: "new-case-1",
+      preopId: "preop-1",
+      preop: expect.objectContaining({ smoking: true }),
+      answers,
+    }))
   })
 
   it("creates a case with status DRAFT (never COMPLETE)", async () => {
