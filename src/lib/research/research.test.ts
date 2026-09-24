@@ -174,6 +174,27 @@ describe("research access and query contracts", () => {
     expect(researchContextForAction(context!, "exportOmop").institutionIds).toEqual(["inst-2"])
   })
 
+  it("filters on preop answers, intraop drugs and ATC classes", async () => {
+    findSelfAuthorization.mockResolvedValue({ institution: { id: "inst-1", name: "Hospital A" } })
+    const context = await resolveResearchContext({ ...baseUser, role: "HEAD_OF_DEPT" })
+    const where = await compileResearchWhere(researchCohortSchema.parse({
+      version: 1,
+      filters: {
+        preopAnswers: [{ stableKey: "A12_PACEMAKER_ICD", states: ["YES"] }],
+        intraopAtcCodes: ["n02a"],
+        atcCodes: ["B01A"],
+      },
+    }), context!)
+    const text = JSON.stringify(where)
+    expect(text).toContain('"assessmentAnswers":{"some":{"question":{"stableKey":"A12_PACEMAKER_ICD"},"state":{"in":["YES"]}}}')
+    expect(text).toContain('"events":{"some":{"type":"drug","OR":[{"atcCode":{"startsWith":"N02A"}}]}}')
+    expect(text).toContain('{"atcCode":{"startsWith":"B01A"}}')
+  })
+
+  it("refuses a preop answer filter with an invented state", () => {
+    expect(() => researchCohortSchema.parse({ version: 1, filters: { preopAnswers: [{ stableKey: "A1", states: ["MAYBE"] }] } })).toThrow()
+  })
+
   it("compiles clinical filters into fixed Prisma predicates", async () => {
     findSelfAuthorization.mockResolvedValue({
       institution: { id: "inst-1", name: "Hospital A" },

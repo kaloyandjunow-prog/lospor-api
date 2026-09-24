@@ -16,6 +16,11 @@ function textContains(value: string | undefined) {
   return value ? { contains: value, mode: "insensitive" as const } : undefined
 }
 
+/** An ATC code or class: N02A matches every opioid below it, N02AA01 only morphine. */
+function atcMatches(codes: string[]) {
+  return codes.map(code => ({ atcCode: { startsWith: code.toUpperCase() } }))
+}
+
 function exclusiveUtcDayEnd(value: string) {
   const date = new Date(`${value}T00:00:00.000Z`)
   date.setUTCDate(date.getUTCDate() + 1)
@@ -123,7 +128,7 @@ export async function compileResearchWhere(
             { nameRaw: textContains(value) },
             { inn: textContains(value) },
           ]) ?? []),
-          ...(filters.atcCodes?.length ? [{ atcCode: { in: filters.atcCodes } }] : []),
+          ...(filters.atcCodes?.length ? atcMatches(filters.atcCodes) : []),
         ],
       },
     }
@@ -164,6 +169,19 @@ export async function compileResearchWhere(
     if (values?.length) {
       and.push({ selections: { some: { category, value: { in: values } } } })
     }
+  }
+
+  if (filters.intraopAtcCodes?.length) {
+    and.push({ events: { some: { type: "drug", OR: atcMatches(filters.intraopAtcCodes) } } })
+  }
+
+  for (const answer of filters.preopAnswers ?? []) {
+    and.push({
+      preop: { is: { assessmentAnswers: { some: {
+        question: { stableKey: answer.stableKey },
+        state: { in: answer.states as never },
+      } } } },
+    })
   }
 
   if (filters.complications?.length) {
