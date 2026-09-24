@@ -41,6 +41,22 @@ async function completenessCaseIds(minimum: number): Promise<string[]> {
   return rows.map(row => row.caseId)
 }
 
+/**
+ * Cases where the clinician accepted at least one item imported from the
+ * hospital system. Read from the audit log, which is permanent: the import
+ * itself is deleted after its retention period, and an accepted value becomes
+ * the case's own data.
+ */
+async function ehrImportedCaseIds(): Promise<string[]> {
+  const rows = await prisma.$queryRaw<Array<{ entityId: string }>>`
+    SELECT DISTINCT "entityId"
+    FROM "AuditLog"
+    WHERE "action" = 'EHR_IMPORT_REVIEWED'
+      AND COALESCE(("detail"->>'accepted')::int, 0) > 0
+  `
+  return rows.map(row => row.entityId)
+}
+
 export async function compileResearchWhere(
   definition: ResearchCohortDefinition,
   context: ResearchContext,
@@ -202,6 +218,11 @@ export async function compileResearchWhere(
         { preop: { is: { comorbidityRows: { some: { mappingStatus: { in: filters.mappingStatuses as never } } } } } },
       ],
     })
+  }
+
+  if (filters.ehrImported !== undefined) {
+    const caseIds = await ehrImportedCaseIds()
+    and.push(filters.ehrImported ? { id: { in: caseIds } } : { id: { notIn: caseIds } })
   }
 
   if (filters.minimumCompleteness !== undefined) {

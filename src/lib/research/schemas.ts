@@ -50,6 +50,7 @@ export const researchCohortSchema = z.object({
     medications: stringList.optional(),
     atcCodes: stringList.optional(),
     intraopAtcCodes: stringList.optional(),
+    ehrImported: z.boolean().optional(),
     preopAnswers: z.array(z.object({
       stableKey: z.string().trim().min(1).max(160),
       states: z.array(z.enum(["YES", "NO", "UNKNOWN", "NOT_APPLICABLE", "NOT_ASKED"])).min(1).max(5),

@@ -89,6 +89,8 @@ export async function researchMetadata(context: ResearchContext): Promise<Resear
     supportedBenchmarkMetrics: [...RESEARCH_BENCHMARK_METRIC_IDS],
     supportedDistributions: [...RESEARCH_DISTRIBUTION_IDS],
     supportedExports: [...RESEARCH_EXPORT_FORMATS],
+    // Only an appliance receives imports from a hospital system.
+    supportedFilters: { ehrImported: process.env.LOSPOR_DEPLOYMENT_MODE?.trim().toLowerCase() === "hospital" },
   }
 }
 

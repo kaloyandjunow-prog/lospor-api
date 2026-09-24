@@ -191,6 +191,17 @@ describe("research access and query contracts", () => {
     expect(text).toContain('{"atcCode":{"startsWith":"B01A"}}')
   })
 
+  it("selects cases whose clinician accepted imported hospital data, or none", async () => {
+    findSelfAuthorization.mockResolvedValue({ institution: { id: "inst-1", name: "Hospital A" } })
+    queryRaw.mockResolvedValue([{ entityId: "case-imported" }])
+    const context = await resolveResearchContext({ ...baseUser, role: "HEAD_OF_DEPT" })
+    const imported = await compileResearchWhere(researchCohortSchema.parse({ version: 1, filters: { ehrImported: true } }), context!)
+    const typed = await compileResearchWhere(researchCohortSchema.parse({ version: 1, filters: { ehrImported: false } }), context!)
+    expect(JSON.stringify(imported)).toContain('{"id":{"in":["case-imported"]}}')
+    expect(JSON.stringify(typed)).toContain('{"id":{"notIn":["case-imported"]}}')
+    expect(String(queryRaw.mock.calls.at(-1)?.[0])).toContain("EHR_IMPORT_REVIEWED")
+  })
+
   it("refuses a preop answer filter with an invented state", () => {
     expect(() => researchCohortSchema.parse({ version: 1, filters: { preopAnswers: [{ stableKey: "A1", states: ["MAYBE"] }] } })).toThrow()
   })
