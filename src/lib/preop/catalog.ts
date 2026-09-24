@@ -181,6 +181,11 @@ const pediatric = [
 /**
  * OMOP mapping for every question: [observation concept, source value].
  *
+ * Rules: a LOINC question concept where one names the question itself (how
+ * OMOP represents questionnaire items); a combined "X or Y" question gets 0
+ * and its follow-ups carry the specific concepts; a nearby concept that says
+ * something else is never borrowed.
+ *
  * The answer is the value (Yes 4188539 / No 4188540); the concept is the
  * clinical fact the question asks about. 0 means no standard concept says what
  * the question says -- the answer still exports, under its LOSPOR source value,
@@ -205,7 +210,7 @@ const OMOP: Record<string, readonly [number, string]> = {
   BASE_RCRI_ISCHEMIC_HEART: [4185932, "LOSPOR:RCRI_ISCHEMIC_HEART"], // Ischemic heart disease
   BASE_RCRI_CHF: [319835, "LOSPOR:RCRI_CHF"], // Congestive heart failure
   BASE_RCRI_CVD: [381591, "LOSPOR:RCRI_CVD"], // Cerebrovascular disease
-  BASE_RCRI_INSULIN_DM: [0, "LOSPOR:RCRI_INSULIN_DM"], // only "insulin-treated type 2" exists; RCRI includes type 1
+  BASE_RCRI_INSULIN_DM: [3046418, "LOSPOR:RCRI_INSULIN_DM"], // Insulin dependent diabetes mellitus [Presence] (LOINC question)
   BASE_RCRI_CREATININE: [0, "LOSPOR:RCRI_CREATININE"], // a > 2 mg/dL threshold, not a concept
   BASE_APFEL_PONV_HISTORY: [4032472, "LOSPOR:APFEL_PONV_HISTORY"], // Postoperative nausea and vomiting
   BASE_APFEL_POSTOP_OPIOIDS: [0, "LOSPOR:APFEL_POSTOP_OPIOIDS"], // a plan, not a finding
@@ -232,7 +237,7 @@ const OMOP: Record<string, readonly [number, string]> = {
   A4_ADL_WALKING: [36714126, "LOSPOR:PREOP_A4_ADL_WALKING"], // Difficulty walking
   A4_ADL_TOILETING: [4110002, "LOSPOR:PREOP_A4_ADL_TOILETING"], // Difficulty using toilet
   A5_FALLS_LAST_12_MONTHS: [436583, "LOSPOR:PREOP_A5_FALLS_LAST_12_MONTHS"], // Fall
-  A5_FALL_INJURY_MEDICAL_ATTENTION: [0, "LOSPOR:PREOP_A5_FALL_INJURY_MEDICAL_ATTENTION"],
+  A5_FALL_INJURY_MEDICAL_ATTENTION: [1761875, "LOSPOR:PREOP_A5_FALL_INJURY_MEDICAL_ATTENTION"], // History of fall related injury (LOINC question)
   A6_POST_ANAESTHESIA_CONFUSION: [4224115, "LOSPOR:PREOP_A6_POST_ANAESTHESIA_CONFUSION"], // Postoperative confusion
   A7_VTE_HISTORY: [0, "LOSPOR:PREOP_A7_VTE_HISTORY"], // no standard SNOMED VTE concept
   A7_DVT: [4133004, "LOSPOR:PREOP_A7_DVT"], // Deep venous thrombosis
@@ -240,25 +245,25 @@ const OMOP: Record<string, readonly [number, string]> = {
   A8_ABNORMAL_BLEEDING: [0, "LOSPOR:PREOP_A8_ABNORMAL_BLEEDING"],
   A8_BLEEDING_AFTER_PROCEDURE: [0, "LOSPOR:PREOP_A8_BLEEDING_AFTER_PROCEDURE"],
   A8_FAMILY_BLEEDING: [0, "LOSPOR:PREOP_A8_FAMILY_BLEEDING"],
-  A9_TRANSFUSION_HISTORY: [4024656, "LOSPOR:PREOP_A9_TRANSFUSION_HISTORY"], // Transfusion of blood product (history)
-  A9_PREVIOUS_TRANSFUSION: [4024656, "LOSPOR:PREOP_A9_PREVIOUS_TRANSFUSION"],
+  A9_TRANSFUSION_HISTORY: [0, "LOSPOR:PREOP_A9_TRANSFUSION_HISTORY"], // transfusion *or* reaction: the follow-ups carry the concepts
+  A9_PREVIOUS_TRANSFUSION: [4024656, "LOSPOR:PREOP_A9_PREVIOUS_TRANSFUSION"], // Transfusion of blood product
   A9_TRANSFUSION_REACTION: [440603, "LOSPOR:PREOP_A9_TRANSFUSION_REACTION"], // Blood transfusion reaction
   A9_BLOOD_ANTIBODIES: [0, "LOSPOR:PREOP_A9_BLOOD_ANTIBODIES"],
-  A11_DYSPHAGIA_ASPIRATION: [31317, "LOSPOR:PREOP_A11_DYSPHAGIA_ASPIRATION"], // Dysphagia
+  A11_DYSPHAGIA_ASPIRATION: [0, "LOSPOR:PREOP_A11_DYSPHAGIA_ASPIRATION"], // dysphagia *or* aspiration: a yes does not assert dysphagia
   A11_SOLID_FOOD: [0, "LOSPOR:PREOP_A11_SOLID_FOOD"],
   A11_LIQUIDS: [0, "LOSPOR:PREOP_A11_LIQUIDS"],
   A11_PREVIOUS_ASPIRATION: [0, "LOSPOR:PREOP_A11_PREVIOUS_ASPIRATION"],
   A12_PACEMAKER_ICD: [0, "LOSPOR:PREOP_A12_PACEMAKER_ICD"], // pacemaker *or* ICD; each concept covers one
-  A13_PREGNANCY: [4299535, "LOSPOR:PREOP_A13_PREGNANCY"], // Pregnancy
+  A13_PREGNANCY: [42528957, "LOSPOR:PREOP_A13_PREGNANCY"], // Pregnancy status (LOINC question)
   A13_GESTATIONAL_AGE_KNOWN: [0, "LOSPOR:PREOP_A13_GESTATIONAL_AGE_KNOWN"],
-  A14_BREASTFEEDING: [4188824, "LOSPOR:PREOP_A14_BREASTFEEDING"], // Breastfeeding (mother)
+  A14_BREASTFEEDING: [40766616, "LOSPOR:PREOP_A14_BREASTFEEDING"], // Breastfeeding status (LOINC question)
   A14_CONTINUE_BREASTFEEDING: [0, "LOSPOR:PREOP_A14_CONTINUE_BREASTFEEDING"],
-  P1_PREMATURITY_NICU: [36675035, "LOSPOR:PREOP_P1_PREMATURITY_NICU"], // Prematurity of infant
-  P1_BORN_BEFORE_37_WEEKS: [36675035, "LOSPOR:PREOP_P1_BORN_BEFORE_37_WEEKS"],
+  P1_PREMATURITY_NICU: [0, "LOSPOR:PREOP_P1_PREMATURITY_NICU"], // prematurity *or* NICU: the follow-ups carry the concepts
+  P1_BORN_BEFORE_37_WEEKS: [36675035, "LOSPOR:PREOP_P1_BORN_BEFORE_37_WEEKS"], // Prematurity of infant
   P1_NICU_ADMISSION: [3661417, "LOSPOR:PREOP_P1_NICU_ADMISSION"], // Admission to neonatal intensive care unit
   P1_GESTATIONAL_AGE_KNOWN: [0, "LOSPOR:PREOP_P1_GESTATIONAL_AGE_KNOWN"],
-  P2_HOME_OXYGEN_NIV: [42873170, "LOSPOR:PREOP_P2_HOME_OXYGEN_NIV"], // Dependence on supplemental oxygen
-  P3_FEEDING_SWALLOWING: [4299954, "LOSPOR:PREOP_P3_FEEDING_SWALLOWING"], // Feeding problem
+  P2_HOME_OXYGEN_NIV: [0, "LOSPOR:PREOP_P2_HOME_OXYGEN_NIV"], // oxygen *or* non-invasive ventilation
+  P3_FEEDING_SWALLOWING: [0, "LOSPOR:PREOP_P3_FEEDING_SWALLOWING"], // feeding *or* swallowing: the follow-ups carry the concepts
   P3_CHOKING_FEEDING: [4096712, "LOSPOR:PREOP_P3_CHOKING_FEEDING"], // Choking
   P3_ASPIRATION_FEEDING: [0, "LOSPOR:PREOP_P3_ASPIRATION_FEEDING"],
   P3_FEEDING_TUBE: [0, "LOSPOR:PREOP_P3_FEEDING_TUBE"],
