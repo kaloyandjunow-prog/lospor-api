@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { AIRWAY_ACTS, mapCasesToOmop } from "@/lib/omop-mapper"
 
 import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
+import { withPreopAnswers } from "./fixtures/preop-answers"
 import { pediatricCaseFixture } from "./fixtures/pediatric-case"
 
 describe("mapCasesToOmop", () => {
@@ -437,7 +438,7 @@ describe("allergies are not drug administrations", () => {
     c.preop.allergies = false
     c.preop.medications = []
 
-    const bundle = mapCasesToOmop([c as never], options as never)
+    const bundle = mapCasesToOmop([withPreopAnswers(c) as never], options as never)
     const row = bundle.observation.find(r => r.observation_source_value === "LOSPOR:ALLERGY_PRESENT")
 
     expect(row).toBeDefined()
@@ -454,7 +455,7 @@ describe("allergies are not drug administrations", () => {
     const c = completeCase() as never as { preop: { allergies: boolean | null } }
     c.preop.allergies = null
 
-    const bundle = mapCasesToOmop([c as never], options as never)
+    const bundle = mapCasesToOmop([withPreopAnswers(c) as never], options as never)
     expect(bundle.observation.some(r => r.observation_source_value === "LOSPOR:ALLERGY_PRESENT")).toBe(false)
   })
 })
@@ -1217,15 +1218,15 @@ describe("clinical data that used to never leave", () => {
     // A register exists partly to study these, and they left the appliance
     // nowhere at all: read out of the database, carried through the mapper's
     // row types, written to no table.
-    expect(obs("LOSPOR:SMOKING")[0]?.value_as_string).toBe("false")
-    expect(obs("LOSPOR:SUBSTANCE_ABUSE")[0]?.value_as_string).toBe("false")
+    expect(obs("LOSPOR:SMOKING")[0]?.value_as_string).toBe("NO")
+    expect(obs("LOSPOR:SUBSTANCE_ABUSE")[0]?.value_as_string).toBe("NO")
   })
 
   it("exports the rest of the preop history", () => {
-    expect(obs("LOSPOR:LATEX_ALLERGY")[0]?.value_as_string).toBe("false")
-    expect(obs("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")[0]?.value_as_string).toBe("true")
-    expect(obs("LOSPOR:DENTAL_PROSTHETICS")[0]?.value_as_string).toBe("false")
-    expect(obs("LOSPOR:HEART_ARRHYTHMIA")[0]?.value_as_string).toBe("false")
+    expect(obs("LOSPOR:LATEX_ALLERGY")[0]?.value_as_string).toBe("NO")
+    expect(obs("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")[0]?.value_as_string).toBe("YES")
+    expect(obs("LOSPOR:DENTAL_PROSTHETICS")[0]?.value_as_string).toBe("NO")
+    expect(obs("LOSPOR:HEART_ARRHYTHMIA")[0]?.value_as_string).toBe("NO")
     expect(obs("LOSPOR:GUTA_SCORE")[0]?.value_as_number).toBe(2)
   })
 
@@ -1455,6 +1456,34 @@ describe("mapping summary provenance", () => {
   })
 })
 
+describe("preop questions leave from the answer rows only", () => {
+  // Hospital 1.4.7 exported each baseline yes/no twice once answer rows
+  // existed: from the legacy column under its concept, and again from the
+  // answer row as an unmapped concept 0.
+  it("exports each baseline answer once, under its catalogue concept", () => {
+    const rows = mapCasesToOmop([completeCase() as never]).observation
+      .filter(row => row.observation_source_value === "LOSPOR:SMOKING" || row.observation_source_value === "LOSPOR:PREOP_BASE_SMOKING")
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ observation_concept_id: 43054909, value_as_concept_id: 4188540 })
+  })
+
+  it("does not read the legacy column: no answer row, no observation", () => {
+    const c = completeCase() as unknown as { preop: Record<string, unknown> }
+    c.preop.assessmentAnswers = []
+    const rows = mapCasesToOmop([c as never]).observation
+      .filter(row => row.observation_source_value === "LOSPOR:SMOKING")
+    expect(rows).toHaveLength(0)
+  })
+
+  it("exports surgical risk with the option concept and leaves urgency to the procedure", () => {
+    const c = withPreopAnswers({ ...(completeCase() as Record<string, unknown>) }) as { preop: Record<string, unknown> }
+    const observations = mapCasesToOmop([withPreopAnswers({ ...c, preop: { ...c.preop, highRiskSurgery: true, elective: true, emergencySurgery: false } }) as never]).observation
+    expect(observations.filter(row => row.observation_source_value === "LOSPOR:HIGH_RISK_SURGERY")[0])
+      .toMatchObject({ observation_concept_id: 4250613, value_as_concept_id: 4188539 })
+    expect(observations.some(row => String(row.observation_source_value).includes("URGENCY"))).toBe(false)
+  })
+})
+
 describe("one source answer is one row", () => {
   // A source concept with both a Maps to and a Maps to value describes one
   // fact, and the OHDSI convention puts both halves in a single row. Emitting
@@ -1464,7 +1493,7 @@ describe("one source answer is one row", () => {
   const latexRows = (latexAllergy: boolean | null) => {
     const base = completeCase() as Record<string, unknown>
     const preop = { ...(base.preop as Record<string, unknown>), latexAllergy }
-    return mapCasesToOmop([{ ...base, preop } as never]).observation
+    return mapCasesToOmop([withPreopAnswers({ ...base, preop }) as never]).observation
       .filter(row => row.observation_concept_id === 43530807)
   }
 
@@ -1511,7 +1540,7 @@ describe("the anaesthesia history that is about the patient, not their family", 
   const withPreop = (patch: Record<string, unknown>) => {
     const c = completeCase() as unknown as { preop: Record<string, unknown> }
     Object.assign(c.preop, patch)
-    return c as never
+    return withPreopAnswers(c) as never
   }
   const obs = (source: string, value: boolean | null) => {
     const key = source === "LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY"

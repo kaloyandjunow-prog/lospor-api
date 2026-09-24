@@ -324,7 +324,7 @@ export type PreopAssessmentAnswerOrderByWithRelationInput = {
 
 export type PreopAssessmentAnswerWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  preopId_questionId_profileVersion?: Prisma.PreopAssessmentAnswerPreopIdQuestionIdProfileVersionCompoundUniqueInput
+  preopId_questionId?: Prisma.PreopAssessmentAnswerPreopIdQuestionIdCompoundUniqueInput
   AND?: Prisma.PreopAssessmentAnswerWhereInput | Prisma.PreopAssessmentAnswerWhereInput[]
   OR?: Prisma.PreopAssessmentAnswerWhereInput[]
   NOT?: Prisma.PreopAssessmentAnswerWhereInput | Prisma.PreopAssessmentAnswerWhereInput[]
@@ -345,7 +345,7 @@ export type PreopAssessmentAnswerWhereUniqueInput = Prisma.AtLeast<{
   preop?: Prisma.XOR<Prisma.PreoperativeAssessmentScalarRelationFilter, Prisma.PreoperativeAssessmentWhereInput>
   question?: Prisma.XOR<Prisma.PreopQuestionDefinitionScalarRelationFilter, Prisma.PreopQuestionDefinitionWhereInput>
   option?: Prisma.XOR<Prisma.PreopAnswerOptionNullableScalarRelationFilter, Prisma.PreopAnswerOptionWhereInput> | null
-}, "id" | "preopId_questionId_profileVersion">
+}, "id" | "preopId_questionId">
 
 export type PreopAssessmentAnswerOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -524,10 +524,9 @@ export type PreopAssessmentAnswerOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type PreopAssessmentAnswerPreopIdQuestionIdProfileVersionCompoundUniqueInput = {
+export type PreopAssessmentAnswerPreopIdQuestionIdCompoundUniqueInput = {
   preopId: string
   questionId: string
-  profileVersion: number
 }
 
 export type PreopAssessmentAnswerCountOrderByAggregateInput = {

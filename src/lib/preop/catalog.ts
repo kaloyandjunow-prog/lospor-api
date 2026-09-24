@@ -7,7 +7,8 @@
  * existing bundled row with different clinical metadata.
  */
 
-export const PREOP_CATALOG_VERSION = "1.4.7"
+/** The catalogue ships with, and is versioned as, the Hospital release. */
+export const PREOP_CATALOG_VERSION = "1.4.8"
 export const YES_CONCEPT_ID = 4188539
 export const NO_CONCEPT_ID = 4188540
 export const A3_WEIGHT_LOSS_CONCEPT_ID = 40491502
@@ -22,6 +23,18 @@ export type PreopCatalogOption = {
   omopSourceCode?: string
 }
 
+/** Core canonical preoperative sections; each client maps them onto its own tabs. */
+export type PreopFormSection =
+  | "demographics"
+  | "case_details"
+  | "medical_history"
+  | "current_medications"
+  | "anamnesis"
+  | "physical_exam"
+  | "airway"
+  | "labs"
+  | "risk_scores"
+
 export type PreopCatalogQuestion = {
   stableKey: string
   catalogVersion: string
@@ -34,6 +47,10 @@ export type PreopCatalogQuestion = {
   allowUnknown: boolean
   allowNotApplicable: boolean
   conditionalRuleKey?: string
+  /** Follow-up questions: the question whose YES shows this one. Derived from conditionalRuleKey. */
+  parentKey?: string
+  /** The preoperative form section (core canonical key) the question renders in. */
+  formSection: PreopFormSection
   omopDomain?: string
   omopConceptId?: number
   omopVocabulary?: string
@@ -52,8 +69,9 @@ function question(
   labelEn: string,
   labelBg: string,
   options: PreopCatalogOption[] = yesNo(),
-  extra: Partial<Omit<PreopCatalogQuestion, "stableKey" | "section" | "labelEn" | "labelBg" | "options">> = {},
-): PreopCatalogQuestion {
+  extra: Partial<Omit<PreopCatalogQuestion, "stableKey" | "section" | "labelEn" | "labelBg" | "options" | "formSection">> = {},
+): Omit<PreopCatalogQuestion, "formSection"> {
+  const resolvedOptions = options.length === 0 && extra.answerType !== "TEXT" ? yesNo() : options
   return {
     stableKey,
     catalogVersion: PREOP_CATALOG_VERSION,
@@ -66,7 +84,7 @@ function question(
     allowUnknown: false,
     allowNotApplicable: false,
     ...extra,
-    options,
+    options: resolvedOptions,
   }
 }
 
@@ -160,11 +178,154 @@ const pediatric = [
   question("P8_DIFFICULT_VENOUS_ACCESS", "PEDIATRIC_ADDITIONS", "Difficult venous access history", "Анамнеза за труден венозен достъп", [], { applicability: ["PEDIATRIC"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS" }),
 ]
 
-export const BUNDLED_PREOP_QUESTIONS: readonly PreopCatalogQuestion[] = Object.freeze([
+/**
+ * OMOP mapping for every question: [observation concept, source value].
+ *
+ * The answer is the value (Yes 4188539 / No 4188540); the concept is the
+ * clinical fact the question asks about. 0 means no standard concept says what
+ * the question says -- the answer still exports, under its LOSPOR source value,
+ * and no concept is invented. Every non-zero id was checked as a standard
+ * concept against the local Athena bundle (athena-20260913).
+ *
+ * Baseline source values are the ones the exporter already used, so a query
+ * written against earlier exports keeps working.
+ */
+const OMOP: Record<string, readonly [number, string]> = {
+  BASE_ALLERGIES: [3013237, "LOSPOR:ALLERGY_PRESENT"], // History of allergies, reported (LOINC)
+  BASE_LATEX_ALLERGY: [43530807, "LOSPOR:LATEX_ALLERGY"], // Allergic disposition
+  BASE_FAMILY_ANAESTHESIA_PROBLEMS: [764557, "LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS"], // Family history of complication of anesthesia
+  BASE_UNEXPLAINED_ANAESTHESIA_COMPLICATIONS: [37017043, "LOSPOR:UNEXPLAINED_ANAESTHESIA_COMPLICATIONS"], // Complication due to anesthesia during surgery
+  BASE_MALIGNANT_HYPERTHERMIA_HISTORY: [440285, "LOSPOR:MALIGNANT_HYPERTHERMIA_HISTORY"], // Malignant hyperthermia
+  BASE_ANTICIPATED_DIFFICULT_AIRWAY: [37159176, "LOSPOR:ANTICIPATED_DIFFICULT_AIRWAY"], // At increased risk for difficult tracheal intubation
+  BASE_DENTAL_PROSTHETICS: [3029182, "LOSPOR:DENTAL_PROSTHETICS"], // Dental prosthesis (LOINC)
+  BASE_LOOSE_TEETH: [4002000, "LOSPOR:LOOSE_TEETH"], // Abnormal tooth mobility
+  BASE_SMOKING: [43054909, "LOSPOR:SMOKING"], // Tobacco smoking status (LOINC)
+  BASE_SUBSTANCE_ABUSE: [4234597, "LOSPOR:SUBSTANCE_ABUSE"], // Misuses drugs
+  BASE_HEART_ARRHYTHMIA: [44784217, "LOSPOR:HEART_ARRHYTHMIA"], // Cardiac arrhythmia
+  BASE_RCRI_ISCHEMIC_HEART: [4185932, "LOSPOR:RCRI_ISCHEMIC_HEART"], // Ischemic heart disease
+  BASE_RCRI_CHF: [319835, "LOSPOR:RCRI_CHF"], // Congestive heart failure
+  BASE_RCRI_CVD: [381591, "LOSPOR:RCRI_CVD"], // Cerebrovascular disease
+  BASE_RCRI_INSULIN_DM: [0, "LOSPOR:RCRI_INSULIN_DM"], // only "insulin-treated type 2" exists; RCRI includes type 1
+  BASE_RCRI_CREATININE: [0, "LOSPOR:RCRI_CREATININE"], // a > 2 mg/dL threshold, not a concept
+  BASE_APFEL_PONV_HISTORY: [4032472, "LOSPOR:APFEL_PONV_HISTORY"], // Postoperative nausea and vomiting
+  BASE_APFEL_POSTOP_OPIOIDS: [0, "LOSPOR:APFEL_POSTOP_OPIOIDS"], // a plan, not a finding
+  BASE_STOPBANG_SNORING: [4248728, "LOSPOR:STOPBANG_SNORING"], // Snoring
+  BASE_STOPBANG_TIRED: [42872394, "LOSPOR:STOPBANG_TIRED"], // Daytime somnolence
+  BASE_STOPBANG_OBSERVED: [0, "LOSPOR:STOPBANG_OBSERVED_APNOEA"],
+  BASE_STOPBANG_BP: [316866, "LOSPOR:STOPBANG_BP"], // Hypertensive disorder
+  BASE_STOPBANG_NECK: [0, "LOSPOR:STOPBANG_NECK"], // a > 40 cm threshold
+  BASE_SURGERY_URGENCY: [0, "LOSPOR:SURGERY_URGENCY"], // exported on the planned procedure (4093606 / 4013731)
+  BASE_SURGERY_RISK: [4250613, "LOSPOR:HIGH_RISK_SURGERY"], // At increased risk for perioperative injury
+  BASE_POVOC_SURGERY_30_MINUTES: [0, "LOSPOR:POVOC_SURGERY_30_MIN"],
+  BASE_POVOC_STRABISMUS_SURGERY: [4214521, "LOSPOR:POVOC_STRABISMUS"], // Strabismus surgery
+  BASE_POVOC_HISTORY: [0, "LOSPOR:POVOC_HISTORY"], // patient *or family* history
+  BASE_COLDS_APPLICABLE: [0, "LOSPOR:COLDS_APPLICABLE"],
+  BASE_PEDIATRIC_FASTING: [3031632, "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT"], // Fasting status - Reported (LOINC)
+  A1_RECENT_INFECTION: [0, "LOSPOR:PREOP_A1_RECENT_INFECTION"], // broader than 4181583 URI
+  A1_RECENT_INFECTION_TWO_WEEKS: [0, "LOSPOR:PREOP_A1_RECENT_INFECTION_TWO_WEEKS"],
+  A2_REDUCED_EXERCISE_TOLERANCE: [0, "LOSPOR:PREOP_A2_REDUCED_EXERCISE_TOLERANCE"], // 4086848 does not imply reduced
+  A2_CAN_CLIMB_TWO_FLIGHTS: [0, "LOSPOR:PREOP_A2_CAN_CLIMB_TWO_FLIGHTS"], // 4013698 has inverted polarity
+  A3_UNINTENTIONAL_WEIGHT_LOSS: [40491502, "LOSPOR:PREOP_A3_UNINTENTIONAL_WEIGHT_LOSS"], // Unintentional weight loss (condition)
+  A4_ADL_DEPENDENCE: [0, "LOSPOR:PREOP_A4_ADL_DEPENDENCE"],
+  A4_ADL_WASHING: [4109856, "LOSPOR:PREOP_A4_ADL_WASHING"], // Difficulty washing self
+  A4_ADL_DRESSING: [4110925, "LOSPOR:PREOP_A4_ADL_DRESSING"], // Difficulty dressing
+  A4_ADL_WALKING: [36714126, "LOSPOR:PREOP_A4_ADL_WALKING"], // Difficulty walking
+  A4_ADL_TOILETING: [4110002, "LOSPOR:PREOP_A4_ADL_TOILETING"], // Difficulty using toilet
+  A5_FALLS_LAST_12_MONTHS: [436583, "LOSPOR:PREOP_A5_FALLS_LAST_12_MONTHS"], // Fall
+  A5_FALL_INJURY_MEDICAL_ATTENTION: [0, "LOSPOR:PREOP_A5_FALL_INJURY_MEDICAL_ATTENTION"],
+  A6_POST_ANAESTHESIA_CONFUSION: [4224115, "LOSPOR:PREOP_A6_POST_ANAESTHESIA_CONFUSION"], // Postoperative confusion
+  A7_VTE_HISTORY: [0, "LOSPOR:PREOP_A7_VTE_HISTORY"], // no standard SNOMED VTE concept
+  A7_DVT: [4133004, "LOSPOR:PREOP_A7_DVT"], // Deep venous thrombosis
+  A7_PE: [440417, "LOSPOR:PREOP_A7_PE"], // Pulmonary embolism
+  A8_ABNORMAL_BLEEDING: [0, "LOSPOR:PREOP_A8_ABNORMAL_BLEEDING"],
+  A8_BLEEDING_AFTER_PROCEDURE: [0, "LOSPOR:PREOP_A8_BLEEDING_AFTER_PROCEDURE"],
+  A8_FAMILY_BLEEDING: [0, "LOSPOR:PREOP_A8_FAMILY_BLEEDING"],
+  A9_TRANSFUSION_HISTORY: [4024656, "LOSPOR:PREOP_A9_TRANSFUSION_HISTORY"], // Transfusion of blood product (history)
+  A9_PREVIOUS_TRANSFUSION: [4024656, "LOSPOR:PREOP_A9_PREVIOUS_TRANSFUSION"],
+  A9_TRANSFUSION_REACTION: [440603, "LOSPOR:PREOP_A9_TRANSFUSION_REACTION"], // Blood transfusion reaction
+  A9_BLOOD_ANTIBODIES: [0, "LOSPOR:PREOP_A9_BLOOD_ANTIBODIES"],
+  A11_DYSPHAGIA_ASPIRATION: [31317, "LOSPOR:PREOP_A11_DYSPHAGIA_ASPIRATION"], // Dysphagia
+  A11_SOLID_FOOD: [0, "LOSPOR:PREOP_A11_SOLID_FOOD"],
+  A11_LIQUIDS: [0, "LOSPOR:PREOP_A11_LIQUIDS"],
+  A11_PREVIOUS_ASPIRATION: [0, "LOSPOR:PREOP_A11_PREVIOUS_ASPIRATION"],
+  A12_PACEMAKER_ICD: [0, "LOSPOR:PREOP_A12_PACEMAKER_ICD"], // pacemaker *or* ICD; each concept covers one
+  A13_PREGNANCY: [4299535, "LOSPOR:PREOP_A13_PREGNANCY"], // Pregnancy
+  A13_GESTATIONAL_AGE_KNOWN: [0, "LOSPOR:PREOP_A13_GESTATIONAL_AGE_KNOWN"],
+  A14_BREASTFEEDING: [4188824, "LOSPOR:PREOP_A14_BREASTFEEDING"], // Breastfeeding (mother)
+  A14_CONTINUE_BREASTFEEDING: [0, "LOSPOR:PREOP_A14_CONTINUE_BREASTFEEDING"],
+  P1_PREMATURITY_NICU: [36675035, "LOSPOR:PREOP_P1_PREMATURITY_NICU"], // Prematurity of infant
+  P1_BORN_BEFORE_37_WEEKS: [36675035, "LOSPOR:PREOP_P1_BORN_BEFORE_37_WEEKS"],
+  P1_NICU_ADMISSION: [3661417, "LOSPOR:PREOP_P1_NICU_ADMISSION"], // Admission to neonatal intensive care unit
+  P1_GESTATIONAL_AGE_KNOWN: [0, "LOSPOR:PREOP_P1_GESTATIONAL_AGE_KNOWN"],
+  P2_HOME_OXYGEN_NIV: [42873170, "LOSPOR:PREOP_P2_HOME_OXYGEN_NIV"], // Dependence on supplemental oxygen
+  P3_FEEDING_SWALLOWING: [4299954, "LOSPOR:PREOP_P3_FEEDING_SWALLOWING"], // Feeding problem
+  P3_CHOKING_FEEDING: [4096712, "LOSPOR:PREOP_P3_CHOKING_FEEDING"], // Choking
+  P3_ASPIRATION_FEEDING: [0, "LOSPOR:PREOP_P3_ASPIRATION_FEEDING"],
+  P3_FEEDING_TUBE: [0, "LOSPOR:PREOP_P3_FEEDING_TUBE"],
+  P4_SLEEP_DISORDERED_BREATHING: [0, "LOSPOR:PREOP_P4_SLEEP_DISORDERED_BREATHING"], // OSA 442588 is narrower
+  P4_LOUD_SNORING: [4248728, "LOSPOR:PREOP_P4_LOUD_SNORING"], // Snoring
+  P4_OBSERVED_PAUSES: [0, "LOSPOR:PREOP_P4_OBSERVED_PAUSES"],
+  P8_DIFFICULT_VENOUS_ACCESS: [4115246, "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS"], // Difficult venous access
+}
+
+/** Where a question renders. Unlisted questions (and follow-ups of listed ones) are anamnesis. */
+const FORM_SECTION: Record<string, PreopFormSection> = {
+  BASE_ANTICIPATED_DIFFICULT_AIRWAY: "airway",
+  BASE_HEART_ARRHYTHMIA: "physical_exam",
+  BASE_SURGERY_URGENCY: "case_details",
+  BASE_SURGERY_RISK: "case_details",
+  BASE_POVOC_SURGERY_30_MINUTES: "risk_scores",
+  BASE_POVOC_STRABISMUS_SURGERY: "risk_scores",
+  BASE_POVOC_HISTORY: "risk_scores",
+  BASE_COLDS_APPLICABLE: "risk_scores",
+  A11_DYSPHAGIA_ASPIRATION: "airway",
+  A12_PACEMAKER_ICD: "physical_exam",
+  A13_PREGNANCY: "demographics",
+  A14_BREASTFEEDING: "demographics",
+  P3_FEEDING_SWALLOWING: "airway",
+  P4_SLEEP_DISORDERED_BREATHING: "airway",
+  P8_DIFFICULT_VENOUS_ACCESS: "physical_exam",
+}
+
+function parentOf(item: Omit<PreopCatalogQuestion, "formSection">): string | undefined {
+  return /^(.+)_IS_YES$/.exec(item.conditionalRuleKey ?? "")?.[1]
+}
+
+function withMapping(items: Omit<PreopCatalogQuestion, "formSection">[]): PreopCatalogQuestion[] {
+  const byKey = new Map(items.map(item => [item.stableKey, item]))
+  const sectionOf = (key: string): PreopFormSection => {
+    if (FORM_SECTION[key]) return FORM_SECTION[key]
+    const item = byKey.get(key)
+    const parent = item ? parentOf(item) : undefined
+    return parent ? sectionOf(parent) : "anamnesis"
+  }
+  return items.map(item => {
+    const omop = OMOP[item.stableKey]
+    const parentKey = parentOf(item)
+    const options = item.stableKey === "BASE_SURGERY_RISK"
+      // High versus low risk is the yes/no of "at increased risk".
+      ? item.options.map(option => ({ ...option, omopConceptId: option.key === "HIGH" ? YES_CONCEPT_ID : NO_CONCEPT_ID, omopVocabulary: "SNOMED" }))
+      : item.options
+    return {
+      ...item,
+      options,
+      ...(parentKey ? { parentKey } : {}),
+      formSection: sectionOf(item.stableKey),
+      // Urgency is a modifier on the planned procedure (4093606 Emergency /
+      // 4013731 Elective), exported there rather than as an observation.
+      omopDomain: item.stableKey === "BASE_SURGERY_URGENCY"
+        ? "procedure_modifier"
+        : item.stableKey === "A3_UNINTENTIONAL_WEIGHT_LOSS" ? "condition_occurrence" : "observation",
+      ...(omop ? { omopConceptId: omop[0], omopSourceCode: omop[1] } : {}),
+    }
+  })
+}
+
+export const BUNDLED_PREOP_QUESTIONS: readonly PreopCatalogQuestion[] = Object.freeze(withMapping([
   ...baseline,
   ...adult,
   ...pediatric,
-])
+]))
 
 export const DEFAULT_ENABLED_QUESTION_KEYS = new Set(
   baseline.map(item => item.stableKey),
@@ -177,4 +338,3 @@ export function bundledQuestion(stableKey: string): PreopCatalogQuestion | undef
 export function bundledQuestionKeys(): string[] {
   return BUNDLED_PREOP_QUESTIONS.map(item => item.stableKey)
 }
-

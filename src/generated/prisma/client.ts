@@ -278,11 +278,6 @@ export type PreopAnswerOption = Prisma.PreopAnswerOptionModel
  */
 export type PreopAssessmentProfile = Prisma.PreopAssessmentProfileModel
 /**
- * Model PreopCaseProfilePin
- * 
- */
-export type PreopCaseProfilePin = Prisma.PreopCaseProfilePinModel
-/**
  * Model PreopProfileQuestion
  * 
  */

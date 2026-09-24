@@ -233,7 +233,6 @@ export type PreopAssessmentProfileWhereInput = {
   publishedById?: Prisma.StringNullableFilter<"PreopAssessmentProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"PreopAssessmentProfile"> | Date | string
   questions?: Prisma.PreopProfileQuestionListRelationFilter
-  casePins?: Prisma.PreopCaseProfilePinListRelationFilter
   auditEvents?: Prisma.PreopAssessmentAuditEventListRelationFilter
 }
 
@@ -246,7 +245,6 @@ export type PreopAssessmentProfileOrderByWithRelationInput = {
   publishedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   questions?: Prisma.PreopProfileQuestionOrderByRelationAggregateInput
-  casePins?: Prisma.PreopCaseProfilePinOrderByRelationAggregateInput
   auditEvents?: Prisma.PreopAssessmentAuditEventOrderByRelationAggregateInput
 }
 
@@ -262,7 +260,6 @@ export type PreopAssessmentProfileWhereUniqueInput = Prisma.AtLeast<{
   publishedById?: Prisma.StringNullableFilter<"PreopAssessmentProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"PreopAssessmentProfile"> | Date | string
   questions?: Prisma.PreopProfileQuestionListRelationFilter
-  casePins?: Prisma.PreopCaseProfilePinListRelationFilter
   auditEvents?: Prisma.PreopAssessmentAuditEventListRelationFilter
 }, "id" | "version">
 
@@ -303,7 +300,6 @@ export type PreopAssessmentProfileCreateInput = {
   publishedById?: string | null
   createdAt?: Date | string
   questions?: Prisma.PreopProfileQuestionCreateNestedManyWithoutProfileInput
-  casePins?: Prisma.PreopCaseProfilePinCreateNestedManyWithoutProfileInput
   auditEvents?: Prisma.PreopAssessmentAuditEventCreateNestedManyWithoutProfileInput
 }
 
@@ -316,7 +312,6 @@ export type PreopAssessmentProfileUncheckedCreateInput = {
   publishedById?: string | null
   createdAt?: Date | string
   questions?: Prisma.PreopProfileQuestionUncheckedCreateNestedManyWithoutProfileInput
-  casePins?: Prisma.PreopCaseProfilePinUncheckedCreateNestedManyWithoutProfileInput
   auditEvents?: Prisma.PreopAssessmentAuditEventUncheckedCreateNestedManyWithoutProfileInput
 }
 
@@ -329,7 +324,6 @@ export type PreopAssessmentProfileUpdateInput = {
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PreopProfileQuestionUpdateManyWithoutProfileNestedInput
-  casePins?: Prisma.PreopCaseProfilePinUpdateManyWithoutProfileNestedInput
   auditEvents?: Prisma.PreopAssessmentAuditEventUpdateManyWithoutProfileNestedInput
 }
 
@@ -342,7 +336,6 @@ export type PreopAssessmentProfileUncheckedUpdateInput = {
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PreopProfileQuestionUncheckedUpdateManyWithoutProfileNestedInput
-  casePins?: Prisma.PreopCaseProfilePinUncheckedUpdateManyWithoutProfileNestedInput
   auditEvents?: Prisma.PreopAssessmentAuditEventUncheckedUpdateManyWithoutProfileNestedInput
 }
 
@@ -428,20 +421,6 @@ export type EnumPreopProfileStatusFieldUpdateOperationsInput = {
   set?: $Enums.PreopProfileStatus
 }
 
-export type PreopAssessmentProfileCreateNestedOneWithoutCasePinsInput = {
-  create?: Prisma.XOR<Prisma.PreopAssessmentProfileCreateWithoutCasePinsInput, Prisma.PreopAssessmentProfileUncheckedCreateWithoutCasePinsInput>
-  connectOrCreate?: Prisma.PreopAssessmentProfileCreateOrConnectWithoutCasePinsInput
-  connect?: Prisma.PreopAssessmentProfileWhereUniqueInput
-}
-
-export type PreopAssessmentProfileUpdateOneRequiredWithoutCasePinsNestedInput = {
-  create?: Prisma.XOR<Prisma.PreopAssessmentProfileCreateWithoutCasePinsInput, Prisma.PreopAssessmentProfileUncheckedCreateWithoutCasePinsInput>
-  connectOrCreate?: Prisma.PreopAssessmentProfileCreateOrConnectWithoutCasePinsInput
-  upsert?: Prisma.PreopAssessmentProfileUpsertWithoutCasePinsInput
-  connect?: Prisma.PreopAssessmentProfileWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.PreopAssessmentProfileUpdateToOneWithWhereWithoutCasePinsInput, Prisma.PreopAssessmentProfileUpdateWithoutCasePinsInput>, Prisma.PreopAssessmentProfileUncheckedUpdateWithoutCasePinsInput>
-}
-
 export type PreopAssessmentProfileCreateNestedOneWithoutQuestionsInput = {
   create?: Prisma.XOR<Prisma.PreopAssessmentProfileCreateWithoutQuestionsInput, Prisma.PreopAssessmentProfileUncheckedCreateWithoutQuestionsInput>
   connectOrCreate?: Prisma.PreopAssessmentProfileCreateOrConnectWithoutQuestionsInput
@@ -472,70 +451,6 @@ export type PreopAssessmentProfileUpdateOneWithoutAuditEventsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.PreopAssessmentProfileUpdateToOneWithWhereWithoutAuditEventsInput, Prisma.PreopAssessmentProfileUpdateWithoutAuditEventsInput>, Prisma.PreopAssessmentProfileUncheckedUpdateWithoutAuditEventsInput>
 }
 
-export type PreopAssessmentProfileCreateWithoutCasePinsInput = {
-  id?: string
-  version: number
-  catalogVersion: string
-  status?: $Enums.PreopProfileStatus
-  publishedAt?: Date | string | null
-  publishedById?: string | null
-  createdAt?: Date | string
-  questions?: Prisma.PreopProfileQuestionCreateNestedManyWithoutProfileInput
-  auditEvents?: Prisma.PreopAssessmentAuditEventCreateNestedManyWithoutProfileInput
-}
-
-export type PreopAssessmentProfileUncheckedCreateWithoutCasePinsInput = {
-  id?: string
-  version: number
-  catalogVersion: string
-  status?: $Enums.PreopProfileStatus
-  publishedAt?: Date | string | null
-  publishedById?: string | null
-  createdAt?: Date | string
-  questions?: Prisma.PreopProfileQuestionUncheckedCreateNestedManyWithoutProfileInput
-  auditEvents?: Prisma.PreopAssessmentAuditEventUncheckedCreateNestedManyWithoutProfileInput
-}
-
-export type PreopAssessmentProfileCreateOrConnectWithoutCasePinsInput = {
-  where: Prisma.PreopAssessmentProfileWhereUniqueInput
-  create: Prisma.XOR<Prisma.PreopAssessmentProfileCreateWithoutCasePinsInput, Prisma.PreopAssessmentProfileUncheckedCreateWithoutCasePinsInput>
-}
-
-export type PreopAssessmentProfileUpsertWithoutCasePinsInput = {
-  update: Prisma.XOR<Prisma.PreopAssessmentProfileUpdateWithoutCasePinsInput, Prisma.PreopAssessmentProfileUncheckedUpdateWithoutCasePinsInput>
-  create: Prisma.XOR<Prisma.PreopAssessmentProfileCreateWithoutCasePinsInput, Prisma.PreopAssessmentProfileUncheckedCreateWithoutCasePinsInput>
-  where?: Prisma.PreopAssessmentProfileWhereInput
-}
-
-export type PreopAssessmentProfileUpdateToOneWithWhereWithoutCasePinsInput = {
-  where?: Prisma.PreopAssessmentProfileWhereInput
-  data: Prisma.XOR<Prisma.PreopAssessmentProfileUpdateWithoutCasePinsInput, Prisma.PreopAssessmentProfileUncheckedUpdateWithoutCasePinsInput>
-}
-
-export type PreopAssessmentProfileUpdateWithoutCasePinsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
-  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  questions?: Prisma.PreopProfileQuestionUpdateManyWithoutProfileNestedInput
-  auditEvents?: Prisma.PreopAssessmentAuditEventUpdateManyWithoutProfileNestedInput
-}
-
-export type PreopAssessmentProfileUncheckedUpdateWithoutCasePinsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
-  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  questions?: Prisma.PreopProfileQuestionUncheckedUpdateManyWithoutProfileNestedInput
-  auditEvents?: Prisma.PreopAssessmentAuditEventUncheckedUpdateManyWithoutProfileNestedInput
-}
-
 export type PreopAssessmentProfileCreateWithoutQuestionsInput = {
   id?: string
   version: number
@@ -544,7 +459,6 @@ export type PreopAssessmentProfileCreateWithoutQuestionsInput = {
   publishedAt?: Date | string | null
   publishedById?: string | null
   createdAt?: Date | string
-  casePins?: Prisma.PreopCaseProfilePinCreateNestedManyWithoutProfileInput
   auditEvents?: Prisma.PreopAssessmentAuditEventCreateNestedManyWithoutProfileInput
 }
 
@@ -556,7 +470,6 @@ export type PreopAssessmentProfileUncheckedCreateWithoutQuestionsInput = {
   publishedAt?: Date | string | null
   publishedById?: string | null
   createdAt?: Date | string
-  casePins?: Prisma.PreopCaseProfilePinUncheckedCreateNestedManyWithoutProfileInput
   auditEvents?: Prisma.PreopAssessmentAuditEventUncheckedCreateNestedManyWithoutProfileInput
 }
 
@@ -584,7 +497,6 @@ export type PreopAssessmentProfileUpdateWithoutQuestionsInput = {
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  casePins?: Prisma.PreopCaseProfilePinUpdateManyWithoutProfileNestedInput
   auditEvents?: Prisma.PreopAssessmentAuditEventUpdateManyWithoutProfileNestedInput
 }
 
@@ -596,7 +508,6 @@ export type PreopAssessmentProfileUncheckedUpdateWithoutQuestionsInput = {
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  casePins?: Prisma.PreopCaseProfilePinUncheckedUpdateManyWithoutProfileNestedInput
   auditEvents?: Prisma.PreopAssessmentAuditEventUncheckedUpdateManyWithoutProfileNestedInput
 }
 
@@ -609,7 +520,6 @@ export type PreopAssessmentProfileCreateWithoutAuditEventsInput = {
   publishedById?: string | null
   createdAt?: Date | string
   questions?: Prisma.PreopProfileQuestionCreateNestedManyWithoutProfileInput
-  casePins?: Prisma.PreopCaseProfilePinCreateNestedManyWithoutProfileInput
 }
 
 export type PreopAssessmentProfileUncheckedCreateWithoutAuditEventsInput = {
@@ -621,7 +531,6 @@ export type PreopAssessmentProfileUncheckedCreateWithoutAuditEventsInput = {
   publishedById?: string | null
   createdAt?: Date | string
   questions?: Prisma.PreopProfileQuestionUncheckedCreateNestedManyWithoutProfileInput
-  casePins?: Prisma.PreopCaseProfilePinUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type PreopAssessmentProfileCreateOrConnectWithoutAuditEventsInput = {
@@ -649,7 +558,6 @@ export type PreopAssessmentProfileUpdateWithoutAuditEventsInput = {
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PreopProfileQuestionUpdateManyWithoutProfileNestedInput
-  casePins?: Prisma.PreopCaseProfilePinUpdateManyWithoutProfileNestedInput
 }
 
 export type PreopAssessmentProfileUncheckedUpdateWithoutAuditEventsInput = {
@@ -661,7 +569,6 @@ export type PreopAssessmentProfileUncheckedUpdateWithoutAuditEventsInput = {
   publishedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   questions?: Prisma.PreopProfileQuestionUncheckedUpdateManyWithoutProfileNestedInput
-  casePins?: Prisma.PreopCaseProfilePinUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 
@@ -671,13 +578,11 @@ export type PreopAssessmentProfileUncheckedUpdateWithoutAuditEventsInput = {
 
 export type PreopAssessmentProfileCountOutputType = {
   questions: number
-  casePins: number
   auditEvents: number
 }
 
 export type PreopAssessmentProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   questions?: boolean | PreopAssessmentProfileCountOutputTypeCountQuestionsArgs
-  casePins?: boolean | PreopAssessmentProfileCountOutputTypeCountCasePinsArgs
   auditEvents?: boolean | PreopAssessmentProfileCountOutputTypeCountAuditEventsArgs
 }
 
@@ -701,13 +606,6 @@ export type PreopAssessmentProfileCountOutputTypeCountQuestionsArgs<ExtArgs exte
 /**
  * PreopAssessmentProfileCountOutputType without action
  */
-export type PreopAssessmentProfileCountOutputTypeCountCasePinsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.PreopCaseProfilePinWhereInput
-}
-
-/**
- * PreopAssessmentProfileCountOutputType without action
- */
 export type PreopAssessmentProfileCountOutputTypeCountAuditEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.PreopAssessmentAuditEventWhereInput
 }
@@ -722,7 +620,6 @@ export type PreopAssessmentProfileSelect<ExtArgs extends runtime.Types.Extension
   publishedById?: boolean
   createdAt?: boolean
   questions?: boolean | Prisma.PreopAssessmentProfile$questionsArgs<ExtArgs>
-  casePins?: boolean | Prisma.PreopAssessmentProfile$casePinsArgs<ExtArgs>
   auditEvents?: boolean | Prisma.PreopAssessmentProfile$auditEventsArgs<ExtArgs>
   _count?: boolean | Prisma.PreopAssessmentProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["preopAssessmentProfile"]>
@@ -760,7 +657,6 @@ export type PreopAssessmentProfileSelectScalar = {
 export type PreopAssessmentProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "version" | "catalogVersion" | "status" | "publishedAt" | "publishedById" | "createdAt", ExtArgs["result"]["preopAssessmentProfile"]>
 export type PreopAssessmentProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   questions?: boolean | Prisma.PreopAssessmentProfile$questionsArgs<ExtArgs>
-  casePins?: boolean | Prisma.PreopAssessmentProfile$casePinsArgs<ExtArgs>
   auditEvents?: boolean | Prisma.PreopAssessmentProfile$auditEventsArgs<ExtArgs>
   _count?: boolean | Prisma.PreopAssessmentProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -771,7 +667,6 @@ export type $PreopAssessmentProfilePayload<ExtArgs extends runtime.Types.Extensi
   name: "PreopAssessmentProfile"
   objects: {
     questions: Prisma.$PreopProfileQuestionPayload<ExtArgs>[]
-    casePins: Prisma.$PreopCaseProfilePinPayload<ExtArgs>[]
     auditEvents: Prisma.$PreopAssessmentAuditEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1177,7 +1072,6 @@ readonly fields: PreopAssessmentProfileFieldRefs;
 export interface Prisma__PreopAssessmentProfileClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   questions<T extends Prisma.PreopAssessmentProfile$questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PreopAssessmentProfile$questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PreopProfileQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  casePins<T extends Prisma.PreopAssessmentProfile$casePinsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PreopAssessmentProfile$casePinsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PreopCaseProfilePinPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditEvents<T extends Prisma.PreopAssessmentProfile$auditEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PreopAssessmentProfile$auditEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PreopAssessmentAuditEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1629,30 +1523,6 @@ export type PreopAssessmentProfile$questionsArgs<ExtArgs extends runtime.Types.E
   take?: number
   skip?: number
   distinct?: Prisma.PreopProfileQuestionScalarFieldEnum | Prisma.PreopProfileQuestionScalarFieldEnum[]
-}
-
-/**
- * PreopAssessmentProfile.casePins
- */
-export type PreopAssessmentProfile$casePinsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the PreopCaseProfilePin
-   */
-  select?: Prisma.PreopCaseProfilePinSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the PreopCaseProfilePin
-   */
-  omit?: Prisma.PreopCaseProfilePinOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.PreopCaseProfilePinInclude<ExtArgs> | null
-  where?: Prisma.PreopCaseProfilePinWhereInput
-  orderBy?: Prisma.PreopCaseProfilePinOrderByWithRelationInput | Prisma.PreopCaseProfilePinOrderByWithRelationInput[]
-  cursor?: Prisma.PreopCaseProfilePinWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.PreopCaseProfilePinScalarFieldEnum | Prisma.PreopCaseProfilePinScalarFieldEnum[]
 }
 
 /**
