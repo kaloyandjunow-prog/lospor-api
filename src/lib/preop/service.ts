@@ -7,6 +7,7 @@ import {
   type PreopCatalogQuestion,
   type PreopFormSection,
 } from "./catalog"
+import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION } from "@lospor/core/preop-assessment"
 
 /**
  * The preoperative assessment: one bundled catalogue, one appliance profile.
@@ -357,35 +358,10 @@ export async function updatePreopProfile(
   return result
 }
 
-const LEGACY_BOOLEAN_QUESTIONS: Record<string, string> = {
-  allergies: "BASE_ALLERGIES",
-  latexAllergy: "BASE_LATEX_ALLERGY",
-  familyAnesthesiaProblems: "BASE_FAMILY_ANAESTHESIA_PROBLEMS",
-  unexplainedAnaesthesiaComplications: "BASE_UNEXPLAINED_ANAESTHESIA_COMPLICATIONS",
-  malignantHyperthermiaHistory: "BASE_MALIGNANT_HYPERTHERMIA_HISTORY",
-  anticipatedDifficultAirway: "BASE_ANTICIPATED_DIFFICULT_AIRWAY",
-  dentalProsthetics: "BASE_DENTAL_PROSTHETICS",
-  looseTeeth: "BASE_LOOSE_TEETH",
-  smoking: "BASE_SMOKING",
-  substanceAbuse: "BASE_SUBSTANCE_ABUSE",
-  heartArrhythmia: "BASE_HEART_ARRHYTHMIA",
-  rcriIschemicHeart: "BASE_RCRI_ISCHEMIC_HEART",
-  rcriCHF: "BASE_RCRI_CHF",
-  rcriCVD: "BASE_RCRI_CVD",
-  rcriInsulinDM: "BASE_RCRI_INSULIN_DM",
-  rcriCreatinine: "BASE_RCRI_CREATININE",
-  apfelPONVHistory: "BASE_APFEL_PONV_HISTORY",
-  apfelPostopOpioids: "BASE_APFEL_POSTOP_OPIOIDS",
-  stopbangSnoring: "BASE_STOPBANG_SNORING",
-  stopbangTired: "BASE_STOPBANG_TIRED",
-  stopbangObserved: "BASE_STOPBANG_OBSERVED",
-  stopbangBP: "BASE_STOPBANG_BP",
-  stopbangNeck: "BASE_STOPBANG_NECK",
-  povocSurgeryAtLeast30Minutes: "BASE_POVOC_SURGERY_30_MINUTES",
-  povocStrabismusSurgery: "BASE_POVOC_STRABISMUS_SURGERY",
-  povocHistory: "BASE_POVOC_HISTORY",
-  coldsApplicable: "BASE_COLDS_APPLICABLE",
-}
+/** Legacy preop field -> baseline question, from the map core shares with the clients. */
+const LEGACY_BOOLEAN_QUESTIONS: Record<string, string> = Object.fromEntries(
+  Object.entries(PREOP_LEGACY_FIELD_BY_QUESTION).map(([stableKey, field]) => [field, stableKey]),
+)
 
 /** The legacy preop field that mirrors a baseline question, if any. */
 export function legacyFieldForQuestion(stableKey: string): string | null {
@@ -537,10 +513,22 @@ export async function savePreopAnswers(
     submitted.set(answer.stableKey, { answer, explicit: false })
   }
   for (const answer of args.answers ?? []) {
+    // A baseline question is answered through its own form field only. A copy
+    // of it in preopAnswers is at best redundant and at worst stale (a form
+    // that loaded the answer, then had the toggle changed), so it is ignored.
+    if (hasDedicatedPreopControl(answer.stableKey)) continue
     validateAnswer(answer, byKey.get(answer.stableKey))
     submitted.set(answer.stableKey, { answer, explicit: true })
   }
   const cleared = legacyClearedQuestions(preop)
+  // preopAnswers, when sent, is the form's complete set of answers to the
+  // questions without their own control: one it no longer holds was cleared.
+  if (Array.isArray(args.answers)) {
+    for (const row of profile.questions) {
+      const key = row.question.stableKey
+      if (!hasDedicatedPreopControl(key) && !submitted.has(key)) cleared.add(key)
+    }
+  }
 
   const stored = new Map<string, StoredAnswer>((await db.preopAssessmentAnswer.findMany({
     where: { preopId: args.preopId },
@@ -560,7 +548,9 @@ export async function savePreopAnswers(
     let decision: Target
     if (incoming && (on || incoming.explicit || previous)) {
       decision = { kind: "answer", answer: incoming.answer, off: !on }
-    } else if (cleared.has(key) && !incoming) {
+    } else if (cleared.has(key) && !incoming && (on || !previous || previous.state === PreopAnswerState.NOT_ASKED)) {
+      // An off question is hidden, so the form cannot have cleared it: a real
+      // answer recorded while it was on stays.
       decision = on ? { kind: "not-asked" } : { kind: "none" }
     } else if (previous) {
       decision = !on && previous.state === PreopAnswerState.NOT_ASKED ? { kind: "none" } : { kind: "keep" }

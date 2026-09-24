@@ -199,6 +199,28 @@ describe("switching a question on or off", () => {
   })
 })
 
+describe("preopAnswers is the complete set of the form", () => {
+  it("clears an addition the form no longer holds", async () => {
+    const env = fakeDb(profileRow({ A12_PACEMAKER_ICD: { enabled: true } }))
+    await env.save({ clinicalMode: "ADULT" }, { answers: [{ stableKey: "A12_PACEMAKER_ICD", state: PreopAnswerState.YES, optionKey: "YES" }] })
+    await env.save({ clinicalMode: "ADULT" }, { answers: [] })
+    expect(env.stateOf("A12_PACEMAKER_ICD")).toBe(PreopAnswerState.NOT_ASKED)
+  })
+
+  it("leaves additions alone when preopAnswers is not sent", async () => {
+    const env = fakeDb(profileRow({ A12_PACEMAKER_ICD: { enabled: true } }))
+    await env.save({ clinicalMode: "ADULT" }, { answers: [{ stableKey: "A12_PACEMAKER_ICD", state: PreopAnswerState.YES, optionKey: "YES" }] })
+    await env.save({ clinicalMode: "ADULT", heightCm: 180 })
+    expect(env.stateOf("A12_PACEMAKER_ICD")).toBe(PreopAnswerState.YES)
+  })
+
+  it("answers baseline questions through their own field only, never from a stale copy", async () => {
+    const env = fakeDb()
+    await env.save({ clinicalMode: "ADULT", smoking: true }, { answers: [{ stableKey: "BASE_SMOKING", state: PreopAnswerState.NO, optionKey: "NO" }] })
+    expect(env.stateOf("BASE_SMOKING")).toBe(PreopAnswerState.YES)
+  })
+})
+
 describe("follow-up questions", () => {
   const withA1 = () => fakeDb(profileRow({ A1_RECENT_INFECTION: { enabled: true }, A1_RECENT_INFECTION_TWO_WEEKS: { enabled: true } }))
 
@@ -224,11 +246,11 @@ describe("follow-up questions", () => {
 describe("answer validation", () => {
   it("refuses a client-sent NOT_ASKED, an unknown question, and an option the question does not have", async () => {
     const env = fakeDb()
-    await expect(env.save({}, { answers: [{ stableKey: "BASE_SMOKING", state: PreopAnswerState.NOT_ASKED }] }))
+    await expect(env.save({}, { answers: [{ stableKey: "A12_PACEMAKER_ICD", state: PreopAnswerState.NOT_ASKED }] }))
       .rejects.toMatchObject({ code: "NOT_ASKED_IS_SERVER_GENERATED" })
     await expect(env.save({}, { answers: [{ stableKey: "NOT_IN_CATALOGUE", state: PreopAnswerState.YES }] }))
       .rejects.toMatchObject({ code: "UNKNOWN_PREOP_QUESTION" })
-    await expect(env.save({}, { answers: [{ stableKey: "BASE_SMOKING", state: PreopAnswerState.YES, optionKey: "MAYBE" }] }))
+    await expect(env.save({}, { answers: [{ stableKey: "A12_PACEMAKER_ICD", state: PreopAnswerState.YES, optionKey: "MAYBE" }] }))
       .rejects.toMatchObject({ code: "UNKNOWN_PREOP_ANSWER_OPTION" })
   })
 
