@@ -37,8 +37,16 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
     ;({ prisma } = await import("@/lib/prisma"))
     ;({ savePreopAnswers } = await import("@/lib/preop/service"))
     ;({ withLockedCaseTransaction, disconnectClinicalPrismaForTests } = await import("@/lib/clinical-transaction"))
+    // A username as well as an email: the Hospital database requires one.
     await prisma.user.create({
-      data: { id: userId, email: `${userId}@example.test`, name: "Preop answers test", passwordHash: "not-a-real-password" },
+      data: {
+        id: userId,
+        email: `${userId}@example.test`,
+        username: userId,
+        usernameCanonical: userId.toLowerCase(),
+        name: "Preop answers test",
+        passwordHash: "not-a-real-password",
+      },
     })
   })
 
