@@ -347,26 +347,36 @@ describe("the one profile", () => {
       .rejects.toMatchObject({ code: "DISABLED_QUESTION_CANNOT_BE_REQUIRED" })
   })
 
-  it("is created with only the baseline switched on", async () => {
-    let created: { questions: { create: Array<{ enabled: boolean; question: { connect: { stableKey: string } } }> } } | undefined
+  it("is created with only the baseline switched on, in flat writes", async () => {
     let active: unknown = null
+    const createMany = vi.fn(async () => {
+      active = profileRow()
+      return { count: BUNDLED_PREOP_QUESTIONS.length }
+    })
+    const create = vi.fn(async () => ({ id: "profile-new" }))
     const db = {
       $executeRaw: vi.fn(async () => 0),
-      preopQuestionDefinition: { findMany: vi.fn(async () => []) },
+      preopQuestionDefinition: {
+        findMany: vi.fn(async ({ select }: { select?: { id?: boolean } } = {}) =>
+          select && "id" in select ? BUNDLED_PREOP_QUESTIONS.map(item => ({ id: "definition-" + item.stableKey, stableKey: item.stableKey })) : []),
+      },
       preopAssessmentProfile: {
         findFirst: vi.fn(async ({ select }: { select?: unknown } = {}) => select ? null : active),
-        create: vi.fn(async ({ data }: { data: typeof created }) => {
-          created = data
-          active = profileRow()
-          return active
-        }),
+        create,
       },
+      preopProfileQuestion: { createMany },
       preopAssessmentAuditEvent: { create: vi.fn() },
     } as unknown as PreopDb
 
     await ensurePreopProfile(db, "clinician-1")
 
-    const enabled = created!.questions.create.filter(row => row.enabled).map(row => row.question.connect.stableKey)
+    // No nested create: that resolved each question with its own queries.
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.not.objectContaining({ questions: expect.anything() }) }))
+    expect(createMany).toHaveBeenCalledOnce()
+    const rows = (createMany.mock.calls[0] as unknown as [{ data: Array<{ questionId: string; enabled: boolean; profileId: string }> }])[0].data
+    expect(rows).toHaveLength(BUNDLED_PREOP_QUESTIONS.length)
+    expect(rows.every(row => row.profileId === "profile-new")).toBe(true)
+    const enabled = rows.filter(row => row.enabled).map(row => row.questionId.replace("definition-", ""))
     expect(enabled.length).toBe(30)
     expect(enabled.every(key => key.startsWith("BASE_"))).toBe(true)
   })

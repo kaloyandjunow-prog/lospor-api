@@ -1,5 +1,26 @@
 # Changelog - LOSPOR API
 
+## [9.11.2] - 2026-09-25
+
+### Fixed
+
+- **Preoperative saves still failed with a 500 on the hosted demo after
+  9.11.1.** Its database had never been given a catalogue or a profile, so
+  the first save had to create both. Creating the profile with a nested
+  write resolved each of the 75 questions with its own queries, 172 in all;
+  with the API about 90 ms from its database that took 16 seconds and ran
+  out the save's 5-second transaction, every time. The profile is now
+  created with flat writes (23 queries in all from an empty database).
+- **The one-off setup no longer runs inside a clinician's save.** Case
+  create and update, the profile read and suggestion generation first put
+  the catalogue and profile in place in a transaction of their own (up to
+  30 seconds); the save itself then finds the profile in five queries.
+
+### Added
+
+- A PostgreSQL regression test counts the queries of setting up an empty
+  database (at most 30) and of an already-set-up one (at most 6).
+
 ## [9.11.1] - 2026-09-25
 
 ### Fixed
