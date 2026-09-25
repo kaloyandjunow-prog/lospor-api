@@ -86,6 +86,43 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
     })).rejects.toThrow(/CASE_FINALIZED/)
   })
 
+  // A hosted database that ran 1.4.7 holds the 1.4.7 catalogue and profile.
+  // The first save on the new release upgrades them inside the save's own
+  // 5-second transaction; row by row that outlived the timeout on Supabase and
+  // every save failed with a 500. Recreate that state and upgrade it the same way.
+  it("upgrades a previous release's catalogue and profile inside one save transaction", async () => {
+    const { ensurePreopProfile } = await import("@/lib/preop/service")
+    const { BUNDLED_PREOP_QUESTIONS, PREOP_CATALOG_VERSION } = await import("@/lib/preop/catalog")
+    const profile = await prisma.$transaction(tx => ensurePreopProfile(tx, userId))
+
+    // What 1.4.7 left behind: an older catalogue version on every question,
+    // a concept the new release corrects, a missing option, and a profile
+    // without a question the new release adds.
+    const a6 = await prisma.preopQuestionDefinition.findUniqueOrThrow({ where: { stableKey: "A6_POST_ANAESTHESIA_CONFUSION" } })
+    await prisma.preopQuestionDefinition.updateMany({ data: { catalogVersion: "1.4.7" } })
+    await prisma.preopQuestionDefinition.update({ where: { id: a6.id }, data: { omopConceptId: 4224115 } })
+    const dropped = profile.questions.find(row => row.question.stableKey === "P8_DIFFICULT_VENOUS_ACCESS")!
+    await prisma.preopProfileQuestion.delete({ where: { profileId_questionId: { profileId: profile.id, questionId: dropped.questionId } } })
+    await prisma.preopAnswerOption.deleteMany({ where: { questionId: dropped.questionId, key: "NO" } })
+    await prisma.preopAssessmentProfile.update({ where: { id: profile.id }, data: { catalogVersion: "1.4.7" } })
+
+    const started = Date.now()
+    const upgraded = await prisma.$transaction(tx => ensurePreopProfile(tx, userId), { timeout: 5_000 })
+    expect(Date.now() - started).toBeLessThan(5_000)
+
+    expect(upgraded.catalogVersion).toBe(PREOP_CATALOG_VERSION)
+    expect(upgraded.questions).toHaveLength(BUNDLED_PREOP_QUESTIONS.length)
+    const readded = upgraded.questions.find(row => row.question.stableKey === "P8_DIFFICULT_VENOUS_ACCESS")!
+    expect(readded).toMatchObject({ enabled: false, required: false })
+    expect(readded.question.options.map(option => option.key).sort()).toEqual(["NO", "YES"])
+    expect(await prisma.preopQuestionDefinition.count({ where: { catalogVersion: { not: PREOP_CATALOG_VERSION } } })).toBe(0)
+    const expectedA6 = BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === "A6_POST_ANAESTHESIA_CONFUSION")!
+    expect((await prisma.preopQuestionDefinition.findUniqueOrThrow({ where: { id: a6.id } })).omopConceptId)
+      .toBe(expectedA6.omopConceptId ?? null)
+    // Existing rows keep their identity, so answers that reference them stay valid.
+    expect((await prisma.preopQuestionDefinition.findUniqueOrThrow({ where: { stableKey: "A6_POST_ANAESTHESIA_CONFUSION" } })).id).toBe(a6.id)
+  })
+
   it("keeps exactly one row per case and question", async () => {
     const { preopId } = await caseWithPreop()
     const smoking = await prisma.preopAssessmentAnswer.findFirstOrThrow({ where: { preopId, question: { stableKey: "BASE_SMOKING" } } })

@@ -1,5 +1,26 @@
 # Changelog - LOSPOR API
 
+## [9.11.1] - 2026-09-25
+
+### Fixed
+
+- **Preoperative saves failed with a 500 after upgrading a database that ran
+  9.10.7.** The first save on the new release brings the stored question
+  catalogue up to the bundled one, inside the save's own transaction. It
+  wrote the 75 questions and their options one row at a time, about 300
+  round trips; on a hosted database that outlived the 5-second transaction,
+  everything rolled back, and the next save tried again, so every preop save
+  and the profile read failed. The catalogue is now compared in one read and,
+  only if it differs, written in two statements; questions a release adds
+  are added to the profile in one insert.
+- **A case's first preoperative save** creates its answer rows in one
+  statement instead of one per question, and resets to "not asked" in one
+  statement, for the same reason.
+
+### Changed
+
+- Web, Mobile and API are released together at 9.11.1; Core stays 9.11.0.
+
 ## [9.11.0] - 2026-09-24
 
 ### Changed
