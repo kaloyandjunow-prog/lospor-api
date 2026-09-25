@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import { Prisma, PreopAnswerState, PreopProfileStatus, type PrismaClient } from "@/generated/prisma/client"
 import {
   BUNDLED_PREOP_QUESTIONS,
@@ -23,7 +24,7 @@ import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION } from "@lospo
  */
 
 type Db = Prisma.TransactionClient | PrismaClientLike
-type PrismaClientLike = Pick<PrismaClient, "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopProfileQuestion" | "preopAssessmentAnswer" | "preopAssessmentAuditEvent" | "preopAssessmentSuggestion">
+type PrismaClientLike = Pick<PrismaClient, "$executeRaw" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopProfileQuestion" | "preopAssessmentAnswer" | "preopAssessmentAuditEvent" | "preopAssessmentSuggestion">
 
 type PreopQuestionOptionRow = {
   key: string
@@ -187,29 +188,111 @@ function optionData(option: PreopCatalogQuestion["options"][number], sortOrder: 
   }
 }
 
+type StoredCatalogQuestion = ReturnType<typeof catalogData> & {
+  stableKey: string
+  options: Array<ReturnType<typeof optionData> & { key: string }>
+}
+
+/** Whether the stored catalogue already says exactly what the bundle says. */
+function catalogMatches(stored: StoredCatalogQuestion[]): boolean {
+  const byKey = new Map(stored.map(row => [row.stableKey, row]))
+  return BUNDLED_PREOP_QUESTIONS.every(item => {
+    const row = byKey.get(item.stableKey)
+    if (!row) return false
+    const expected = catalogData(item)
+    const sameQuestion = (Object.keys(expected) as Array<keyof typeof expected>).every(field =>
+      field === "applicability"
+        ? row.applicability.join("\u0000") === expected.applicability.join("\u0000")
+        : row[field] === expected[field])
+    return sameQuestion && item.options.every((option, sortOrder) => {
+      const found = row.options.find(value => value.key === option.key)
+      const wanted = optionData(option, sortOrder)
+      return !!found && (Object.keys(wanted) as Array<keyof typeof wanted>).every(field => found[field] === wanted[field])
+    })
+  })
+}
+
 /**
  * Bring the database copy of the catalogue in line with the bundle.
  *
  * The bundle is the only catalogue; the tables exist so answers can reference
  * a question and an option relationally. Options are never deleted -- an
  * answer may reference one -- only added or updated.
+ *
+ * One read, and when anything differs two statements: the questions, then
+ * their options, each as a single INSERT ... ON CONFLICT DO UPDATE. This runs
+ * inside a clinician's save after an upgrade, and row-by-row upserts (about
+ * 300 round trips) outlived the 5-second transaction on a hosted database, so
+ * every save failed and the upgrade never completed.
  */
 export async function provisionPreopCatalog(db: Db): Promise<void> {
-  for (const item of BUNDLED_PREOP_QUESTIONS) {
-    const definition = await db.preopQuestionDefinition.upsert({
-      where: { stableKey: item.stableKey },
-      create: { stableKey: item.stableKey, ...catalogData(item) },
-      update: catalogData(item),
-      select: { id: true },
-    })
-    for (const [sortOrder, option] of item.options.entries()) {
-      await db.preopAnswerOption.upsert({
-        where: { questionId_key: { questionId: definition.id, key: option.key } },
-        create: { questionId: definition.id, key: option.key, ...optionData(option, sortOrder) },
-        update: optionData(option, sortOrder),
-      })
-    }
-  }
+  const stored = await db.preopQuestionDefinition.findMany({
+    select: {
+      stableKey: true, catalogVersion: true, section: true, applicability: true, answerType: true,
+      labelEn: true, labelBg: true, requiredDefault: true, allowUnknown: true, allowNotApplicable: true,
+      conditionalRuleKey: true, omopDomain: true, omopConceptId: true, omopVocabulary: true, omopSourceCode: true,
+      options: {
+        select: {
+          key: true, labelEn: true, labelBg: true, omopConceptId: true, omopVocabulary: true,
+          omopSourceCode: true, sortOrder: true,
+        },
+      },
+    },
+  })
+  if (catalogMatches(stored as StoredCatalogQuestion[])) return
+
+  const questions = BUNDLED_PREOP_QUESTIONS.map(item => {
+    const data = catalogData(item)
+    return Prisma.sql`(${randomUUID()}, ${item.stableKey}, ${data.catalogVersion}, ${data.section},
+      ${data.applicability}::text[], ${data.answerType}::"PreopAnswerType", ${data.labelEn}, ${data.labelBg},
+      ${data.requiredDefault}, ${data.allowUnknown}, ${data.allowNotApplicable}, ${data.conditionalRuleKey}::text,
+      ${data.omopDomain}::text, ${data.omopConceptId}::int, ${data.omopVocabulary}::text, ${data.omopSourceCode}::text)`
+  })
+  await db.$executeRaw`
+    INSERT INTO "PreopQuestionDefinition" (
+      "id", "stableKey", "catalogVersion", "section", "applicability", "answerType", "labelEn", "labelBg",
+      "requiredDefault", "allowUnknown", "allowNotApplicable", "conditionalRuleKey",
+      "omopDomain", "omopConceptId", "omopVocabulary", "omopSourceCode"
+    )
+    VALUES ${Prisma.join(questions)}
+    ON CONFLICT ("stableKey") DO UPDATE SET
+      "catalogVersion" = EXCLUDED."catalogVersion",
+      "section" = EXCLUDED."section",
+      "applicability" = EXCLUDED."applicability",
+      "answerType" = EXCLUDED."answerType",
+      "labelEn" = EXCLUDED."labelEn",
+      "labelBg" = EXCLUDED."labelBg",
+      "requiredDefault" = EXCLUDED."requiredDefault",
+      "allowUnknown" = EXCLUDED."allowUnknown",
+      "allowNotApplicable" = EXCLUDED."allowNotApplicable",
+      "conditionalRuleKey" = EXCLUDED."conditionalRuleKey",
+      "omopDomain" = EXCLUDED."omopDomain",
+      "omopConceptId" = EXCLUDED."omopConceptId",
+      "omopVocabulary" = EXCLUDED."omopVocabulary",
+      "omopSourceCode" = EXCLUDED."omopSourceCode"`
+
+  const options = BUNDLED_PREOP_QUESTIONS.flatMap(item => item.options.map((option, sortOrder) => {
+    const data = optionData(option, sortOrder)
+    return Prisma.sql`(${randomUUID()}, ${item.stableKey}, ${option.key}, ${data.labelEn}, ${data.labelBg},
+      ${data.omopConceptId}::int, ${data.omopVocabulary}::text, ${data.omopSourceCode}::text, ${data.sortOrder}::int)`
+  }))
+  await db.$executeRaw`
+    INSERT INTO "PreopAnswerOption" (
+      "id", "questionId", "key", "labelEn", "labelBg", "omopConceptId", "omopVocabulary", "omopSourceCode", "sortOrder"
+    )
+    SELECT bundled."id", definition."id", bundled."key", bundled."labelEn", bundled."labelBg",
+      bundled."omopConceptId", bundled."omopVocabulary", bundled."omopSourceCode", bundled."sortOrder"
+    FROM (VALUES ${Prisma.join(options)}) AS bundled (
+      "id", "stableKey", "key", "labelEn", "labelBg", "omopConceptId", "omopVocabulary", "omopSourceCode", "sortOrder"
+    )
+    JOIN "PreopQuestionDefinition" definition ON definition."stableKey" = bundled."stableKey"
+    ON CONFLICT ("questionId", "key") DO UPDATE SET
+      "labelEn" = EXCLUDED."labelEn",
+      "labelBg" = EXCLUDED."labelBg",
+      "omopConceptId" = EXCLUDED."omopConceptId",
+      "omopVocabulary" = EXCLUDED."omopVocabulary",
+      "omopSourceCode" = EXCLUDED."omopSourceCode",
+      "sortOrder" = EXCLUDED."sortOrder"`
 }
 
 const PROFILE_INCLUDE = {
@@ -276,20 +359,24 @@ export async function ensurePreopProfile(db: Db, actorId: string): Promise<Preop
     // A release that adds questions adds them switched off, after the
     // operator's existing order. Nothing the operator chose is changed.
     const present = new Set(profile.questions.map(row => row.question.stableKey))
-    let next = profile.questions.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1
-    const added: string[] = []
-    for (const item of BUNDLED_PREOP_QUESTIONS) {
-      if (present.has(item.stableKey)) continue
-      await db.preopProfileQuestion.create({
-        data: {
-          profile: { connect: { id: profile.id } },
-          question: { connect: { stableKey: item.stableKey } },
+    const added = BUNDLED_PREOP_QUESTIONS.map(item => item.stableKey).filter(key => !present.has(key))
+    if (added.length > 0) {
+      // One read and one insert, however many questions a release adds.
+      const definitions = await db.preopQuestionDefinition.findMany({
+        where: { stableKey: { in: added } },
+        select: { id: true, stableKey: true },
+      })
+      const idOf = new Map(definitions.map(row => [row.stableKey, row.id]))
+      const first = profile.questions.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1
+      await db.preopProfileQuestion.createMany({
+        data: added.map((stableKey, index) => ({
+          profileId: profile.id,
+          questionId: idOf.get(stableKey)!,
           enabled: false,
           required: false,
-          sortOrder: next++,
-        },
+          sortOrder: first + index,
+        })),
       })
-      added.push(item.stableKey)
     }
     await db.preopAssessmentProfile.update({ where: { id: profile.id }, data: { catalogVersion: PREOP_CATALOG_VERSION } })
     await db.preopAssessmentAuditEvent.create({
@@ -571,32 +658,39 @@ export async function savePreopAnswers(
     target.set(row.question.stableKey, on ? { kind: "not-asked" } : { kind: "none" })
   }
 
-  let answersWritten = 0
+  // Writes are batched: this runs inside the case's save transaction, and a
+  // case's first save creates a row for every question that is on (up to the
+  // whole catalogue). One round trip per row is what outlived the 5-second
+  // transaction on a hosted database during the catalogue upgrade.
+  const notAsked = {
+    profileId: profile.id,
+    profileVersion: profile.version,
+    state: PreopAnswerState.NOT_ASKED,
+    optionKey: null,
+    valueText: null,
+    valueNumber: null,
+    valueDate: null,
+    source: "schema",
+    provenance: json({ source: "schema", reason: "optional_unanswered" }),
+    authorId: args.actorId,
+  }
+  const removed: string[] = []
+  const resetToNotAsked: string[] = []
+  const created: Prisma.PreopAssessmentAnswerCreateManyInput[] = []
+  const changed: Array<{ questionId: string; data: Omit<Prisma.PreopAssessmentAnswerUncheckedCreateInput, "preopId" | "questionId"> }> = []
+
   for (const row of profile.questions) {
     const decision = target.get(row.question.stableKey)!
     const previous = stored.get(row.questionId)
-    const where = { preopId_questionId: { preopId: args.preopId, questionId: row.questionId } }
     if (decision.kind === "keep") continue
     if (decision.kind === "none") {
-      if (previous) await db.preopAssessmentAnswer.deleteMany({ where: { preopId: args.preopId, questionId: row.questionId } })
+      if (previous) removed.push(row.questionId)
       continue
     }
     if (decision.kind === "not-asked") {
       if (previous?.state === PreopAnswerState.NOT_ASKED) continue
-      const data = {
-        profileId: profile.id,
-        profileVersion: profile.version,
-        state: PreopAnswerState.NOT_ASKED,
-        optionKey: null,
-        valueText: null,
-        valueNumber: null,
-        valueDate: null,
-        source: "schema",
-        provenance: json({ source: "schema", reason: "optional_unanswered" }),
-        authorId: args.actorId,
-      }
-      await db.preopAssessmentAnswer.upsert({ where, create: { preopId: args.preopId, questionId: row.questionId, ...data }, update: data })
-      answersWritten += 1
+      if (previous) resetToNotAsked.push(row.questionId)
+      else created.push({ preopId: args.preopId, questionId: row.questionId, ...notAsked })
       continue
     }
     if (sameAnswer(previous, decision.answer)) continue
@@ -612,10 +706,28 @@ export async function savePreopAnswers(
       provenance: json(decision.off ? { source: "clinician", recordedWhileQuestionOff: true } : { source: "clinician" }),
       authorId: args.actorId,
     }
-    await db.preopAssessmentAnswer.upsert({ where, create: { preopId: args.preopId, questionId: row.questionId, ...data }, update: data })
-    answersWritten += 1
+    if (previous) changed.push({ questionId: row.questionId, data })
+    else created.push({ preopId: args.preopId, questionId: row.questionId, ...data })
   }
-  return { profile, answersWritten }
+
+  if (removed.length > 0) {
+    await db.preopAssessmentAnswer.deleteMany({ where: { preopId: args.preopId, questionId: { in: removed } } })
+  }
+  if (resetToNotAsked.length > 0) {
+    await db.preopAssessmentAnswer.updateMany({
+      where: { preopId: args.preopId, questionId: { in: resetToNotAsked } },
+      data: notAsked,
+    })
+  }
+  if (created.length > 0) await db.preopAssessmentAnswer.createMany({ data: created })
+  // Only answers the clinician actually changed; an autosave carries one or two.
+  for (const { questionId, data } of changed) {
+    await db.preopAssessmentAnswer.update({
+      where: { preopId_questionId: { preopId: args.preopId, questionId } },
+      data,
+    })
+  }
+  return { profile, answersWritten: resetToNotAsked.length + created.length + changed.length }
 }
 
 export type MissingRequiredPreopQuestion = {

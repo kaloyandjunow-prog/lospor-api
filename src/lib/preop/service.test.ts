@@ -85,6 +85,29 @@ function fakeDb(profile = profileRow()) {
         writes.push(questionId)
         return row
       }),
+      createMany: vi.fn(async ({ data }: { data: Row[] }) => {
+        for (const row of data) {
+          if (answers.has(row.questionId as string)) throw new Error("unique (preopId, questionId)")
+          answers.set(row.questionId as string, { ...row })
+          writes.push(row.questionId as string)
+        }
+        return { count: data.length }
+      }),
+      updateMany: vi.fn(async ({ where, data }: { where: { questionId: { in: string[] } }; data: Row }) => {
+        for (const id of where.questionId.in) {
+          answers.set(id, { ...answers.get(id)!, ...data })
+          writes.push(id)
+        }
+        return { count: where.questionId.in.length }
+      }),
+      update: vi.fn(async ({ where, data }: { where: { preopId_questionId: { questionId: string } }; data: Row }) => {
+        const questionId = where.preopId_questionId.questionId
+        if (!answers.has(questionId)) throw new Error("record to update not found")
+        const row = { ...answers.get(questionId)!, ...data }
+        answers.set(questionId, row)
+        writes.push(questionId)
+        return row
+      }),
       deleteMany: vi.fn(async ({ where }: { where: { questionId: string | { in: string[] } } }) => {
         const ids = typeof where.questionId === "string" ? [where.questionId] : where.questionId.in
         let count = 0
@@ -112,6 +135,16 @@ describe("the answer rows record what was asked", () => {
     expect(stateOf("A1_RECENT_INFECTION")).toBeUndefined()
     expect(stateOf("BASE_POVOC_HISTORY")).toBeUndefined()
     expect(answers.size).toBe(ADULT_BASELINE_ON.length)
+  })
+
+  // Inside a 5-second transaction on a hosted database, one round trip per
+  // question is what timed out. A first save is one insert, however many rows.
+  it("creates a case's rows in one statement, not one per question", async () => {
+    const { save, db } = fakeDb()
+    await save({ clinicalMode: "ADULT", smoking: false })
+    expect(db.preopAssessmentAnswer.createMany).toHaveBeenCalledOnce()
+    expect(db.preopAssessmentAnswer.update).not.toHaveBeenCalled()
+    expect(db.preopAssessmentAnswer.upsert).not.toHaveBeenCalled()
   })
 
   it("keeps stored answers when a partial autosave does not mention them", async () => {
@@ -318,8 +351,8 @@ describe("the one profile", () => {
     let created: { questions: { create: Array<{ enabled: boolean; question: { connect: { stableKey: string } } }> } } | undefined
     let active: unknown = null
     const db = {
-      preopQuestionDefinition: { upsert: vi.fn(async () => ({ id: "definition" })) },
-      preopAnswerOption: { upsert: vi.fn(async () => ({})) },
+      $executeRaw: vi.fn(async () => 0),
+      preopQuestionDefinition: { findMany: vi.fn(async () => []) },
       preopAssessmentProfile: {
         findFirst: vi.fn(async ({ select }: { select?: unknown } = {}) => select ? null : active),
         create: vi.fn(async ({ data }: { data: typeof created }) => {
@@ -342,38 +375,89 @@ describe("the one profile", () => {
     const profile = profileRow()
     const dropped = profile.questions.pop()!
     profile.catalogVersion = "1.4.7"
-    const create = vi.fn(async () => ({}))
+    const createMany = vi.fn(async () => ({ count: 1 }))
     const db = {
-      preopQuestionDefinition: { upsert: vi.fn(async () => ({ id: "definition" })) },
-      preopAnswerOption: { upsert: vi.fn(async () => ({})) },
+      $executeRaw: vi.fn(async () => 0),
+      preopQuestionDefinition: {
+        findMany: vi.fn(async ({ where }: { where?: { stableKey?: { in: string[] } } } = {}) =>
+          where ? where.stableKey!.in.map(stableKey => ({ id: "definition-" + stableKey, stableKey })) : []),
+      },
       preopAssessmentProfile: { findFirst: vi.fn(async () => profile), update: vi.fn(async () => profile) },
-      preopProfileQuestion: { create },
+      preopProfileQuestion: { createMany },
       preopAssessmentAuditEvent: { create: vi.fn() },
     } as unknown as PreopDb
 
     await ensurePreopProfile(db, "clinician-1")
 
-    expect(create).toHaveBeenCalledWith({ data: expect.objectContaining({
-      question: { connect: { stableKey: dropped.question.stableKey } },
+    expect(createMany).toHaveBeenCalledOnce()
+    expect(createMany).toHaveBeenCalledWith({ data: [expect.objectContaining({
+      questionId: "definition-" + dropped.question.stableKey,
       enabled: false,
+      required: false,
       sortOrder: profile.questions.length,
-    }) })
+    })] })
   })
 })
 
 describe("the catalogue", () => {
-  it("is mirrored into the database by upsert, options added or updated but never deleted", async () => {
-    const upsertDefinition = vi.fn(async () => ({ id: "definition" }))
-    const upsertOption = vi.fn(async () => ({}))
-    const db = {
-      preopQuestionDefinition: { upsert: upsertDefinition },
-      preopAnswerOption: { upsert: upsertOption },
-    } as unknown as PreopDb
+  // An upgrade runs inside a clinician's save. Row by row it took about 300
+  // round trips and outlived the 5-second transaction on a hosted database, so
+  // the save failed and the upgrade never finished. It must stay a fixed, small
+  // number of statements however large the catalogue is.
+  it("is brought up to the bundle in one read and two statements, whatever changed", async () => {
+    const executeRaw = vi.fn(async () => 0)
+    const findMany = vi.fn(async () => [])
+    const db = { $executeRaw: executeRaw, preopQuestionDefinition: { findMany } } as unknown as PreopDb
 
     await provisionPreopCatalog(db)
 
-    expect(upsertDefinition).toHaveBeenCalledTimes(BUNDLED_PREOP_QUESTIONS.length)
-    expect(upsertOption).toHaveBeenCalledTimes(BUNDLED_PREOP_QUESTIONS.reduce((sum, item) => sum + item.options.length, 0))
+    expect(findMany).toHaveBeenCalledOnce()
+    expect(executeRaw).toHaveBeenCalledTimes(2)
+    const [questions, options] = executeRaw.mock.calls.map(call => String((call as unknown[])[0]))
+    expect(questions).toContain("INSERT INTO \"PreopQuestionDefinition\"")
+    expect(questions).toContain("ON CONFLICT (\"stableKey\") DO UPDATE")
+    // Options are added or updated, never deleted: an answer may reference one.
+    expect(options).toContain("INSERT INTO \"PreopAnswerOption\"")
+    expect(options).toContain("ON CONFLICT (\"questionId\", \"key\") DO UPDATE")
+    expect(options).not.toContain("DELETE")
+  })
+
+  it("writes nothing when the stored catalogue already matches the bundle", async () => {
+    const executeRaw = vi.fn(async () => 0)
+    const stored = BUNDLED_PREOP_QUESTIONS.map(item => ({
+      stableKey: item.stableKey,
+      catalogVersion: item.catalogVersion,
+      section: item.section,
+      applicability: item.applicability,
+      answerType: item.answerType,
+      labelEn: item.labelEn,
+      labelBg: item.labelBg,
+      requiredDefault: item.requiredDefault,
+      allowUnknown: item.allowUnknown,
+      allowNotApplicable: item.allowNotApplicable,
+      conditionalRuleKey: item.conditionalRuleKey ?? null,
+      omopDomain: item.omopDomain ?? null,
+      omopConceptId: item.omopConceptId ?? null,
+      omopVocabulary: item.omopVocabulary ?? null,
+      omopSourceCode: item.omopSourceCode ?? null,
+      options: item.options.map((option, sortOrder) => ({
+        key: option.key,
+        labelEn: option.labelEn,
+        labelBg: option.labelBg,
+        omopConceptId: option.omopConceptId ?? null,
+        omopVocabulary: option.omopVocabulary ?? null,
+        omopSourceCode: option.omopSourceCode ?? null,
+        sortOrder,
+      })),
+    }))
+    const db = { $executeRaw: executeRaw, preopQuestionDefinition: { findMany: vi.fn(async () => stored) } } as unknown as PreopDb
+
+    await provisionPreopCatalog(db)
+    expect(executeRaw).not.toHaveBeenCalled()
+
+    stored[0]!.catalogVersion = "1.4.7"
+    await provisionPreopCatalog(db)
+    expect(executeRaw).toHaveBeenCalledTimes(2)
   })
 
   it("maps every question to OMOP and places every question in a form section", () => {
