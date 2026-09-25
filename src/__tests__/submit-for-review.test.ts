@@ -94,6 +94,18 @@ describe("POST /api/cases/:id/submit-for-review", () => {
     )
   })
 
+  // The clients show "already finalised" for this code; an uncoded 409 read
+  // as the server being unreachable.
+  it("refuses a finalised case with a code the clients can name", async () => {
+    findUniqueMock.mockResolvedValue({
+      userId: "user-1", status: "COMPLETE", institutionId: "inst-1", clinicalMode: "ADULT", awaitingReviewAt: null,
+    })
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe("CASE_ALREADY_FINALISED")
+    expect(updateMock).not.toHaveBeenCalled()
+  })
+
   // The whole point of this endpoint: the same readiness check finalize()
   // applies, run before the case is allowed into the closure countdown.
   it("refuses an incomplete postop and does not change status", async () => {

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Prisma, PreopAnswerState, PreopSuggestionStatus } from "@/generated/prisma/client"
-import { activePreopProfile, ensurePreopProfile, questionAppliesToMode, type PreopProfileShape } from "./service"
+import { activePreopProfile, effectiveOptionKey, ensurePreopProfile, questionAppliesToMode, type PreopProfileShape } from "./service"
 
 export const PREOP_SUGGESTION_RULE_VERSION = "1.4.7.1"
 
@@ -211,11 +211,15 @@ export async function reviewPreopSuggestion(db: Db, args: {
 }) {
   const suggestion = await db.preopAssessmentSuggestion.findUnique({
     where: { id: args.suggestionId },
-    include: { preop: true, question: true },
+    include: { preop: true, question: { include: { options: { select: { key: true } } } } },
   })
   if (!suggestion || suggestion.preop.caseId !== args.caseId) throw new Error("PREOP_SUGGESTION_NOT_FOUND")
   const reviewedAt = new Date()
   if (args.status === "ACCEPTED" && suggestion.proposedState) {
+    // Stored the way the forms record the same answer, so their next autosave
+    // recognises it instead of rewriting it as the clinician's own.
+    const wanted = effectiveOptionKey(suggestion.proposedState, suggestion.proposedOptionKey)
+    const optionKey = wanted && suggestion.question.options.some((option: { key: string }) => option.key === wanted) ? wanted : null
     const clinicianAnswer = await db.preopAssessmentAnswer.findFirst({
       where: { preopId: suggestion.preopId, questionId: suggestion.questionId, source: "clinician" },
       orderBy: { updatedAt: "desc" },
@@ -227,13 +231,13 @@ export async function reviewPreopSuggestion(db: Db, args: {
           preopId: suggestion.preopId, questionId: suggestion.questionId,
           profileId: (await activePreopProfile(db))!.id,
           profileVersion: suggestion.profileVersion,
-          state: suggestion.proposedState, optionKey: suggestion.proposedOptionKey ?? null,
+          state: suggestion.proposedState, optionKey,
           valueText: suggestion.proposedValueText ?? null, valueNumber: suggestion.proposedValueNumber ?? null,
           source: "suggestion", provenance: { suggestionId: suggestion.id, ruleId: suggestion.ruleId, ruleVersion: suggestion.ruleVersion, linkedDiagnosisId: suggestion.linkedDiagnosisId },
           authorId: args.reviewerId,
         },
         update: {
-          state: suggestion.proposedState, optionKey: suggestion.proposedOptionKey ?? null,
+          state: suggestion.proposedState, optionKey,
           valueText: suggestion.proposedValueText ?? null, valueNumber: suggestion.proposedValueNumber ?? null,
           source: "suggestion", provenance: { suggestionId: suggestion.id, ruleId: suggestion.ruleId, ruleVersion: suggestion.ruleVersion, linkedDiagnosisId: suggestion.linkedDiagnosisId },
           authorId: args.reviewerId,

@@ -1,5 +1,23 @@
 # Changelog - LOSPOR API
 
+## [9.11.5] - 2026-09-25
+
+### Fixed
+
+- **An accepted suggestion keeps its provenance.** It was stored with no
+  option while the forms hold the same answer as `optionKey: "YES"`, so the
+  next autosave saw a new answer and rewrote it as the clinician's, dropping
+  the suggestion (for unintentional weight loss, the link to the diagnosis
+  that stops OMOP exporting the condition twice). Accepting now stores the
+  forms' option code, and a plain yes/no is compared with or without it, which
+  also protects rows accepted before this release.
+
+### Changed
+
+- **submit-for-review 409s carry a code:** `CASE_ALREADY_FINALISED` and
+  `CASE_NOT_IN_PROGRESS`, so the clients can say "already finalised" instead
+  of "unreachable". Released with Web and Mobile 9.11.5; Core stays 9.11.4.
+
 ## [9.11.4] - 2026-09-25
 
 ### Changed
