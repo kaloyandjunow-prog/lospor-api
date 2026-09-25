@@ -1,5 +1,46 @@
 # Changelog - LOSPOR API
 
+## [9.11.0] - 2026-09-24
+
+### Changed
+
+- **One bundled catalogue and one in-place preoperative profile.** The
+  catalogue follows the release (1.4.8) and provisioning mirrors it into the
+  database by upsert. Operators reorder, switch on or off and mark questions
+  required, every change audited. Baseline questions start on, additions off,
+  none required. Profile versions, case pinning and the adoption route are
+  removed (migration `20260924120000_preop_single_profile_answers`).
+- **The answer rows are the research record for every question.** A question
+  that is on has one row per case (the answer, or NOT_ASKED); a question that
+  is off has none. Follow-ups exist only while their parent is Yes; a late
+  answer to a switched-off question is kept and marked; an unchanged answer is
+  never rewritten. Partial autosaves keep stored answers.
+- **OMOP exports every catalogue question from the answer rows only**, with
+  the concept recorded in the catalogue (verified against Athena 2026-09-13,
+  0 where no standard concept says what the question says). This ends the
+  double export of baseline answers. `value_as_string` is now YES/NO.
+- **Required questions are checked at continue-to-intraop, not on draft
+  save.** The case read reports `preopRequiredMissing`.
+
+### Added
+
+- **Finalization lock on answers and suggestions.** Answer and suggestion
+  rows of a finalized case are refused by the database, and every write bumps
+  the case revision. Suggestion routes take the case lock.
+- **Research filters** for preop answers, intraoperative drugs (ATC prefix)
+  and data accepted from the hospital system.
+
+### Fixed
+
+- **Preop autosave stuck on "saved locally".** An unanswered toggle is no
+  longer refused as NOT_ASKED, a refused answer returns
+  `PREOP_ANSWER_REFUSED` with the blocked fields, and server faults return
+  500 instead of 400.
+- **A case created with preop already filled in now writes its answer rows**
+  in the same transaction as the case.
+- **Listing suggestions for a case without a preop** no longer returns other
+  cases' suggestions.
+
 ## [9.10.7] - 2026-09-23
 
 ### Added

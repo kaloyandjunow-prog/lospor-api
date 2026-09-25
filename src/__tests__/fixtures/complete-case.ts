@@ -1,3 +1,5 @@
+import { withPreopAnswers } from "./preop-answers"
+
 /**
  * A case with every section populated, used by the OMOP tests and by the data
  * dictionary consistency check.
@@ -8,6 +10,10 @@
  * check cannot notice going undocumented.
  */
 export function completeCaseFixture(overrides: Record<string, unknown> = {}) {
+  return withPreopAnswers(completeCaseRow(overrides))
+}
+
+function completeCaseRow(overrides: Record<string, unknown>) {
   const createdAt = new Date("2026-06-01T07:30:00Z")
   const startTime = new Date("2026-06-01T08:00:00Z")
   const endTime = new Date("2026-06-01T09:00:00Z")

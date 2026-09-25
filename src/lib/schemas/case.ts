@@ -191,9 +191,9 @@ export const preopSchema = z.object({
     policyVersion: z.string().min(1),
   })).optional(),
 
-  // Definition-driven preoperative answers. The legacy wide fields above
-  // remain accepted for compatibility, but these relational answers are the
-  // authoritative 1.4.7 contract.
+  // Answers to the catalogue questions without their own form control. When
+  // present it is the form's complete set: a question it no longer holds was
+  // cleared. Baseline questions are answered through their fields above.
   preopAnswers: z.array(z.object({
     stableKey: z.string().min(1).max(160),
     state: z.enum(["YES", "NO", "UNKNOWN", "NOT_APPLICABLE"]),
@@ -202,8 +202,6 @@ export const preopSchema = z.object({
     valueNumber: z.number().finite().nullable().optional(),
     valueDate: z.string().datetime().nullable().optional(),
   })).optional(),
-  preopProfileVersion: z.number().int().positive().optional(),
-  adoptPreopProfile: z.boolean().optional(),
 
   // Item 27: Strict lab result shape matching the lab scan extractor output
   //

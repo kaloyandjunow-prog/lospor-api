@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Prisma, PreopAnswerState, PreopSuggestionStatus } from "@/generated/prisma/client"
-import { pinPreopProfile, type PreopProfileShape } from "./service"
+import { activePreopProfile, ensurePreopProfile, questionAppliesToMode, type PreopProfileShape } from "./service"
 
 export const PREOP_SUGGESTION_RULE_VERSION = "1.4.7.1"
 
@@ -159,14 +159,17 @@ export async function generatePreopSuggestions(db: Db, args: {
   preopId: string
   actorId: string
 }): Promise<{ profileVersion: number; suggestions: unknown[] }> {
-  const { profile } = await pinPreopProfile(db, args.caseId, args.actorId)
+  const profile = await ensurePreopProfile(db, args.actorId)
   const caseRow = await db.case.findUnique({ where: { id: args.caseId }, select: { clinicalMode: true } })
   const preop = await db.preoperativeAssessment.findUnique({
     where: { id: args.preopId },
     include: { diagnoses: true, comorbidityRows: true, medications: true, labRows: true },
   })
   if (!preop) throw new Error("PREOP_NOT_FOUND")
-  const enabled = new Set(profile.questions.filter((row: any) => row.enabled).map((row: any) => row.question.stableKey))
+  // Suggestions only for questions that are on for this case.
+  const enabled = new Set(profile.questions
+    .filter((row: any) => row.enabled && questionAppliesToMode(row.question.applicability, caseRow?.clinicalMode))
+    .map((row: any) => row.question.stableKey))
   const candidates = buildPreopSuggestionCandidates({
     clinicalMode: caseRow?.clinicalMode ?? undefined,
     diagnoses: preop.diagnoses,
@@ -219,12 +222,10 @@ export async function reviewPreopSuggestion(db: Db, args: {
     })
     if (!clinicianAnswer) {
       await db.preopAssessmentAnswer.upsert({
-        where: { preopId_questionId_profileVersion: {
-          preopId: suggestion.preopId, questionId: suggestion.questionId, profileVersion: suggestion.profileVersion,
-        } },
+        where: { preopId_questionId: { preopId: suggestion.preopId, questionId: suggestion.questionId } },
         create: {
           preopId: suggestion.preopId, questionId: suggestion.questionId,
-          profileId: (await db.preopCaseProfilePin.findUnique({ where: { caseId: args.caseId } })).profileId,
+          profileId: (await activePreopProfile(db))!.id,
           profileVersion: suggestion.profileVersion,
           state: suggestion.proposedState, optionKey: suggestion.proposedOptionKey ?? null,
           valueText: suggestion.proposedValueText ?? null, valueNumber: suggestion.proposedValueNumber ?? null,

@@ -92,7 +92,6 @@ export const ModelName = {
   PreopQuestionDefinition: 'PreopQuestionDefinition',
   PreopAnswerOption: 'PreopAnswerOption',
   PreopAssessmentProfile: 'PreopAssessmentProfile',
-  PreopCaseProfilePin: 'PreopCaseProfilePin',
   PreopProfileQuestion: 'PreopProfileQuestion',
   PreopAssessmentAnswer: 'PreopAssessmentAnswer',
   PreopAssessmentSuggestion: 'PreopAssessmentSuggestion',
@@ -855,20 +854,6 @@ export const PreopAssessmentProfileScalarFieldEnum = {
 } as const
 
 export type PreopAssessmentProfileScalarFieldEnum = (typeof PreopAssessmentProfileScalarFieldEnum)[keyof typeof PreopAssessmentProfileScalarFieldEnum]
-
-
-export const PreopCaseProfilePinScalarFieldEnum = {
-  id: 'id',
-  caseId: 'caseId',
-  profileId: 'profileId',
-  profileVersion: 'profileVersion',
-  pinnedAt: 'pinnedAt',
-  pinnedById: 'pinnedById',
-  adoptedAt: 'adoptedAt',
-  adoptedById: 'adoptedById'
-} as const
-
-export type PreopCaseProfilePinScalarFieldEnum = (typeof PreopCaseProfilePinScalarFieldEnum)[keyof typeof PreopCaseProfilePinScalarFieldEnum]
 
 
 export const PreopProfileQuestionScalarFieldEnum = {

@@ -3,7 +3,7 @@ import { PrismaClient, Prisma } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { NO_INSTITUTION } from "../src/lib/institutions"
 import { provisionBundledClinicalBaselines } from "../src/lib/clinical-rules/bundled-baseline-provisioner"
-import { ensureInitialPreopProfile } from "../src/lib/preop/service"
+import { ensurePreopProfile } from "../src/lib/preop/service"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter } satisfies Prisma.PrismaClientOptions)
@@ -42,7 +42,7 @@ async function main() {
   })
 
   const baselines = await provisionBundledClinicalBaselines(prisma)
-  await ensureInitialPreopProfile(prisma, "seed")
+  await prisma.$transaction(tx => ensurePreopProfile(tx, "seed"))
 
   console.log(`Seeded ${institutions.length} institutions, plus ${NO_INSTITUTION.name}`)
   console.log(`Bundled clinical baselines: ${baselines.outcome} (${baselines.baselines.map(item => `${item.clinicalMode} ${item.ruleCount}`).join(", ")})`)

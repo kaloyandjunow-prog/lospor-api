@@ -542,6 +542,7 @@ export type CaseRow = {
         omopConceptId?: number | null
         omopSourceCode?: string | null
       }
+      option?: { omopConceptId?: number | null } | null
     }[]
   } | null
   intraop?: {

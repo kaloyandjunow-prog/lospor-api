@@ -145,7 +145,7 @@ export const RESEARCH_DETAIL_SELECT = {
           profileVersion: true,
           source: true,
           provenance: true,
-          question: { select: { stableKey: true } },
+          question: { select: { stableKey: true, labelEn: true, labelBg: true, omopConceptId: true, omopSourceCode: true } },
         },
         orderBy: { questionId: "asc" },
       },
@@ -389,6 +389,10 @@ function eventLabel(event: ResearchDetailRow["events"][number]): {
 export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail & {
   preoperativeAnswers: Array<{
     stableKey: string
+    labelEn: string
+    labelBg: string
+    omopConceptId: number | null
+    omopSourceCode: string | null
     state: string
     optionKey: string | null
     profileVersion: number
@@ -444,8 +448,15 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail & 
       colds: row.preop?.coldsScore ?? null,
       mappingStatus: item.mappingStatus,
     })),
+    // NOT_ASKED is the placeholder for a question that was on and unanswered;
+    // it stays in the research record, which is how "asked but left blank"
+    // is told apart from "not on the form" (no row).
     preoperativeAnswers: (row.preop?.assessmentAnswers ?? []).map(item => ({
       stableKey: item.question.stableKey,
+      labelEn: item.question.labelEn,
+      labelBg: item.question.labelBg,
+      omopConceptId: item.question.omopConceptId,
+      omopSourceCode: item.question.omopSourceCode,
       state: item.state,
       optionKey: item.optionKey,
       profileVersion: item.profileVersion,

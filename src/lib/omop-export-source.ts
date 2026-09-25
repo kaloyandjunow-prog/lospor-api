@@ -213,6 +213,7 @@ export const CASE_SELECT = {
           source: true,
           provenance: true,
           question: { select: { stableKey: true, omopDomain: true, omopConceptId: true, omopSourceCode: true } },
+          option: { select: { omopConceptId: true } },
         },
         orderBy: { questionId: "asc" },
       },

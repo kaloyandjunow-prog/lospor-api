@@ -16,6 +16,11 @@ function textContains(value: string | undefined) {
   return value ? { contains: value, mode: "insensitive" as const } : undefined
 }
 
+/** An ATC code or class: N02A matches every opioid below it, N02AA01 only morphine. */
+function atcMatches(codes: string[]) {
+  return codes.map(code => ({ atcCode: { startsWith: code.toUpperCase() } }))
+}
+
 function exclusiveUtcDayEnd(value: string) {
   const date = new Date(`${value}T00:00:00.000Z`)
   date.setUTCDate(date.getUTCDate() + 1)
@@ -34,6 +39,22 @@ async function completenessCaseIds(minimum: number): Promise<string[]> {
     ) >= ${minimum}
   `
   return rows.map(row => row.caseId)
+}
+
+/**
+ * Cases where the clinician accepted at least one item imported from the
+ * hospital system. Read from the audit log, which is permanent: the import
+ * itself is deleted after its retention period, and an accepted value becomes
+ * the case's own data.
+ */
+async function ehrImportedCaseIds(): Promise<string[]> {
+  const rows = await prisma.$queryRaw<Array<{ entityId: string }>>`
+    SELECT DISTINCT "entityId"
+    FROM "AuditLog"
+    WHERE "action" = 'EHR_IMPORT_REVIEWED'
+      AND COALESCE(("detail"->>'accepted')::int, 0) > 0
+  `
+  return rows.map(row => row.entityId)
 }
 
 export async function compileResearchWhere(
@@ -123,7 +144,7 @@ export async function compileResearchWhere(
             { nameRaw: textContains(value) },
             { inn: textContains(value) },
           ]) ?? []),
-          ...(filters.atcCodes?.length ? [{ atcCode: { in: filters.atcCodes } }] : []),
+          ...(filters.atcCodes?.length ? atcMatches(filters.atcCodes) : []),
         ],
       },
     }
@@ -166,6 +187,19 @@ export async function compileResearchWhere(
     }
   }
 
+  if (filters.intraopAtcCodes?.length) {
+    and.push({ events: { some: { type: "drug", OR: atcMatches(filters.intraopAtcCodes) } } })
+  }
+
+  for (const answer of filters.preopAnswers ?? []) {
+    and.push({
+      preop: { is: { assessmentAnswers: { some: {
+        question: { stableKey: answer.stableKey },
+        state: { in: answer.states as never },
+      } } } },
+    })
+  }
+
   if (filters.complications?.length) {
     and.push({
       complications: {
@@ -184,6 +218,11 @@ export async function compileResearchWhere(
         { preop: { is: { comorbidityRows: { some: { mappingStatus: { in: filters.mappingStatuses as never } } } } } },
       ],
     })
+  }
+
+  if (filters.ehrImported !== undefined) {
+    const caseIds = await ehrImportedCaseIds()
+    and.push(filters.ehrImported ? { id: { in: caseIds } } : { id: { notIn: caseIds } })
   }
 
   if (filters.minimumCompleteness !== undefined) {

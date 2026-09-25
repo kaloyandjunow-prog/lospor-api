@@ -300,7 +300,6 @@ model Case {
   updatedAt            DateTime     @updatedAt
 
   preop                PreoperativeAssessment?
-  preopProfilePin      PreopCaseProfilePin?
   intraop              IntraoperativeRecord?
   postop               PostoperativeRecord?
   transfers            CaseTransfer[]
@@ -1197,26 +1196,11 @@ model PreopAssessmentProfile {
   createdAt      DateTime           @default(now())
 
   questions   PreopProfileQuestion[]
-  casePins    PreopCaseProfilePin[]
   auditEvents PreopAssessmentAuditEvent[]
 
   @@index([status, version])
 }
 
-model PreopCaseProfilePin {
-  id             String                  @id @default(cuid())
-  caseId         String                  @unique
-  case           Case                    @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  profileId      String                  
-  profile        PreopAssessmentProfile  @relation(fields: [profileId], references: [id], onDelete: Restrict)
-  profileVersion Int
-  pinnedAt       DateTime                @default(now())
-  pinnedById     String?
-  adoptedAt      DateTime?
-  adoptedById    String?
-
-  @@index([profileId, profileVersion])
-}
 
 model PreopProfileQuestion {
   profileId  String
@@ -1251,8 +1235,7 @@ model PreopAssessmentAnswer {
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
 
-  @@unique([preopId, questionId, profileVersion])
-  @@index([preopId, profileVersion])
+  @@unique([preopId, questionId])
   @@index([questionId, state])
 }
 

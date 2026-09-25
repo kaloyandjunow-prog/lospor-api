@@ -1,3 +1,4 @@
+import { PREOP_ANSWER_REFUSED, PreopContractError, preopContractBlockedKeys, savePreopAnswers } from "@/lib/preop/service"
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
@@ -146,24 +147,41 @@ export async function POST(req: NextRequest) {
     let caseRecord
     for (let attempt = 0; ; attempt++) {
       try {
-        caseRecord = await prisma.case.create({
-          data: {
-            clinicalMode: pediatricDecision.clinicalMode,
-            clinicalRulesVersion: pediatricDecision.clinicalRulesVersion,
-            userId,
-            createdById: userId,
-            status,
-            awaitingReviewAt,
-            institutionId: user.institutionId ?? null,
-            caseCode: await generateCaseCode(userId, prisma),
-            ...(idempotencyKey ? { clientDraftId: idempotencyKey } : {}),
-            preop: { create: { ...mapPreop(mappedPreop), syncRevision: 1 } },
-            ...(intraop ? { intraop: { create: { ...mapIntraop(intraop), syncRevision: 1 } } } : {}),
-            ...(postop  ? { postop:  { create: { ...mapPostop(postop), syncRevision: 1 } } } : {}),
-          },
-          include: {
-            preop: { select: { updatedAt: true, syncRevision: true } },
-          },
+        // The case and its preop answer rows are created together: answers
+        // given before the case existed (a draft saved before its patient
+        // number) are otherwise never written, and the next save -- which
+        // sends only what changed -- would record them as unanswered.
+        caseRecord = await prisma.$transaction(async tx => {
+          const created = await tx.case.create({
+            data: {
+              clinicalMode: pediatricDecision.clinicalMode,
+              clinicalRulesVersion: pediatricDecision.clinicalRulesVersion,
+              userId,
+              createdById: userId,
+              status,
+              awaitingReviewAt,
+              institutionId: user.institutionId ?? null,
+              caseCode: await generateCaseCode(userId, prisma),
+              ...(idempotencyKey ? { clientDraftId: idempotencyKey } : {}),
+              preop: { create: { ...mapPreop(mappedPreop), syncRevision: 1 } },
+              ...(intraop ? { intraop: { create: { ...mapIntraop(intraop), syncRevision: 1 } } } : {}),
+              ...(postop  ? { postop:  { create: { ...mapPostop(postop), syncRevision: 1 } } } : {}),
+            },
+            include: {
+              preop: { select: { id: true, updatedAt: true, syncRevision: true } },
+            },
+          })
+          if (created.preop) {
+            await savePreopAnswers(tx, {
+              caseId: created.id,
+              preopId: created.preop.id,
+              actorId: userId,
+              preop: mappedPreop as Record<string, unknown>,
+              answers: (mappedPreop as Record<string, unknown>).preopAnswers as never,
+              clinicalMode: pediatricDecision.clinicalMode,
+            })
+          }
+          return created
         })
         break
       } catch (e: unknown) {
@@ -198,6 +216,14 @@ export async function POST(req: NextRequest) {
     }, { status: 201 })
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    if (err instanceof PreopContractError) {
+      const blockedKeys = preopContractBlockedKeys(err)
+      if (!blockedKeys) return NextResponse.json({ error: err.code }, { status: 500 })
+      return NextResponse.json({
+        error: err.code, code: PREOP_ANSWER_REFUSED, reason: err.code,
+        field: blockedKeys[0], blockedKeys, details: err.details,
+      }, { status: 400 })
+    }
     console.error(err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
