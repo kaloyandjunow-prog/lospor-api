@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
-import { ensurePreopProfile, serializePreopProfile } from "@/lib/preop/service"
+import { ensurePreopProfile, preparePreopProfile, serializePreopProfile } from "@/lib/preop/service"
 
 /**
  * The appliance's preoperative profile: which bundled questions are on, their
@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
+    await preparePreopProfile(prisma, user.id)
     const profile = await prisma.$transaction(tx => ensurePreopProfile(tx, user.id))
     return NextResponse.json(serializePreopProfile(profile))
   } catch {

@@ -6,6 +6,7 @@ const findUniqueMock    = vi.fn()
 const createMock        = vi.fn()
 const logAuditMock      = vi.fn()
 const savePreopAnswersMock = vi.fn()
+const preparePreopProfileMock = vi.fn(async () => {})
 
 const caseCodeSequenceUpsertMock = vi.fn()
 
@@ -28,6 +29,7 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/preop/service", async importOriginal => ({
   ...await importOriginal<typeof import("@/lib/preop/service")>(),
   savePreopAnswers: savePreopAnswersMock,
+  preparePreopProfile: preparePreopProfileMock,
 }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
 vi.mock("@/lib/relational-sync", () => ({ syncCaseRelationalSafe: vi.fn() }))
@@ -101,6 +103,9 @@ describe("POST /api/cases", () => {
     const answers = [{ stableKey: "A12_PACEMAKER_ICD", state: "YES", optionKey: "YES" }]
     const res = await POST(makeRequest({ preop: { ...MINIMAL_PREOP, smoking: true, preopAnswers: answers } }))
     expect(res.status).toBe(201)
+    // The one-off profile setup runs before the case transaction, not inside it.
+    expect(preparePreopProfileMock).toHaveBeenCalledOnce()
+    expect(preparePreopProfileMock.mock.invocationCallOrder[0]).toBeLessThan(createMock.mock.invocationCallOrder[0]!)
     expect(savePreopAnswersMock).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
       caseId: "new-case-1",
       preopId: "preop-1",

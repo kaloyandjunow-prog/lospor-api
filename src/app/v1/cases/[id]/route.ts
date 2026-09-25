@@ -40,6 +40,7 @@ import {
   preopContractBlockedKeys,
   savePreopAnswers,
   serializePreopProfile,
+  preparePreopProfile,
 } from "@/lib/preop/service"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
@@ -219,6 +220,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       after(() => logAudit(userId, "PII_BLOCKED", id, { field: piiError.field, reason: piiError.reason }))
       return NextResponse.json(piiErrorBody(piiError), { status: 400 })
     }
+
+    // One-off catalogue and profile setup happens here, outside the locked
+    // case transaction, so a save never spends that transaction on it.
+    if (preop != null || clinicalMode !== undefined) await preparePreopProfile(prisma, userId)
 
     const transactionResult = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({

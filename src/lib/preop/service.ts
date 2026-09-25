@@ -326,6 +326,22 @@ async function lockProfile(db: Db): Promise<void> {
  * every bundled question is returned without touching the catalogue, so an
  * ordinary preop save costs one read.
  */
+/**
+ * Puts the catalogue and the profile in place in a transaction of their own.
+ *
+ * Call it before opening a clinical write transaction. Creating the profile on
+ * a fresh database, or upgrading the catalogue after a release, is a one-off
+ * set of writes that must never run inside a clinician's save: that transaction
+ * has 5 seconds, and a hosted database far from the API spends most of it on
+ * round trips. Afterwards the save finds the profile on its fast path.
+ */
+export async function preparePreopProfile(
+  client: { $transaction: PrismaClient["$transaction"] },
+  actorId: string,
+): Promise<void> {
+  await client.$transaction(tx => ensurePreopProfile(tx, actorId), { maxWait: 10_000, timeout: 30_000 })
+}
+
 export async function ensurePreopProfile(db: Db, actorId: string): Promise<PreopProfileRow> {
   const current = await activePreopProfile(db)
   if (current && current.catalogVersion === PREOP_CATALOG_VERSION
@@ -336,24 +352,34 @@ export async function ensurePreopProfile(db: Db, actorId: string): Promise<Preop
   await provisionPreopCatalog(db)
   const profile = await activePreopProfile(db)
   if (!profile) {
+    // Flat writes, not a nested create: a nested create resolves each of the
+    // 75 question connects with its own queries (172 in all), which took 16 s
+    // at the ~90 ms round trip between the hosted API and its database and
+    // outlived the save's 5-second transaction. This is five statements.
     const latest = await db.preopAssessmentProfile.findFirst({ orderBy: { version: "desc" }, select: { version: true } })
-    await db.preopAssessmentProfile.create({
+    const created = await db.preopAssessmentProfile.create({
       data: {
         version: (latest?.version ?? 0) + 1,
         catalogVersion: PREOP_CATALOG_VERSION,
         status: PreopProfileStatus.PUBLISHED,
         publishedAt: new Date(),
         publishedById: actorId,
-        questions: {
-          create: BUNDLED_PREOP_QUESTIONS.map((item, sortOrder) => ({
-            question: { connect: { stableKey: item.stableKey } },
-            enabled: DEFAULT_ENABLED_QUESTION_KEYS.has(item.stableKey),
-            required: item.requiredDefault,
-            sortOrder,
-          })),
-        },
-        auditEvents: { create: { actorId, action: "PROFILE_CREATED", detail: json({ catalogVersion: PREOP_CATALOG_VERSION }) } },
       },
+      select: { id: true },
+    })
+    const definitions = await db.preopQuestionDefinition.findMany({ select: { id: true, stableKey: true } })
+    const idOf = new Map(definitions.map(row => [row.stableKey, row.id]))
+    await db.preopProfileQuestion.createMany({
+      data: BUNDLED_PREOP_QUESTIONS.map((item, sortOrder) => ({
+        profileId: created.id,
+        questionId: idOf.get(item.stableKey)!,
+        enabled: DEFAULT_ENABLED_QUESTION_KEYS.has(item.stableKey),
+        required: item.requiredDefault,
+        sortOrder,
+      })),
+    })
+    await db.preopAssessmentAuditEvent.create({
+      data: { profileId: created.id, actorId, action: "PROFILE_CREATED", detail: json({ catalogVersion: PREOP_CATALOG_VERSION }) },
     })
   } else {
     // A release that adds questions adds them switched off, after the

@@ -4,6 +4,7 @@ import { canReadCase, canWriteCaseWithOwnerFallback } from "@/lib/access-control
 import { CaseWriteError, isCaseFinalizedDatabaseError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
 import { prisma } from "@/lib/prisma"
 import { generatePreopSuggestions } from "@/lib/preop/suggestions"
+import { preparePreopProfile } from "@/lib/preop/service"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id } = await params
   try {
+    await preparePreopProfile(prisma, user.id)
     const result = await withLockedCaseTransaction(id, async tx => {
       const record = await tx.case.findUnique({
         where: { id },

@@ -123,6 +123,42 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
     expect((await prisma.preopQuestionDefinition.findUniqueOrThrow({ where: { stableKey: "A6_POST_ANAESTHESIA_CONFUSION" } })).id).toBe(a6.id)
   })
 
+  // Production (API far from its database, ~90 ms a round trip) had no
+  // catalogue and no profile. A nested profile create took 172 queries, 16 s,
+  // and every save failed. Round trips, not rows, are what cost there.
+  it("sets up the catalogue and profile on an empty database in a bounded number of queries", async () => {
+    const { PrismaClient } = await import("@/generated/prisma/client")
+    const { PrismaPg } = await import("@prisma/adapter-pg")
+    const { ensurePreopProfile } = await import("@/lib/preop/service")
+    const { BUNDLED_PREOP_QUESTIONS } = await import("@/lib/preop/catalog")
+    const counted = new PrismaClient({
+      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL!, max: 2 }),
+      log: [{ emit: "event", level: "query" }],
+    })
+    let queries = 0
+    counted.$on("query" as never, () => { queries += 1 })
+    try {
+      await counted.$transaction(async tx => {
+        await tx.preopAssessmentAnswer.deleteMany({})
+        await tx.preopAssessmentSuggestion.deleteMany({})
+        await tx.preopProfileQuestion.deleteMany({})
+        await tx.preopAssessmentAuditEvent.deleteMany({})
+        await tx.preopAssessmentProfile.deleteMany({})
+        await tx.preopAnswerOption.deleteMany({})
+        await tx.preopQuestionDefinition.deleteMany({})
+      })
+      queries = 0
+      const profile = await counted.$transaction(tx => ensurePreopProfile(tx, userId), { timeout: 30_000 })
+      expect(profile.questions).toHaveLength(BUNDLED_PREOP_QUESTIONS.length)
+      expect(queries).toBeLessThanOrEqual(30)
+      queries = 0
+      await counted.$transaction(tx => ensurePreopProfile(tx, userId))
+      expect(queries).toBeLessThanOrEqual(6)
+    } finally {
+      await counted.$disconnect()
+    }
+  })
+
   it("keeps exactly one row per case and question", async () => {
     const { preopId } = await caseWithPreop()
     const smoking = await prisma.preopAssessmentAnswer.findFirstOrThrow({ where: { preopId, question: { stableKey: "BASE_SMOKING" } } })
