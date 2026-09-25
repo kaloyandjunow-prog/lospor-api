@@ -3,6 +3,7 @@ import { PreopAnswerState, PreopProfileStatus } from "@/generated/prisma/client"
 import { BUNDLED_PREOP_QUESTIONS, DEFAULT_ENABLED_QUESTION_KEYS, PREOP_CATALOG_VERSION } from "./catalog"
 import {
   ensurePreopProfile,
+  effectiveOptionKey,
   legacyAnswers,
   missingRequiredPreopQuestions,
   PreopContractError,
@@ -174,6 +175,32 @@ describe("the answer rows record what was asked", () => {
 
     expect(writes).toEqual([])
     expect(answers.get("q-BASE_SMOKING")!.source).toBe("suggestion")
+  })
+
+  // An accepted suggestion was stored with no option; the form holds the same
+  // Yes as optionKey "YES". Its next autosave rewrote the row as the
+  // clinician's and lost the suggestion's provenance.
+  it("keeps an accepted suggestion's provenance when the form sends the same yes back", async () => {
+    const { save, writes, answers, profile } = fakeDb()
+    profile.questions.find(row => row.question.stableKey === "A5_FALLS_LAST_12_MONTHS")!.enabled = true
+    await save({ clinicalMode: "ADULT" })
+    Object.assign(answers.get("q-A5_FALLS_LAST_12_MONTHS")!, {
+      state: PreopAnswerState.YES, optionKey: null, source: "suggestion", provenance: { suggestionId: "s-1" },
+    })
+    writes.length = 0
+    await save({ clinicalMode: "ADULT" }, {
+      answers: [{ stableKey: "A5_FALLS_LAST_12_MONTHS", state: PreopAnswerState.YES, optionKey: "YES" }],
+    })
+
+    expect(writes).toEqual([])
+    expect(answers.get("q-A5_FALLS_LAST_12_MONTHS")).toMatchObject({ source: "suggestion", provenance: { suggestionId: "s-1" } })
+  })
+
+  it("reads a plain yes or no the same with or without its option code", () => {
+    expect(effectiveOptionKey(PreopAnswerState.YES, null)).toBe("YES")
+    expect(effectiveOptionKey(PreopAnswerState.NO, undefined)).toBe("NO")
+    expect(effectiveOptionKey(PreopAnswerState.YES, "HIGH")).toBe("HIGH")
+    expect(effectiveOptionKey(PreopAnswerState.UNKNOWN, null)).toBeNull()
   })
 
   it("treats a false COLDS applicability as no answer: false means nobody looked", () => {

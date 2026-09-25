@@ -43,7 +43,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
       if (caseRecord.status === "COMPLETE") {
-        return NextResponse.json({ error: "Case is already finalised" }, { status: 409 })
+        // A stable code: the clients say "already finalised" rather than
+        // treating an unexpected 409 as the server being unreachable.
+        return NextResponse.json({ error: "Case is already finalised", code: "CASE_ALREADY_FINALISED" }, { status: 409 })
       }
       // Idempotent: revisiting the summary (or a retried request) must not
       // restart the countdown a second time. shouldStampAwaitingReview in
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
       if (caseRecord.status !== "IN_PROGRESS") {
         return NextResponse.json(
-          { error: "Case must be in progress before it can be submitted for review" },
+          { error: "Case must be in progress before it can be submitted for review", code: "CASE_NOT_IN_PROGRESS" },
           { status: 409 },
         )
       }

@@ -559,10 +559,22 @@ type StoredAnswer = {
   valueDate: Date | null
 }
 
+/**
+ * A plain yes/no answer names its option after its state. The forms send
+ * `optionKey: "YES"`; an accepted suggestion used to be stored with none. Read
+ * both the same way, or the form's copy of an accepted suggestion looks like a
+ * new answer on the next autosave and rewrites it as the clinician's, losing
+ * the provenance (for weight loss, the link that stops a second OMOP condition).
+ */
+export function effectiveOptionKey(state: PreopAnswerState | string, optionKey: string | null | undefined): string | null {
+  if (optionKey) return optionKey
+  return state === PreopAnswerState.YES || state === PreopAnswerState.NO ? state : null
+}
+
 function sameAnswer(stored: StoredAnswer | undefined, answer: PreopAnswerInput): boolean {
   return stored != null
     && stored.state === answer.state
-    && stored.optionKey === (answer.optionKey ?? null)
+    && effectiveOptionKey(stored.state, stored.optionKey) === effectiveOptionKey(answer.state, answer.optionKey)
     && stored.valueText === (answer.valueText ?? null)
     && stored.valueNumber === (answer.valueNumber ?? null)
     && (stored.valueDate?.toISOString() ?? null) === (answer.valueDate ? new Date(answer.valueDate).toISOString() : null)
