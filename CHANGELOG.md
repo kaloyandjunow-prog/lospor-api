@@ -1,5 +1,20 @@
 # Changelog - LOSPOR API
 
+## [9.11.4] - 2026-09-25
+
+### Changed
+
+- **Released with Core, Web and Mobile 9.11.4.** No API behaviour change. The
+  autosave fix (a queued save sent twice could overwrite a newer edit) is in
+  Core; the clients stop re-sending unchanged intraoperative sections.
+
+### Tests
+
+- **The preoperative query-count test no longer breaks other suites.** It
+  emptied the preop catalogue and profile for real while the other PostgreSQL
+  suites ran against the same database, wiping their data mid-run. It now
+  measures inside a transaction that is always rolled back.
+
 ## [9.11.3] - 2026-09-25
 
 ### Changed
