@@ -137,8 +137,19 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
     })
     let queries = 0
     counted.$on("query" as never, () => { queries += 1 })
+    // Measured inside one transaction that is always rolled back: the other
+    // PostgreSQL suites run at the same time against the same database, and
+    // emptying the catalogue for real would take their answers, profile and
+    // case revisions with it. session_replication_role = replica suspends the
+    // finalization triggers and foreign keys for this transaction only, so the
+    // empty state can be reached even with finalized cases present.
+    const ROLLBACK = new Error("measured; roll back")
+    let fromEmpty = 0
+    let whenSetUp = 0
+    let questionCount = 0
     try {
       await counted.$transaction(async tx => {
+        await tx.$executeRawUnsafe("SET LOCAL session_replication_role = replica")
         await tx.preopAssessmentAnswer.deleteMany({})
         await tx.preopAssessmentSuggestion.deleteMany({})
         await tx.preopProfileQuestion.deleteMany({})
@@ -146,17 +157,21 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
         await tx.preopAssessmentProfile.deleteMany({})
         await tx.preopAnswerOption.deleteMany({})
         await tx.preopQuestionDefinition.deleteMany({})
-      })
-      queries = 0
-      const profile = await counted.$transaction(tx => ensurePreopProfile(tx, userId), { timeout: 30_000 })
-      expect(profile.questions).toHaveLength(BUNDLED_PREOP_QUESTIONS.length)
-      expect(queries).toBeLessThanOrEqual(30)
-      queries = 0
-      await counted.$transaction(tx => ensurePreopProfile(tx, userId))
-      expect(queries).toBeLessThanOrEqual(6)
+        queries = 0
+        const profile = await ensurePreopProfile(tx, userId)
+        fromEmpty = queries
+        questionCount = profile.questions.length
+        queries = 0
+        await ensurePreopProfile(tx, userId)
+        whenSetUp = queries
+        throw ROLLBACK
+      }, { timeout: 30_000 }).catch(error => { if (error !== ROLLBACK) throw error })
     } finally {
       await counted.$disconnect()
     }
+    expect(questionCount).toBe(BUNDLED_PREOP_QUESTIONS.length)
+    expect(fromEmpty).toBeLessThanOrEqual(30)
+    expect(whenSetUp).toBeLessThanOrEqual(6)
   })
 
   it("keeps exactly one row per case and question", async () => {
