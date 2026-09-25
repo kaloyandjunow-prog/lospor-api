@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [9.11.3] - 2026-09-25
+
+### Changed
+
+- **Version alignment only, no behaviour change.** Released with Mobile
+  9.11.3, which stops a reopened case from autosaving blank preop values
+  before the case has loaded.
+
 ## [9.11.2] - 2026-09-25
 
 ### Fixed
