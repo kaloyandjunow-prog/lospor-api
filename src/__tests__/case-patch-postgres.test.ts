@@ -84,7 +84,7 @@ describe.skipIf(!runPostgres)("case PATCH PostgreSQL transaction", () => {
     await prisma.$disconnect()
   })
 
-  it("commits a web timetable PATCH and its event projection in one locked transaction", async () => {
+  it("refuses a whole-chart PATCH and commits the rest of the section without it (1.4.9)", async () => {
     const baselineEvent = {
       id: "baseline-event",
       type: "clinical_event",
@@ -92,12 +92,6 @@ describe.skipIf(!runPostgres)("case PATCH PostgreSQL transaction", () => {
       label: "Anaesthesia started",
       sequence: 1,
     }
-    const addedClinicalEvent = {
-      colIdx: 1,
-      label: "Incision",
-      color: "#ef4444",
-    }
-    const addedEventId = `web-${addedClinicalEvent.colIdx}-${addedClinicalEvent.label}`
 
     await withLockedCaseTransaction(caseId, async tx => {
       await tx.intraoperativeRecord.create({
@@ -114,94 +108,41 @@ describe.skipIf(!runPostgres)("case PATCH PostgreSQL transaction", () => {
       await rebuildProjection(tx, caseId, { revisionAlreadyReserved: true })
     }, { timeout: 20_000 })
 
-    const before = await prisma.case.findUniqueOrThrow({
-      where: { id: caseId },
-      select: {
-        clinicalRevision: true,
-        eventRevision: true,
-        relationalRevision: true,
-      },
-    })
-    const request = new Request(`http://localhost/v1/cases/${caseId}`, {
-      method: "PATCH",
-      headers: {
-        "content-type": "application/json",
-        "x-lospor-intraop-revision": "1",
-      },
-      body: JSON.stringify({
-        intraop: {
-          techniques: ["GENERAL_BALANCED"],
-          timetableData: { clinicalEvents: [addedClinicalEvent] },
-        },
-      }),
-    })
-
-    const response = await within(
-      patchCase(request as never, { params: Promise.resolve({ id: caseId }) }),
+    const patch = (intraop: Record<string, unknown>) => within(
+      patchCase(new Request(`http://localhost/v1/cases/${caseId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json", "x-lospor-intraop-revision": "1" },
+        body: JSON.stringify({ intraop }),
+      }) as never, { params: Promise.resolve({ id: caseId }) }),
       5_000,
     )
-    expect(response.status).toBe(200)
-    const body = await response.json() as {
-      clinicalRevision: number
-      eventRevision: number
-      relationalRevision: number
-      intraopRevision: number
-    }
 
-    const [updatedCase, intraop, events] = await Promise.all([
-      prisma.case.findUniqueOrThrow({
-        where: { id: caseId },
-        select: {
-          clinicalRevision: true,
-          eventRevision: true,
-          relationalRevision: true,
-        },
-      }),
+    // The chart is written as single events; a whole chart is refused, and
+    // nothing in the section changes.
+    const refused = await patch({
+      techniques: ["GENERAL_BALANCED"],
+      timetableData: { clinicalEvents: [{ colIdx: 1, label: "Incision", color: "#ef4444" }] },
+    })
+    expect(refused.status).toBe(400)
+    expect(await refused.json()).toMatchObject({ error: "timetable_data_retired" })
+    const untouched = await prisma.intraoperativeRecord.findUniqueOrThrow({
+      where: { caseId },
+      select: { techniques: true, syncRevision: true },
+    })
+    expect(untouched).toEqual({ techniques: [], syncRevision: 1 })
+
+    const response = await patch({ techniques: ["GENERAL_BALANCED"] })
+    expect(response.status).toBe(200)
+    const body = await response.json() as { intraopRevision: number }
+    const [intraop, events] = await Promise.all([
       prisma.intraoperativeRecord.findUniqueOrThrow({
         where: { caseId },
-        select: {
-          techniques: true,
-          keyEvents: true,
-          syncRevision: true,
-        },
+        select: { techniques: true, syncRevision: true },
       }),
-      prisma.caseEvent.findMany({
-        where: { caseId, status: "active" },
-        orderBy: { timestamp: "asc" },
-        select: {
-          logicalId: true,
-          source: true,
-          userId: true,
-          metadataJson: true,
-        },
-      }),
+      prisma.caseEvent.findMany({ where: { caseId, status: "active" }, select: { logicalId: true } }),
     ])
-
-    expect(intraop.techniques).toEqual(["GENERAL_BALANCED"])
-    expect(intraop.syncRevision).toBe(2)
-    expect(intraop.keyEvents).toMatchObject({
-      log: expect.arrayContaining([
-        expect.objectContaining({ id: baselineEvent.id }),
-        expect.objectContaining({ id: addedEventId }),
-      ]),
-    })
-    expect(events).toHaveLength(2)
-    expect(events).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        logicalId: addedEventId,
-        source: "web",
-        userId,
-        metadataJson: expect.objectContaining({ id: addedEventId }),
-      }),
-    ]))
-    expect(updatedCase.eventRevision).toBe(before.eventRevision + 1)
-    expect(updatedCase.clinicalRevision).toBeGreaterThan(before.clinicalRevision)
-    expect(updatedCase.relationalRevision).toBe(before.relationalRevision)
-    expect(body).toMatchObject({
-      clinicalRevision: updatedCase.clinicalRevision,
-      eventRevision: updatedCase.eventRevision,
-      relationalRevision: updatedCase.relationalRevision,
-      intraopRevision: intraop.syncRevision,
-    })
+    expect(intraop).toEqual({ techniques: ["GENERAL_BALANCED"], syncRevision: 2 })
+    expect(events).toEqual([{ logicalId: baselineEvent.id }])
+    expect(body.intraopRevision).toBe(intraop.syncRevision)
   }, 15_000)
 })

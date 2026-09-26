@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LOSPOR API - internal inventory",
-    "version": "9.11.5",
+    "version": "9.12.0",
     "description": "Complete server contract, including secret maintenance jobs."
   },
   "servers": [
@@ -3454,12 +3454,13 @@
       },
       "put": {
         "operationId": "put_v1_cases_id_events",
-        "summary": "Replace and reconcile the complete event log",
+        "summary": "Retired whole-log write (1.4.9); write single events",
         "tags": [
           "cases"
         ],
         "x-lospor-explicit-contract": true,
-        "x-lospor-stability": "stable",
+        "x-lospor-stability": "deprecated",
+        "x-lospor-tombstone": true,
         "parameters": [
           {
             "name": "id",
@@ -3468,40 +3469,9 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "x-lospor-intraop-revision",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "integer"
-            }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
-          }
-        },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EventMutationResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -3544,6 +3514,16 @@
           },
           "409": {
             "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Compatibility endpoint removed",
             "content": {
               "application/json": {
                 "schema": {
@@ -12156,6 +12136,127 @@
       "get": {
         "operationId": "get_v1_internal_close_expired_cases",
         "summary": "Close cases whose review window elapsed",
+        "tags": [
+          "internal"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "internal",
+        "parameters": [
+          {
+            "name": "x-cron-secret",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request is valid but cannot be completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/internal/auto-end-cases": {
+      "get": {
+        "operationId": "get_v1_internal_auto_end_cases",
+        "summary": "End cases 48 hours after start with no screen open",
         "tags": [
           "internal"
         ],

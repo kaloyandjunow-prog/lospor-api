@@ -50,6 +50,9 @@ describe("vercel.json crons", () => {
   // silent addition.
   it("still schedules the nightly retention purge and export processing", () => {
     expect(crons.map(cron => cron.path).sort()).toEqual([
+      // Daily on the hosted deployment; the appliance sweeps it every five
+      // minutes through close-expired-cases (1.4.9).
+      "/v1/internal/auto-end-cases",
       "/v1/internal/purge-deleted",
       "/v1/internal/research-exports/process",
     ])

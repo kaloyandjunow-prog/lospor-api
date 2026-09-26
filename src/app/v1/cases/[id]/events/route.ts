@@ -4,7 +4,8 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
 import { logAudit } from "@/lib/audit"
-import { addEvent, reconcileFullLog, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
+import { activeCaseLog, addEvent, rebuildProjection, reserveIntraopRevision, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
+import { timelineRefusal } from "@/lib/timeline-refusal"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { resolveDrugExposureConcepts } from "@/lib/relational-sync"
 import { corsHeaders } from "@/lib/cors"
@@ -18,6 +19,7 @@ import { z } from "zod"
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
 const CORS = (req: NextRequest) => corsHeaders(req, "POST, PUT, OPTIONS")
+// PUT stays in CORS only to answer the retired full-log write with 410.
 
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: CORS(req) })
@@ -25,7 +27,6 @@ export async function OPTIONS(req: NextRequest) {
 
 // Permissive event schema — known fields typed, unknown ones (color, infId,
 // fluidId, etc.) passed through so the timetable projection still sees them.
-const MAX_LOG_ENTRIES = 20_000
 
 const eventSchema = caseEventWriteSchema
 
@@ -138,6 +139,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return revisionConflict(existing.intraop)
       }
 
+      // Checked before the revision is reserved, so a refusal changes nothing.
+      // The same timeline rules the apps apply (Core), on the log this write
+      // would produce. A refusal is a 400, which the outbox records and drops.
+      const current = await activeCaseLog(tx, id)
+      const next = [...current.filter(item => item.id !== event.id), event as unknown as LogEvent]
+      const refused = timelineRefusal(timelineIssuesFor(current, next))
+      if (refused) return refused
+
       const revisionReserved = revision != null && !!existing.intraop
       if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
         const fresh = await tx.intraoperativeRecord.findUnique({
@@ -174,123 +183,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-// PUT — reconcile the client's full desired log into versioned source rows and
-// rebuild the legacy projection in the same locked transaction.
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getAuthUser(req)
-  if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const { id } = await params
-  const source = clinicalEventSource(user)
-
-  const body = await req.json().catch(() => null)
-  const rawLog = body?.log
-  if (!Array.isArray(rawLog)) return NextResponse.json({ error: "log must be array" }, { status: 400 })
-  if (rawLog.length > MAX_LOG_ENTRIES) {
-    return NextResponse.json(
-      { error: `log too large (${rawLog.length} entries, maximum ${MAX_LOG_ENTRIES})` },
-      { status: 413 },
-    )
-  }
-
-  const intraopBase = req.headers.get("x-lospor-intraop-updated-at")
-  const revisionRaw = req.headers.get("x-lospor-intraop-revision")
-  const intraopRevision = revisionRaw == null
-    ? null
-    : /^\d+$/.test(revisionRaw) && Number.isSafeInteger(Number(revisionRaw))
-      ? Number(revisionRaw)
-      : "invalid"
-  if (intraopRevision === "invalid") {
-    return NextResponse.json({ error: "Invalid intraop revision" }, { status: 400 })
-  }
-  if (intraopBase && Number.isNaN(new Date(intraopBase).getTime())) {
-    return NextResponse.json({ error: "Invalid intraop conflict timestamp" }, { status: 400 })
-  }
-
-  let log: z.infer<typeof eventSchema>[]
-  try {
-    log = rawLog.map(entry => eventSchema.parse(entry))
-  } catch {
-    return NextResponse.json({ error: "Invalid event in log" }, { status: 400 })
-  }
-  for (const event of log) {
-    const piiError = piiForEvent(event)
-    if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
-  }
-  // Same resolution the single-event POST does. Reconciling a whole log used
-  // to skip it entirely, so whether a drug arrived with a concept depended on
-  // which of the two endpoints the client happened to use to send it.
-  // Read-only, and outside the case lock for the same reason POST's is.
-  await resolveDrugExposureConcepts(prisma, log as unknown as Record<string, unknown>[])
-
-  try {
-    const result = await withLockedCaseTransaction(id, async tx => {
-      const caseRecord = await tx.case.findUnique({
-        where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
-      })
-      if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
-      if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      }
-      if (caseRecord.status === "COMPLETE") {
-        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
-      }
-      const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
-      if (pediatricBlock) return pediatricBlock
-      const existingIntraop = await tx.intraoperativeRecord.findUnique({
-        where: { caseId: id },
-        select: { updatedAt: true, syncRevision: true },
-      })
-      const existing = { ...caseRecord, intraop: existingIntraop }
-      if (intraopRevision == null && !intraopBase && existing.intraop?.updatedAt) {
-        return NextResponse.json({
-          error: "conflict",
-          section: "intraop",
-          reason: "missing_conflict_timestamp",
-          serverVersion: {
-            updatedAt: existing.intraop.updatedAt,
-            revision: existing.intraop.syncRevision,
-          },
-        }, { status: 409 })
-      }
-      if (intraopRevision != null && existing.intraop && existing.intraop.syncRevision !== intraopRevision) {
-        return revisionConflict(existing.intraop)
-      }
-      if (
-        intraopRevision == null &&
-        intraopBase &&
-        existing.intraop?.updatedAt &&
-        existing.intraop.updatedAt.getTime() > new Date(intraopBase).getTime()
-      ) {
-        return revisionConflict(existing.intraop)
-      }
-
-      const revisionReserved = intraopRevision != null && !!existing.intraop
-      if (revisionReserved && !await reserveIntraopRevision(tx, id, intraopRevision)) {
-        const fresh = await tx.intraoperativeRecord.findUnique({
-          where: { caseId: id },
-          select: { updatedAt: true, syncRevision: true },
-        })
-        throw new EventRouteResponse(revisionConflict(fresh))
-      }
-
-      await reconcileFullLog(tx, id, user.id, log as unknown as LogEvent[], source)
-      await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
-      const intraop = await tx.intraoperativeRecord.findUnique({
-        where: { caseId: id },
-        select: { updatedAt: true, syncRevision: true },
-      })
-      return { intraop }
-    })
-
-    if (result instanceof Response) return result
-    after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { count: log.length, source }))
-    return NextResponse.json({
-      ok: true,
-      intraopUpdatedAt: result.intraop?.updatedAt,
-      intraopRevision: result.intraop?.syncRevision,
-    })
-  } catch (error: unknown) {
-    return eventWriteError(error, "PUT", id)
-  }
+/**
+ * PUT with a whole log is retired (1.4.9). It reconciled a client's full copy
+ * of the chart into events, which re-timed and rewrote entries the clinician
+ * never touched. Every client now writes single events: POST here, and PUT or
+ * DELETE on /events/:eventId.
+ */
+export async function PUT() {
+  return NextResponse.json({
+    error: "full_log_retired",
+    message: "Write single events: POST /events, PUT or DELETE /events/:eventId.",
+  }, { status: 410 })
 }

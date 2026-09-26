@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 import {
   CASE_EVENT_SCHEMA_VERSION,
+  cascadeDeleteIds,
+  timelineIssuesFor,
   buildRow,
   caseEventDrugAuditColumns,
   projectTimetable,
@@ -15,7 +17,7 @@ const at = (min: number) => new Date(START.getTime() + min * 60_000).toISOString
 describe("projectTimetable", () => {
   it("places a drug at its 5-minute column", () => {
     const t = projectTimetable([{ type: "drug", name: "Propofol", dose: "150", unit: "mg", ts: at(10) }], START)
-    expect(t.drugs).toEqual([{ colIdx: 2, name: "Propofol", dose: "150", unit: "mg" }])
+    expect(t.drugs).toEqual([expect.objectContaining({ colIdx: 2, name: "Propofol", dose: "150", unit: "mg" })])
   })
 
   it("records a vital at its column", () => {
@@ -32,16 +34,18 @@ describe("projectTimetable", () => {
     const t = projectTimetable(log, START)
     expect(t.infusions).toHaveLength(1)
     expect(t.infusions[0]).toMatchObject({ id: "i1", name: "Noradrenaline", rate: 5, unit: "mcg/min", startCol: 0, endCol: 6 })
-    expect(t.infusions[0].rateChanges).toEqual([{ col: 3, rate: 8, unit: "mcg/min" }])
+    expect(t.infusions[0].rateChanges).toEqual([expect.objectContaining({ col: 3, rate: 8, unit: "mcg/min" })])
   })
 
-  it("leaves an unstopped infusion open-ended (endCol = maxCol + 1)", () => {
+  // 1.4.9: a running item ends in the last column read, inclusive -- never one
+  // beyond it, which drew it five minutes long and overcounted its total.
+  it("leaves an unstopped infusion open to the last recorded column", () => {
     const log: LogEvent[] = [
       { type: "infusion_start", infId: "i1", name: "Propofol", rate: "6", unit: "mg/kg/hr", ts: at(0) },
       { type: "drug", name: "Fentanyl", dose: "100", unit: "mcg", ts: at(20) }, // maxCol = 4
     ]
     const t = projectTimetable(log, START)
-    expect(t.infusions[0]).toMatchObject({ startCol: 0, endCol: 5 })
+    expect(t.infusions[0]).toMatchObject({ startCol: 0, endCol: 4 })
   })
 
   it("projects fluids, agents and clinical events", () => {
@@ -55,7 +59,7 @@ describe("projectTimetable", () => {
     const t = projectTimetable(log, START)
     expect(t.fluids[0]).toMatchObject({ id: "f1", name: "Ringer", startCol: 0, endCol: 5 })
     expect(t.agents[0]).toMatchObject({ name: "Sevoflurane", startCol: 0, endCol: 4, percent: 2 })
-    expect(t.clinicalEvents).toEqual([{ colIdx: 1, label: "Incision", color: "#64748b" }])
+    expect(t.clinicalEvents).toEqual([expect.objectContaining({ colIdx: 1, label: "Incision", color: "#64748b" })])
   })
 
   it("sorts events chronologically regardless of input order", () => {
@@ -277,5 +281,47 @@ describe("drug route-profile event audit", () => {
       clinicalPresetVersion: null,
       clinicalPresetScope: "INSTITUTION",
     })
+  })
+})
+
+describe("projectTimetable reads at the case end", () => {
+  it("columns start at the five-minute row of the start, as both apps draw them", () => {
+    const t = projectTimetable([{ type: "drug", name: "X", dose: "1", unit: "mg", ts: new Date(START.getTime() + 7 * 60_000).toISOString() }], new Date(START.getTime() + 3 * 60_000))
+    expect(t.drugs[0].colIdx).toBe(1)
+  })
+
+  it("stops a continued infusion at the end, however late it is read", () => {
+    const t = projectTimetable(
+      [{ type: "infusion_start", infId: "i1", name: "Propofol", rate: "6", unit: "mg/hr", ts: at(0) }],
+      START,
+      { endedAt: new Date(START.getTime() + 45 * 60_000), asOf: new Date(START.getTime() + 600 * 60_000) },
+    )
+    expect(t.infusions[0]).toMatchObject({ startCol: 0, endCol: 9 })
+  })
+})
+
+describe("timeline rules on the server (1.4.9)", () => {
+  const log = [
+    { id: "s", type: "infusion_start", infId: "i1", name: "Propofol", rate: "6", unit: "mg/hr", ts: at(0) },
+    { id: "r", type: "infusion_rate", infId: "i1", rate: "3", unit: "mg/hr", ts: at(10) },
+    { id: "x", type: "infusion_stop", infId: "i1", ts: at(20) },
+  ] as LogEvent[]
+
+  it("refuses only what the write introduces", () => {
+    const early = { id: "x", type: "infusion_stop", infId: "i1", ts: at(5) } as LogEvent
+    expect(timelineIssuesFor(log, [...log.slice(0, 2), early]).map(issue => issue.code)).toEqual(["STOP_BEFORE_LATER_CHANGE"])
+    expect(timelineIssuesFor(log, log)).toEqual([])
+  })
+
+  it("allows a device clock two minutes ahead, but not a vital in the future", () => {
+    const now = new Date(START.getTime() + 60 * 60_000)
+    const vital = (min: number) => ({ id: `v${min}`, type: "vital", heartRate: 70, ts: at(min) }) as LogEvent
+    expect(timelineIssuesFor([], [vital(61)], now)).toEqual([])
+    expect(timelineIssuesFor([], [vital(70)], now).map(issue => issue.code)).toEqual(["FUTURE_VITAL"])
+  })
+
+  it("deleting a start takes its change and stop", () => {
+    expect(cascadeDeleteIds(log, "s")).toEqual(["s", "r", "x"])
+    expect(cascadeDeleteIds(log, "unknown")).toEqual(["unknown"])
   })
 })

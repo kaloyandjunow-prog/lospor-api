@@ -7,9 +7,12 @@ import { logAudit, logAuditInTransaction } from "@/lib/audit"
 import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
 import { parseLenient } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
-import { resolveDrugExposureConcepts, syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
+import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
-import { rebuildProjection, reconcileFullLog, snapshotLogForReconcile } from "@/lib/case-events"
+import { activeCaseLog, rebuildProjection } from "@/lib/case-events"
+import { autoEndCaseIfStale } from "@/lib/intraop-auto-end"
+import { intraopEntriesOutsideCase } from "@lospor/core/intraop-commands"
+import { parseLogEvents } from "@lospor/core/intraop-types"
 import {
   canWriteCaseWithOwnerFallback,
   caseCapabilitiesForUser,
@@ -17,11 +20,9 @@ import {
 } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
 import type { CaseDetail, Serialized } from "@/types/case-detail"
-import type { LegacyKeyEvents, LogEvent } from "@/types/timetable"
 import { SECTION_REVISION_HEADER } from "@lospor/core/sync"
 import { detectSectionConflicts } from "./_patch-conflicts"
 import { computeNextStatus, shouldStampAwaitingReview } from "./_patch-status"
-import { bridgeGridVitalsIntoLog, mergeWebClinicalEventsIntoLog, projectedVitalIssues } from "./_patch-intraop-log"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import {
   CaseWriteError,
@@ -45,12 +46,6 @@ import {
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 const REVISION_HEADER = SECTION_REVISION_HEADER
-
-function validateProjectedVitalEvents(events: LogEvent[]): void {
-  const issues = projectedVitalIssues(events)
-  if (issues.length === 0) return
-  throw new CaseRouteResponse(NextResponse.json({ error: "Invalid event", issues }, { status: 400 }))
-}
 
 function readRevision(req: NextRequest, section: keyof typeof REVISION_HEADER): number | null | "invalid" {
   const raw = req.headers.get(REVISION_HEADER[section])
@@ -95,6 +90,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params
   const where = caseReadWhereForUser(user, id)
+
+  // A case started 48 hours ago with no screen open on it ends as it is opened
+  // (1.4.9); the sweeps catch the ones nobody opens. Only for a case this user
+  // may read, and never allowed to fail the read.
+  if (await prisma.case.count({ where }) > 0) {
+    await autoEndCaseIfStale(id).catch(error => console.error("[GET case] auto-end", id, error))
+  }
 
   const record = await prisma.case.findFirst({
     where,
@@ -215,6 +217,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
+    // The chart is written as single events only (1.4.9). A whole chart sent
+    // with the case was reconciled into events, re-timing entries nobody had
+    // touched; that path is retired rather than left for an old client to use.
+    if (intraop && ("timetableData" in intraop || "keyEvents" in intraop)) {
+      return NextResponse.json({
+        error: "timetable_data_retired",
+        message: "Write the intraoperative chart as single events: POST /cases/:id/events.",
+      }, { status: 400, headers: CORS(req) })
+    }
     const piiError = checkClinicalPayloadPII({ preop, intraop, postop, notes })
     if (piiError) {
       after(() => logAudit(userId, "PII_BLOCKED", id, { field: piiError.field, reason: piiError.reason }))
@@ -253,6 +264,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               id: true,
               keyEvents: true,
               startedAt: true,
+              endedAt: true,
               startTime: true,
               createdAt: true,
               updatedAt: true,
@@ -386,24 +398,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       // The day this case belongs to, so a bare "HH:MM" plus the client's zone
       // can be resolved to a real instant. Taken from the record rather than
       // "now" — editing a case the morning after must not redate it.
-      let effectiveIntraop: Record<string, unknown> = {
+      const effectiveIntraop: Record<string, unknown> = {
         caseDay: existing.intraop?.createdAt ?? existing.createdAt,
         ...intraop,
-      }
-      if ("timetableData" in intraop && intraop.timetableData) {
-        const existingKev = (existing.intraop?.keyEvents as LegacyKeyEvents | null) ?? {}
-        const existingLog: LogEvent[] = Array.isArray(existingKev.log) ? existingKev.log : []
-        // Web charts clinical events into a column grid with no timestamps;
-        // mobile only ever sees the log. ./_patch-intraop-log does the bridge.
-        const sortedLog = [...existingLog].sort((a, b) => new Date(a.ts ?? 0).getTime() - new Date(b.ts ?? 0).getTime())
-        const chartStartMs = existing.intraop?.startedAt?.getTime()
-          ?? (sortedLog[0]?.ts ? new Date(sortedLog[0].ts).getTime() : null)
-        const mergedLog = mergeWebClinicalEventsIntoLog(
-          existingLog,
-          (intraop.timetableData as LegacyKeyEvents)?.clinicalEvents ?? [],
-          chartStartMs ?? null,
-        )
-        effectiveIntraop = { ...intraop, timetableData: { ...(intraop.timetableData as LegacyKeyEvents), log: mergedLog } }
       }
       if (existing.intraop) {
         const updated = await tx.intraoperativeRecord.updateMany({
@@ -428,45 +425,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           data: { caseId: id, ...mapIntraop(effectiveIntraop), syncRevision: 1 },
         })
       }
-      if ("timetableData" in effectiveIntraop && effectiveIntraop.timetableData) {
-        const keyEvents = effectiveIntraop.timetableData as LegacyKeyEvents
-        const savedTiming = await tx.intraoperativeRecord.findUnique({
+      // A change of start or end moves where the chart is read (1.4.9).
+      if (["startedAt", "endedAt", "startTime", "endTime"].some(key => key in intraop)) {
+        const saved = await tx.intraoperativeRecord.findUnique({
           where: { caseId: id },
-          select: { startedAt: true },
+          select: { startedAt: true, endedAt: true },
         })
-        const start = savedTiming?.startedAt?.getTime() ?? null
-        const eventRowCount = await tx.caseEvent.count({ where: { caseId: id } })
-        let projectedLog = Array.isArray(keyEvents.log) && keyEvents.log.length > 0
-          ? keyEvents.log
-          : eventRowCount === 0
-            ? snapshotLogForReconcile(keyEvents, start)
-            : null
-        // Vitals typed straight into the grid by older cached web builds
-        // become vital events, or rebuildProjection wipes them. See
-        // ./_patch-intraop-log.
-        const gridVitals = Array.isArray(keyEvents.vitals) ? keyEvents.vitals : []
-        if (projectedLog) {
-          projectedLog = bridgeGridVitalsIntoLog(projectedLog, gridVitals, start)
-        }
-        if (projectedLog && projectedLog.length > 0) {
-          // The web timetable reconciles a complete log instead of calling the
-          // individual event endpoint. Apply the same vital contract here so a
-          // client cannot store a value the PWA would correctly refuse.
-          validateProjectedVitalEvents(projectedLog)
-          // The third write path into CaseEvent, and the one a web client uses
-          // most: saving the case saves the whole timetable. Without this a
-          // drug charted here would store its ATC and no concept, while the
-          // identical drug charted through the events endpoint stored both.
-          await resolveDrugExposureConcepts(tx, projectedLog as unknown as Record<string, unknown>[])
-          try {
-            await reconcileFullLog(tx, id, userId, projectedLog, "web")
-            await rebuildProjection(tx, id, { revisionAlreadyReserved: true })
-          } catch (reconcileErr: unknown) {
-            const code = (reconcileErr as { code?: string })?.code
-            if (code !== "P2003" && code !== "P2025") throw reconcileErr
-            console.warn("[PATCH /api/cases/:id] reconcileFullLog skipped — case deleted mid-save", code)
+        const before = existing.intraop
+        const endMovedEarlier = !!(before?.endedAt && saved?.endedAt && saved.endedAt < before.endedAt)
+        const startMovedLater = !!(before?.startedAt && saved?.startedAt && saved.startedAt > before.startedAt)
+        if (endMovedEarlier || startMovedLater) {
+          // Refused when entries would fall outside the case. Items continued
+          // postoperatively have no entry past the end, so they never block.
+          const outside = intraopEntriesOutsideCase(parseLogEvents(await activeCaseLog(tx, id)), {
+            startedAt: saved?.startedAt ?? null,
+            endedAt: saved?.endedAt ?? null,
+          })
+          if (outside.length > 0) {
+            throw new CaseRouteResponse(NextResponse.json({
+              error: "case_bounds",
+              message: "Entries would fall outside the case. Move or delete them first.",
+              eventIds: outside.map(event => event.id),
+            }, { status: 400 }))
           }
-        } else if (eventRowCount > 0) {
+        }
+        if (await tx.caseEvent.count({ where: { caseId: id } }) > 0) {
           await rebuildProjection(tx, id, { revisionAlreadyReserved: true })
         }
       }

@@ -1,5 +1,35 @@
 # Changelog - LOSPOR API
 
+## [9.12.0] - 2026-09-26
+
+### Changed
+
+- **Timeline writes follow the shared rules.** An event that would put a stop
+  before its start, change or stop something not running, stop before a later
+  change, or record a vital in the future is refused (400 `timeline_rule`).
+  Deleting a start deletes its changes and its stop.
+- **The whole-chart write paths are retired.** `PUT /cases/:id/events` answers
+  410 and a case PATCH carrying `timetableData` or `keyEvents` answers 400;
+  the chart is only ever rebuilt from single events. Legacy snapshots are no
+  longer turned back into events.
+- **The stored chart matches the apps**: read at the case end once ended, with
+  column 0 on the five-minute row of the start.
+- Moving an existing end earlier or start later is refused while entries would
+  fall outside; finalisation refuses entries left after the end.
+
+### Added
+
+- **48-hour automatic end.** A started case not ended 48 hours later, with
+  nothing saved to it for 48 hours and no screen open on it (so a case charted
+  retrospectively is never taken), ends at its last recorded entry, marked `autoEndedAt`
+  (cleared on Resume) and audited as the system. It runs in the appliance's
+  five-minute sweep, a daily cron (`/internal/auto-end-cases`) and when the
+  case is opened. Migration `20260926120000_intraop_auto_ended`.
+
+### Removed
+
+- Ranitidine, from the drug list and its source data.
+
 ## [9.11.5] - 2026-09-25
 
 ### Fixed

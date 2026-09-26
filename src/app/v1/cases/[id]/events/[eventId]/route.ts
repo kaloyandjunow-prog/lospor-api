@@ -3,7 +3,8 @@ import { z } from "zod"
 
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { logAudit } from "@/lib/audit"
-import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent } from "@/lib/case-events"
+import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent, activeCaseLog, cascadeDeleteIds, timelineIssuesFor } from "@/lib/case-events"
+import { timelineRefusal } from "@/lib/timeline-refusal"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
 import { corsHeaders } from "@/lib/cors"
 import {
@@ -106,6 +107,13 @@ export async function PUT(
         return conflict(existing.intraop)
       }
 
+      // The Core timeline rules on the log this edit would produce, checked
+      // before the revision is reserved so a refusal changes nothing (1.4.9).
+      const current = await activeCaseLog(tx, id)
+      const next = [...current.filter(item => item.id !== eventId), event as LogEvent]
+      const refused = timelineRefusal(timelineIssuesFor(current, next))
+      if (refused) return refused
+
       const revisionReserved = revision != null && !!existing.intraop
       if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
         const fresh = await tx.intraoperativeRecord.findUnique({
@@ -178,7 +186,12 @@ export async function DELETE(
         })
         return conflict(fresh)
       }
-      const removed = await deleteEvent(tx, id, eventId)
+      // Deleting a start deletes its changes and its stop with it (Core), so
+      // a client's separate deletes for those arrive as harmless no-ops.
+      let removed = false
+      for (const logicalId of cascadeDeleteIds(await activeCaseLog(tx, id), eventId)) {
+        if (await deleteEvent(tx, id, logicalId)) removed = true
+      }
       if (removed) await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
       const fresh = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },

@@ -1151,11 +1151,7 @@ add("POST", "/v1/cases/{id}/events", "Append an idempotent intraoperative event"
   status: 201,
   result: ref("EventMutationResponse"),
 })
-add("PUT", "/v1/cases/{id}/events", "Replace and reconcile the complete event log", {
-  parameters: [id, header("x-lospor-intraop-revision", { type: "integer" })],
-  requestBody: body(arrayOf("Event")),
-  result: ref("EventMutationResponse"),
-})
+add("PUT", "/v1/cases/{id}/events", "Retired whole-log write (1.4.9); write single events", { parameters: [id], tombstone: true, stability: "deprecated" })
 add("PUT", "/v1/cases/{id}/events/{eventId}", "Update an intraoperative event", {
   parameters: [id, pathParameter("eventId"), header("x-lospor-intraop-revision", { type: "integer" })],
   requestBody: body(ref("Event")),
@@ -1321,6 +1317,12 @@ add("GET", "/v1/internal/purge-deleted", "Purge accounts past the retention peri
   tag: "internal",
 })
 add("GET", "/v1/internal/close-expired-cases", "Close cases whose review window elapsed", {
+  parameters: [header("x-cron-secret", { type: "string" }), header("authorization", { type: "string" })],
+  result: ref("JsonObject"),
+  stability: "internal",
+  tag: "internal",
+})
+add("GET", "/v1/internal/auto-end-cases", "End cases 48 hours after start with no screen open", {
   parameters: [header("x-cron-secret", { type: "string" }), header("authorization", { type: "string" })],
   result: ref("JsonObject"),
   stability: "internal",
