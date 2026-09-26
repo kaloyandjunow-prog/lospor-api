@@ -1,5 +1,14 @@
 # Changelog - LOSPOR API
 
+## [9.12.2] - 2026-09-26
+
+### Fixed
+
+- **The automatic end records the end time and the duration.** It wrote the
+  end instant alone, so an automatically ended case had no end time or
+  anaesthesia duration in the case list, the research copy or the OMOP export.
+  It now sets both as a saved end does.
+
 ## [9.12.1] - 2026-09-26
 
 ### Changed
