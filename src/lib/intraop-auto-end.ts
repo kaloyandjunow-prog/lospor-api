@@ -10,8 +10,8 @@ import { logAuditInTransaction } from "@/lib/audit"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
 /**
- * Ends a case that was started 48 hours ago, never ended, and has no screen
- * open on it (1.4.9).
+ * Ends a case that was started 48 hours ago, has had nothing saved to it for 48
+ * hours, was never ended, and has no screen open on it (1.4.9).
  *
  * A forgotten case otherwise keeps growing: autofill keeps charting, running
  * infusions keep adding to their totals, and the chart is read at an ever later
@@ -39,7 +39,7 @@ export async function autoEndCaseIfStale(caseId: string, now = new Date()): Prom
       select: {
         status: true,
         userId: true,
-        intraop: { select: { startedAt: true, endedAt: true } },
+        intraop: { select: { startedAt: true, endedAt: true, updatedAt: true } },
         lock: { select: { expiresAt: true } },
       },
     })
@@ -49,6 +49,7 @@ export async function autoEndCaseIfStale(caseId: string, now = new Date()): Prom
       endedAt: record.intraop.endedAt,
       now,
       screenOpenUntil: record.lock?.expiresAt ?? null,
+      lastSavedAt: record.intraop.updatedAt,
     })) return null
 
     const endedAt = intraopAutoEndInstant(
@@ -79,6 +80,9 @@ export async function autoEndStaleIntraopCases(
   const due = await prisma.intraoperativeRecord.findMany({
     where: {
       startedAt: { not: null, lte: cutoff },
+      // Nothing saved for 48 hours either: a case charted retrospectively is
+      // being worked on, whatever its start says.
+      updatedAt: { lte: cutoff },
       endedAt: null,
       case: {
         status: { not: "COMPLETE" },

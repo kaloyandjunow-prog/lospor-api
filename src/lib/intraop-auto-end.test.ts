@@ -25,7 +25,7 @@ const startedAt = new Date("2026-09-20T08:00:00.000Z")
 const now = new Date("2026-09-22T08:30:00.000Z")
 
 function caseRecord(overrides: Record<string, unknown> = {}) {
-  return { status: "IN_PROGRESS", userId: "u1", intraop: { startedAt, endedAt: null }, lock: null, ...overrides }
+  return { status: "IN_PROGRESS", userId: "u1", intraop: { startedAt, endedAt: null, updatedAt: startedAt }, lock: null, ...overrides }
 }
 
 describe("48-hour automatic end", () => {
@@ -54,7 +54,9 @@ describe("48-hour automatic end", () => {
       caseRecord({ lock: { expiresAt: new Date(now.getTime() + 10_000) } }),
       caseRecord({ intraop: { startedAt, endedAt: now } }),
       caseRecord({ status: "COMPLETE" }),
-      caseRecord({ intraop: { startedAt: new Date(now.getTime() - 60 * 60_000), endedAt: null } }),
+      caseRecord({ intraop: { startedAt: new Date(now.getTime() - 60 * 60_000), endedAt: null, updatedAt: startedAt } }),
+      // Charted retrospectively: an old start, but saved to an hour ago.
+      caseRecord({ intraop: { startedAt, endedAt: null, updatedAt: new Date(now.getTime() - 60 * 60_000) } }),
     ]) {
       tx.case.findUnique.mockResolvedValue(record)
       expect(await autoEndCaseIfStale("c1", now)).toBeNull()

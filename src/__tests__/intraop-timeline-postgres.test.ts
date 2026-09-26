@@ -61,6 +61,8 @@ describe.skipIf(!runPostgres)("intraop timeline PostgreSQL", () => {
       await prisma.case.create({ data: { id, userId, createdById: userId, status: "IN_PROGRESS" } })
       await prisma.intraoperativeRecord.create({ data: { caseId: id, startedAt: start, timezone: "UTC", techniques: [], syncRevision: 1 } })
     }
+    // Nothing saved to the stale case for 50 hours either (it was abandoned).
+    await prisma.$executeRaw`UPDATE "IntraoperativeRecord" SET "updatedAt" = ${new Date(Date.now() - 50 * 60 * 60_000)} WHERE "caseId" = ${staleCaseId}`
   })
 
   afterAll(async () => {

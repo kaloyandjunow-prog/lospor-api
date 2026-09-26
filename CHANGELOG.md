@@ -19,8 +19,9 @@
 
 ### Added
 
-- **48-hour automatic end.** A started case not ended 48 hours later, with no
-  screen open on it, ends at its last recorded entry, marked `autoEndedAt`
+- **48-hour automatic end.** A started case not ended 48 hours later, with
+  nothing saved to it for 48 hours and no screen open on it (so a case charted
+  retrospectively is never taken), ends at its last recorded entry, marked `autoEndedAt`
   (cleared on Resume) and audited as the system. It runs in the appliance's
   five-minute sweep, a daily cron (`/internal/auto-end-cases`) and when the
   case is opened. Migration `20260926120000_intraop_auto_ended`.
