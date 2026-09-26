@@ -5,6 +5,7 @@ import {
   shouldAutoEndIntraopCase,
 } from "@lospor/core/intraop-commands"
 import { parseLogEvents } from "@lospor/core/intraop-types"
+import { durationMinutesBetween, isValidTimeZone, legacyWallClock, localTimeOf } from "@/lib/intraop-time"
 import { activeCaseLog, rebuildProjection } from "@/lib/case-events"
 import { logAuditInTransaction } from "@/lib/audit"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
@@ -31,6 +32,27 @@ export const AUTO_END_SYSTEM_ACTOR_ID = "System (automatic end after 48 hours)"
 
 export type AutoEndSweep = { scanned: number; ended: number; failed: number }
 
+/**
+ * The columns an end sets besides the instant (9.12.2): the end's wall clock
+ * in the case's zone, on the day after the start's when it reads earlier, and
+ * the real elapsed minutes. A case saved with an end gets these from the case
+ * mapper; the automatic end wrote the instant alone, so research exports and
+ * the case list had no duration or end time for it.
+ */
+export function autoEndColumns(input: {
+  startedAt: Date
+  startTime: Date | null
+  timezone: string | null
+  endedAt: Date
+}): { endTime: Date | null; durationMinutes: number | null } {
+  const durationMinutes = durationMinutesBetween(input.startedAt, input.endedAt)
+  const endClock = isValidTimeZone(input.timezone) ? localTimeOf(input.endedAt, input.timezone) : null
+  if (!endClock) return { endTime: null, durationMinutes }
+  const startClock = legacyWallClock(input.startTime)
+  const nextDay = startClock !== null && endClock < startClock
+  return { endTime: new Date(`2000-01-0${nextDay ? 2 : 1}T${endClock}:00.000Z`), durationMinutes }
+}
+
 /** Ends one case if it qualifies. Returns the end instant written, or null. */
 export async function autoEndCaseIfStale(caseId: string, now = new Date()): Promise<Date | null> {
   return withLockedCaseTransaction(caseId, async tx => {
@@ -39,7 +61,7 @@ export async function autoEndCaseIfStale(caseId: string, now = new Date()): Prom
       select: {
         status: true,
         userId: true,
-        intraop: { select: { startedAt: true, endedAt: true, updatedAt: true } },
+        intraop: { select: { startedAt: true, endedAt: true, updatedAt: true, startTime: true, timezone: true } },
         lock: { select: { expiresAt: true } },
       },
     })
@@ -59,7 +81,17 @@ export async function autoEndCaseIfStale(caseId: string, now = new Date()): Prom
     )
     await tx.intraoperativeRecord.update({
       where: { caseId },
-      data: { endedAt, autoEndedAt: now, syncRevision: { increment: 1 } },
+      data: {
+        endedAt,
+        ...autoEndColumns({
+          startedAt: record.intraop.startedAt!,
+          startTime: record.intraop.startTime,
+          timezone: record.intraop.timezone,
+          endedAt,
+        }),
+        autoEndedAt: now,
+        syncRevision: { increment: 1 },
+      },
     })
     await rebuildProjection(tx, caseId, { revisionAlreadyReserved: true })
     await logAuditInTransaction(tx, AUTO_END_SYSTEM_ACTOR_ID, "CASE_INTRAOP_AUTO_ENDED", caseId, {

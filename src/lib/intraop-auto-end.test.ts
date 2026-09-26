@@ -19,13 +19,19 @@ vi.mock("@/lib/case-events", () => ({
 }))
 vi.mock("@/lib/audit", () => ({ logAuditInTransaction: (...args: unknown[]) => logAuditInTransaction(...args) }))
 
-import { AUTO_END_SYSTEM_ACTOR_ID, autoEndCaseIfStale, autoEndStaleIntraopCases } from "./intraop-auto-end"
+import { AUTO_END_SYSTEM_ACTOR_ID, autoEndCaseIfStale, autoEndColumns, autoEndStaleIntraopCases } from "./intraop-auto-end"
 
 const startedAt = new Date("2026-09-20T08:00:00.000Z")
 const now = new Date("2026-09-22T08:30:00.000Z")
 
 function caseRecord(overrides: Record<string, unknown> = {}) {
-  return { status: "IN_PROGRESS", userId: "u1", intraop: { startedAt, endedAt: null, updatedAt: startedAt }, lock: null, ...overrides }
+  return {
+    status: "IN_PROGRESS",
+    userId: "u1",
+    intraop: { startedAt, endedAt: null, updatedAt: startedAt, startTime: new Date("2000-01-01T11:00:00.000Z"), timezone: "Europe/Sofia" },
+    lock: null,
+    ...overrides,
+  }
 }
 
 describe("48-hour automatic end", () => {
@@ -43,7 +49,14 @@ describe("48-hour automatic end", () => {
     expect(endedAt?.toISOString()).toBe("2026-09-20T10:15:00.000Z")
     expect(tx.intraoperativeRecord.update).toHaveBeenCalledWith({
       where: { caseId: "c1" },
-      data: { endedAt, autoEndedAt: now, syncRevision: { increment: 1 } },
+      // 9.12.2: the end's wall clock and the duration, as a saved end has them.
+      data: {
+        endedAt,
+        endTime: new Date("2000-01-01T13:15:00.000Z"),
+        durationMinutes: 135,
+        autoEndedAt: now,
+        syncRevision: { increment: 1 },
+      },
     })
     expect(rebuildProjection).toHaveBeenCalled()
     expect(logAuditInTransaction).toHaveBeenCalledWith(tx, AUTO_END_SYSTEM_ACTOR_ID, "CASE_INTRAOP_AUTO_ENDED", "c1", expect.objectContaining({ assignedUserId: "u1" }))
@@ -62,6 +75,21 @@ describe("48-hour automatic end", () => {
       expect(await autoEndCaseIfStale("c1", now)).toBeNull()
     }
     expect(tx.intraoperativeRecord.update).not.toHaveBeenCalled()
+  })
+
+  it("puts an end that reads earlier than the start on the next day", () => {
+    expect(autoEndColumns({
+      startedAt: new Date("2026-09-20T20:00:00.000Z"),
+      startTime: new Date("2000-01-01T23:00:00.000Z"),
+      timezone: "Europe/Sofia",
+      endedAt: new Date("2026-09-20T22:30:00.000Z"),
+    })).toEqual({ endTime: new Date("2000-01-02T01:30:00.000Z"), durationMinutes: 150 })
+  })
+
+  it("keeps the duration but no wall clock without a zone", () => {
+    expect(autoEndColumns({
+      startedAt, startTime: null, timezone: null, endedAt: new Date("2026-09-20T09:00:00.000Z"),
+    })).toEqual({ endTime: null, durationMinutes: 60 })
   })
 
   it("sweeps the candidates and counts what it ended", async () => {
