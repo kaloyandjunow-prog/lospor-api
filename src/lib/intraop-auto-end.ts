@@ -98,10 +98,11 @@ export async function autoEndStaleIntraopCases(
   for (const { caseId } of due) {
     try {
       if (await autoEndCaseIfStale(caseId, now)) sweep.ended += 1
-    } catch (error) {
-      // One case failing must not stop the sweep; it runs unattended.
+    } catch {
+      // One case failing must not stop the sweep; it runs unattended. A fixed
+      // code only: runtime logs never carry case data.
       sweep.failed += 1
-      console.error("[intraop-auto-end] could not end case", caseId, error)
+      console.error("[intraop-auto-end] INTRAOP_AUTO_END_FAILED")
     }
   }
   return sweep

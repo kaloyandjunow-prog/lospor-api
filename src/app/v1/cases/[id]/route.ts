@@ -95,7 +95,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // (1.4.9); the sweeps catch the ones nobody opens. Only for a case this user
   // may read, and never allowed to fail the read.
   if (await prisma.case.count({ where }) > 0) {
-    await autoEndCaseIfStale(id).catch(error => console.error("[GET case] auto-end", id, error))
+    await autoEndCaseIfStale(id).catch(() => {
+      console.error("[GET case] INTRAOP_AUTO_END_FAILED")
+    })
   }
 
   const record = await prisma.case.findFirst({

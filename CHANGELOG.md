@@ -1,5 +1,14 @@
 # Changelog - LOSPOR API
 
+## [9.12.1] - 2026-09-26
+
+### Changed
+
+- **Released with Web and Mobile 9.12.1** (repeated saves from the web chart,
+  Resume after reopening an ended case, sign-in flash). Core stays 9.12.1.
+- The automatic end logs a fixed code only when a case cannot be ended,
+  without the case id or the error.
+
 ## [9.12.0] - 2026-09-26
 
 ### Changed
