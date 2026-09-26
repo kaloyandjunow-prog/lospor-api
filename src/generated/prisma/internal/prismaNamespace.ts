@@ -6425,6 +6425,7 @@ export const IntraoperativeRecordScalarFieldEnum = {
   startedAt: 'startedAt',
   endedAt: 'endedAt',
   timezone: 'timezone',
+  autoEndedAt: 'autoEndedAt',
   positions: 'positions',
   techniques: 'techniques',
   airwayDevice: 'airwayDevice',

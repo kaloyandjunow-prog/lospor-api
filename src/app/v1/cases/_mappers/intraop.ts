@@ -28,6 +28,8 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     if (has("endTime"))       r.endTime         = full.endTime
     if (has("startedAt")) r.startedAt = full.startedAt
     if (has("endedAt"))   r.endedAt   = full.endedAt
+    // Resuming (clearing the end) also clears an automatic end.
+    if (has("endedAt") && full.endedAt == null) r.autoEndedAt = null
     if (full.timezone)        r.timezone        = full.timezone
                               r.durationMinutes = full.durationMinutes
   }
@@ -58,7 +60,6 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
 
   // Aliased source keys
   if (has("vitals"))       r.timeSeriesData = full.timeSeriesData
-  if (has("timetableData")) r.keyEvents      = full.keyEvents
 
   // Computed from compound sources
   if (has("airwayTools") || has("fob")) r.airwayTools = full.airwayTools
@@ -241,7 +242,9 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     premedicationMorning: intraop.premedicationMorning ?? null,
     drugsAdministered: intraop.drugsAdministered ?? [],
     timeSeriesData:    intraop.vitals            ?? [],
-    keyEvents:         intraop.timetableData     ?? Prisma.JsonNull,
+    // The chart is only ever rebuilt from events (rebuildProjection), never
+    // taken from a client (1.4.9).
+    keyEvents:         Prisma.JsonNull,
     crystalloidsMl:    intraop.crystalloidsMl    ?? null,
     colloidsMl:        intraop.colloidsMl        ?? null,
     bloodMl:           intraop.bloodMl           ?? null,

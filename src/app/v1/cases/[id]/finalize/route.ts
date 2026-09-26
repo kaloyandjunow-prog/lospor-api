@@ -18,6 +18,7 @@ const FINALIZATION_ERRORS: Partial<Record<ClinicalIssueCode, string>> = {
   missing_intraop: "Cannot finalise: intraoperative record has not been started",
   missing_start_time: "Cannot finalise: intraoperative start time is missing",
   missing_end_time: "Cannot finalise: intraoperative end time is missing",
+  entries_after_case_end: "Cannot finalise: planned timeline entries remain after the case end; mark each as happened or not",
   missing_technique: "Cannot finalise: at least one anaesthesia technique must be recorded",
   invalid_intraop_times: "Cannot finalise: intraop end time must be after start time",
   missing_postop: "Cannot finalise: postoperative record is missing",

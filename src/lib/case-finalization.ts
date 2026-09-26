@@ -80,6 +80,8 @@ export async function evaluateCaseReadiness(tx: Db, caseId: string) {
       startTime: true,
       endTime: true,
       techniques: true,
+      // Its log: planned entries left after the end block finalisation.
+      keyEvents: true,
     },
   })
   const postop = await tx.postoperativeRecord.findUnique({

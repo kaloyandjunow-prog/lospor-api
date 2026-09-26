@@ -85,6 +85,7 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "CASE_AUTO_FINALIZED", category: "CASE", labels: { bg: "Автоматично финализиран случай след изтичане на срока за преглед", en: "Case finalised automatically when the review window elapsed" } },
   { code: "CASE_UNFINALIZED", category: "CASE", labels: { bg: "Отменено финализиране на случай", en: "Case finalisation reversed" } },
   { code: "CASE_CONFLICT_OVERRIDE", category: "CASE", labels: { bg: "Преодолян конфликт при запис", en: "Save conflict overridden" } },
+  { code: "CASE_INTRAOP_AUTO_ENDED", category: "CASE", labels: { bg: "Случаят е приключен автоматично 48 часа след началото", en: "Case ended automatically 48 hours after it started" } },
   { code: "CASE_EVENT_ADD", category: "CASE", labels: { bg: "Добавено събитие към случай", en: "Case event added" } },
   { code: "CASE_EVENT_EDIT", category: "CASE", labels: { bg: "Редактирано събитие в случай", en: "Case event edited" } },
   { code: "CASE_EVENT_DELETE", category: "CASE", labels: { bg: "Изтрито събитие от случай", en: "Case event deleted" } },

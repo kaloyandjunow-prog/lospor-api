@@ -1337,6 +1337,9 @@ model IntraoperativeRecord {
   startedAt DateTime?
   endedAt   DateTime?
   timezone  String?
+  /// Set when the case was ended automatically 48 hours after it started with
+  /// no screen open on it (1.4.9); cleared on Resume. The apps show a notice.
+  autoEndedAt DateTime?
 
   positions Json @default("[]")
 

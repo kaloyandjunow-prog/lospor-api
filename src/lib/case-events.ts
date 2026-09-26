@@ -2,12 +2,16 @@ import { Prisma } from "@/generated/prisma/client"
 import { calculateFluidTotals, fluidTotalsPatch } from "@lospor/core/intraop-totals"
 import { canonicalConcentrationUnit } from "@lospor/core/clinical-rule-vocabulary"
 import {
-  INTRAOP_COLUMN_MS,
   gasFractions,
   projectIntraopEvents,
-  reverseProjectIntraop,
+  roundDownToIntraopColumn,
 } from "@lospor/core/intraop-engine"
-import { parseLogEvents, type LegacyKeyEvents as CoreLegacyKeyEvents } from "@lospor/core/intraop-types"
+import {
+  intraopCascadeDeleteIds,
+  newIntraopTimelineIssues,
+  type IntraopTimelineIssue,
+} from "@lospor/core/intraop-commands"
+import { parseLogEvents } from "@lospor/core/intraop-types"
 import type {
   LogEvent,
   LegacyKeyEvents,
@@ -94,12 +98,27 @@ export function caseEventDrugAuditColumns(event: Partial<CaseEventInput>) {
 }
 
 // ─── Projection (moved verbatim from the events route) ───────────────────────
-export function projectTimetable(log: LogEvent[], start: Date) {
+/**
+ * The stored chart: the log read at `asOf` (the write time) or at the case end
+ * once ended. Column 0 is the five-minute row the start falls in, exactly as
+ * both apps draw it -- the raw start put an event at 21:07 in a different
+ * column on the print and in the export than on screen when the case began at
+ * 21:03.
+ */
+export function projectTimetable(
+  log: LogEvent[],
+  start: Date,
+  timing: { endedAt?: Date | null; asOf?: Date } = {},
+) {
   const parsed = parseLogEvents(log.map((event, index) => ({
     ...event,
     id: event.id ?? `legacy-${index}`,
   })))
-  return projectIntraopEvents(parsed, { start })
+  return projectIntraopEvents(parsed, {
+    start: roundDownToIntraopColumn(start),
+    endedAt: timing.endedAt ?? null,
+    openThrough: timing.asOf,
+  })
 }
 
 
@@ -239,32 +258,6 @@ export function buildRow(
   }
 }
 
-// Reconstruct a log from the legacy projected arrays when a case has a
-// keyEvents blob but no `log` (a case whose intraop data predates this app's
-// event-sourced write path). Synthetic timestamps preserve the column layout
-// so the rebuilt chart matches; `baseMs` should be the case's actual start
-// (real calendar day + time-of-day), not an arbitrary epoch, so these rows
-// remain chronologically meaningful for audit/sorting once mixed in with
-// real-timestamped events.
-export function reverseProject(keyEvents: LegacyKeyEvents, baseMs: number): LogEvent[] {
-  return reverseProjectIntraop(keyEvents as CoreLegacyKeyEvents, baseMs)
-}
-
-export function snapshotLogForReconcile(
-  keyEvents: LegacyKeyEvents,
-  startedAtMs: number | null,
-  nowMs = Date.now(),
-): LogEvent[] | null {
-  if (Array.isArray(keyEvents.log) && keyEvents.log.length > 0) return keyEvents.log
-  if (startedAtMs === null) return null
-  const projected = reverseProject(keyEvents, startedAtMs)
-  const futureLimit = nowMs + INTRAOP_COLUMN_MS
-  return projected.some(event => {
-    const ts = typeof event.ts === "string" ? Date.parse(event.ts) : NaN
-    return Number.isFinite(ts) && ts > futureLimit
-  }) ? null : projected
-}
-
 function hasProjectedSnapshot(keyEvents: LegacyKeyEvents): boolean {
   return [
     keyEvents.vitals,
@@ -289,25 +282,18 @@ export function shouldPreserveUnanchoredSnapshot(
         hasProjectedSnapshot(keyEvents)))
 }
 
-// If a case has no CaseEvent rows yet (its intraop data predates the
-// event-sourced write path), seed them from its existing keyEvents (log if
-// present, else reverse-projected from the legacy column-indexed arrays) so
-// the rebuild has a complete picture and nothing is lost on the first write.
+// If a case has no CaseEvent rows yet but its keyEvents carries a log (written
+// before the event-sourced path), seed rows from that log so the rebuild has a
+// complete picture. A legacy snapshot with no log is never turned back into
+// events (1.4.9): a reconstructed log invents times, so such a chart is kept
+// as it was stored (see shouldPreserveUnanchoredSnapshot) and not rewritten.
 export async function ensureBackfilled(tx: Tx, caseId: string): Promise<void> {
   const count = await tx.caseEvent.count({ where: { caseId } })
   if (count > 0) return
 
-  const intra = await tx.intraoperativeRecord.findUnique({ where: { caseId }, select: { keyEvents: true, startedAt: true, startTime: true, createdAt: true } })
+  const intra = await tx.intraoperativeRecord.findUnique({ where: { caseId }, select: { keyEvents: true } })
   const keyEvents = (intra?.keyEvents as LegacyKeyEvents | null) ?? {}
-  let log: LogEvent[] = Array.isArray(keyEvents.log) ? keyEvents.log : []
-  if (log.length === 0) {
-    // The legacy format only ever stored a 5-minute column index, never a real
-    // timestamp, so reconstructed timestamps hang off the same chart anchor the
-    // projection uses — one definition of column 0, shared.
-    const anchor = intra ? chartAnchorFor(intra) : null
-    if (!anchor) return
-    log = reverseProject(keyEvents, anchor.getTime())
-  }
+  const log: LogEvent[] = Array.isArray(keyEvents.log) ? keyEvents.log : []
 
   for (const ev of log) {
     if (!ev?.id) continue
@@ -359,6 +345,38 @@ export async function addEvent(tx: Tx, caseId: string, userId: string, ev: LogEv
   return true
 }
 
+/** The live event log of a case: the active row of every logical event. */
+export async function activeCaseLog(tx: Tx, caseId: string): Promise<LogEvent[]> {
+  const rows = await tx.caseEvent.findMany({
+    where:  { caseId, status: "active" },
+    select: { logicalId: true, version: true, metadataJson: true },
+  })
+  const latest = new Map<string, { version: number; ev: LogEvent }>()
+  for (const row of rows) {
+    const current = latest.get(row.logicalId)
+    if (!current || row.version > current.version) latest.set(row.logicalId, { version: row.version, ev: row.metadataJson as LogEvent })
+  }
+  return [...latest.entries()].map(([logicalId, entry]) => ({ ...entry.ev, id: entry.ev.id ?? logicalId }))
+}
+
+/**
+ * The Core timeline rules, applied on the server to the log a write would
+ * produce (1.4.9): a stop before its start, a change or stop of something not
+ * running, a stop before a later change, a vital in the future. Only issues
+ * the write introduces count, so an older record stays editable. A two-minute
+ * allowance keeps a device clock slightly ahead from refusing a vital.
+ */
+export function timelineIssuesFor(current: LogEvent[], next: LogEvent[], now = new Date()): IntraopTimelineIssue[] {
+  const parse = (log: LogEvent[]) => parseLogEvents(log)
+  return newIntraopTimelineIssues(parse(current), parse(next), { now: new Date(now.getTime() + 2 * 60_000) })
+}
+
+/** The ids a delete takes with it: a start takes its changes and its stop. */
+export function cascadeDeleteIds(log: LogEvent[], logicalId: string): string[] {
+  const ids = intraopCascadeDeleteIds(parseLogEvents(log), logicalId)
+  return ids.length > 0 ? ids : [logicalId]
+}
+
 /** Tombstone one logical event. Repeating the same delete is a safe no-op. */
 export async function deleteEvent(tx: Tx, caseId: string, logicalId: string): Promise<boolean> {
   await ensureBackfilled(tx, caseId)
@@ -384,38 +402,6 @@ export async function reserveIntraopRevision(
     data: { syncRevision: { increment: 1 } },
   })
   return result.count === 1
-}
-
-// Reconcile the full client log into append-only rows: new ids inserted, changed
-// content superseded, ids missing from the incoming log tombstoned.
-export async function reconcileFullLog(tx: Tx, caseId: string, userId: string, incoming: LogEvent[], source: string): Promise<void> {
-  await ensureBackfilled(tx, caseId)
-  const incomingById = new Map<string, LogEvent>()
-  for (const ev of incoming) if (ev.id) incomingById.set(ev.id, ev)
-
-  const { active, maxVer } = await indexRows(tx, caseId)
-
-  for (const [logicalId, ev] of incomingById) {
-    const cur = active.get(logicalId)
-    if (cur) {
-      if (sameContent(cur.metadataJson, ev)) continue
-      await tx.caseEvent.update({ where: { id: cur.id }, data: { status: "superseded" } })
-      const version = (maxVer.get(logicalId) ?? 1) + 1
-      await tx.caseEvent.create({ data: buildRow(caseId, userId, ev, version, "active", `${caseId}:${logicalId}:v${version}`, source) })
-    } else {
-      const prev = maxVer.get(logicalId)
-      const version = prev ? prev + 1 : 1
-      const key = version === 1 ? `${caseId}:${logicalId}` : `${caseId}:${logicalId}:v${version}`
-      await tx.caseEvent.create({ data: buildRow(caseId, userId, ev, version, "active", key, source) })
-    }
-  }
-
-  // Tombstone any active row whose logicalId is no longer in the client log.
-  for (const [logicalId, cur] of active) {
-    if (!incomingById.has(logicalId)) {
-      await tx.caseEvent.update({ where: { id: cur.id }, data: { status: "deleted" } })
-    }
-  }
 }
 
 // Rebuild the keyEvents cache from the live (active) rows. This is what the
@@ -468,6 +454,7 @@ export async function rebuildProjection(
     where:  { caseId },
     select: {
       startedAt: true,
+      endedAt: true,
       startTime: true,
       createdAt: true,
       keyEvents: true,
@@ -482,7 +469,9 @@ export async function rebuildProjection(
     existingKeyEvents,
   )
   const start = resolveChartStart(intraopRec, log)
-  const projected = preserveUnanchored ? existingKeyEvents : projectTimetable(log, start)
+  const projected = preserveUnanchored
+    ? existingKeyEvents
+    : projectTimetable(log, start, { endedAt: intraopRec?.endedAt ?? null, asOf: new Date() })
 
   // The projected shape is a real, JSON-serializable plain object — optional
   // fields just don't structurally match Prisma's InputJsonValue (which

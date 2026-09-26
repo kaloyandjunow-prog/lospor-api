@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { closeExpiredPendingCases } from "@/lib/pending-close"
+import { autoEndStaleIntraopCases } from "@/lib/intraop-auto-end"
 import { bearerToken, matchesSecret } from "@/lib/constant-time-secret"
 
 /**
@@ -56,6 +57,9 @@ export async function GET(req: NextRequest) {
   }
 
   const sweep = await closeExpiredPendingCases()
+  // The 48-hour automatic end rides on the same five-minute appliance sweep
+  // (1.4.9); see @/lib/intraop-auto-end.
+  const autoEnd = await autoEndStaleIntraopCases()
 
-  return NextResponse.json({ ok: true, ...sweep })
+  return NextResponse.json({ ok: true, ...sweep, autoEnd })
 }

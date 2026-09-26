@@ -3,9 +3,8 @@ import {
   chartAnchorFor,
   resolveChartStart,
   shouldPreserveUnanchoredSnapshot,
-  snapshotLogForReconcile,
 } from "@/lib/case-events"
-import type { LegacyKeyEvents, LogEvent } from "@/types/timetable"
+import type { LogEvent } from "@/types/timetable"
 
 const legacyStart = (hhmm: string) => new Date(`2000-01-01T${hhmm}:00.000Z`)
 const eventAt = (ts: string): LogEvent => ({ id: ts, ts, type: "vital" })
@@ -61,46 +60,9 @@ describe("chart anchors", () => {
   }
 })
 
-describe("legacy snapshot reconciliation", () => {
-  it("does not convert a snapshot without a trusted start instant", () => {
-    const snapshot: LegacyKeyEvents = { vitals: [{ systolic: 120 }] }
-    expect(snapshotLogForReconcile(snapshot, null)).toBeNull()
-  })
-
-  it("rejects the reported Sofia mirror that would create future vitals", () => {
-    // 11:45 Europe/Sofia is 08:45Z. At 13:00 local (10:00Z), column 36
-    // represents 14:45 local and must never be synthesized.
-    const vitals = Array.from({ length: 37 }, () => ({}))
-    vitals[0] = { systolic: 150 }
-    vitals[36] = { systolic: 150 }
-    const snapshot: LegacyKeyEvents = { vitals }
-    expect(snapshotLogForReconcile(
-      snapshot,
-      Date.parse("2026-07-24T08:45:00.000Z"),
-      Date.parse("2026-07-24T10:00:00.000Z"),
-    )).toBeNull()
-  })
-
-  it("converts past columns when the start instant is trusted", () => {
-    const snapshot: LegacyKeyEvents = {
-      vitals: [{ systolic: 120 }, {}, { systolic: 118 }],
-    }
-    const log = snapshotLogForReconcile(
-      snapshot,
-      Date.parse("2026-07-24T08:45:00.000Z"),
-      Date.parse("2026-07-24T10:00:00.000Z"),
-    )
-    expect(log?.map(event => event.ts)).toEqual([
-      "2026-07-24T08:45:00.000Z",
-      "2026-07-24T08:55:00.000Z",
-    ])
-  })
-
-  it("preserves an explicit event log without re-dating it", () => {
-    const log = [eventAt("2026-07-24T08:45:00.000Z")]
-    expect(snapshotLogForReconcile({ log }, null)).toEqual(log)
-  })
-
+// 1.4.9: a legacy snapshot is never turned back into events (reverse
+// projection is retired); it is kept as stored.
+describe("legacy snapshots", () => {
   it("preserves an unanchored snapshot even when an empty log array was added", () => {
     expect(shouldPreserveUnanchoredSnapshot(null, {
       vitals: [{ systolic: 120 }],
