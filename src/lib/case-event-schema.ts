@@ -82,6 +82,12 @@ export const caseEventSchema = z.object({
   clinicalPresetId: z.string().min(1).max(240).optional(),
   clinicalPresetVersion: z.number().int().positive().optional(),
   clinicalPresetScope: z.enum(["PLATFORM", "INSTITUTION", "USER"]).optional(),
+  // When the clinician entered the event, beside when it happened (9.13.0).
+  // A stop dated ahead of its entry is asked about when its time comes, and
+  // confirmed with stopConfirmed. Validated rather than passed through: an
+  // entry time that is not an instant would make that question unanswerable.
+  recordedAt: z.string().datetime({ offset: true }).optional(),
+  stopConfirmed: z.boolean().optional(),
   // Every charted vital, bounded. Without these they arrived through
   // passthrough below and were coerced with a bare Number(), so the API stored
   // whatever a client sent -- a BIS of -500, a train-of-four of 20 -- with the

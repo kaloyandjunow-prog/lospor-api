@@ -42,6 +42,15 @@ describe("research-only application boundary", () => {
     expect(response.status).toBe(200)
     expect(response.headers.get("x-middleware-next")).toBe("1")
   })
+
+  it("stamps the server's clock as an instant, for the apps' notion of now (9.13.0)", async () => {
+    getAuthUser.mockResolvedValue({ id: "research-1", accountKind: "RESEARCH_ONLY" })
+    const before = Date.now()
+    const response = await proxy(new NextRequest("http://localhost/v1/research/query"))
+    const stamped = Number(response.headers.get("x-lospor-server-time"))
+    expect(stamped).toBeGreaterThanOrEqual(before)
+    expect(stamped).toBeLessThanOrEqual(Date.now())
+  })
 })
 
 describe("browser session CSRF boundary", () => {

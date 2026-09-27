@@ -1,5 +1,43 @@
 # Changelog - LOSPOR API
 
+## [9.13.0] - 2026-09-28
+
+### Added
+
+- Responses carry `X-LOSPOR-Server-Time` (epoch milliseconds) so the apps
+  can correct "now".
+- The event schema validates `recordedAt` and `stopConfirmed`; finalising
+  refuses unconfirmed stops.
+- **The last change made wins across devices,** not the last to arrive.
+  Each event change records when it was made (`X-Lospor-Made-At`, capped at
+  two minutes past now); an older edit or deletion arriving late is refused
+  with 412 `SUPERSEDED`, and an edit made before a deletion cannot bring the
+  entry back. Migration `20260927120000_case_event_made_at`.
+
+### Tests (test coverage review)
+
+- The edit and delete event routes on PostgreSQL: timeline rules on an edit,
+  a late older edit or deletion refused, a finalised case refused.
+- Moving a case's end earlier or start later past charted entries.
+- The preop suggestion routes: a case sees only its own suggestions,
+  reviews only through its own case, acceptance never overrides the
+  clinician's answer.
+
+### Fixed (release sweep)
+
+- An add sent again because its first reply was lost could re-create an
+  entry deleted since on another screen, or overwrite a later edit with the
+  older version. The add route now applies the same last-change-made rule and
+  answers 412 `SUPERSEDED`; a genuine retry of the same add is unaffected.
+
+### Included from 9.12.3 (never released on its own)
+
+#### Changed
+
+- **Core 9.12.3.** Stored charts now carry each infusion's real instants and
+  recorded weight basis. Version aligned with Web and Mobile 9.12.3, which the
+  appliance ships as one set.
+
 ## [9.12.2] - 2026-09-26
 
 ### Fixed

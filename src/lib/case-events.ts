@@ -324,7 +324,35 @@ async function indexRows(tx: Tx, caseId: string) {
 
 // Add a single event. Returns true if a new active row was written, false if it
 // was a no-op duplicate (idempotent retry).
-export async function addEvent(tx: Tx, caseId: string, userId: string, ev: LogEvent, source: string): Promise<boolean> {
+/**
+ * When a change was made, from the device's X-LOSPOR-Made-At (9.13.0), set
+ * from its server-corrected clock. Absent or unreadable: now. Never later
+ * than a little past now, so a device clock far ahead cannot make its change
+ * outrank every later one.
+ */
+export function madeAtFrom(header: string | null, now = new Date()): Date {
+  const parsed = header ? Date.parse(header) : NaN
+  if (!Number.isFinite(parsed)) return now
+  return new Date(Math.min(parsed, now.getTime() + 2 * 60_000))
+}
+
+/**
+ * True when the event's latest change -- an edit or its deletion -- was made
+ * after `madeAt` (9.13.0). The last change made wins across devices: an
+ * older edit arriving late is refused instead of undoing a newer one, and an
+ * edit made before a deletion cannot bring the entry back. Rows from before
+ * 9.13.0 carry no time and never refuse.
+ */
+export async function laterChangeMade(tx: Tx, caseId: string, logicalId: string, madeAt: Date): Promise<boolean> {
+  const latest = await tx.caseEvent.findFirst({
+    where: { caseId, logicalId },
+    orderBy: { version: "desc" },
+    select: { madeAt: true },
+  })
+  return latest?.madeAt != null && latest.madeAt.getTime() > madeAt.getTime()
+}
+
+export async function addEvent(tx: Tx, caseId: string, userId: string, ev: LogEvent, source: string, madeAt: Date = new Date()): Promise<boolean> {
   await ensureBackfilled(tx, caseId)
   const logicalId = ev.id!
   const { active, maxVer } = await indexRows(tx, caseId)
@@ -334,14 +362,14 @@ export async function addEvent(tx: Tx, caseId: string, userId: string, ev: LogEv
     if (sameContent(cur.metadataJson, ev)) return false      // idempotent retry
     await tx.caseEvent.update({ where: { id: cur.id }, data: { status: "superseded" } })
     const version = (maxVer.get(logicalId) ?? 1) + 1
-    await tx.caseEvent.create({ data: buildRow(caseId, userId, ev, version, "active", `${caseId}:${logicalId}:v${version}`, source) })
+    await tx.caseEvent.create({ data: { ...buildRow(caseId, userId, ev, version, "active", `${caseId}:${logicalId}:v${version}`, source), madeAt } })
     return true
   }
 
   const prev = maxVer.get(logicalId)
   const version = prev ? prev + 1 : 1
   const key = version === 1 ? `${caseId}:${logicalId}` : `${caseId}:${logicalId}:v${version}`
-  await tx.caseEvent.create({ data: buildRow(caseId, userId, ev, version, "active", key, source) })
+  await tx.caseEvent.create({ data: { ...buildRow(caseId, userId, ev, version, "active", key, source), madeAt } })
   return true
 }
 
@@ -378,12 +406,13 @@ export function cascadeDeleteIds(log: LogEvent[], logicalId: string): string[] {
 }
 
 /** Tombstone one logical event. Repeating the same delete is a safe no-op. */
-export async function deleteEvent(tx: Tx, caseId: string, logicalId: string): Promise<boolean> {
+export async function deleteEvent(tx: Tx, caseId: string, logicalId: string, madeAt: Date = new Date()): Promise<boolean> {
   await ensureBackfilled(tx, caseId)
   const { active } = await indexRows(tx, caseId)
   const current = active.get(logicalId)
   if (!current) return false
-  await tx.caseEvent.update({ where: { id: current.id }, data: { status: "deleted" } })
+  // The row now records when it was deleted, which a later edit must beat.
+  await tx.caseEvent.update({ where: { id: current.id }, data: { status: "deleted", madeAt } })
   return true
 }
 

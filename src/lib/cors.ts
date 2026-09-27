@@ -64,7 +64,7 @@ export function corsHeaders(req?: { headers: { get(name: string): string | null 
     ...(allowOrigin === null ? {} : { "Access-Control-Allow-Origin": allowOrigin }),
     "Access-Control-Allow-Methods": methods,
     "Access-Control-Allow-Headers": headers,
-    "Access-Control-Expose-Headers": "X-Request-Id, X-LOSPOR-API-Version, ETag, X-Case-Updated-At, X-Case-Revision, X-Section-Revision",
+    "Access-Control-Expose-Headers": "X-Request-Id, X-LOSPOR-API-Version, X-LOSPOR-Server-Time, ETag, X-Case-Updated-At, X-Case-Revision, X-Section-Revision",
     "Access-Control-Max-Age":       "86400",
     "Vary":                         "Origin",
   }

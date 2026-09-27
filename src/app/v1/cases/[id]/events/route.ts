@@ -4,8 +4,8 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
 import { logAudit } from "@/lib/audit"
-import { activeCaseLog, addEvent, rebuildProjection, reserveIntraopRevision, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
-import { timelineRefusal } from "@/lib/timeline-refusal"
+import { activeCaseLog, addEvent, laterChangeMade, madeAtFrom, rebuildProjection, reserveIntraopRevision, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
+import { supersededRefusal, timelineRefusal } from "@/lib/timeline-refusal"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { resolveDrugExposureConcepts } from "@/lib/relational-sync"
 import { corsHeaders } from "@/lib/cors"
@@ -139,6 +139,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return revisionConflict(existing.intraop)
       }
 
+      // An add sent again because its first reply was lost must not undo a
+      // change made to the entry since, on another screen: a deletion there
+      // would be undone, an edit overwritten by the older version (9.13.0).
+      // The last change made wins for adds as for edits and deletions.
+      const madeAt = madeAtFrom(req.headers.get("x-lospor-made-at"))
+      if (await laterChangeMade(tx, id, String(event.id), madeAt)) return supersededRefusal()
+
       // Checked before the revision is reserved, so a refusal changes nothing.
       // The same timeline rules the apps apply (Core), on the log this write
       // would produce. A refusal is a 400, which the outbox records and drops.
@@ -156,7 +163,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         throw new EventRouteResponse(revisionConflict(fresh))
       }
 
-      const added = await addEvent(tx, id, user.id, event as unknown as LogEvent, source)
+      const added = await addEvent(tx, id, user.id, event as unknown as LogEvent, source, madeAt)
       await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
       if (existing.status === "DRAFT") {
         await tx.case.update({ where: { id }, data: { status: "IN_PROGRESS" } })
