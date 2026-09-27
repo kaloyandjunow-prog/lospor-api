@@ -4,7 +4,7 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
 import { logAudit } from "@/lib/audit"
-import { activeCaseLog, addEvent, rebuildProjection, reserveIntraopRevision, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
+import { activeCaseLog, addEvent, madeAtFrom, rebuildProjection, reserveIntraopRevision, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
 import { timelineRefusal } from "@/lib/timeline-refusal"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { resolveDrugExposureConcepts } from "@/lib/relational-sync"
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         throw new EventRouteResponse(revisionConflict(fresh))
       }
 
-      const added = await addEvent(tx, id, user.id, event as unknown as LogEvent, source)
+      const added = await addEvent(tx, id, user.id, event as unknown as LogEvent, source, madeAtFrom(req.headers.get("x-lospor-made-at")))
       await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
       if (existing.status === "DRAFT") {
         await tx.case.update({ where: { id }, data: { status: "IN_PROGRESS" } })

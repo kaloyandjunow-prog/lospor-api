@@ -125,6 +125,7 @@ export type CaseEventMinAggregateOutputType = {
   sourceVersion: string | null
   schemaVersion: string | null
   idempotencyKey: string | null
+  madeAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -184,6 +185,7 @@ export type CaseEventMaxAggregateOutputType = {
   sourceVersion: string | null
   schemaVersion: string | null
   idempotencyKey: string | null
+  madeAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -245,6 +247,7 @@ export type CaseEventCountAggregateOutputType = {
   sourceVersion: number
   schemaVersion: number
   idempotencyKey: number
+  madeAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -350,6 +353,7 @@ export type CaseEventMinAggregateInputType = {
   sourceVersion?: true
   schemaVersion?: true
   idempotencyKey?: true
+  madeAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -409,6 +413,7 @@ export type CaseEventMaxAggregateInputType = {
   sourceVersion?: true
   schemaVersion?: true
   idempotencyKey?: true
+  madeAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -470,6 +475,7 @@ export type CaseEventCountAggregateInputType = {
   sourceVersion?: true
   schemaVersion?: true
   idempotencyKey?: true
+  madeAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -618,6 +624,7 @@ export type CaseEventGroupByOutputType = {
   sourceVersion: string | null
   schemaVersion: string | null
   idempotencyKey: string
+  madeAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: CaseEventCountAggregateOutputType | null
@@ -702,6 +709,7 @@ export type CaseEventWhereInput = {
   sourceVersion?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   schemaVersion?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   idempotencyKey?: Prisma.StringFilter<"CaseEvent"> | string
+  madeAt?: Prisma.DateTimeNullableFilter<"CaseEvent"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CaseEvent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CaseEvent"> | Date | string
   case?: Prisma.XOR<Prisma.CaseScalarRelationFilter, Prisma.CaseWhereInput>
@@ -764,6 +772,7 @@ export type CaseEventOrderByWithRelationInput = {
   sourceVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   schemaVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  madeAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   case?: Prisma.CaseOrderByWithRelationInput
@@ -829,6 +838,7 @@ export type CaseEventWhereUniqueInput = Prisma.AtLeast<{
   source?: Prisma.StringFilter<"CaseEvent"> | string
   sourceVersion?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   schemaVersion?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
+  madeAt?: Prisma.DateTimeNullableFilter<"CaseEvent"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CaseEvent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CaseEvent"> | Date | string
   case?: Prisma.XOR<Prisma.CaseScalarRelationFilter, Prisma.CaseWhereInput>
@@ -891,6 +901,7 @@ export type CaseEventOrderByWithAggregationInput = {
   sourceVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   schemaVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  madeAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.CaseEventCountOrderByAggregateInput
@@ -960,6 +971,7 @@ export type CaseEventScalarWhereWithAggregatesInput = {
   sourceVersion?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
   schemaVersion?: Prisma.StringNullableWithAggregatesFilter<"CaseEvent"> | string | null
   idempotencyKey?: Prisma.StringWithAggregatesFilter<"CaseEvent"> | string
+  madeAt?: Prisma.DateTimeNullableWithAggregatesFilter<"CaseEvent"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"CaseEvent"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"CaseEvent"> | Date | string
 }
@@ -1020,6 +1032,7 @@ export type CaseEventCreateInput = {
   sourceVersion?: string | null
   schemaVersion?: string | null
   idempotencyKey: string
+  madeAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   case: Prisma.CaseCreateNestedOneWithoutEventsInput
@@ -1082,6 +1095,7 @@ export type CaseEventUncheckedCreateInput = {
   sourceVersion?: string | null
   schemaVersion?: string | null
   idempotencyKey: string
+  madeAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1142,6 +1156,7 @@ export type CaseEventUpdateInput = {
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schemaVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  madeAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   case?: Prisma.CaseUpdateOneRequiredWithoutEventsNestedInput
@@ -1204,6 +1219,7 @@ export type CaseEventUncheckedUpdateInput = {
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schemaVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  madeAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1265,6 +1281,7 @@ export type CaseEventCreateManyInput = {
   sourceVersion?: string | null
   schemaVersion?: string | null
   idempotencyKey: string
+  madeAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1325,6 +1342,7 @@ export type CaseEventUpdateManyMutationInput = {
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schemaVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  madeAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1386,6 +1404,7 @@ export type CaseEventUncheckedUpdateManyInput = {
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schemaVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  madeAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1457,6 +1476,7 @@ export type CaseEventCountOrderByAggregateInput = {
   sourceVersion?: Prisma.SortOrder
   schemaVersion?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  madeAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1538,6 +1558,7 @@ export type CaseEventMaxOrderByAggregateInput = {
   sourceVersion?: Prisma.SortOrder
   schemaVersion?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  madeAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1597,6 +1618,7 @@ export type CaseEventMinOrderByAggregateInput = {
   sourceVersion?: Prisma.SortOrder
   schemaVersion?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  madeAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1721,6 +1743,7 @@ export type CaseEventCreateWithoutCaseInput = {
   sourceVersion?: string | null
   schemaVersion?: string | null
   idempotencyKey: string
+  madeAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1781,6 +1804,7 @@ export type CaseEventUncheckedCreateWithoutCaseInput = {
   sourceVersion?: string | null
   schemaVersion?: string | null
   idempotencyKey: string
+  madeAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1871,6 +1895,7 @@ export type CaseEventScalarWhereInput = {
   sourceVersion?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   schemaVersion?: Prisma.StringNullableFilter<"CaseEvent"> | string | null
   idempotencyKey?: Prisma.StringFilter<"CaseEvent"> | string
+  madeAt?: Prisma.DateTimeNullableFilter<"CaseEvent"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CaseEvent"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CaseEvent"> | Date | string
 }
@@ -1931,6 +1956,7 @@ export type CaseEventCreateManyCaseInput = {
   sourceVersion?: string | null
   schemaVersion?: string | null
   idempotencyKey: string
+  madeAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1991,6 +2017,7 @@ export type CaseEventUpdateWithoutCaseInput = {
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schemaVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  madeAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -2051,6 +2078,7 @@ export type CaseEventUncheckedUpdateWithoutCaseInput = {
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schemaVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  madeAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -2111,6 +2139,7 @@ export type CaseEventUncheckedUpdateManyWithoutCaseInput = {
   sourceVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   schemaVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string
+  madeAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -2174,6 +2203,7 @@ export type CaseEventSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   sourceVersion?: boolean
   schemaVersion?: boolean
   idempotencyKey?: boolean
+  madeAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
@@ -2236,6 +2266,7 @@ export type CaseEventSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   sourceVersion?: boolean
   schemaVersion?: boolean
   idempotencyKey?: boolean
+  madeAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
@@ -2298,6 +2329,7 @@ export type CaseEventSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   sourceVersion?: boolean
   schemaVersion?: boolean
   idempotencyKey?: boolean
+  madeAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
@@ -2360,11 +2392,12 @@ export type CaseEventSelectScalar = {
   sourceVersion?: boolean
   schemaVersion?: boolean
   idempotencyKey?: boolean
+  madeAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type CaseEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "userId" | "logicalId" | "version" | "status" | "type" | "timestamp" | "label" | "value" | "unit" | "systolic" | "diastolic" | "heartRate" | "spO2" | "etco2" | "temp" | "bis" | "tofRatio" | "cvp" | "fgfLitersPerMin" | "carrierGas" | "fio2Percent" | "fiAirPercent" | "fiN2OPercent" | "atcCode" | "drugId" | "inn" | "drugRoute" | "standardConceptId" | "mappingStatus" | "concentrationValue" | "concentrationUnit" | "formulation" | "calculationBasis" | "calculationWeightKg" | "calculationMethod" | "clinicalRuleKey" | "clinicalRuleVersion" | "clinicalRuleSourceIds" | "clinicalPresetId" | "clinicalPresetVersion" | "clinicalPresetScope" | "infId" | "fluidId" | "rate" | "concentration" | "volume" | "fluidCategory" | "agentPercent" | "clinicalEventCode" | "metadataJson" | "source" | "sourceVersion" | "schemaVersion" | "idempotencyKey" | "createdAt" | "updatedAt", ExtArgs["result"]["caseEvent"]>
+export type CaseEventOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "userId" | "logicalId" | "version" | "status" | "type" | "timestamp" | "label" | "value" | "unit" | "systolic" | "diastolic" | "heartRate" | "spO2" | "etco2" | "temp" | "bis" | "tofRatio" | "cvp" | "fgfLitersPerMin" | "carrierGas" | "fio2Percent" | "fiAirPercent" | "fiN2OPercent" | "atcCode" | "drugId" | "inn" | "drugRoute" | "standardConceptId" | "mappingStatus" | "concentrationValue" | "concentrationUnit" | "formulation" | "calculationBasis" | "calculationWeightKg" | "calculationMethod" | "clinicalRuleKey" | "clinicalRuleVersion" | "clinicalRuleSourceIds" | "clinicalPresetId" | "clinicalPresetVersion" | "clinicalPresetScope" | "infId" | "fluidId" | "rate" | "concentration" | "volume" | "fluidCategory" | "agentPercent" | "clinicalEventCode" | "metadataJson" | "source" | "sourceVersion" | "schemaVersion" | "idempotencyKey" | "madeAt" | "createdAt" | "updatedAt", ExtArgs["result"]["caseEvent"]>
 export type CaseEventInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
 }
@@ -2437,6 +2470,7 @@ export type $CaseEventPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     sourceVersion: string | null
     schemaVersion: string | null
     idempotencyKey: string
+    madeAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["caseEvent"]>
@@ -2919,6 +2953,7 @@ export interface CaseEventFieldRefs {
   readonly sourceVersion: Prisma.FieldRef<"CaseEvent", 'String'>
   readonly schemaVersion: Prisma.FieldRef<"CaseEvent", 'String'>
   readonly idempotencyKey: Prisma.FieldRef<"CaseEvent", 'String'>
+  readonly madeAt: Prisma.FieldRef<"CaseEvent", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"CaseEvent", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"CaseEvent", 'DateTime'>
 }

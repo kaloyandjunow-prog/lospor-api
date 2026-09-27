@@ -945,6 +945,11 @@ model CaseEvent {
   sourceVersion         String?
   schemaVersion         String?
   idempotencyKey        String               @unique
+  // When the change this row records was made on the device (9.13.0) --
+  // not when it arrived, which for an offline device can be hours later. The
+  // last change made wins: an edit or deletion made before this is refused.
+  // On a deleted row, when the deletion was made. Null on rows before 9.13.0.
+  madeAt                DateTime?
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
 
