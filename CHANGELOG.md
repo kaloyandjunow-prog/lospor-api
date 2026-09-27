@@ -8,6 +8,20 @@
   can correct "now".
 - The event schema validates `recordedAt` and `stopConfirmed`; finalising
   refuses unconfirmed stops.
+- **The last change made wins across devices,** not the last to arrive.
+  Each event change records when it was made (`X-Lospor-Made-At`, capped at
+  two minutes past now); an older edit or deletion arriving late is refused
+  with 412 `SUPERSEDED`, and an edit made before a deletion cannot bring the
+  entry back. Migration `20260927120000_case_event_made_at`.
+
+### Tests (test coverage review)
+
+- The edit and delete event routes on PostgreSQL: timeline rules on an edit,
+  a late older edit or deletion refused, a finalised case refused.
+- Moving a case's end earlier or start later past charted entries.
+- The preop suggestion routes: a case sees only its own suggestions,
+  reviews only through its own case, acceptance never overrides the
+  clinician's answer.
 
 ## [9.12.3] - 2026-09-27
 
