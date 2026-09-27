@@ -142,6 +142,33 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
     expect((await active(caseId)).some(row => row.logicalId === "stop")).toBe(false)
   }, 30_000)
 
+  it("an add sent again after its reply was lost cannot undo a later deletion or edit", async () => {
+    const add = (event: Record<string, unknown>, made: string) => postEvent(
+      new Request(`http://localhost/v1/cases/${caseId}/events`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-lospor-made-at": made },
+        body: JSON.stringify(event),
+      }) as never,
+      { params: Promise.resolve({ id: caseId }) },
+    )
+    const deleted = { id: "resent-deleted", type: "drug", name: "Ondansetron", dose: "4", unit: "mg", ts: at(15) }
+    expect((await add(deleted, madeAt(30))).status).toBe(200)
+    // A retry of the very same add is harmless.
+    expect((await add(deleted, madeAt(30))).status).toBe(200)
+    expect((await remove(caseId, "resent-deleted", madeAt(5))).status).toBe(200)
+    const resurrect = await add(deleted, madeAt(30))
+    expect(resurrect.status).toBe(412)
+    expect(await resurrect.json()).toMatchObject({ code: "SUPERSEDED" })
+    expect((await active(caseId)).some(row => row.logicalId === "resent-deleted")).toBe(false)
+
+    const edited = { id: "resent-edited", type: "drug", name: "Fentanyl", dose: "50", unit: "mcg", ts: at(20) }
+    expect((await add(edited, madeAt(30))).status).toBe(200)
+    expect((await put(caseId, "resent-edited", { ...edited, id: undefined, dose: "100" }, madeAt(5))).status).toBe(200)
+    expect((await add(edited, madeAt(30))).status).toBe(412)
+    const row = await prisma.caseEvent.findFirst({ where: { caseId, logicalId: "resent-edited", status: "active" }, select: { value: true, metadataJson: true } })
+    expect(JSON.stringify(row)).toContain("100")
+  }, 30_000)
+
   it("a finalised case takes no edit and no deletion -- refused by the route itself", async () => {
     expect((await post(finalCaseId, { id: "dose", type: "drug", name: "Ondansetron", dose: "4", unit: "mg", ts: at(20) })).status).toBe(200)
     await prisma.case.update({ where: { id: finalCaseId }, data: { status: "COMPLETE" } })

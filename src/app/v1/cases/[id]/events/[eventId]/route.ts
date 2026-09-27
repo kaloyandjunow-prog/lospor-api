@@ -4,19 +4,7 @@ import { z } from "zod"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { logAudit } from "@/lib/audit"
 import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent, activeCaseLog, cascadeDeleteIds, laterChangeMade, madeAtFrom, timelineIssuesFor } from "@/lib/case-events"
-
-/**
- * A newer change to this entry was made elsewhere (9.13.0). Permanent for
- * this change: the device lists it as refused and never retries it, and the
- * newer one stands.
- */
-function superseded() {
-  return NextResponse.json({
-    error: "A later change to this entry was made on another screen",
-    code: "SUPERSEDED",
-  }, { status: 412 })
-}
-import { timelineRefusal } from "@/lib/timeline-refusal"
+import { supersededRefusal as superseded, timelineRefusal } from "@/lib/timeline-refusal"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
 import { corsHeaders } from "@/lib/cors"
 import {

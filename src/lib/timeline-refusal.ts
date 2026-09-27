@@ -6,6 +6,19 @@ import type { IntraopTimelineIssue } from "@lospor/core/intraop-commands"
  * route returns: 400, which the clients' outbox records and drops rather than
  * retrying for ever, with the rule and the entry named.
  */
+/**
+ * A change to an entry made before the entry's latest change, made elsewhere
+ * (9.13.0): the last change made wins, not the last to arrive. Permanent for
+ * this change -- the device lists it as refused and never resends it -- and
+ * the same answer from every event route.
+ */
+export function supersededRefusal(): NextResponse {
+  return NextResponse.json({
+    error: "A later change to this entry was made on another screen",
+    code: "SUPERSEDED",
+  }, { status: 412 })
+}
+
 export function timelineRefusal(issues: IntraopTimelineIssue[]): NextResponse | null {
   const [issue] = issues
   if (!issue) return null
