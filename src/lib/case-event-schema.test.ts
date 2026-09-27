@@ -174,3 +174,17 @@ describe("caseEventWriteSchema timestamps", () => {
     }).success).toBe(true)
   })
 })
+
+describe("caseEventSchema entry times (9.13.0)", () => {
+  const stop = { id: "stop-1", ts: "2026-09-27T14:43:00.000Z", type: "infusion_stop", infId: "i" }
+
+  it("keeps when an event was entered and a stop's confirmation", () => {
+    const parsed = caseEventSchema.parse({ ...stop, recordedAt: "2026-09-27T14:13:00.000Z", stopConfirmed: true })
+    expect(parsed).toMatchObject({ recordedAt: "2026-09-27T14:13:00.000Z", stopConfirmed: true })
+  })
+
+  it("refuses an entry time that is not an instant", () => {
+    expect(caseEventSchema.safeParse({ ...stop, recordedAt: "14:13" }).success).toBe(false)
+    expect(caseEventSchema.safeParse({ ...stop, stopConfirmed: "yes" }).success).toBe(false)
+  })
+})
