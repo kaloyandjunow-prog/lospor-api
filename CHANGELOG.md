@@ -1,5 +1,14 @@
 # Changelog - LOSPOR API
 
+## [9.13.0] - 2026-09-27
+
+### Added
+
+- Responses carry `X-LOSPOR-Server-Time` (epoch milliseconds) so the apps
+  can correct "now".
+- The event schema validates `recordedAt` and `stopConfirmed`; finalising
+  refuses unconfirmed stops.
+
 ## [9.12.3] - 2026-09-27
 
 ### Changed
