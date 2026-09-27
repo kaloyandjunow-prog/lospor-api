@@ -22,6 +22,10 @@ function applyApiHeaders(
     response.headers.set(name, value)
   }
   response.headers.set("X-LOSPOR-API-Version", "1")
+  // The server's clock in epoch milliseconds (9.13.0): the apps correct "now"
+  // by how far the device is from it. An instant, never a time of day, so the
+  // host's time zone cannot enter into it.
+  response.headers.set("X-LOSPOR-Server-Time", String(Date.now()))
   response.headers.set("X-Request-Id", requestId)
   return response
 }
