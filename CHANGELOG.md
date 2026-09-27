@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [9.12.3] - 2026-09-27
+
+### Changed
+
+- **Core 9.12.3.** Stored charts now carry each infusion's real instants and
+  recorded weight basis. Version aligned with Web and Mobile 9.12.3, which the
+  appliance ships as one set.
+
 ## [9.12.2] - 2026-09-26
 
 ### Fixed
