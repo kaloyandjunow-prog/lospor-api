@@ -1,6 +1,6 @@
 # Changelog - LOSPOR API
 
-## [9.13.0] - 2026-09-27
+## [9.13.0] - 2026-09-28
 
 ### Added
 
@@ -23,9 +23,16 @@
   reviews only through its own case, acceptance never overrides the
   clinician's answer.
 
-## [9.12.3] - 2026-09-27
+### Fixed (release sweep)
 
-### Changed
+- An add sent again because its first reply was lost could re-create an
+  entry deleted since on another screen, or overwrite a later edit with the
+  older version. The add route now applies the same last-change-made rule and
+  answers 412 `SUPERSEDED`; a genuine retry of the same add is unaffected.
+
+### Included from 9.12.3 (never released on its own)
+
+#### Changed
 
 - **Core 9.12.3.** Stored charts now carry each infusion's real instants and
   recorded weight basis. Version aligned with Web and Mobile 9.12.3, which the
