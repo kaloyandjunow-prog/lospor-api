@@ -7,6 +7,15 @@ const { getAuthUserMock } = vi.hoisted(() => ({ getAuthUserMock: vi.fn() }))
 vi.mock("server-only", () => ({}))
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: getAuthUserMock }))
 
+// The database refuses writes to a finalised case as well (its own tests
+// cover that). Switched off where a test proves the route's own check: with
+// it off, only the route can answer 403.
+const databaseLayer = vi.hoisted(() => ({ translate: true }))
+vi.mock("@/lib/clinical-transaction", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/clinical-transaction")>()
+  return { ...actual, isCaseFinalizedDatabaseError: (error: unknown) => databaseLayer.translate && actual.isCaseFinalizedDatabaseError(error) }
+})
+
 const runPostgres = process.env.LOSPOR_POSTGRES_INTEGRATION === "true"
 if (runPostgres && !process.env.DATABASE_URL) loadDotenv({ quiet: true })
 
@@ -128,6 +137,11 @@ describe.skipIf(!runPostgres)("preop suggestion routes, PostgreSQL", () => {
     const pending = await suggest(preopId!, "A3_UNINTENTIONAL_WEIGHT_LOSS")
     expect((await review(caseId, pending.id, { status: "MAYBE" })).status).toBe(400)
     await prisma.case.update({ where: { id: caseId }, data: { status: "COMPLETE" } })
-    expect((await review(caseId, pending.id, { status: "ACCEPTED" })).status).toBe(403)
+    databaseLayer.translate = false
+    try {
+      expect((await review(caseId, pending.id, { status: "ACCEPTED" })).status).toBe(403)
+    } finally {
+      databaseLayer.translate = true
+    }
   }, 30_000)
 })

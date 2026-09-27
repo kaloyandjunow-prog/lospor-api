@@ -14,6 +14,15 @@ vi.mock("next/server", async importOriginal => {
 })
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: getAuthUserMock }))
 
+// The database refuses writes to a finalised case as well (its own tests
+// cover that). Switched off where a test proves the route's own check: with
+// it off, only the route can answer 403.
+const databaseLayer = vi.hoisted(() => ({ translate: true }))
+vi.mock("@/lib/clinical-transaction", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/lib/clinical-transaction")>()
+  return { ...actual, isCaseFinalizedDatabaseError: (error: unknown) => databaseLayer.translate && actual.isCaseFinalizedDatabaseError(error) }
+})
+
 const runPostgres = process.env.LOSPOR_POSTGRES_INTEGRATION === "true"
 if (runPostgres && !process.env.DATABASE_URL) loadDotenv({ quiet: true })
 
@@ -133,10 +142,15 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
     expect((await active(caseId)).some(row => row.logicalId === "stop")).toBe(false)
   }, 30_000)
 
-  it("a finalised case takes no edit and no deletion", async () => {
+  it("a finalised case takes no edit and no deletion -- refused by the route itself", async () => {
     expect((await post(finalCaseId, { id: "dose", type: "drug", name: "Ondansetron", dose: "4", unit: "mg", ts: at(20) })).status).toBe(200)
     await prisma.case.update({ where: { id: finalCaseId }, data: { status: "COMPLETE" } })
-    expect((await put(finalCaseId, "dose", { type: "drug", name: "Ondansetron", dose: "8", unit: "mg", ts: at(20) })).status).toBe(403)
-    expect((await remove(finalCaseId, "dose")).status).toBe(403)
+    databaseLayer.translate = false
+    try {
+      expect((await put(finalCaseId, "dose", { type: "drug", name: "Ondansetron", dose: "8", unit: "mg", ts: at(20) })).status).toBe(403)
+      expect((await remove(finalCaseId, "dose")).status).toBe(403)
+    } finally {
+      databaseLayer.translate = true
+    }
   }, 30_000)
 })
