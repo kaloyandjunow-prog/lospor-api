@@ -20,7 +20,7 @@ describe.skipIf(!runPostgres)("event changes: the last one made wins", () => {
   beforeAll(async () => {
     ;({ prisma } = await import("@/lib/prisma"))
     events = await import("@/lib/case-events")
-    await prisma.user.create({ data: { id: userId, email: `${userId}@example.test`, name: "Made-at test", passwordHash: "not-a-real-password" } })
+    await prisma.user.create({ data: { id: userId, email: `${userId}@example.test`, username: userId, usernameCanonical: userId.toLowerCase(), name: "Made-at test", passwordHash: "not-a-real-password" } })
     await prisma.case.create({ data: { id: caseId, userId, createdById: userId } })
   })
 

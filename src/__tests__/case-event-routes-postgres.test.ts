@@ -87,7 +87,7 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
       firstName: null, lastName: null, title: null, jti: null,
     })
     await prisma.user.create({
-      data: { id: userId, email: `${userId}@example.test`, name: "Event routes test", passwordHash: "not-a-real-password" },
+      data: { id: userId, email: `${userId}@example.test`, username: userId, usernameCanonical: userId.toLowerCase(), name: "Event routes test", passwordHash: "not-a-real-password" },
     })
     for (const id of [caseId, finalCaseId]) {
       await prisma.case.create({ data: { id, userId, createdById: userId, status: "IN_PROGRESS" } })
