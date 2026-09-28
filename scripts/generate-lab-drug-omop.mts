@@ -15,13 +15,15 @@
  *   atc[code]    the standard RxNorm/RxNorm Extension ids an ATC code maps to,
  *                ascending (the concept map applies only a single one), for
  *                every catalogue drug and every drug in the Bulgarian drug list
- *                (src/data/drugs.json) -- the home medications and allergies.
+ *                (Core's medication list, NHIS CL009 plus BDA) -- the home
+ *                medications and allergies.
  */
 
 import fs from "node:fs"
 import path from "node:path"
 import readline from "node:readline"
 import { CLINICAL_CATALOG, INTRAOP_DRUG_CODE_ENTRIES, PREMED_ATC_CODES } from "@lospor/core/catalog"
+import { medicationRows } from "@lospor/core/vocabulary/medications"
 import { normalizeAtcCode } from "../src/lib/atc"
 
 const argument = (name: string) => {
@@ -53,8 +55,7 @@ const catalogCodes = new Set([
   ...catalogAtc,
 ])
 // The drug list a clinician picks home medications and allergies from.
-const drugListCodes = new Set((JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "drugs.json"), "utf8")) as { atc: string }[])
-  .map(drug => normalizeAtcCode(drug.atc)).filter((code): code is string => !!code))
+const drugListCodes = new Set(medicationRows().map(drug => normalizeAtcCode(drug.atc)).filter((code): code is string => !!code))
 const atcCodes = new Set([...catalogCodes, ...drugListCodes])
 
 async function each(file: string, fn: (columns: string[]) => void) {

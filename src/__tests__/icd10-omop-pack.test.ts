@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import { describe, expect, it } from "vitest"
 import { icd10Rows } from "@lospor/core/vocabulary"
+import { medicationRows } from "@lospor/core/vocabulary/medications"
 
 type Pack = {
   source: string
@@ -60,14 +61,14 @@ describe("the bundled laboratory and drug research numbers", () => {
   })
 
   it("give the drug list a clinician picks home medications from its research numbers too", () => {
-    // Metformin and bisoprolol, as the Bulgarian drug list codes them.
+    // Metformin and bisoprolol, as the medication list (CL009) codes them.
     expect(labDrug.atc["A10BA02"]).toEqual([1503297])
     expect(labDrug.atc["C07AB07"]?.length).toBe(1)
-    const drugs = JSON.parse(fs.readFileSync("src/data/drugs.json", "utf8")) as { atc: string }[]
+    const drugs = medicationRows()
     const coded = drugs.filter(drug => drug.atc)
     const mapped = coded.filter(drug => labDrug.atc[drug.atc]?.length === 1)
-    // 2,938 of 3,525 in the 2026-09-13 Athena bundle; the rest are allergen
-    // extracts, local "00" codes, retired codes and combinations.
+    // With CL009 as the list (9.13.3), in the 2026-09-13 Athena bundle; the rest
+    // are combinations with several ingredients, herbal and homeopathic products.
     expect(mapped.length / coded.length).toBeGreaterThan(0.8)
   })
 })

@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUT = path.join(__dirname, "../src/data/drugs.json");
+const OUT = path.join(__dirname, "../data/bda/drugs.json");
 const BASE = "https://www.bda.bg/images/stories/documents/register/drugs/";
 const CONCURRENCY = 8;
 

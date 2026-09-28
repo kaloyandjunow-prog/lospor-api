@@ -9,6 +9,7 @@ import "dotenv/config"
 import { INTRAOP_DRUG_CODE_ENTRIES, PREMED_ATC_CODES } from "@lospor/core/catalog"
 import { ALL_COMPLICATIONS } from "@lospor/core/complications"
 import { PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
+import { medicationRows } from "@lospor/core/vocabulary/medications"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
@@ -783,14 +784,14 @@ async function main() {
     }, withBundled(catalogAtcStandards.get(entry.atcCode), bundledAtc(entry.atcCode, entry.name))))
   }
 
-  // The Bulgarian drug list (src/data/drugs.json): the codes of the home
-  // medications and allergies a clinician picks. Like the catalogue block, it
-  // covers a site without an Athena import, where the Atc table is empty and
-  // every home medication would otherwise export concept 0. Labelled with the
-  // code's most frequent INN in the list.
+  // Core's medication list (NHIS CL009 plus the BDA products it lacks): the
+  // codes of the home medications and allergies a clinician picks. Like the
+  // catalogue block, it covers a site without an Athena import, where the Atc
+  // table is empty and every home medication would otherwise export concept 0.
+  // Labelled with the code's most frequent INN in the list.
   const seededAtc = new Set([...atcCodes, ...catalogAtc.map(entry => entry.atcCode)])
   const drugListInn = new Map<string, Map<string, number>>()
-  for (const drug of JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "drugs.json"), "utf8")) as { inn: string; atc: string }[]) {
+  for (const drug of medicationRows()) {
     const code = normalizeAtcCode(drug.atc)
     if (!code || seededAtc.has(code)) continue
     const names = drugListInn.get(code) ?? new Map<string, number>()

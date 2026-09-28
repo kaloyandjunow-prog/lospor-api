@@ -20,7 +20,7 @@ import readline from "readline"
 import { PrismaClient, Prisma } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { parseIcd10BgRows } from "../src/lib/icd10-bg-import"
-import { normalizeAtcCode } from "../src/lib/atc"
+import { medicationRows } from "@lospor/core/vocabulary/medications"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter } satisfies Prisma.PrismaClientOptions)
@@ -342,19 +342,19 @@ async function seedBgLabels() {
   console.log(`\n  BG labels done: ${updated} codes updated.`)
 }
 
-// ── Step 5: Drug table from drugs.json ────────────────────────────────────────
+// ── Step 5: Drug table from Core's medication list ────────────────────────────
 
+// One Drug row per list row, keyed by the list's stable id (cl009:<code> or
+// bda:<hash>), so a Status mapping and an import resolve to the same row. Rows
+// seeded from the old list under drug-<name> are left alone: mappings may point
+// at them.
 async function seedDrugs() {
-  const drugFile = path.join(process.cwd(), "src", "data", "drugs.json")
-  if (!fs.existsSync(drugFile)) { console.log("drugs.json not found — skipping."); return }
-  console.log("Seeding Drug table from drugs.json...")
-
-  const drugs: { name: string; inn: string; form: string; strength: string; atc: string }[] = JSON.parse(fs.readFileSync(drugFile, "utf8"))
-  const rows = drugs.map(d => ({
-    id: `drug-${d.name.slice(0, 80)}`,
+  console.log("Seeding Drug table from the medication list...")
+  const rows = medicationRows().map(d => ({
+    id: `drug-${d.id}`,
     name: d.name,
     inn: d.inn || null,
-    atcCode: normalizeAtcCode(d.atc),
+    atcCode: d.atc || null,
     form: d.form || null,
     strength: d.strength || null,
   }))

@@ -1,5 +1,26 @@
 # Changelog - LOSPOR API
 
+## [9.13.3] - 2026-09-28
+
+### Changed
+
+- **Home medications and allergies come from Core's medication list** (NHIS
+  CL009 plus the BDA products it lacks): the drug search, the Drug table seed,
+  the concept-map seed and the bundled OMOP numbers all read it. The search no
+  longer reads the Drug table first and a separate file second, two lists that
+  could answer the same query differently. It also finds by ATC code, and each
+  result carries its list id and national code.
+- **Bundled OMOP numbers regenerated** (Athena, RxNorm 2026-06-01) for every
+  ATC code in the new list: 1,414 codes, up from 1,036; no existing mapping
+  changed. A code with several RxNorm targets is still left unmapped.
+- The old list moved to data/bda/drugs.json, as a source for the generator
+  only; the national register snapshot is data/nhis/CL009.json.
+
+### Fixed
+
+- The personal-data export test builds a whole ZIP and overran the default
+  timeout under a full parallel run; it has 20 seconds.
+
 ## [9.13.2] - 2026-09-28
 
 ### Changed
