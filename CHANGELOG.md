@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [9.13.1] - 2026-09-28
+
+### Fixed
+
+- The 9.13.0 PostgreSQL route suites create their users with a username, which
+  the hospital database requires.
+- The release manifest named docs v9.12.1; it names the released docs.
+
 ## [9.13.0] - 2026-09-28
 
 ### Added
