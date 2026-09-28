@@ -55,7 +55,7 @@ describe.skipIf(!runPostgres)("case start and end bounds, PostgreSQL", () => {
       id: userId, role: "MEMBER", institutionId: null, institutionName: null,
       firstName: null, lastName: null, title: null, jti: null,
     })
-    await prisma.user.create({ data: { id: userId, email: `${userId}@example.test`, name: "Case bounds test", passwordHash: "not-a-real-password" } })
+    await prisma.user.create({ data: { id: userId, email: `${userId}@example.test`, username: userId, usernameCanonical: userId.toLowerCase(), name: "Case bounds test", passwordHash: "not-a-real-password" } })
     await prisma.case.create({ data: { id: caseId, userId, createdById: userId, status: "IN_PROGRESS" } })
     await withLockedCaseTransaction(caseId, async tx => {
       await tx.intraoperativeRecord.create({
