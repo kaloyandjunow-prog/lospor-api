@@ -1,5 +1,18 @@
 # Changelog - LOSPOR API
 
+## [9.13.1] - 2026-09-28
+
+### Fixed
+
+- The 9.13.0 PostgreSQL route suites create their users with a username, which
+  the hospital database requires.
+- The release manifest named docs v9.12.1; it names the released docs.
+- **A delete that changes nothing leaves the intraop revision alone.** A
+  delete made before the entry's latest edit (412 SUPERSEDED), or a repeat of
+  one already done, advanced the revision anyway, and every other screen then
+  met a conflict it had no reason for. Refused before anything moves, as the
+  add and edit routes already were.
+
 ## [9.13.0] - 2026-09-28
 
 ### Added

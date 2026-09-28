@@ -169,6 +169,36 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
     expect(JSON.stringify(row)).toContain("100")
   }, 30_000)
 
+  it("a delete that changes nothing leaves the revision where it was", async () => {
+    // A superseded delete advanced the revision though it changed nothing,
+    // and every other screen then met a conflict it had no reason for.
+    const revision = async () => (await prisma.intraoperativeRecord.findUniqueOrThrow({ where: { caseId }, select: { syncRevision: true } })).syncRevision
+    const removeAt = async (made: string) => deleteEvent(
+      new Request(`http://localhost/v1/cases/${caseId}/events/rev-drug`, {
+        method: "DELETE",
+        headers: { "x-lospor-made-at": made, "x-lospor-intraop-revision": String(await revision()) },
+      }) as never,
+      { params: Promise.resolve({ id: caseId, eventId: "rev-drug" }) },
+    )
+    const drug = { type: "drug", name: "Ondansetron", dose: "4", unit: "mg", ts: at(25) }
+    expect((await post(caseId, { id: "rev-drug", ...drug })).status).toBe(200)
+    expect((await put(caseId, "rev-drug", { ...drug, dose: "8" }, madeAt(2))).status).toBe(200)
+
+    const before = await revision()
+    expect((await removeAt(madeAt(5))).status).toBe(412)
+    expect(await revision()).toBe(before)
+
+    const removed = await removeAt(madeAt(1))
+    expect(removed.status).toBe(200)
+    expect(await revision()).toBe(before + 1)
+    expect((await removed.json()).intraopRevision).toBe(before + 1)
+
+    // The same delete again, as a client whose reply was lost sends it.
+    const again = await removeAt(madeAt(0))
+    expect(again.status).toBe(200)
+    expect(await revision()).toBe(before + 1)
+  }, 30_000)
+
   it("a finalised case takes no edit and no deletion -- refused by the route itself", async () => {
     expect((await post(finalCaseId, { id: "dose", type: "drug", name: "Ondansetron", dose: "4", unit: "mg", ts: at(20) })).status).toBe(200)
     await prisma.case.update({ where: { id: finalCaseId }, data: { status: "COMPLETE" } })
