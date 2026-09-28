@@ -1,5 +1,11 @@
 # Changelog - LOSPOR API
 
+## [9.13.2] - 2026-09-28
+
+### Changed
+
+- Release manifest names web, mobile and docs 9.13.2. No API change.
+
 ## [9.13.1] - 2026-09-28
 
 ### Fixed
