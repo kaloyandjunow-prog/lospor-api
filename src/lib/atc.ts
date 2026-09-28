@@ -1,7 +1,7 @@
 /**
  * One WHO ATC code in its canonical form, or null when the value is not one.
  *
- * The Bulgarian drug list (src/data/drugs.json, scraped from the BDA register
+ * The Bulgarian drug list (now data/bda/drugs.json, scraped from the BDA register
  * by scripts/scrape-bda.mjs) carried every substance-level code as the register
  * page prints it -- "L01BC 2", not L01BC02. No ATC table, concept map or
  * research pack spells a code that way, so every home medication picked from

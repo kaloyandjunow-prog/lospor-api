@@ -5,6 +5,7 @@ import { parsePremedicationEntries, type PremedicationPhase } from "@lospor/core
 import { getLabSeverity, parseLabValue } from "@lospor/core/labs"
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { normalizeAtcCode } from "@/lib/atc"
+import { COMBINATION_SOURCE_VOCABULARY, combinationKey } from "@/lib/medication-combination"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
 // Mirror the JSON clinical arrays into queryable research rows.
@@ -53,8 +54,8 @@ type ConceptInfo = {
   mappingStatus: MappingStatus
 }
 
-/** Conditions only: a source code OMOP decomposes into several concepts. */
-const conditionConceptIds = new Map<string, number[]>()
+/** A source code OMOP decomposes into several concepts: conditions, and drug combinations. */
+const multiConceptIds = new Map<string, number[]>()
 
 let conceptCache: Map<string, ConceptInfo> | null = null
 
@@ -68,10 +69,10 @@ async function getConceptMap(db: Db) {
     where: { active: true },
     select: { domain: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, standardConceptIds: true, mappingStatus: true },
   })
-  conditionConceptIds.clear()
+  multiConceptIds.clear()
   for (const r of rows) {
-    if (r.domain === "condition" && r.standardConceptIds?.length) {
-      conditionConceptIds.set(conceptKey(r.domain, r.sourceVocabulary, r.sourceCode), r.standardConceptIds)
+    if ((r.domain === "condition" || r.domain === "drug") && r.standardConceptIds?.length) {
+      multiConceptIds.set(conceptKey(r.domain, r.sourceVocabulary, r.sourceCode), r.standardConceptIds)
     }
   }
   conceptCache = new Map(rows.map(r => [conceptKey(r.domain, r.sourceVocabulary, r.sourceCode), {
@@ -118,7 +119,7 @@ function conditionConcept(
 ): ConceptInfo & { standardConceptIds: number[] } {
   const found = concept(concepts, "condition", sourceVocabulary, sourceCode)
   const ids = sourceVocabulary && sourceCode && found.mappingStatus !== "REJECTED"
-    ? conditionConceptIds.get(conceptKey("condition", sourceVocabulary, sourceCode)) ?? []
+    ? multiConceptIds.get(conceptKey("condition", sourceVocabulary, sourceCode)) ?? []
     : []
   return { ...found, standardConceptIds: ids }
 }
@@ -455,6 +456,35 @@ function parseDrugList(raw: unknown): unknown {
     .map(s => ({ label: s }))
 }
 
+/**
+ * A home medication's concept: a combination product by its ATC code and
+ * ingredients first (9.13.3), since the ATC code's own "Maps to" names only one
+ * ingredient of some combinations; then the ATC code; then INN or label. The
+ * row keeps the ATC code as its source either way, so drug_source_value still
+ * reads "ATC:<code> - <name>".
+ */
+export function medicationConcept(
+  concepts: Map<string, ConceptInfo>,
+  atc: string | null | undefined,
+  inn: string | null | undefined,
+  label: string | null | undefined,
+): ConceptInfo & { standardConceptIds: number[] } {
+  const key = combinationKey(atc, inn)
+  const combination = key ? concepts.get(conceptKey("drug", COMBINATION_SOURCE_VOCABULARY, key)) : undefined
+  if (atc && key && combination && combination.mappingStatus !== "REJECTED") {
+    return {
+      ...combination,
+      sourceVocabulary: "ATC",
+      sourceCode: atc,
+      standardConceptIds: multiConceptIds.get(conceptKey("drug", COMBINATION_SOURCE_VOCABULARY, key)) ?? [],
+    }
+  }
+  const mapped = atc
+    ? concept(concepts, "drug", "ATC", atc)
+    : concept(concepts, "drug", inn ? "INN" : "LOSPOR_DRUG_RAW", inn ?? label)
+  return { ...mapped, standardConceptIds: [] }
+}
+
 function medicationRows(preopId: string, caseId: string, json: unknown, kind: "CURRENT" | "ALLERGY", concepts: Map<string, ConceptInfo>) {
   return arr(json)
     .filter((m: JsonItem) => m && (m.label || m.name || m.inn))
@@ -462,9 +492,7 @@ function medicationRows(preopId: string, caseId: string, json: unknown, kind: "C
       const rawAtc = str(m.atc ?? m.atcCode)
       const atc = normalizeAtcCode(rawAtc)
       const inn = str(m.inn)
-      const mapped = atc
-        ? concept(concepts, "drug", "ATC", atc)
-        : concept(concepts, "drug", inn ? "INN" : "LOSPOR_DRUG_RAW", inn ?? str(m.label ?? m.name))
+      const mapped = medicationConcept(concepts, atc, inn, str(m.label ?? m.name))
       return {
         preopId, caseId,
         kind,

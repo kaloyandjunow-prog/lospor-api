@@ -28,11 +28,13 @@ export type AggregateMedication = {
 
 export type MedicationAvgAggregateOutputType = {
   standardConceptId: number | null
+  standardConceptIds: number | null
   ordinal: number | null
 }
 
 export type MedicationSumAggregateOutputType = {
   standardConceptId: number | null
+  standardConceptIds: number[]
   ordinal: number | null
 }
 
@@ -97,6 +99,7 @@ export type MedicationCountAggregateOutputType = {
   sourceVocabulary: number
   sourceCode: number
   standardConceptId: number
+  standardConceptIds: number
   mappingStatus: number
   source: number
   clinicalSource: number
@@ -109,11 +112,13 @@ export type MedicationCountAggregateOutputType = {
 
 export type MedicationAvgAggregateInputType = {
   standardConceptId?: true
+  standardConceptIds?: true
   ordinal?: true
 }
 
 export type MedicationSumAggregateInputType = {
   standardConceptId?: true
+  standardConceptIds?: true
   ordinal?: true
 }
 
@@ -178,6 +183,7 @@ export type MedicationCountAggregateInputType = {
   sourceVocabulary?: true
   sourceCode?: true
   standardConceptId?: true
+  standardConceptIds?: true
   mappingStatus?: true
   source?: true
   clinicalSource?: true
@@ -288,6 +294,7 @@ export type MedicationGroupByOutputType = {
   sourceVocabulary: string | null
   sourceCode: string | null
   standardConceptId: number | null
+  standardConceptIds: number[]
   mappingStatus: $Enums.ConceptMappingStatus
   source: string
   clinicalSource: string | null
@@ -334,6 +341,7 @@ export type MedicationWhereInput = {
   sourceVocabulary?: Prisma.StringNullableFilter<"Medication"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"Medication"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"Medication"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Medication">
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"Medication"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"Medication"> | string
   clinicalSource?: Prisma.StringNullableFilter<"Medication"> | string | null
@@ -358,6 +366,7 @@ export type MedicationOrderByWithRelationInput = {
   sourceVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceCode?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
   clinicalSource?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -385,6 +394,7 @@ export type MedicationWhereUniqueInput = Prisma.AtLeast<{
   sourceVocabulary?: Prisma.StringNullableFilter<"Medication"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"Medication"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"Medication"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Medication">
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"Medication"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"Medication"> | string
   clinicalSource?: Prisma.StringNullableFilter<"Medication"> | string | null
@@ -409,6 +419,7 @@ export type MedicationOrderByWithAggregationInput = {
   sourceVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceCode?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
   clinicalSource?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -440,6 +451,7 @@ export type MedicationScalarWhereWithAggregatesInput = {
   sourceVocabulary?: Prisma.StringNullableWithAggregatesFilter<"Medication"> | string | null
   sourceCode?: Prisma.StringNullableWithAggregatesFilter<"Medication"> | string | null
   standardConceptId?: Prisma.IntNullableWithAggregatesFilter<"Medication"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Medication">
   mappingStatus?: Prisma.EnumConceptMappingStatusWithAggregatesFilter<"Medication"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringWithAggregatesFilter<"Medication"> | string
   clinicalSource?: Prisma.StringNullableWithAggregatesFilter<"Medication"> | string | null
@@ -462,6 +474,7 @@ export type MedicationCreateInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.MedicationCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -486,6 +499,7 @@ export type MedicationUncheckedCreateInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.MedicationCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -508,6 +522,7 @@ export type MedicationUpdateInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.MedicationUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -532,6 +547,7 @@ export type MedicationUncheckedUpdateInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.MedicationUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -555,6 +571,7 @@ export type MedicationCreateManyInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.MedicationCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -577,6 +594,7 @@ export type MedicationUpdateManyMutationInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.MedicationUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -600,6 +618,7 @@ export type MedicationUncheckedUpdateManyInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.MedicationUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -633,6 +652,7 @@ export type MedicationCountOrderByAggregateInput = {
   sourceVocabulary?: Prisma.SortOrder
   sourceCode?: Prisma.SortOrder
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   mappingStatus?: Prisma.SortOrder
   source?: Prisma.SortOrder
   clinicalSource?: Prisma.SortOrder
@@ -643,6 +663,7 @@ export type MedicationCountOrderByAggregateInput = {
 
 export type MedicationAvgOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   ordinal?: Prisma.SortOrder
 }
 
@@ -694,6 +715,7 @@ export type MedicationMinOrderByAggregateInput = {
 
 export type MedicationSumOrderByAggregateInput = {
   standardConceptId?: Prisma.SortOrder
+  standardConceptIds?: Prisma.SortOrder
   ordinal?: Prisma.SortOrder
 }
 
@@ -739,8 +761,17 @@ export type MedicationUncheckedUpdateManyWithoutPreopNestedInput = {
   deleteMany?: Prisma.MedicationScalarWhereInput | Prisma.MedicationScalarWhereInput[]
 }
 
+export type MedicationCreatestandardConceptIdsInput = {
+  set: number[]
+}
+
 export type EnumMedicationKindFieldUpdateOperationsInput = {
   set?: $Enums.MedicationKind
+}
+
+export type MedicationUpdatestandardConceptIdsInput = {
+  set?: number[]
+  push?: number | number[]
 }
 
 export type MedicationCreateWithoutPreopInput = {
@@ -757,6 +788,7 @@ export type MedicationCreateWithoutPreopInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.MedicationCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -779,6 +811,7 @@ export type MedicationUncheckedCreateWithoutPreopInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.MedicationCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -831,6 +864,7 @@ export type MedicationScalarWhereInput = {
   sourceVocabulary?: Prisma.StringNullableFilter<"Medication"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"Medication"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"Medication"> | number | null
+  standardConceptIds?: Prisma.IntNullableListFilter<"Medication">
   mappingStatus?: Prisma.EnumConceptMappingStatusFilter<"Medication"> | $Enums.ConceptMappingStatus
   source?: Prisma.StringFilter<"Medication"> | string
   clinicalSource?: Prisma.StringNullableFilter<"Medication"> | string | null
@@ -853,6 +887,7 @@ export type MedicationCreateManyPreopInput = {
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
+  standardConceptIds?: Prisma.MedicationCreatestandardConceptIdsInput | number[]
   mappingStatus?: $Enums.ConceptMappingStatus
   source?: string
   clinicalSource?: string | null
@@ -875,6 +910,7 @@ export type MedicationUpdateWithoutPreopInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.MedicationUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -897,6 +933,7 @@ export type MedicationUncheckedUpdateWithoutPreopInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.MedicationUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -919,6 +956,7 @@ export type MedicationUncheckedUpdateManyWithoutPreopInput = {
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  standardConceptIds?: Prisma.MedicationUpdatestandardConceptIdsInput | number[]
   mappingStatus?: Prisma.EnumConceptMappingStatusFieldUpdateOperationsInput | $Enums.ConceptMappingStatus
   source?: Prisma.StringFieldUpdateOperationsInput | string
   clinicalSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -944,6 +982,7 @@ export type MedicationSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -968,6 +1007,7 @@ export type MedicationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -992,6 +1032,7 @@ export type MedicationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -1016,6 +1057,7 @@ export type MedicationSelectScalar = {
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
+  standardConceptIds?: boolean
   mappingStatus?: boolean
   source?: boolean
   clinicalSource?: boolean
@@ -1024,7 +1066,7 @@ export type MedicationSelectScalar = {
   createdAt?: boolean
 }
 
-export type MedicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "preopId" | "caseId" | "kind" | "drugId" | "nameRaw" | "inn" | "atcCode" | "dose" | "route" | "frequency" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "mappingStatus" | "source" | "clinicalSource" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["medication"]>
+export type MedicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "preopId" | "caseId" | "kind" | "drugId" | "nameRaw" | "inn" | "atcCode" | "dose" | "route" | "frequency" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "standardConceptIds" | "mappingStatus" | "source" | "clinicalSource" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["medication"]>
 export type MedicationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   preop?: boolean | Prisma.PreoperativeAssessmentDefaultArgs<ExtArgs>
 }
@@ -1055,6 +1097,12 @@ export type $MedicationPayload<ExtArgs extends runtime.Types.Extensions.Internal
     sourceVocabulary: string | null
     sourceCode: string | null
     standardConceptId: number | null
+    /**
+     * Every ingredient concept of a combination product with no combination
+     * concept of its own: standardConceptId is then null and the export writes
+     * one drug_exposure row per id. Empty otherwise.
+     */
+    standardConceptIds: number[]
     mappingStatus: $Enums.ConceptMappingStatus
     source: string
     clinicalSource: string | null
@@ -1499,6 +1547,7 @@ export interface MedicationFieldRefs {
   readonly sourceVocabulary: Prisma.FieldRef<"Medication", 'String'>
   readonly sourceCode: Prisma.FieldRef<"Medication", 'String'>
   readonly standardConceptId: Prisma.FieldRef<"Medication", 'Int'>
+  readonly standardConceptIds: Prisma.FieldRef<"Medication", 'Int[]'>
   readonly mappingStatus: Prisma.FieldRef<"Medication", 'ConceptMappingStatus'>
   readonly source: Prisma.FieldRef<"Medication", 'String'>
   readonly clinicalSource: Prisma.FieldRef<"Medication", 'String'>

@@ -44,6 +44,13 @@ function makeDb(caseRow: Record<string, unknown>) {
         { domain: "measurement", sourceVocabulary: "NHIS_CL024", sourceCode: "00-00E-00", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
         { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N05BA01", standardConceptId: 19019905, mappingStatus: "MAPPED" },
         { domain: "drug", sourceVocabulary: "ATC", sourceCode: "N05CD08", standardConceptId: 708298, mappingStatus: "MAPPED" },
+        // Combination products (9.13.3): C09DA03's own "Maps to" is valsartan only.
+        { domain: "drug", sourceVocabulary: "ATC", sourceCode: "C09DA03", standardConceptId: 1308842, mappingStatus: "MAPPED" },
+        { domain: "drug", sourceVocabulary: "LOSPOR_DRUG_COMBINATION", sourceCode: "C09DA03|hydrochlorothiazide+valsartan", standardConceptId: 40045128, mappingStatus: "MAPPED" },
+        { domain: "drug", sourceVocabulary: "LOSPOR_DRUG_COMBINATION", sourceCode: "J01CR02|amoxicillin+clavulanic acid", standardConceptId: null, standardConceptIds: [1713332, 1759842], mappingStatus: "MAPPED" },
+        { domain: "drug", sourceVocabulary: "LOSPOR_DRUG_COMBINATION", sourceCode: "C09DA03|indapamide+valsartan", standardConceptId: null, mappingStatus: "SOURCE_ONLY" },
+        { domain: "drug", sourceVocabulary: "LOSPOR_DRUG_COMBINATION", sourceCode: "C09DA01|hydrochlorothiazide+losartan", standardConceptId: 99, mappingStatus: "REJECTED" },
+        { domain: "drug", sourceVocabulary: "ATC", sourceCode: "C09DA01", standardConceptId: 1367500, mappingStatus: "MAPPED" },
         { domain: "procedure", sourceVocabulary: "LOSPOR_VASCULAR_ACCESS", sourceCode: "IJ", standardConceptId: 433590, mappingStatus: "MAPPED" },
       ]),
     },
@@ -486,6 +493,35 @@ describe("syncCaseRelational", () => {
         expect.objectContaining({ sourceCode: "K35", standardConceptId: 12345, standardConceptIds: [] }),
       ],
     })
+  })
+
+  it("maps a combination product to its combination concept or its ingredients, never to one ingredient", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const row = makeCaseRow()
+    row.preop.currentMedications = JSON.stringify([
+      { label: "Valsartan, Hydrochlorothiazide 160 mg/12,5 mg", inn: "Valsartan, Hydrochlorothiazide", atcCode: "C09DA03" },
+      { label: "Amoxicillin/Clavulanic acid", inn: "Amoxicillin/ Clavulanic acid", atcCode: "j01cr02" },
+      { label: "Valomindo", inn: "Valsartan, Indapamide", atcCode: "C09DA03" },
+      { label: "Valsartan 80 mg", inn: "Valsartan", atcCode: "C09DA03" },
+      { label: "Lorista H", inn: "Losartan, Hydrochlorothiazide", atcCode: "C09DA01" },
+    ]) as never
+    const db = makeDb(row)
+
+    await syncCaseRelational(db as never, "case-1")
+
+    const saved = db.medication.createMany.mock.calls[0][0].data.filter((m: { kind: string }) => m.kind === "CURRENT")
+    expect(saved.map((m: Record<string, unknown>) => [m.sourceVocabulary, m.sourceCode, m.standardConceptId, m.standardConceptIds, m.mappingStatus])).toEqual([
+      // Its own Clinical Drug Form, with the ATC code still the source.
+      ["ATC", "C09DA03", 40045128, [], "MAPPED"],
+      // No combination concept fits: every ingredient, one export row each.
+      ["ATC", "J01CR02", null, [1713332, 1759842], "MAPPED"],
+      // Only part of it named: concept 0, not valsartan alone.
+      ["ATC", "C09DA03", null, [], "SOURCE_ONLY"],
+      // A single substance is not a combination: its ATC code decides.
+      ["ATC", "C09DA03", 1308842, [], "MAPPED"],
+      // A rejected combination mapping is never applied; the ATC code decides.
+      ["ATC", "C09DA01", 1367500, [], "MAPPED"],
+    ])
   })
 
   it("codes each premedication as its drug, under the day it was given", async () => {

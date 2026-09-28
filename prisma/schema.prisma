@@ -523,7 +523,7 @@ model Atc {
   @@index([level])
 }
 
-// Drug registry (seeded from drugs.json, searchable by name/INN/ATC)
+// Drug registry (seeded from Core's medication list; the targets of medication mappings)
 model Drug {
   id            String          @id @default(cuid())
   name          String
@@ -1978,6 +1978,10 @@ model Medication {
   sourceVocabulary  String?
   sourceCode        String?
   standardConceptId Int?
+  /// Every ingredient concept of a combination product with no combination
+  /// concept of its own: standardConceptId is then null and the export writes
+  /// one drug_exposure row per id. Empty otherwise.
+  standardConceptIds Int[]                 @default([])
   mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
   source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
   clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.

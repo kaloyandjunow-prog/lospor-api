@@ -631,7 +631,14 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "recorded as a premedication or an intraop dose (both 32818, EHR "
       + "administration record; see event.atcCode). An allergy is not "
       + "included here: Medication.kind ALLERGY is the opposite claim and is "
-      + "exported as an observation instead, so it can never be read as a dose.",
+      + "exported as an observation instead, so it can never be read as a dose. "
+      + "A combination product (9.13.3) takes its own RxNorm Clinical Drug Form "
+      + "where one matches every product of those ingredients in the list; "
+      + "otherwise it is one row per ingredient, each with the product in "
+      + "drug_source_value and no dose, since the recorded dose is the "
+      + "product's; and concept 0 when RxNorm names only some of its ingredients. "
+      + "The ATC code alone is not used for a combination, since its \"Maps to\" "
+      + "can name one ingredient of several.",
     type: "concept_id",
     missingnessRule: "No row = no current medications recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "medications",

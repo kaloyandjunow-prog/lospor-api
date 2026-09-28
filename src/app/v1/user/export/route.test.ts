@@ -69,5 +69,6 @@ describe("personal data archive", () => {
         activatedAt: true,
       }),
     }))
-  })
+  // Builds a whole ZIP: under a full parallel run it overran the default 5 s.
+  }, 20_000)
 })

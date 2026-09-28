@@ -1,5 +1,38 @@
 # Changelog - LOSPOR API
 
+## [9.13.3] - 2026-09-28
+
+### Changed
+
+- **Home medications and allergies come from Core's medication list** (NHIS
+  CL009 plus the BDA products it lacks): the drug search, the Drug table seed,
+  the concept-map seed and the bundled OMOP numbers all read it. The search no
+  longer reads the Drug table first and a separate file second, two lists that
+  could answer the same query differently. It also finds by ATC code, and each
+  result carries its list id and national code.
+- **Bundled OMOP numbers regenerated** (Athena, RxNorm 2026-06-01) for every
+  ATC code in the new list: 1,414 codes, up from 1,036; no existing mapping
+  changed.
+- The old list moved to data/bda/drugs.json, as a source for the generator
+  only; the national register snapshot is data/nhis/CL009.json.
+
+### Fixed
+
+- **A combination home medication exports as the combination** (OMOP's
+  convention). It was mapped through its ATC code alone, whose Athena "Maps
+  to" names one ingredient of some combinations: Co-Diovan (valsartan with
+  hydrochlorothiazide, C09DA03) exported as valsartan, and a code naming
+  several ingredients exported concept 0. A combination now takes its own
+  RxNorm Clinical Drug Form where one matches every product of those
+  ingredients in the list (161 ingredient sets); otherwise it is one
+  drug_exposure row per ingredient, each naming the product and carrying no
+  dose (110); and concept 0 where RxNorm names only some of its ingredients
+  (23). New column Medication.standardConceptIds (migration
+  20260928120000_medication_concept_ids); rows saved before keep what they
+  had. Single-substance products are unchanged.
+- The personal-data export test builds a whole ZIP and overran the default
+  timeout under a full parallel run; it has 20 seconds.
+
 ## [9.13.2] - 2026-09-28
 
 ### Changed

@@ -9,6 +9,8 @@ import "dotenv/config"
 import { INTRAOP_DRUG_CODE_ENTRIES, PREMED_ATC_CODES } from "@lospor/core/catalog"
 import { ALL_COMPLICATIONS } from "@lospor/core/complications"
 import { PROCEDURE_GROUP_SYSTEM } from "@lospor/core/procedure-codes"
+import { medicationRows } from "@lospor/core/vocabulary/medications"
+import { COMBINATION_SOURCE_VOCABULARY } from "../src/lib/medication-combination"
 import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
@@ -594,7 +596,12 @@ async function main() {
   // A site's imported Athena still wins where it resolves a code.
   const labDrugPack = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "src", "data", "lab-drug-omop.json"), "utf8"),
-  ) as { source: string; loinc: Record<string, number>; atc: Record<string, number[]> }
+  ) as {
+    source: string
+    loinc: Record<string, number>
+    atc: Record<string, number[]>
+    combinations?: Record<string, { concept: number } | { ingredients: number[] } | { unmapped: true }>
+  }
   const withBundled = (
     athenaResolution: StandardMapResolution | undefined,
     bundled: StandardMapResolution | undefined,
@@ -783,14 +790,14 @@ async function main() {
     }, withBundled(catalogAtcStandards.get(entry.atcCode), bundledAtc(entry.atcCode, entry.name))))
   }
 
-  // The Bulgarian drug list (src/data/drugs.json): the codes of the home
-  // medications and allergies a clinician picks. Like the catalogue block, it
-  // covers a site without an Athena import, where the Atc table is empty and
-  // every home medication would otherwise export concept 0. Labelled with the
-  // code's most frequent INN in the list.
+  // Core's medication list (NHIS CL009 plus the BDA products it lacks): the
+  // codes of the home medications and allergies a clinician picks. Like the
+  // catalogue block, it covers a site without an Athena import, where the Atc
+  // table is empty and every home medication would otherwise export concept 0.
+  // Labelled with the code's most frequent INN in the list.
   const seededAtc = new Set([...atcCodes, ...catalogAtc.map(entry => entry.atcCode)])
   const drugListInn = new Map<string, Map<string, number>>()
-  for (const drug of JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "drugs.json"), "utf8")) as { inn: string; atc: string }[]) {
+  for (const drug of medicationRows()) {
     const code = normalizeAtcCode(drug.atc)
     if (!code || seededAtc.has(code)) continue
     const names = drugListInn.get(code) ?? new Map<string, number>()
@@ -807,6 +814,54 @@ async function main() {
       sourceCode: code,
       sourceLabelEn: label,
     }, withBundled(drugListStandards.get(code), bundledAtc(code, label))))
+  }
+
+  // Combination products (9.13.3), keyed by ATC code and ingredients
+  // (src/lib/medication-combination.ts): the combination's own RxNorm concept,
+  // or every ingredient -- one drug_exposure row each -- or, when only part of
+  // it could be named, nothing. A home medication consults these before its
+  // ATC code, whose "Maps to" names one ingredient of some combinations.
+  for (const [key, target] of Object.entries(labDrugPack.combinations ?? {})) {
+    const base = {
+      domain: "drug",
+      sourceVocabulary: COMBINATION_SOURCE_VOCABULARY,
+      sourceCode: key,
+      sourceLabelEn: key.split("|")[1]?.split("+").join(" / ") ?? key,
+      athenaVersion: labDrugPack.source,
+    }
+    if ("concept" in target) {
+      seeds.push({
+        ...base,
+        standardVocabulary: "RxNorm",
+        standardConceptId: target.concept,
+        mappingStatus: ConceptMappingStatus.MAPPED,
+        mappingMethod: "bundled-combination-drug-form",
+        mappingConfidence: 0.95,
+        reviewed: false,
+        mappingNotes: "The combination's own Clinical Drug Form, matching every product of these ingredients in the list.",
+      })
+    } else if ("ingredients" in target) {
+      seeds.push({
+        ...base,
+        standardVocabulary: "RxNorm",
+        standardConceptId: null,
+        standardConceptIds: target.ingredients,
+        mappingStatus: ConceptMappingStatus.MAPPED,
+        mappingMethod: "bundled-combination-ingredients",
+        mappingConfidence: 0.9,
+        reviewed: false,
+        mappingNotes: `No single combination concept fits; the export writes one drug row for each of ${target.ingredients.length} ingredients.`,
+      })
+    } else {
+      seeds.push({
+        ...base,
+        standardConceptId: null,
+        mappingStatus: ConceptMappingStatus.SOURCE_ONLY,
+        mappingMethod: "combination-partly-named",
+        reviewed: false,
+        mappingNotes: "RxNorm names only some of these ingredients; exported as concept 0 rather than as part of the combination.",
+      })
+    }
   }
 
   // The raw-name fallback. `resolveDrugConcept` reaches for this only when an

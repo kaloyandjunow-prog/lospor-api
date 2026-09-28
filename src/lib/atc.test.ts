@@ -1,6 +1,5 @@
-import fs from "node:fs"
-import path from "node:path"
 import { describe, expect, it } from "vitest"
+import { medicationRows } from "@lospor/core/vocabulary/medications"
 import { normalizeAtcCode } from "./atc"
 
 describe("normalizeAtcCode", () => {
@@ -23,7 +22,7 @@ describe("normalizeAtcCode", () => {
   })
 
   it("leaves no code in the shipped drug list that the concept map could not match", () => {
-    const drugs = JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "drugs.json"), "utf8")) as { atc: string }[]
+    const drugs = medicationRows()
     const unrepaired = drugs.filter(drug => drug.atc && normalizeAtcCode(drug.atc) !== drug.atc)
     expect(unrepaired.slice(0, 5)).toEqual([])
   })

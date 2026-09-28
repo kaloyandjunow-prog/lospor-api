@@ -199,7 +199,7 @@ export const CASE_SELECT = {
       medications: {
         select: {
           kind: true, nameRaw: true, inn: true, atcCode: true, dose: true, route: true,
-          sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, ordinal: true,
+          sourceVocabulary: true, sourceCode: true, standardConceptId: true, standardConceptIds: true, mappingStatus: true, ordinal: true,
         },
         orderBy: [{ kind: "asc" }, { ordinal: "asc" }],
       },

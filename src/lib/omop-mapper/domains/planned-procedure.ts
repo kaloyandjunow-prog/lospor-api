@@ -99,10 +99,16 @@ export function mapPlannedProcedureAndMedicationsToOmop(
     // into "not recorded", the same class of bug the fluid figures below
     // were tested against and this line was not.
     const dose = numOrNull(med.dose)
-    ctx.drugs.push({
+    // A combination product with no combination concept of its own is one row
+    // per ingredient (OMOP's convention), each carrying the product in
+    // drug_source_value. The recorded dose is the product's, not any one
+    // ingredient's, so those rows carry no dose.
+    const concepts = med.standardConceptIds?.length ? med.standardConceptIds : [med.standardConceptId ?? 0]
+    const split = concepts.length > 1
+    for (const conceptId of concepts) ctx.drugs.push({
       drug_exposure_id: nextId(),
       person_id: ctx.personId,
-      drug_concept_id: med.standardConceptId ?? 0,
+      drug_concept_id: conceptId,
       drug_exposure_start_date: isoDate(c.createdAt),
       // A single administration, not an interval: no end to record.
       drug_exposure_end_date: null,
@@ -118,8 +124,8 @@ export function mapPlannedProcedureAndMedicationsToOmop(
       // OMOP *source* concept is resolved for it today, so this stays null
       // rather than being filled with something that is not a concept id.
       drug_source_concept_id: null,
-      dose_value: dose,
-      dose_unit_source_value: doseUnitOf(med.dose),
+      dose_value: split ? null : dose,
+      dose_unit_source_value: split ? null : doseUnitOf(med.dose),
       route_source_value: med.route,
       visit_occurrence_id: ctx.visitId,
     })
