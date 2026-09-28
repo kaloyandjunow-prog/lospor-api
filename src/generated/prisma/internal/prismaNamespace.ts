@@ -6791,6 +6791,7 @@ export const MedicationScalarFieldEnum = {
   sourceVocabulary: 'sourceVocabulary',
   sourceCode: 'sourceCode',
   standardConceptId: 'standardConceptId',
+  standardConceptIds: 'standardConceptIds',
   mappingStatus: 'mappingStatus',
   source: 'source',
   clinicalSource: 'clinicalSource',

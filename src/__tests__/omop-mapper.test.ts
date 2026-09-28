@@ -1413,6 +1413,34 @@ describe("an ICD-10 code OMOP decomposes into several concepts", () => {
   })
 })
 
+describe("a combination home medication (9.13.3)", () => {
+  const exported = (medications: Record<string, unknown>[]) => {
+    const base = completeCase() as unknown as { preop: Record<string, unknown> }
+    const bundle = mapCasesToOmop([{ ...base, preop: { ...base.preop, medications } } as never], {
+      userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+      excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+    })
+    return bundle.drug_exposure.filter(row => row.drug_type_concept_id === 32865)
+  }
+  const med = (extra: Record<string, unknown>) => ({
+    kind: "CURRENT", nameRaw: "Augmentin", inn: "Amoxicillin, Clavulanic acid", atcCode: "J01CR02",
+    dose: "875 mg", route: "PO", sourceVocabulary: "ATC", sourceCode: "J01CR02", mappingStatus: "MAPPED", ordinal: 0, ...extra,
+  })
+
+  it("is one row per ingredient when it has no combination concept, each naming the product and none a dose", () => {
+    const rows = exported([med({ standardConceptId: null, standardConceptIds: [1713332, 1759842] })])
+    expect(rows.map(row => row.drug_concept_id)).toEqual([1713332, 1759842])
+    expect(rows.every(row => row.drug_source_value === rows[0].drug_source_value && String(row.drug_source_value).includes("J01CR02"))).toBe(true)
+    expect(rows.map(row => [row.dose_value, row.dose_unit_source_value, row.route_source_value])).toEqual([[null, null, "PO"], [null, null, "PO"]])
+    expect(new Set(rows.map(row => row.drug_exposure_id)).size).toBe(2)
+  })
+
+  it("is one row, with its dose, when it has its own concept", () => {
+    const rows = exported([med({ standardConceptId: 40045128, standardConceptIds: [] })])
+    expect(rows.map(row => [row.drug_concept_id, row.dose_value])).toEqual([[40045128, 875]])
+  })
+})
+
 describe("mapping summary provenance", () => {
   const summaryFor = (mappingStatus: string) => {
     const base = completeCase() as unknown as { preop: { diagnoses: Record<string, unknown>[] } }
