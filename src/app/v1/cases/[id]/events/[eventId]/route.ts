@@ -183,23 +183,21 @@ export async function DELETE(
         return conflict(existing.intraop)
       }
 
-      const revisionReserved = revision != null && !!existing.intraop
-      if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
-        const fresh = await tx.intraoperativeRecord.findUnique({
-          where: { caseId: id },
-          select: { updatedAt: true, syncRevision: true },
-        })
-        return conflict(fresh)
-      }
       // A deletion made before the entry's latest edit does not undo it (9.13.0).
+      // Refused before anything moves the revision, as PUT and POST refuse: the
+      // refusal changes nothing, and advancing the revision anyway sent every
+      // other screen into a needless conflict.
       if (await laterChangeMade(tx, id, eventId, madeAt)) return superseded()
       // Deleting a start deletes its changes and its stop with it (Core), so
-      // a client's separate deletes for those arrive as harmless no-ops.
+      // a client's separate deletes for those arrive as harmless no-ops --
+      // no-ops for the revision too, which moves only when something went.
       let removed = false
       for (const logicalId of cascadeDeleteIds(await activeCaseLog(tx, id), eventId)) {
         if (await deleteEvent(tx, id, logicalId, madeAt)) removed = true
       }
-      if (removed) await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+      // The revision was checked above under the case lock, which every
+      // writer takes, so the rebuild's own increment is the reservation.
+      if (removed) await rebuildProjection(tx, id)
       const fresh = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
