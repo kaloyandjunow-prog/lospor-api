@@ -523,7 +523,7 @@ model Atc {
   @@index([level])
 }
 
-// Drug registry (seeded from drugs.json, searchable by name/INN/ATC)
+// Drug registry (seeded from Core's medication list; the targets of medication mappings)
 model Drug {
   id            String          @id @default(cuid())
   name          String
