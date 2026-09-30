@@ -1,5 +1,14 @@
 # Changelog - LOSPOR API
 
+## [9.13.4] - 2026-09-30
+
+### Fixed
+
+- **Finalization honors the Case clinical mode.** Submit-for-review, manual
+  finalization, automatic close, and direct-create readiness now pass the
+  authoritative Case mode to Core, so imported pediatric pre-op rows without a
+  repeated mode are evaluated with pediatric age rules.
+
 ## [9.13.3] - 2026-09-28
 
 ### Changed

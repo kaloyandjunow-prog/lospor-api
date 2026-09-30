@@ -118,13 +118,14 @@ export async function closeExpiredPendingCases(
         // the case unfinalized, or the status moved on since the scan above.
         const current = await tx.case.findUnique({
           where: { id: candidate.id },
-          select: { status: true, awaitingReviewAt: true, userId: true },
+          select: { status: true, awaitingReviewAt: true, userId: true, clinicalMode: true },
         })
         if (!current || current.status !== "AWAITING_REVIEW") return "skipped" as const
         if (!current.awaitingReviewAt || current.awaitingReviewAt > cutoff) return "skipped" as const
 
         return finalizeCaseWithinTransaction(tx, candidate.id, current.userId, {
           currentStatus: current.status,
+          clinicalMode: current.clinicalMode,
           automatic: true,
         })
       })

@@ -48,6 +48,15 @@ const COMPLETE_PREOP = {
   mallampati: "II", asaScore: "II",
 }
 
+// Imported pediatric pre-op data may carry ageValue/ageUnit without repeating
+// the Case row's clinicalMode. This fixture intentionally has no mode field.
+const COMPLETE_PAEDIATRIC_PREOP = {
+  ageValue: 7, ageUnit: "YEARS", sex: "MALE", heightCm: 122, weightKg: 24,
+  diagnosis: "Recurrent tonsillitis", plannedProcedure: "Tonsillectomy",
+  bpSystolic: 106, bpDiastolic: 68, heartRate: 88, respiratoryRate: 20,
+  mallampati: "II", asaScore: "II",
+}
+
 const COMPLETE_INTRAOP = {
   id: "intraop-1",
   startedAt: new Date("2026-09-07T08:00:00.000Z"),
@@ -92,6 +101,19 @@ describe("POST /api/cases/:id/submit-for-review", () => {
       expect.anything(), "user-1", "CASE_SUBMITTED_FOR_REVIEW", "case-1",
       expect.objectContaining({ from: "IN_PROGRESS", to: "AWAITING_REVIEW" }),
     )
+  })
+
+  it("uses the Case pediatric mode when the imported pre-op row has no mode", async () => {
+    findUniqueMock.mockResolvedValue({
+      userId: "user-1", status: "IN_PROGRESS", institutionId: "inst-1",
+      clinicalMode: "PEDIATRIC", awaitingReviewAt: null,
+    })
+    findPreopMock.mockResolvedValue(COMPLETE_PAEDIATRIC_PREOP)
+
+    const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
+
+    expect(res.status).toBe(200)
+    expect((await res.json()).status).toBe("AWAITING_REVIEW")
   })
 
   // The clients show "already finalised" for this code; an uncoded 409 read

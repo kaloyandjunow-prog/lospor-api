@@ -5,6 +5,7 @@ import {
   evaluateCaseFinalization,
   type ClinicalIssue,
 } from "@lospor/core/clinical-validation"
+import type { ClinicalMode } from "@lospor/core/pediatric"
 import type { PrismaClient, Prisma } from "@/generated/prisma/client"
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -69,7 +70,7 @@ export class CaseFinalizationStepError extends Error {
  * validator happens to consult today would drift the moment core changes what
  * "complete" means.
  */
-export async function evaluateCaseReadiness(tx: Db, caseId: string) {
+export async function evaluateCaseReadiness(tx: Db, caseId: string, clinicalMode: ClinicalMode) {
   const preop = await tx.preoperativeAssessment.findUnique({ where: { caseId } })
   const intraop = await tx.intraoperativeRecord.findUnique({
     where: { caseId },
@@ -95,7 +96,7 @@ export async function evaluateCaseReadiness(tx: Db, caseId: string) {
       disposition: true,
     },
   })
-  return evaluateCaseFinalization({ preop, intraop, postop })
+  return evaluateCaseFinalization({ clinicalMode, preop, intraop, postop })
 }
 
 /**
@@ -113,10 +114,10 @@ export async function finalizeCaseWithinTransaction(
   tx: Db,
   caseId: string,
   actorUserId: string,
-  options: { currentStatus: string; automatic?: boolean },
+  options: { currentStatus: string; clinicalMode: ClinicalMode; automatic?: boolean },
 ): Promise<FinalizeOutcome> {
   const signedBy = options.automatic ? AUTO_CLOSE_SYSTEM_ACTOR_ID : actorUserId
-  const readiness = await evaluateCaseReadiness(tx, caseId)
+  const readiness = await evaluateCaseReadiness(tx, caseId, options.clinicalMode)
   if (!readiness.valid) {
     return { ok: false, blockers: readiness.issues.filter(issue => issue.severity === "error") }
   }

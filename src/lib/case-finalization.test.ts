@@ -54,7 +54,9 @@ beforeEach(() => {
 
 describe("finalizeCaseWithinTransaction", () => {
   it("signs a manual finalization as the acting clinician", async () => {
-    await finalizeCaseWithinTransaction(fakeTx(), "case-1", "dr-jones", { currentStatus: "IN_PROGRESS" })
+    await finalizeCaseWithinTransaction(fakeTx(), "case-1", "dr-jones", {
+      currentStatus: "IN_PROGRESS", clinicalMode: "ADULT",
+    })
 
     expect(writeSnapshotAsyncMock).toHaveBeenCalledWith(expect.anything(), "case-1", "dr-jones")
     expect(logAuditMock).toHaveBeenCalledWith(
@@ -70,7 +72,9 @@ describe("finalizeCaseWithinTransaction", () => {
    */
   it("signs an automatic closure as the system, not the case's assignee", async () => {
     await finalizeCaseWithinTransaction(
-      fakeTx(), "case-1", "dr-jones", { currentStatus: "AWAITING_REVIEW", automatic: true },
+      fakeTx(), "case-1", "dr-jones", {
+        currentStatus: "AWAITING_REVIEW", clinicalMode: "ADULT", automatic: true,
+      },
     )
 
     expect(writeSnapshotAsyncMock).toHaveBeenCalledWith(expect.anything(), "case-1", AUTO_CLOSE_SYSTEM_ACTOR_ID)
@@ -81,7 +85,9 @@ describe("finalizeCaseWithinTransaction", () => {
   })
 
   it("does not record an assignedUserId detail on a manual finalization", async () => {
-    await finalizeCaseWithinTransaction(fakeTx(), "case-1", "dr-jones", { currentStatus: "IN_PROGRESS" })
+    await finalizeCaseWithinTransaction(fakeTx(), "case-1", "dr-jones", {
+      currentStatus: "IN_PROGRESS", clinicalMode: "ADULT",
+    })
 
     const detail = logAuditMock.mock.calls[0]?.[4]
     expect(detail).not.toHaveProperty("assignedUserId")

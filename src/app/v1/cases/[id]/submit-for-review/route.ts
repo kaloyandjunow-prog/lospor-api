@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // preoperative assessment and no intraoperative record start the
       // thirty-minute countdown and then be refused by the check that
       // countdown exists to run.
-      const readiness = await evaluateCaseReadiness(tx, id)
+      const readiness = await evaluateCaseReadiness(tx, id, caseRecord.clinicalMode)
       if (!readiness.valid) {
         const blockers = readiness.issues.filter(issue => issue.severity === "error")
         return NextResponse.json({
