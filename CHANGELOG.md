@@ -1,5 +1,12 @@
 # Changelog - LOSPOR API
 
+## [9.13.5] - 2026-09-30
+
+### Security
+
+- **Refreshed the shared Core dependency** to 9.13.5, which carries the
+  patched high-severity transitive dependency set. API behavior is unchanged.
+
 ## [9.13.4] - 2026-09-30
 
 ### Fixed
