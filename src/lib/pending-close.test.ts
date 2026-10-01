@@ -61,7 +61,7 @@ describe("closeExpiredPendingCases", () => {
   it("passes the case's assignee through, under the automatic action", async () => {
     hoisted.findMany.mockResolvedValue([{ id: "c1", userId: "stale", status: "AWAITING_REVIEW" }])
     hoisted.caseFindUnique.mockResolvedValue({
-      status: "AWAITING_REVIEW", awaitingReviewAt: minutesAgo(31), userId: "current-assignee",
+      status: "AWAITING_REVIEW", awaitingReviewAt: minutesAgo(31), userId: "current-assignee", clinicalMode: "PEDIATRIC",
     })
 
     await closeExpiredPendingCases({ now: NOW })
@@ -70,7 +70,7 @@ describe("closeExpiredPendingCases", () => {
       expect.anything(),
       "c1",
       "current-assignee",
-      expect.objectContaining({ automatic: true }),
+      expect.objectContaining({ automatic: true, clinicalMode: "PEDIATRIC" }),
     )
   })
 

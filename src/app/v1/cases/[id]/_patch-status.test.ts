@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { computeNextStatus, shouldStampAwaitingReview } from "./_patch-status"
+import { computeNextStatus, intraopPatchHasStartedAt, shouldStampAwaitingReview } from "./_patch-status"
 
 describe("computeNextStatus", () => {
   it("honours an explicit status from the request", () => {
@@ -14,9 +14,18 @@ describe("computeNextStatus", () => {
     })).toBe("IN_PROGRESS")
   })
 
+  it("recognizes an ISO startedAt instant as a real intraop start", () => {
+    expect(intraopPatchHasStartedAt({ startedAt: "2026-03-04T07:30:00.000Z" })).toBe(true)
+    expect(computeNextStatus({
+      currentStatus: "DRAFT",
+      intraopStarted: intraopPatchHasStartedAt({ startedAt: "2026-03-04T07:30:00.000Z" }),
+    })).toBe("IN_PROGRESS")
+  })
+
   // Intraop data alone is not a start: a case can be part-documented before
   // anyone is in the room.
   it("leaves a draft alone when intraop carries no start time", () => {
+    expect(intraopPatchHasStartedAt({})).toBe(false)
     expect(computeNextStatus({
       currentStatus: "DRAFT", intraopStarted: false,
     })).toBeUndefined()

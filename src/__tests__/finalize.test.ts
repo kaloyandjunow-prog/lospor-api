@@ -76,8 +76,22 @@ const VALID_CASE = {
   },
 }
 
-function makeRequest(caseId = "case-1") {
-  return new Request(`http://localhost/api/cases/${caseId}/finalize`, { method: "POST" }) as Parameters<typeof POST>[0]
+// Deliberately omit `clinicalMode` from the pre-op row. Imported pediatric
+// assessments can have the precise age but no row-level mode; the Case row is
+// the authority the finalization gate must use.
+const COMPLETE_PAEDIATRIC_PREOP = {
+  ageValue: 7, ageUnit: "YEARS",
+  sex: "MALE", heightCm: 122, weightKg: 24,
+  diagnoses: ["J03.9"], procedures: ["TONSILLECTOMY"],
+  bpSystolic: 106, bpDiastolic: 68, heartRate: 88, respiratoryRate: 20,
+  mallampati: "II", asaScore: 2,
+}
+
+function makeRequest(caseId = "case-1", clientVersion?: string) {
+  return new Request(`http://localhost/api/cases/${caseId}/finalize`, {
+    method: "POST",
+    headers: clientVersion ? { "X-LOSPOR-Client-Version": clientVersion } : undefined,
+  }) as Parameters<typeof POST>[0]
 }
 
 let POST: (req: never, ctx: { params: Promise<{ id: string }> }) => Promise<Response>
@@ -91,6 +105,7 @@ describe("POST /api/cases/:id/finalize", () => {
       userId: VALID_CASE.userId,
       status: VALID_CASE.status,
       institutionId: "inst-1",
+      clinicalMode: "ADULT",
     })
     findPreopMock.mockResolvedValue(VALID_CASE.preop)
     findIntraopMock.mockResolvedValue(VALID_CASE.intraop)
@@ -107,6 +122,23 @@ describe("POST /api/cases/:id/finalize", () => {
     expect(res.status).toBe(200)
     expect(writeSnapshotAsyncMock).toHaveBeenCalled()
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "COMPLETE" }) }))
+  })
+
+  it("uses the Case pediatric mode when the imported pre-op row has no mode", async () => {
+    findUniqueMock.mockResolvedValue({
+      userId: VALID_CASE.userId,
+      status: VALID_CASE.status,
+      institutionId: "inst-1",
+      clinicalMode: "PEDIATRIC",
+    })
+    findPreopMock.mockResolvedValue(COMPLETE_PAEDIATRIC_PREOP)
+
+    const res = await POST(makeRequest("case-1", "9.13.4"), { params: Promise.resolve({ id: "case-1" }) })
+
+    expect(res.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: "COMPLETE" }),
+    }))
   })
 
   it("accepts the current startedAt and endedAt fields", async () => {

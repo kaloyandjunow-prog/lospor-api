@@ -134,6 +134,7 @@ export async function POST(req: NextRequest) {
     // where a row does exist.
     const readyToClose = postop
       ? evaluateCaseFinalization({
+          clinicalMode: pediatricDecision.clinicalMode,
           preop: mapPreop(mappedPreop),
           intraop: intraop ? mapIntraop(intraop) : null,
           postop: mapPostop(postop),

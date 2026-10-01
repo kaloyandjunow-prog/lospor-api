@@ -66,6 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       try {
         outcome = await finalizeCaseWithinTransaction(tx, id, userId, {
           currentStatus: caseRecord.status,
+          clinicalMode: caseRecord.clinicalMode,
         })
       } catch (error) {
         if (error instanceof CaseFinalizationStepError) {
