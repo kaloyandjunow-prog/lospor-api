@@ -48,6 +48,20 @@ export function computeNextStatus(input: {
 }
 
 /**
+ * Both supported intraoperative time shapes mean that the case has started:
+ * the current clients send the wall-clock `startTime`, while imports and
+ * older clients can send the authoritative ISO `startedAt` instant. Keeping
+ * the distinction out of the route prevents an accepted payload shape from
+ * leaving a case in DRAFT after the clinician has entered the theatre record.
+ */
+export function intraopPatchHasStartedAt(input: {
+  startTime?: unknown
+  startedAt?: unknown
+} | null | undefined): boolean {
+  return Boolean(input?.startTime || input?.startedAt)
+}
+
+/**
  * `awaitingReviewAt` is set once, on the genuine transition into
  * AWAITING_REVIEW, and never touched by a later edit that leaves the case
  * there -- it is the one server timestamp the pending-close countdown anchors
