@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [9.13.7] - 2026-10-01
+
+### Security
+
+- **Updated Next.js to 16.3.8** in the API runtime and lint toolchain. This
+  clears the critical `GHSA-vcvr-r3jv-pc5j` remote-code-execution advisory in
+  `next/og` without an audit exception.
+
 ## [9.13.6] - 2026-10-01
 
 ### Fixed
