@@ -1,5 +1,19 @@
 # Changelog - LOSPOR API
 
+## [9.13.6] - 2026-10-01
+
+### Fixed
+
+- **Required and recommended pre-op questions remain independently
+  configurable.** Required questions continue to gate only the transition to
+  intra-op; recommended questions remain non-blocking, and the API keeps the
+  exact per-question profile settings.
+- A case patched with the accepted ISO `startedAt` intraoperative time now
+  enters `IN_PROGRESS` just like one patched with the wall-clock `startTime`.
+  This keeps submit-for-review available to imports and older clients that use
+  the instant form.
+- The API pins Core 9.13.6 for the coordinated 9.13.6 application release.
+
 ## [9.13.5] - 2026-09-30
 
 ### Security

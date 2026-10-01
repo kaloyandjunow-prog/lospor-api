@@ -323,6 +323,21 @@ describe("answer validation", () => {
 })
 
 describe("required questions gate continue-to-intraop, never a save", () => {
+  it("keeps each bundled question independently recommended or required", () => {
+    const profile = profileRow({
+      BASE_SMOKING: { required: true },
+      BASE_LATEX_ALLERGY: { required: false },
+    })
+
+    expect(DEFAULT_ENABLED_QUESTION_KEYS).toHaveLength(30)
+    expect(profile.questions.find(row => row.question.stableKey === "BASE_SMOKING"))
+      .toMatchObject({ enabled: true, required: true })
+    expect(profile.questions.find(row => row.question.stableKey === "BASE_LATEX_ALLERGY"))
+      .toMatchObject({ enabled: true, required: false })
+    expect(missingRequiredPreopQuestions(profile, [], "ADULT").map(item => item.stableKey))
+      .toEqual(["BASE_SMOKING"])
+  })
+
   it("lists required questions that are on for the case and unanswered", () => {
     const profile = profileRow({
       BASE_SMOKING: { required: true },
