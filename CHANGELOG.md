@@ -13,6 +13,10 @@
 - The release manifest names 9.13.8 for Core, API, web, mobile and docs; it
   had not been updated since 9.13.3.
 
+### Changed
+
+- Core dependency moved to 9.13.8.
+
 ## [9.13.7] - 2026-10-01
 
 ### Security
