@@ -78,3 +78,13 @@ e2e/_*.spec.ts
 
 # Codex workspace artefacts
 .codex/
+
+# Local secrets, logs, scratch and agent state
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.log
+.tmp-*
+Thumbs.db
+coverage/
