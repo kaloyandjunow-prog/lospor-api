@@ -1,5 +1,18 @@
 # Changelog - LOSPOR API
 
+## [9.13.8] - 2026-10-03
+
+### Fixed
+
+- **Dashboard "today" and "this month" are counted by the database.** They
+  loaded every accessible case and filtered in JavaScript. They are now UTC
+  ranges for the Europe/Sofia calendar day and month, counted in PostgreSQL
+  (moved from Hospital 1.4.21, which had changed only its own copy). A case
+  whose intraoperative month label is empty is counted by its creation date,
+  as before. Covered by a PostgreSQL test across the Sofia day boundary.
+- The release manifest names 9.13.8 for Core, API, web, mobile and docs; it
+  had not been updated since 9.13.3.
+
 ## [9.13.7] - 2026-10-01
 
 ### Security

@@ -13,7 +13,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }))
 
-import { dashboardCaseCounts } from "./dashboard-case-counts"
+import { dashboardCaseCounts, dashboardDayRange, dashboardMonthRange } from "./dashboard-case-counts"
 
 const NOW = new Date("2026-09-07T10:00:00.000Z") // 13:00 in Sofia (UTC+3, summer)
 const USER_ID = "user-1"
@@ -29,6 +29,8 @@ describe("dashboardCaseCounts", () => {
   it("counts every column-filter scope from the database, not a loaded page", async () => {
     mocks.count
       .mockResolvedValueOnce(120) // all
+      .mockResolvedValueOnce(1)   // today
+      .mockResolvedValueOnce(12)  // month
       .mockResolvedValueOnce(30)  // active
       .mockResolvedValueOnce(5)   // drafts
       .mockResolvedValueOnce(90)  // complete
@@ -39,9 +41,10 @@ describe("dashboardCaseCounts", () => {
     const result = await dashboardCaseCounts({}, USER_ID, NOW)
 
     expect(result).toMatchObject({
-      all: 120, active: 30, drafts: 5, complete: 90, awaitingPostop: 4, icu: 7, handovers: 2,
+      all: 120, today: 1, month: 12, active: 30, drafts: 5, complete: 90, awaitingPostop: 4, icu: 7, handovers: 2,
     })
-    expect(mocks.count).toHaveBeenCalledTimes(6)
+    expect(mocks.count).toHaveBeenCalledTimes(8)
+    expect(mocks.findMany).not.toHaveBeenCalled()
   })
 
   // "Handovers" means awaiting action by this user specifically -- matching
@@ -56,24 +59,42 @@ describe("dashboardCaseCounts", () => {
   })
 
   it("counts today by the calendar day in Europe/Sofia, not the server's own local clock", async () => {
-    // 23:30 UTC on the 6th is already the 7th in Sofia.
-    mocks.findMany.mockResolvedValueOnce([
-      { createdAt: new Date("2026-09-06T23:30:00.000Z"), intraop: null },
-      { createdAt: new Date("2026-09-06T20:00:00.000Z"), intraop: null },
-    ])
+    mocks.count.mockResolvedValueOnce(0).mockResolvedValueOnce(1)
     const result = await dashboardCaseCounts({}, USER_ID, NOW)
     expect(result.today).toBe(1)
+    expect(mocks.findMany).not.toHaveBeenCalled()
+    expect(mocks.count.mock.calls[1][0].where).toEqual({
+      AND: [ {}, { createdAt: dashboardDayRange(NOW) } ],
+    })
   })
 
   it("prefers a case's own monthYear label over its createdAt for 'this month'", async () => {
-    mocks.findMany.mockResolvedValueOnce([
-      // Created in August but the intraoperative record is labelled September --
-      // the label wins, because it is the calendar month the case belongs to
-      // clinically, not merely when the row was first drafted.
-      { createdAt: new Date("2026-08-31T22:00:00.000Z"), intraop: { monthYear: "2026-9" } },
-      { createdAt: new Date("2026-08-15T10:00:00.000Z"), intraop: null },
-    ])
+    mocks.count.mockResolvedValueOnce(0).mockResolvedValueOnce(0).mockResolvedValueOnce(1)
     const result = await dashboardCaseCounts({}, USER_ID, NOW)
     expect(result.month).toBe(1)
+    expect(mocks.findMany).not.toHaveBeenCalled()
+    const monthWhere = mocks.count.mock.calls[2][0].where
+    expect(JSON.stringify(monthWhere)).toContain("2026-09")
+    expect(JSON.stringify(monthWhere)).toContain("2026-9")
+    expect(JSON.stringify(monthWhere)).toContain(dashboardMonthRange(NOW).gte.toISOString())
+  })
+
+  it("uses half-open Sofia calendar boundaries at the UTC edge", () => {
+    const day = dashboardDayRange(NOW)
+    expect(day.gte.toISOString()).toBe("2026-09-06T21:00:00.000Z")
+    expect(day.lt.toISOString()).toBe("2026-09-07T21:00:00.000Z")
+
+    const month = dashboardMonthRange(NOW)
+    expect(month.gte.toISOString()).toBe("2026-08-31T21:00:00.000Z")
+    expect(month.lt.toISOString()).toBe("2026-09-30T21:00:00.000Z")
+  })
+
+  it("keeps the calendar day correct across Sofia's autumn offset change", () => {
+    const day = dashboardDayRange(new Date("2026-10-25T10:00:00.000Z"))
+
+    // Midnight at the start of the day is UTC+3; midnight at the end is
+    // UTC+2 because the offset changes during that local calendar day.
+    expect(day.gte.toISOString()).toBe("2026-10-24T21:00:00.000Z")
+    expect(day.lt.toISOString()).toBe("2026-10-25T22:00:00.000Z")
   })
 })
