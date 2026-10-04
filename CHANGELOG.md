@@ -1,5 +1,25 @@
 # Changelog - LOSPOR API
 
+## [9.14.0] - 2026-10-04
+
+### Added
+
+- **Finalization warns about an unacknowledged allergy clash** (Core 9.14.0).
+  A dose on the chart that matches a recorded allergy and carries no
+  acknowledgement is reported as the warning
+  `unacknowledged_allergy_conflict` at `intraop.medications`. It never blocks.
+- Drug and infusion events may carry `allergyAck` (`{ allergy, level }[]`),
+  the clinician's acknowledgement of a matching allergy. It is stored with the
+  event and kept through reprojection; it is not part of the research export.
+
+### Changed
+
+- **The EHR import review offers an age whatever the case's mode** (Core 9.13.9).
+  The plan this server builds no longer holds a paediatric age back from an
+  adult case; the client switches the mode when the age is added.
+- Core dependency moved to 9.14.0.
+- Release manifest names 9.14.0.
+
 ## [9.13.8] - 2026-10-03
 
 ### Fixed
