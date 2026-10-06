@@ -221,7 +221,21 @@ describe("POST /api/cases", () => {
     expect(createMock).not.toHaveBeenCalled()
   })
 
+  it("creates the case on a hospital appliance, where free text is cleaned on export instead", async () => {
+    vi.stubEnv("LOSPOR_DEPLOYMENT_MODE", "hospital")
+    try {
+      const res = await POST(makeRequest({
+        preop: { ...MINIMAL_PREOP, diagnosis: "Ivan Petrov" },
+      }))
+      expect(res.status).not.toBe(400)
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
+  // The cloud's gate (9.14.2); a hospital appliance does not refuse this.
   it("returns a structured permanent PII error for legacy free-text diagnosis", async () => {
+    vi.stubEnv("LOSPOR_DEPLOYMENT_MODE", "")
     const res = await POST(makeRequest({
       preop: { ...MINIMAL_PREOP, diagnosis: "Ivan Petrov" },
     }))
@@ -235,6 +249,7 @@ describe("POST /api/cases", () => {
       blockedKeys: ["diagnosis", "icdCode"],
     })
     expect(createMock).not.toHaveBeenCalled()
+    vi.unstubAllEnvs()
   })
 
   it("accepts an uppercase Bulgarian diagnosis selected from ICD-10", async () => {

@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { checkClinicalPayloadPII, checkEventPII } from "@/lib/clinical-pii"
 
+// The cloud's gate. A hospital appliance stores free text as typed and cleans it
+// on export instead (9.14.2), so these run as the cloud, whatever the job's mode.
 describe("clinical PII gate", () => {
+  beforeEach(() => { vi.stubEnv("LOSPOR_DEPLOYMENT_MODE", "") })
+  afterEach(() => { vi.unstubAllEnvs() })
+
   it("checks all major free-text clinical save fields", () => {
     const result = checkClinicalPayloadPII({
       preop: { physicalExamReport: "Contact test@example.com" },
