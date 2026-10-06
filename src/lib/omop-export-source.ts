@@ -1,5 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client"
-import { deepRedactPII, redactText } from "@/lib/pii-check"
+import { EVENT_FREE_TEXT_KEYS } from "@/lib/clinical-pii"
+import { redactText } from "@/lib/pii-check"
 
 type ExportRow = Prisma.CaseGetPayload<{ select: typeof CASE_SELECT }>
 
@@ -18,31 +19,28 @@ type ExportRow = Prisma.CaseGetPayload<{ select: typeof CASE_SELECT }>
 // which keeps every structural check — EGN, long numbers, dates, email — and
 // drops only the two-capitalised-words guess that cannot tell a disease from
 // a patient. Genuine prose keeps the guess on.
+//
+// 9.14.2: free text only. Coded fields now pass through as they are: the
+// structural checks still ran on them, and a diagnosis or drug name is not where
+// a patient's identity is written. Every free-text field keeps every rule, the
+// name rule included -- on a hospital appliance identifying text is no longer
+// refused at save, so this is where it is cleaned.
 export function redactExportRow(c: ExportRow) {
-  const coded = { nameHeuristic: false } as const
   return {
     ...c,
     preop: c.preop ? {
       ...c.preop,
-      // Coded clinical vocabulary.
-      diagnosis: c.preop.diagnosis ? redactText(c.preop.diagnosis, coded) : c.preop.diagnosis,
-      plannedProcedure: c.preop.plannedProcedure ? redactText(c.preop.plannedProcedure, coded) : c.preop.plannedProcedure,
-      allergyDetails: c.preop.allergyDetails ? redactText(c.preop.allergyDetails, coded) : c.preop.allergyDetails,
-      currentMedications: c.preop.currentMedications ? redactText(c.preop.currentMedications, coded) : c.preop.currentMedications,
+      // Coded clinical vocabulary (diagnosis, procedure, allergy and medication
+      // lists, medication names) passes through.
       // Free prose written by a clinician, so it goes through the same
       // redaction as every other note before it can leave.
       familyAnesthesiaDetails: c.preop.familyAnesthesiaDetails ? redactText(c.preop.familyAnesthesiaDetails) : c.preop.familyAnesthesiaDetails,
       difficultAirwayNotes: c.preop.difficultAirwayNotes ? redactText(c.preop.difficultAirwayNotes) : c.preop.difficultAirwayNotes,
-      medications: c.preop.medications.map(row => ({
-        ...row,
-        nameRaw: row.nameRaw ? redactText(row.nameRaw, coded) : row.nameRaw,
-      })),
     } : c.preop,
     events: (c.events ?? []).map(e => ({
       ...e,
-      // label is the coded event/drug name; value is whatever was recorded
-      // against it, so only the label is exempt.
-      label: e.label ? redactText(e.label, coded) : e.label,
+      // label is the coded event/drug name and passes through; value is
+      // whatever was recorded against it.
       value: e.value ? redactText(e.value) : e.value,
     })),
     complications: (c.complications ?? []).map(comp => ({
@@ -54,13 +52,29 @@ export function redactExportRow(c: ExportRow) {
       complications: c.intraop.complications ? redactText(c.intraop.complications) : c.intraop.complications,
       premedicationEvening: c.intraop.premedicationEvening ? redactText(c.intraop.premedicationEvening) : c.intraop.premedicationEvening,
       premedicationMorning: c.intraop.premedicationMorning ? redactText(c.intraop.premedicationMorning) : c.intraop.premedicationMorning,
-      keyEvents: deepRedactPII(c.intraop.keyEvents),
-      premedicationRows: c.intraop.premedicationRows.map(row => ({
-        ...row,
-        nameRaw: row.nameRaw ? redactText(row.nameRaw, coded) : row.nameRaw,
-      })),
+      keyEvents: redactEventFreeText(c.intraop.keyEvents),
     } : c.intraop,
   }
+}
+
+/**
+ * The intraop event log with only its typed parts cleaned. Scrubbing every
+ * string in it also scrubbed drug names, event labels and units (9.14.2).
+ */
+export function redactEventFreeText<T>(keyEvents: T): T {
+  const clean = (event: unknown): unknown => {
+    if (!event || typeof event !== "object" || Array.isArray(event)) return event
+    const out: Record<string, unknown> = { ...(event as Record<string, unknown>) }
+    for (const key of EVENT_FREE_TEXT_KEYS) {
+      if (typeof out[key] === "string" && out[key]) out[key] = redactText(out[key] as string)
+    }
+    return out
+  }
+  if (Array.isArray(keyEvents)) return keyEvents.map(clean) as T
+  if (keyEvents && typeof keyEvents === "object" && Array.isArray((keyEvents as { log?: unknown }).log)) {
+    return { ...(keyEvents as object), log: (keyEvents as unknown as { log: unknown[] }).log.map(clean) } as T
+  }
+  return keyEvents
 }
 
 export const CASE_SELECT = {
