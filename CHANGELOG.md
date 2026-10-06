@@ -1,5 +1,10 @@
 # Changelog - LOSPOR API
 
+## [9.14.1] - 2026-10-06
+
+No API changes. Released with Web and PWA 9.14.1 so the three ship as one set;
+Core stays 9.14.0.
+
 ## [9.14.0] - 2026-10-04
 
 ### Added
