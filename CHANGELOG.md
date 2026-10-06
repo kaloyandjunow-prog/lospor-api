@@ -2,8 +2,18 @@
 
 ## [9.14.2] - 2026-10-06
 
-No API changes. Released with Core, Web and PWA 9.14.2 so the set ships
-together.
+### Changed
+
+- **Identifying text is no longer refused at save on a hospital appliance.**
+  Clinical phrases read as names or dates ("Ритмична Сърдечна дейност", "ЕКГ от
+  12.10.2026", "Paracetamol Sopharma") and the save was refused. On a hospital
+  appliance free text is now stored as typed, inside the hospital, and cleaned
+  whenever it leaves. The cloud service, and any deployment that does not say it
+  is a hospital, still refuses it at save.
+- **Exports clean free text only.** Diagnoses, procedures, drug and allergy
+  lists, medication names and event labels leave as they are; free text keeps
+  every rule (name, date, ЕГН, long number, email). The intraop event log is
+  cleaned only in its typed parts, no longer in drug names and units.
 
 ## [9.14.1] - 2026-10-06
 

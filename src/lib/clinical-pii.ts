@@ -77,12 +77,28 @@ export function piiErrorBody(issue: ClinicalPiiIssue) {
   }
 }
 
+/**
+ * Whether a save is refused for identifying text (9.14.2).
+ *
+ * On a hospital appliance the text is the hospital's own record, kept inside
+ * the hospital: it is stored as typed and cleaned on every way out (export,
+ * Central, AI). Refusing it at save turned clinical phrases ("Ритмична
+ * Сърдечна дейност", "ЕКГ от 12.10.2026") into failed saves -- found on the
+ * appliance testing 1.5.1. The cloud demo keeps refusing: there, names typed
+ * into a note would leave the hospital. Anything but an explicit hospital
+ * deployment keeps the check.
+ */
+export function screensIdentifyingTextAtSave(): boolean {
+  return process.env.LOSPOR_DEPLOYMENT_MODE?.trim().toLowerCase() !== "hospital"
+}
+
 export function checkClinicalPayloadPII(payload: {
   preop?: Record<string, unknown>
   intraop?: Record<string, unknown>
   postop?: Record<string, unknown>
   notes?: unknown
 }): ClinicalPiiIssue | null {
+  if (!screensIdentifyingTextAtSave()) return null
   const preop = payload.preop ?? {}
   const intraop = payload.intraop ?? {}
   const postop = payload.postop ?? {}
@@ -153,14 +169,11 @@ export function checkClinicalPayloadPII(payload: {
   return null
 }
 
+/** The typed parts of an intraop event; everything else in it is coded. */
+export const EVENT_FREE_TEXT_KEYS = ["notes", "note", "comment", "description", "complicationNote", "customText"] as const
+
 export function checkEventPII(ev: Record<string, unknown>): ClinicalPiiIssue | null {
-  const issue = findPII({
-    notes: text(ev.notes),
-    note: text(ev.note),
-    comment: text(ev.comment),
-    description: text(ev.description),
-    complicationNote: text(ev.complicationNote),
-    customText: text(ev.customText),
-  })
+  if (!screensIdentifyingTextAtSave()) return null
+  const issue = findPII(Object.fromEntries(EVENT_FREE_TEXT_KEYS.map(key => [key, text(ev[key])])))
   return issue ? toClinicalIssue(issue, [issue.field]) : null
 }
