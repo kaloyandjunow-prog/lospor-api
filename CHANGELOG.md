@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [9.14.3] - 2026-10-07
+
+### Fixed
+
+- **The save-time identifying-text tests pin the cloud mode.** They inherited
+  the deployment mode from the environment, so the hospital, which runs them
+  in hospital mode, saw them fail. Tests only; no behaviour change.
+
 ## [9.14.2] - 2026-10-06
 
 ### Changed
