@@ -1,5 +1,21 @@
 # Changelog - LOSPOR API
 
+## [9.14.5] - 2026-10-11
+
+### Added
+
+- **One preoperative profile for adults and one for children** (migration
+  `20261010120000_preop_profile_per_population`). A case's answers, its
+  required-question check and its suggestions follow the profile of its mode,
+  and each answer row records the profile it was given under. The existing
+  profile becomes the adult one; on the first use after the upgrade the
+  paediatric profile is created as a copy of it, so nothing an operator chose
+  changes. A profile change names its population and lists exactly the
+  questions that population is asked; a question it is never asked is refused
+  (`PREOP_QUESTION_OTHER_POPULATION`). The case read and `GET
+  /v1/preop/profile` send both profiles in one shape (`byMode` per
+  question), keeping the adult settings at the top level for older clients.
+
 ## [9.14.4] - 2026-10-10
 
 ### Security

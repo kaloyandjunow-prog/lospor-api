@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { Prisma, PreopAnswerState, PreopProfileStatus, type PrismaClient } from "@/generated/prisma/client"
+import { ClinicalMode, Prisma, PreopAnswerState, PreopProfileStatus, type PrismaClient } from "@/generated/prisma/client"
 import {
   BUNDLED_PREOP_QUESTIONS,
   DEFAULT_ENABLED_QUESTION_KEYS,
@@ -11,12 +11,15 @@ import {
 import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION } from "@lospor/core/preop-assessment"
 
 /**
- * The preoperative assessment: one bundled catalogue, one appliance profile.
+ * The preoperative assessment: one bundled catalogue, one profile for adults
+ * and one for children.
  *
  * The catalogue is software. It ships with the release and the database copy
- * follows it. Operators configure one profile -- which questions are on, their
- * order, and which are required -- and change it in place. There are no profile
- * versions and nothing to adopt.
+ * follows it. Operators configure each population's profile -- which questions
+ * are on, their order, and which are required -- and change it in place. A
+ * question asked of both populations has its own settings in each (9.14.5).
+ * There are no profile versions and nothing to adopt; a case follows the
+ * profile of its clinical mode.
  *
  * What was asked in a case is recorded by the answer rows themselves: a
  * question that was on has a row (the answer, or NOT_ASKED while unanswered);
@@ -60,6 +63,7 @@ type PreopProfileQuestionRow = {
 type PreopProfileRow = {
   id: string
   version: number
+  population: ClinicalMode
   catalogVersion: string
   status: string
   publishedAt: Date | null
@@ -116,7 +120,21 @@ export type PreopProfileShape = {
       omopVocabulary: string | null
       omopSourceCode: string | null
     }>
+    /** Each population's settings; see serializePreopProfiles. */
+    byMode?: Partial<Record<ClinicalMode, { enabled: boolean; required: boolean; sortOrder: number }>>
   }>
+}
+
+export const PREOP_POPULATIONS = [ClinicalMode.ADULT, ClinicalMode.PEDIATRIC] as const
+
+/** The profile a case of this clinical mode follows. A case with no mode is an adult one. */
+export function populationForMode(mode: string | null | undefined): ClinicalMode {
+  return mode === ClinicalMode.PEDIATRIC ? ClinicalMode.PEDIATRIC : ClinicalMode.ADULT
+}
+
+/** Whether a population is ever asked this question. */
+export function questionAppliesToPopulation(applicability: readonly string[], population: ClinicalMode): boolean {
+  return applicability.length === 0 || applicability.includes(population)
 }
 
 export class PreopContractError extends Error {
@@ -302,9 +320,9 @@ const PROFILE_INCLUDE = {
   },
 } as const
 
-export async function activePreopProfile(db: Db) {
+export async function activePreopProfile(db: Db, population: ClinicalMode = ClinicalMode.ADULT) {
   return db.preopAssessmentProfile.findFirst({
-    where: { status: PreopProfileStatus.PUBLISHED },
+    where: { status: PreopProfileStatus.PUBLISHED, population },
     orderBy: { version: "desc" },
     include: PROFILE_INCLUDE,
   })
@@ -318,39 +336,87 @@ async function lockProfile(db: Db): Promise<void> {
   }
 }
 
+function isCurrent(profile: PreopProfileRow | null): boolean {
+  return profile != null && profile.catalogVersion === PREOP_CATALOG_VERSION
+    && profile.questions.length === BUNDLED_PREOP_QUESTIONS.length
+}
+
 /**
- * The appliance's one profile, created with the bundled defaults on first use
+ * Puts the catalogue and the profiles in place in a transaction of their own.
+ *
+ * Call it before opening a clinical write transaction. Creating the profiles
+ * on a fresh database, or upgrading the catalogue after a release, is a
+ * one-off set of writes that must never run inside a clinician's save: that
+ * transaction has 5 seconds, and a hosted database far from the API spends
+ * most of it on round trips. Afterwards the save finds its profile on the
+ * fast path.
+ */
+export async function preparePreopProfile(
+  client: { $transaction: PrismaClient["$transaction"] },
+  actorId: string,
+): Promise<void> {
+  await client.$transaction(tx => ensurePreopProfiles(tx, actorId), { maxWait: 10_000, timeout: 30_000 })
+}
+
+/**
+ * One population's profile, created with the bundled defaults on first use
  * and brought up to the bundled catalogue after an upgrade.
  *
  * Fast path: a profile already recorded against this catalogue version with
  * every bundled question is returned without touching the catalogue, so an
  * ordinary preop save costs one read.
  */
-/**
- * Puts the catalogue and the profile in place in a transaction of their own.
- *
- * Call it before opening a clinical write transaction. Creating the profile on
- * a fresh database, or upgrading the catalogue after a release, is a one-off
- * set of writes that must never run inside a clinician's save: that transaction
- * has 5 seconds, and a hosted database far from the API spends most of it on
- * round trips. Afterwards the save finds the profile on its fast path.
- */
-export async function preparePreopProfile(
-  client: { $transaction: PrismaClient["$transaction"] },
+export async function ensurePreopProfile(
+  db: Db,
   actorId: string,
-): Promise<void> {
-  await client.$transaction(tx => ensurePreopProfile(tx, actorId), { maxWait: 10_000, timeout: 30_000 })
+  population: ClinicalMode = ClinicalMode.ADULT,
+): Promise<PreopProfileRow> {
+  const current = await activePreopProfile(db, population)
+  if (current && isCurrent(current)) return current
+  return (await ensurePreopProfiles(db, actorId))[population]
 }
 
-export async function ensurePreopProfile(db: Db, actorId: string): Promise<PreopProfileRow> {
-  const current = await activePreopProfile(db)
-  if (current && current.catalogVersion === PREOP_CATALOG_VERSION
-    && current.questions.length === BUNDLED_PREOP_QUESTIONS.length) {
-    return current
-  }
+/**
+ * Both profiles for a read, which never writes. Null on an appliance that has
+ * never saved a preop (callers answer with the bundled defaults). Until the
+ * first save after the 9.14.5 upgrade there is no paediatric profile yet; it
+ * reads as the copy of the adult one that save will make.
+ */
+export async function readPreopProfiles(db: Db): Promise<Record<ClinicalMode, PreopProfileRow> | null> {
+  const adult = await activePreopProfile(db, ClinicalMode.ADULT)
+  if (!adult) return null
+  const pediatric = await activePreopProfile(db, ClinicalMode.PEDIATRIC)
+  return { ADULT: adult, PEDIATRIC: pediatric ?? adult }
+}
+
+/** Both populations' profiles, each created or upgraded as needed. */
+export async function ensurePreopProfiles(db: Db, actorId: string): Promise<Record<ClinicalMode, PreopProfileRow>> {
+  const adult = await activePreopProfile(db, ClinicalMode.ADULT)
+  const pediatric = await activePreopProfile(db, ClinicalMode.PEDIATRIC)
+  if (adult && pediatric && isCurrent(adult) && isCurrent(pediatric)) return { ADULT: adult, PEDIATRIC: pediatric }
   await lockProfile(db)
   await provisionPreopCatalog(db)
-  const profile = await activePreopProfile(db)
+  await ensurePopulationProfile(db, actorId, ClinicalMode.ADULT, null)
+  const adultProfile = await activePreopProfile(db, ClinicalMode.ADULT)
+  // Until 9.14.5 the one profile served both populations, so the paediatric
+  // profile starts as a copy of it: children are asked exactly what they were.
+  await ensurePopulationProfile(db, actorId, ClinicalMode.PEDIATRIC, adultProfile)
+  const result = {
+    ADULT: await activePreopProfile(db, ClinicalMode.ADULT),
+    PEDIATRIC: await activePreopProfile(db, ClinicalMode.PEDIATRIC),
+  }
+  if (!result.ADULT || !result.PEDIATRIC) throw new PreopContractError("PREOP_PROFILE_NOT_PROVISIONED")
+  return { ADULT: result.ADULT, PEDIATRIC: result.PEDIATRIC }
+}
+
+async function ensurePopulationProfile(
+  db: Db,
+  actorId: string,
+  population: ClinicalMode,
+  copyFrom: PreopProfileRow | null,
+): Promise<void> {
+  const profile = await activePreopProfile(db, population)
+  if (isCurrent(profile)) return
   if (!profile) {
     // Flat writes, not a nested create: a nested create resolves each of the
     // 75 question connects with its own queries (172 in all), which took 16 s
@@ -360,6 +426,7 @@ export async function ensurePreopProfile(db: Db, actorId: string): Promise<Preop
     const created = await db.preopAssessmentProfile.create({
       data: {
         version: (latest?.version ?? 0) + 1,
+        population,
         catalogVersion: PREOP_CATALOG_VERSION,
         status: PreopProfileStatus.PUBLISHED,
         publishedAt: new Date(),
@@ -369,76 +436,91 @@ export async function ensurePreopProfile(db: Db, actorId: string): Promise<Preop
     })
     const definitions = await db.preopQuestionDefinition.findMany({ select: { id: true, stableKey: true } })
     const idOf = new Map(definitions.map(row => [row.stableKey, row.id]))
+    const copied = new Map(copyFrom?.questions.map(row => [row.question.stableKey, row]) ?? [])
+    const last = copyFrom?.questions.reduce((max, row) => Math.max(max, row.sortOrder), -1) ?? -1
+    let next = last + 1
     await db.preopProfileQuestion.createMany({
-      data: BUNDLED_PREOP_QUESTIONS.map((item, sortOrder) => ({
-        profileId: created.id,
-        questionId: idOf.get(item.stableKey)!,
-        enabled: DEFAULT_ENABLED_QUESTION_KEYS.has(item.stableKey),
-        required: item.requiredDefault,
-        sortOrder,
-      })),
+      data: BUNDLED_PREOP_QUESTIONS.map((item, sortOrder) => {
+        const source = copied.get(item.stableKey)
+        return {
+          profileId: created.id,
+          questionId: idOf.get(item.stableKey)!,
+          enabled: source ? source.enabled : DEFAULT_ENABLED_QUESTION_KEYS.has(item.stableKey),
+          required: source ? source.required : item.requiredDefault,
+          sortOrder: source ? source.sortOrder : copyFrom ? next++ : sortOrder,
+        }
+      }),
     })
-    await db.preopAssessmentAuditEvent.create({
-      data: { profileId: created.id, actorId, action: "PROFILE_CREATED", detail: json({ catalogVersion: PREOP_CATALOG_VERSION }) },
-    })
-  } else {
-    // A release that adds questions adds them switched off, after the
-    // operator's existing order. Nothing the operator chose is changed.
-    const present = new Set(profile.questions.map(row => row.question.stableKey))
-    const added = BUNDLED_PREOP_QUESTIONS.map(item => item.stableKey).filter(key => !present.has(key))
-    if (added.length > 0) {
-      // One read and one insert, however many questions a release adds.
-      const definitions = await db.preopQuestionDefinition.findMany({
-        where: { stableKey: { in: added } },
-        select: { id: true, stableKey: true },
-      })
-      const idOf = new Map(definitions.map(row => [row.stableKey, row.id]))
-      const first = profile.questions.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1
-      await db.preopProfileQuestion.createMany({
-        data: added.map((stableKey, index) => ({
-          profileId: profile.id,
-          questionId: idOf.get(stableKey)!,
-          enabled: false,
-          required: false,
-          sortOrder: first + index,
-        })),
-      })
-    }
-    await db.preopAssessmentProfile.update({ where: { id: profile.id }, data: { catalogVersion: PREOP_CATALOG_VERSION } })
     await db.preopAssessmentAuditEvent.create({
       data: {
-        profileId: profile.id,
+        profileId: created.id,
         actorId,
-        action: "CATALOG_UPGRADED",
-        detail: json({ from: profile.catalogVersion, to: PREOP_CATALOG_VERSION, added }),
+        action: "PROFILE_CREATED",
+        detail: json({ catalogVersion: PREOP_CATALOG_VERSION, population, copiedFromProfileId: copyFrom?.id ?? null }),
       },
     })
+    return
   }
-  const result = await activePreopProfile(db)
-  if (!result) throw new PreopContractError("PREOP_PROFILE_NOT_PROVISIONED")
-  return result
+  // A release that adds questions adds them switched off, after the
+  // operator's existing order. Nothing the operator chose is changed.
+  const present = new Set(profile.questions.map(row => row.question.stableKey))
+  const added = BUNDLED_PREOP_QUESTIONS.map(item => item.stableKey).filter(key => !present.has(key))
+  if (added.length > 0) {
+    // One read and one insert, however many questions a release adds.
+    const definitions = await db.preopQuestionDefinition.findMany({
+      where: { stableKey: { in: added } },
+      select: { id: true, stableKey: true },
+    })
+    const idOf = new Map(definitions.map(row => [row.stableKey, row.id]))
+    const first = profile.questions.reduce((max, row) => Math.max(max, row.sortOrder), -1) + 1
+    await db.preopProfileQuestion.createMany({
+      data: added.map((stableKey, index) => ({
+        profileId: profile.id,
+        questionId: idOf.get(stableKey)!,
+        enabled: false,
+        required: false,
+        sortOrder: first + index,
+      })),
+    })
+  }
+  await db.preopAssessmentProfile.update({ where: { id: profile.id }, data: { catalogVersion: PREOP_CATALOG_VERSION } })
+  await db.preopAssessmentAuditEvent.create({
+    data: {
+      profileId: profile.id,
+      actorId,
+      action: "CATALOG_UPGRADED",
+      detail: json({ from: profile.catalogVersion, to: PREOP_CATALOG_VERSION, population, added }),
+    },
+  })
 }
 
 /**
- * An operator's change to the profile, applied in place and audited.
+ * An operator's change to one population's profile, applied in place and
+ * audited.
  *
- * Every bundled question must be listed, exactly once, with a unique order.
- * Cases in progress see the change on their next load; the answers already
- * recorded are never touched here (see savePreopAnswers for what happens to a
- * case's rows on its next save).
+ * Every bundled question that population is asked must be listed, exactly
+ * once, with a unique order; a question it is never asked cannot be. Cases in
+ * progress see the change on their next load; the answers already recorded
+ * are never touched here (see savePreopAnswers for what happens to a case's
+ * rows on its next save).
  */
 export async function updatePreopProfile(
   db: Db,
   actorId: string,
   requested: ProfileQuestionInput[],
   reason: string,
+  population: ClinicalMode = ClinicalMode.ADULT,
 ): Promise<PreopProfileRow> {
   await lockProfile(db)
-  const profile = await ensurePreopProfile(db, actorId)
+  const profile = await ensurePreopProfile(db, actorId, population)
   const seen = new Set<string>()
   const seenOrders = new Set<number>()
   for (const config of requested) {
-    if (!bundledQuestion(config.stableKey)) throw new PreopContractError("UNKNOWN_PREOP_QUESTION", { stableKey: config.stableKey })
+    const bundled = bundledQuestion(config.stableKey)
+    if (!bundled) throw new PreopContractError("UNKNOWN_PREOP_QUESTION", { stableKey: config.stableKey })
+    if (!questionAppliesToPopulation(bundled.applicability, population)) {
+      throw new PreopContractError("PREOP_QUESTION_OTHER_POPULATION", { stableKey: config.stableKey, population })
+    }
     if (seen.has(config.stableKey)) throw new PreopContractError("DUPLICATE_PREOP_QUESTION", { stableKey: config.stableKey })
     seen.add(config.stableKey)
     if (!config.enabled && config.required) throw new PreopContractError("DISABLED_QUESTION_CANNOT_BE_REQUIRED", { stableKey: config.stableKey })
@@ -446,7 +528,8 @@ export async function updatePreopProfile(
     if (seenOrders.has(config.sortOrder)) throw new PreopContractError("DUPLICATE_PREOP_QUESTION_ORDER", { sortOrder: config.sortOrder })
     seenOrders.add(config.sortOrder)
   }
-  if (seen.size !== BUNDLED_PREOP_QUESTIONS.length) throw new PreopContractError("PREOP_PROFILE_CATALOG_INCOMPLETE")
+  const expected = BUNDLED_PREOP_QUESTIONS.filter(item => questionAppliesToPopulation(item.applicability, population)).length
+  if (seen.size !== expected) throw new PreopContractError("PREOP_PROFILE_CATALOG_INCOMPLETE")
 
   const byKey = new Map(profile.questions.map(row => [row.question.stableKey, row]))
   const changes: Array<{ stableKey: string; before: ProfileQuestionInput; after: ProfileQuestionInput }> = []
@@ -464,9 +547,9 @@ export async function updatePreopProfile(
     })
   }
   await db.preopAssessmentAuditEvent.create({
-    data: { profileId: profile.id, actorId, action: "PROFILE_UPDATED", detail: json({ reason, changes }) },
+    data: { profileId: profile.id, actorId, action: "PROFILE_UPDATED", detail: json({ reason, population, changes }) },
   })
-  const result = await activePreopProfile(db)
+  const result = await activePreopProfile(db, population)
   if (!result) throw new PreopContractError("PREOP_PROFILE_NOT_PROVISIONED")
   return result
 }
@@ -613,10 +696,12 @@ export async function savePreopAnswers(
     clinicalMode?: string | null
   },
 ) {
-  const profile = await ensurePreopProfile(db, args.actorId)
   const preop = args.preop ?? {}
   const payloadMode = preop.clinicalMode === "PEDIATRIC" || preop.clinicalMode === "ADULT" ? preop.clinicalMode : null
   const mode = payloadMode ?? args.clinicalMode ?? null
+  // The case follows its own population's profile, and its answer rows record
+  // which one (profileId) they were given under.
+  const profile = await ensurePreopProfile(db, args.actorId, populationForMode(mode))
   if (payloadMode) {
     // A case switched to the other population keeps none of that population's
     // answers: they describe a patient the case no longer says it is.
@@ -847,6 +932,7 @@ function serializeQuestion(row: {
   }
 }
 
+/** One population's profile, as Status edits it. */
 export function serializePreopProfile(profile: PreopProfileRow): PreopProfileShape {
   return {
     id: profile.id,
@@ -858,11 +944,67 @@ export function serializePreopProfile(profile: PreopProfileRow): PreopProfileSha
   }
 }
 
+type ProfileSettings = { enabled: boolean; required: boolean; sortOrder: number }
+
+/**
+ * Both populations' profiles in the one shape the forms read (9.14.5).
+ *
+ * Each question carries `byMode`: the settings of every population it is
+ * asked of. The forms read it through preopProfileForMode, so a case switched
+ * between adult and paediatric needs no second request, and the phone's
+ * offline copy holds both. The top-level settings are for clients that
+ * predate this: the adult profile's for a question adults are asked, the
+ * paediatric profile's for a children-only question.
+ */
+export function serializePreopProfiles(
+  profiles: Record<ClinicalMode, Pick<PreopProfileRow, "id" | "version" | "catalogVersion" | "status" | "publishedAt" | "questions">>,
+): PreopProfileShape {
+  const settings = (population: ClinicalMode) => new Map<string, ProfileSettings>(profiles[population].questions.map(row => [
+    row.question.stableKey,
+    { enabled: row.enabled, required: row.required, sortOrder: row.sortOrder },
+  ]))
+  const byPopulation = { ADULT: settings(ClinicalMode.ADULT), PEDIATRIC: settings(ClinicalMode.PEDIATRIC) }
+  const adult = profiles.ADULT
+  return {
+    id: adult.id,
+    version: adult.version,
+    catalogVersion: adult.catalogVersion,
+    status: adult.status,
+    publishedAt: adult.publishedAt,
+    questions: adult.questions.map(row => {
+      const question = serializeQuestion(row)
+      const byMode: Partial<Record<ClinicalMode, ProfileSettings>> = {}
+      for (const population of PREOP_POPULATIONS) {
+        const own = byPopulation[population].get(question.stableKey)
+        if (own && questionAppliesToPopulation(question.applicability, population)) byMode[population] = own
+      }
+      const legacy = byMode.ADULT ?? byMode.PEDIATRIC
+      return { ...question, ...(legacy ?? {}), byMode }
+    }),
+  }
+}
+
 /**
  * The profile a fresh appliance starts with, straight from the bundle, for
  * reads that must not write (a case read before any preop was ever saved).
  */
 export function defaultPreopProfileShape(): PreopProfileShape {
+  // Both populations start from the same bundled defaults.
+  const single = defaultSinglePreopProfileShape()
+  return {
+    ...single,
+    questions: single.questions.map(question => {
+      const own = { enabled: question.enabled, required: question.required, sortOrder: question.sortOrder }
+      const byMode: Partial<Record<ClinicalMode, ProfileSettings>> = {}
+      for (const population of PREOP_POPULATIONS) {
+        if (questionAppliesToPopulation(question.applicability, population)) byMode[population] = own
+      }
+      return { ...question, byMode }
+    }),
+  }
+}
+
+function defaultSinglePreopProfileShape(): PreopProfileShape {
   return {
     id: "bundled-default",
     version: 0,

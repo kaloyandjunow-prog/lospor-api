@@ -1194,6 +1194,8 @@ model PreopAnswerOption {
 model PreopAssessmentProfile {
   id             String             @id @default(cuid())
   version        Int                @unique
+  /// Adults and children each have their own profile (9.14.5).
+  population     ClinicalMode       @default(ADULT)
   catalogVersion String
   status         PreopProfileStatus @default(DRAFT)
   publishedAt    DateTime?
@@ -1203,7 +1205,7 @@ model PreopAssessmentProfile {
   questions   PreopProfileQuestion[]
   auditEvents PreopAssessmentAuditEvent[]
 
-  @@index([status, version])
+  @@index([population, status, version])
 }
 
 

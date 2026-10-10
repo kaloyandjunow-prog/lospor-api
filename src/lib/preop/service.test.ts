@@ -3,6 +3,7 @@ import { PreopAnswerState, PreopProfileStatus } from "@/generated/prisma/client"
 import { BUNDLED_PREOP_QUESTIONS, DEFAULT_ENABLED_QUESTION_KEYS, PREOP_CATALOG_VERSION } from "./catalog"
 import {
   ensurePreopProfile,
+  ensurePreopProfiles,
   effectiveOptionKey,
   legacyAnswers,
   missingRequiredPreopQuestions,
@@ -10,6 +11,7 @@ import {
   preopContractBlockedKeys,
   provisionPreopCatalog,
   savePreopAnswers,
+  serializePreopProfiles,
   updatePreopProfile,
   type PreopDb,
 } from "./service"
@@ -26,10 +28,11 @@ type Row = {
 }
 
 /** The bundled catalogue as a provisioned profile, optionally reconfigured. */
-function profileRow(configure: Record<string, { enabled?: boolean; required?: boolean }> = {}) {
+function profileRow(configure: Record<string, { enabled?: boolean; required?: boolean }> = {}, population: "ADULT" | "PEDIATRIC" = "ADULT") {
   return {
-    id: "profile-1",
-    version: 1,
+    id: population === "ADULT" ? "profile-1" : "profile-2",
+    version: population === "ADULT" ? 1 : 2,
+    population,
     catalogVersion: PREOP_CATALOG_VERSION,
     status: PreopProfileStatus.PUBLISHED,
     publishedAt: new Date("2026-09-24T00:00:00Z"),
@@ -61,17 +64,20 @@ function profileRow(configure: Record<string, { enabled?: boolean; required?: bo
 }
 
 /** A stand-in for the answer table that behaves like the real one. */
-function fakeDb(profile = profileRow()) {
+// The paediatric profile defaults to a copy of the adult one, as an upgrade makes it.
+function fakeDb(profile = profileRow(), pediatric: ReturnType<typeof profileRow> = { ...structuredClone(profile), id: "profile-2", version: 2, population: "PEDIATRIC" }) {
   const answers = new Map<string, Row>()
   const writes: string[] = []
+  const byPopulation = (population?: string) => population === "PEDIATRIC" ? pediatric : profile
   const db = {
     preopAssessmentProfile: {
-      findFirst: vi.fn(async () => profile),
+      findFirst: vi.fn(async ({ where }: { where?: { population?: string } } = {}) => byPopulation(where?.population)),
       update: vi.fn(async () => profile),
     },
     preopProfileQuestion: {
-      update: vi.fn(async ({ where, data }: { where: { profileId_questionId: { questionId: string } }; data: Record<string, unknown> }) => {
-        const row = profile.questions.find(item => item.questionId === where.profileId_questionId.questionId)!
+      update: vi.fn(async ({ where, data }: { where: { profileId_questionId: { profileId: string; questionId: string } }; data: Record<string, unknown> }) => {
+        const owner = where.profileId_questionId.profileId === pediatric.id ? pediatric : profile
+        const row = owner.questions.find(item => item.questionId === where.profileId_questionId.questionId)!
         Object.assign(row, data)
         return row
       }),
@@ -120,7 +126,7 @@ function fakeDb(profile = profileRow()) {
   const stateOf = (key: string) => answers.get(`q-${key}`)?.state
   const save = (preop: Record<string, unknown>, extra: { answers?: Parameters<typeof savePreopAnswers>[1]["answers"]; clinicalMode?: string } = {}) =>
     savePreopAnswers(db, { caseId: "case-1", preopId: "preop-1", actorId: "clinician-1", preop, ...extra })
-  return { db, answers, writes, stateOf, save, profile }
+  return { db, answers, writes, stateOf, save, profile, pediatric }
 }
 
 const ADULT_BASELINE_ON = BUNDLED_PREOP_QUESTIONS
@@ -362,10 +368,99 @@ describe("required questions gate continue-to-intraop, never a save", () => {
   })
 })
 
-describe("the one profile", () => {
-  const all = (profile: ReturnType<typeof profileRow>) => profile.questions.map(row => ({
-    stableKey: row.question.stableKey, enabled: row.enabled, required: row.required, sortOrder: row.sortOrder,
-  }))
+describe("the profiles, one per population", () => {
+  // Every question the profile's population is asked: what Status submits.
+  const all = (profile: ReturnType<typeof profileRow>) => profile.questions
+    .filter(row => row.question.applicability.length === 0 || row.question.applicability.includes(profile.population))
+    .map(row => ({ stableKey: row.question.stableKey, enabled: row.enabled, required: row.required, sortOrder: row.sortOrder }))
+
+  it("changes one population's profile and leaves the other's alone", async () => {
+    const env = fakeDb()
+    const requested = all(env.pediatric).map(item => item.stableKey === "BASE_LATEX_ALLERGY" ? { ...item, enabled: true, required: true } : item)
+    await updatePreopProfile(env.db, "admin-1", requested, "Children: latex allergy is required", "PEDIATRIC")
+
+    expect(env.pediatric.questions.find(row => row.question.stableKey === "BASE_LATEX_ALLERGY")).toMatchObject({ enabled: true, required: true })
+    expect(env.profile.questions.find(row => row.question.stableKey === "BASE_LATEX_ALLERGY")).toMatchObject({ required: false })
+    const audit = vi.mocked(env.db.preopAssessmentAuditEvent.create).mock.calls[0]![0] as { data: { profileId: string; detail: { population: string } } }
+    expect(audit.data).toMatchObject({ profileId: "profile-2", detail: { population: "PEDIATRIC" } })
+  })
+
+  it("refuses a question the population is never asked", async () => {
+    const env = fakeDb()
+    const adultOnly = { stableKey: "A1_RECENT_INFECTION", enabled: true, required: false, sortOrder: 999 }
+    await expect(updatePreopProfile(env.db, "admin-1", [...all(env.pediatric), adultOnly], "reason text", "PEDIATRIC"))
+      .rejects.toMatchObject({ code: "PREOP_QUESTION_OTHER_POPULATION" })
+  })
+
+  it("asks a child what the paediatric profile says, and an adult what the adult one says", async () => {
+    const adult = profileRow({ BASE_LATEX_ALLERGY: { enabled: false } })
+    const child = profileRow({ BASE_LATEX_ALLERGY: { enabled: true } }, "PEDIATRIC")
+    const env = fakeDb(adult, child)
+    await env.save({ clinicalMode: "PEDIATRIC" })
+    expect(env.stateOf("BASE_LATEX_ALLERGY")).toBe(PreopAnswerState.NOT_ASKED)
+    expect(env.answers.get("q-BASE_LATEX_ALLERGY")).toMatchObject({ profileId: "profile-2", profileVersion: 2 })
+
+    const adultEnv = fakeDb(adult, child)
+    await adultEnv.save({ clinicalMode: "ADULT" })
+    expect(adultEnv.stateOf("BASE_LATEX_ALLERGY")).toBeUndefined()
+  })
+
+  it("checks a required question against the case's own population", () => {
+    const adult = profileRow({ BASE_LATEX_ALLERGY: { enabled: true, required: false } })
+    const child = profileRow({ BASE_LATEX_ALLERGY: { enabled: true, required: true } }, "PEDIATRIC")
+    expect(missingRequiredPreopQuestions(child, [], "PEDIATRIC").map(item => item.stableKey)).toContain("BASE_LATEX_ALLERGY")
+    expect(missingRequiredPreopQuestions(adult, [], "ADULT").map(item => item.stableKey)).not.toContain("BASE_LATEX_ALLERGY")
+  })
+
+  it("sends both populations' settings to the forms, and the adult's to an older client", () => {
+    const adult = profileRow({ BASE_LATEX_ALLERGY: { enabled: true, required: false } })
+    const child = profileRow({ BASE_LATEX_ALLERGY: { enabled: true, required: true }, P2_HOME_OXYGEN_NIV: { enabled: true } }, "PEDIATRIC")
+    const shape = serializePreopProfiles({ ADULT: adult, PEDIATRIC: child } as never)
+    const question = (key: string) => shape.questions.find(item => item.stableKey === key)!
+    expect(question("BASE_LATEX_ALLERGY").byMode).toEqual({
+      ADULT: { enabled: true, required: false, sortOrder: expect.any(Number) },
+      PEDIATRIC: { enabled: true, required: true, sortOrder: expect.any(Number) },
+    })
+    expect(question("BASE_LATEX_ALLERGY").required).toBe(false)
+    // Children only: no adult settings, and an older client reads the paediatric ones.
+    expect(Object.keys(question("P2_HOME_OXYGEN_NIV").byMode!)).toEqual(["PEDIATRIC"])
+    expect(question("P2_HOME_OXYGEN_NIV").enabled).toBe(true)
+    expect(Object.keys(question("A1_RECENT_INFECTION").byMode!)).toEqual(["ADULT"])
+  })
+
+  it("starts the paediatric profile as a copy of the existing one on upgrade", async () => {
+    const adult = profileRow({ A1_RECENT_INFECTION: { enabled: true, required: true } })
+    adult.questions.find(row => row.question.stableKey === "A1_RECENT_INFECTION")!.sortOrder = 500
+    let pediatric: ReturnType<typeof profileRow> | null = null
+    const createMany = vi.fn(async ({ data }: { data: Array<{ questionId: string; enabled: boolean; required: boolean; sortOrder: number }> }) => {
+      pediatric = profileRow({}, "PEDIATRIC")
+      for (const row of pediatric.questions) Object.assign(row, data.find(item => item.questionId === "definition-" + row.question.stableKey))
+      return { count: data.length }
+    })
+    const db = {
+      $executeRaw: vi.fn(async () => 0),
+      preopQuestionDefinition: {
+        findMany: vi.fn(async ({ select }: { select?: { id?: boolean } } = {}) =>
+          select && "id" in select ? BUNDLED_PREOP_QUESTIONS.map(item => ({ id: "definition-" + item.stableKey, stableKey: item.stableKey })) : []),
+      },
+      preopAssessmentProfile: {
+        findFirst: vi.fn(async ({ where, select }: { where?: { population?: string }; select?: unknown } = {}) =>
+          select ? { version: 1 } : where?.population === "PEDIATRIC" ? pediatric : adult),
+        create: vi.fn(async () => ({ id: "profile-new" })),
+      },
+      preopProfileQuestion: { createMany },
+      preopAssessmentAuditEvent: { create: vi.fn() },
+    } as unknown as PreopDb
+
+    const both = await ensurePreopProfiles(db, "clinician-1")
+
+    expect(createMany).toHaveBeenCalledOnce()
+    const row = (createMany.mock.calls[0]![0]).data.find(item => item.questionId === "definition-A1_RECENT_INFECTION")
+    expect(row).toMatchObject({ enabled: true, required: true, sortOrder: 500 })
+    expect(both.PEDIATRIC.population).toBe("PEDIATRIC")
+    const audit = vi.mocked(db.preopAssessmentAuditEvent.create).mock.calls[0]![0] as { data: { detail: unknown } }
+    expect(audit.data.detail).toMatchObject({ population: "PEDIATRIC", copiedFromProfileId: "profile-1" })
+  })
 
   it("is changed in place, and only what changed is audited", async () => {
     const env = fakeDb()
@@ -434,7 +529,10 @@ describe("the one profile", () => {
         findMany: vi.fn(async ({ where }: { where?: { stableKey?: { in: string[] } } } = {}) =>
           where ? where.stableKey!.in.map(stableKey => ({ id: "definition-" + stableKey, stableKey })) : []),
       },
-      preopAssessmentProfile: { findFirst: vi.fn(async () => profile), update: vi.fn(async () => profile) },
+      preopAssessmentProfile: {
+        findFirst: vi.fn(async ({ where }: { where?: { population?: string } } = {}) => where?.population === "PEDIATRIC" ? profileRow({}, "PEDIATRIC") : profile),
+        update: vi.fn(async () => profile),
+      },
       preopProfileQuestion: { createMany },
       preopAssessmentAuditEvent: { create: vi.fn() },
     } as unknown as PreopDb

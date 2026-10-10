@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Prisma, PreopAnswerState, PreopSuggestionStatus } from "@/generated/prisma/client"
-import { activePreopProfile, effectiveOptionKey, ensurePreopProfile, questionAppliesToMode, type PreopProfileShape } from "./service"
+import { activePreopProfile, effectiveOptionKey, ensurePreopProfile, populationForMode, questionAppliesToMode, type PreopProfileShape } from "./service"
 
 export const PREOP_SUGGESTION_RULE_VERSION = "1.4.7.1"
 
@@ -159,8 +159,8 @@ export async function generatePreopSuggestions(db: Db, args: {
   preopId: string
   actorId: string
 }): Promise<{ profileVersion: number; suggestions: unknown[] }> {
-  const profile = await ensurePreopProfile(db, args.actorId)
   const caseRow = await db.case.findUnique({ where: { id: args.caseId }, select: { clinicalMode: true } })
+  const profile = await ensurePreopProfile(db, args.actorId, populationForMode(caseRow?.clinicalMode))
   const preop = await db.preoperativeAssessment.findUnique({
     where: { id: args.preopId },
     include: { diagnoses: true, comorbidityRows: true, medications: true, labRows: true },
@@ -211,7 +211,7 @@ export async function reviewPreopSuggestion(db: Db, args: {
 }) {
   const suggestion = await db.preopAssessmentSuggestion.findUnique({
     where: { id: args.suggestionId },
-    include: { preop: true, question: { include: { options: { select: { key: true } } } } },
+    include: { preop: { include: { case: { select: { clinicalMode: true } } } }, question: { include: { options: { select: { key: true } } } } },
   })
   if (!suggestion || suggestion.preop.caseId !== args.caseId) throw new Error("PREOP_SUGGESTION_NOT_FOUND")
   const reviewedAt = new Date()
@@ -229,7 +229,7 @@ export async function reviewPreopSuggestion(db: Db, args: {
         where: { preopId_questionId: { preopId: suggestion.preopId, questionId: suggestion.questionId } },
         create: {
           preopId: suggestion.preopId, questionId: suggestion.questionId,
-          profileId: (await activePreopProfile(db))!.id,
+          profileId: (await activePreopProfile(db, populationForMode(suggestion.preop.case?.clinicalMode)))!.id,
           profileVersion: suggestion.profileVersion,
           state: suggestion.proposedState, optionKey,
           valueText: suggestion.proposedValueText ?? null, valueNumber: suggestion.proposedValueNumber ?? null,
