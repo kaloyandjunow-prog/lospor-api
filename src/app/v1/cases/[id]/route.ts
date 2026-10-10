@@ -33,14 +33,15 @@ import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { decidePediatricWrite } from "@/lib/pediatric-mode"
 import { requiresPediatricModeDecision } from "@lospor/core/pediatric"
 import {
-  activePreopProfile,
   defaultPreopProfileShape,
   missingRequiredPreopQuestions,
   PREOP_ANSWER_REFUSED,
   PreopContractError,
   preopContractBlockedKeys,
   savePreopAnswers,
-  serializePreopProfile,
+  populationForMode,
+  readPreopProfiles,
+  serializePreopProfiles,
   preparePreopProfile,
 } from "@/lib/preop/service"
 
@@ -148,16 +149,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     : { ...record, pediatricModeDecisionRequired }
   // Prisma JSON columns are intentionally broad at the persistence boundary.
   // The response contract is the shared serialised CaseDetail shape.
-  // The form is drawn from the appliance profile. A read never writes, so an
-  // appliance that has not saved any preop yet answers with the bundled
-  // defaults -- exactly what its first save will provision.
-  const activeProfile = await activePreopProfile(prisma)
-  const preopProfile = activeProfile ? serializePreopProfile(activeProfile) : defaultPreopProfileShape()
+  // The form is drawn from the appliance profiles, adult and paediatric, sent
+  // together so a case switched between them needs no second read. A read
+  // never writes, so an appliance that has not saved any preop yet answers
+  // with the bundled defaults -- exactly what its first save will provision.
+  const profiles = await readPreopProfiles(prisma)
+  const preopProfile = profiles ? serializePreopProfiles(profiles) : defaultPreopProfileShape()
   const responseRecord = {
     ...normalizedRecord,
     capabilities: caseCapabilitiesForUser(user, record),
     preopProfile,
-    preopRequiredMissing: missingRequiredPreopQuestions(activeProfile, record.preop?.assessmentAnswers, record.clinicalMode),
+    preopRequiredMissing: missingRequiredPreopQuestions(profiles?.[populationForMode(record.clinicalMode)], record.preop?.assessmentAnswers, record.clinicalMode),
   } as unknown as Serialized<CaseDetail>
 
   // Extending open infusion/fluid/agent bars to "now" on read used to happen here,

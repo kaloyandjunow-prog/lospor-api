@@ -1122,7 +1122,7 @@ add("PATCH", "/v1/cases/{id}/preop-suggestions/{suggestionId}", "Accept or rejec
   errors: [400, 401, 403, 404, 409, 500],
   tag: "clinical",
 })
-add("GET", "/v1/preop/profile", "Read the appliance-wide preoperative profile (which bundled questions are on, their order, and which are required)", {
+add("GET", "/v1/preop/profile", "Read the preoperative profiles, adult and paediatric, in one shape (which bundled questions are on for each population, their order, and which are required)", {
   result: ref("JsonObject"),
   errors: [401, 500],
   tag: "clinical",

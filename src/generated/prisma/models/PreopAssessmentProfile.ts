@@ -37,6 +37,7 @@ export type PreopAssessmentProfileSumAggregateOutputType = {
 export type PreopAssessmentProfileMinAggregateOutputType = {
   id: string | null
   version: number | null
+  population: $Enums.ClinicalMode | null
   catalogVersion: string | null
   status: $Enums.PreopProfileStatus | null
   publishedAt: Date | null
@@ -47,6 +48,7 @@ export type PreopAssessmentProfileMinAggregateOutputType = {
 export type PreopAssessmentProfileMaxAggregateOutputType = {
   id: string | null
   version: number | null
+  population: $Enums.ClinicalMode | null
   catalogVersion: string | null
   status: $Enums.PreopProfileStatus | null
   publishedAt: Date | null
@@ -57,6 +59,7 @@ export type PreopAssessmentProfileMaxAggregateOutputType = {
 export type PreopAssessmentProfileCountAggregateOutputType = {
   id: number
   version: number
+  population: number
   catalogVersion: number
   status: number
   publishedAt: number
@@ -77,6 +80,7 @@ export type PreopAssessmentProfileSumAggregateInputType = {
 export type PreopAssessmentProfileMinAggregateInputType = {
   id?: true
   version?: true
+  population?: true
   catalogVersion?: true
   status?: true
   publishedAt?: true
@@ -87,6 +91,7 @@ export type PreopAssessmentProfileMinAggregateInputType = {
 export type PreopAssessmentProfileMaxAggregateInputType = {
   id?: true
   version?: true
+  population?: true
   catalogVersion?: true
   status?: true
   publishedAt?: true
@@ -97,6 +102,7 @@ export type PreopAssessmentProfileMaxAggregateInputType = {
 export type PreopAssessmentProfileCountAggregateInputType = {
   id?: true
   version?: true
+  population?: true
   catalogVersion?: true
   status?: true
   publishedAt?: true
@@ -194,6 +200,7 @@ export type PreopAssessmentProfileGroupByArgs<ExtArgs extends runtime.Types.Exte
 export type PreopAssessmentProfileGroupByOutputType = {
   id: string
   version: number
+  population: $Enums.ClinicalMode
   catalogVersion: string
   status: $Enums.PreopProfileStatus
   publishedAt: Date | null
@@ -227,6 +234,7 @@ export type PreopAssessmentProfileWhereInput = {
   NOT?: Prisma.PreopAssessmentProfileWhereInput | Prisma.PreopAssessmentProfileWhereInput[]
   id?: Prisma.StringFilter<"PreopAssessmentProfile"> | string
   version?: Prisma.IntFilter<"PreopAssessmentProfile"> | number
+  population?: Prisma.EnumClinicalModeFilter<"PreopAssessmentProfile"> | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFilter<"PreopAssessmentProfile"> | string
   status?: Prisma.EnumPreopProfileStatusFilter<"PreopAssessmentProfile"> | $Enums.PreopProfileStatus
   publishedAt?: Prisma.DateTimeNullableFilter<"PreopAssessmentProfile"> | Date | string | null
@@ -239,6 +247,7 @@ export type PreopAssessmentProfileWhereInput = {
 export type PreopAssessmentProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   version?: Prisma.SortOrder
+  population?: Prisma.SortOrder
   catalogVersion?: Prisma.SortOrder
   status?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -254,6 +263,7 @@ export type PreopAssessmentProfileWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.PreopAssessmentProfileWhereInput | Prisma.PreopAssessmentProfileWhereInput[]
   OR?: Prisma.PreopAssessmentProfileWhereInput[]
   NOT?: Prisma.PreopAssessmentProfileWhereInput | Prisma.PreopAssessmentProfileWhereInput[]
+  population?: Prisma.EnumClinicalModeFilter<"PreopAssessmentProfile"> | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFilter<"PreopAssessmentProfile"> | string
   status?: Prisma.EnumPreopProfileStatusFilter<"PreopAssessmentProfile"> | $Enums.PreopProfileStatus
   publishedAt?: Prisma.DateTimeNullableFilter<"PreopAssessmentProfile"> | Date | string | null
@@ -266,6 +276,7 @@ export type PreopAssessmentProfileWhereUniqueInput = Prisma.AtLeast<{
 export type PreopAssessmentProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   version?: Prisma.SortOrder
+  population?: Prisma.SortOrder
   catalogVersion?: Prisma.SortOrder
   status?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -284,6 +295,7 @@ export type PreopAssessmentProfileScalarWhereWithAggregatesInput = {
   NOT?: Prisma.PreopAssessmentProfileScalarWhereWithAggregatesInput | Prisma.PreopAssessmentProfileScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"PreopAssessmentProfile"> | string
   version?: Prisma.IntWithAggregatesFilter<"PreopAssessmentProfile"> | number
+  population?: Prisma.EnumClinicalModeWithAggregatesFilter<"PreopAssessmentProfile"> | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringWithAggregatesFilter<"PreopAssessmentProfile"> | string
   status?: Prisma.EnumPreopProfileStatusWithAggregatesFilter<"PreopAssessmentProfile"> | $Enums.PreopProfileStatus
   publishedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"PreopAssessmentProfile"> | Date | string | null
@@ -294,6 +306,7 @@ export type PreopAssessmentProfileScalarWhereWithAggregatesInput = {
 export type PreopAssessmentProfileCreateInput = {
   id?: string
   version: number
+  population?: $Enums.ClinicalMode
   catalogVersion: string
   status?: $Enums.PreopProfileStatus
   publishedAt?: Date | string | null
@@ -306,6 +319,7 @@ export type PreopAssessmentProfileCreateInput = {
 export type PreopAssessmentProfileUncheckedCreateInput = {
   id?: string
   version: number
+  population?: $Enums.ClinicalMode
   catalogVersion: string
   status?: $Enums.PreopProfileStatus
   publishedAt?: Date | string | null
@@ -318,6 +332,7 @@ export type PreopAssessmentProfileUncheckedCreateInput = {
 export type PreopAssessmentProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -330,6 +345,7 @@ export type PreopAssessmentProfileUpdateInput = {
 export type PreopAssessmentProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -342,6 +358,7 @@ export type PreopAssessmentProfileUncheckedUpdateInput = {
 export type PreopAssessmentProfileCreateManyInput = {
   id?: string
   version: number
+  population?: $Enums.ClinicalMode
   catalogVersion: string
   status?: $Enums.PreopProfileStatus
   publishedAt?: Date | string | null
@@ -352,6 +369,7 @@ export type PreopAssessmentProfileCreateManyInput = {
 export type PreopAssessmentProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -362,6 +380,7 @@ export type PreopAssessmentProfileUpdateManyMutationInput = {
 export type PreopAssessmentProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -372,6 +391,7 @@ export type PreopAssessmentProfileUncheckedUpdateManyInput = {
 export type PreopAssessmentProfileCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   version?: Prisma.SortOrder
+  population?: Prisma.SortOrder
   catalogVersion?: Prisma.SortOrder
   status?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrder
@@ -386,6 +406,7 @@ export type PreopAssessmentProfileAvgOrderByAggregateInput = {
 export type PreopAssessmentProfileMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   version?: Prisma.SortOrder
+  population?: Prisma.SortOrder
   catalogVersion?: Prisma.SortOrder
   status?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrder
@@ -396,6 +417,7 @@ export type PreopAssessmentProfileMaxOrderByAggregateInput = {
 export type PreopAssessmentProfileMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   version?: Prisma.SortOrder
+  population?: Prisma.SortOrder
   catalogVersion?: Prisma.SortOrder
   status?: Prisma.SortOrder
   publishedAt?: Prisma.SortOrder
@@ -454,6 +476,7 @@ export type PreopAssessmentProfileUpdateOneWithoutAuditEventsNestedInput = {
 export type PreopAssessmentProfileCreateWithoutQuestionsInput = {
   id?: string
   version: number
+  population?: $Enums.ClinicalMode
   catalogVersion: string
   status?: $Enums.PreopProfileStatus
   publishedAt?: Date | string | null
@@ -465,6 +488,7 @@ export type PreopAssessmentProfileCreateWithoutQuestionsInput = {
 export type PreopAssessmentProfileUncheckedCreateWithoutQuestionsInput = {
   id?: string
   version: number
+  population?: $Enums.ClinicalMode
   catalogVersion: string
   status?: $Enums.PreopProfileStatus
   publishedAt?: Date | string | null
@@ -492,6 +516,7 @@ export type PreopAssessmentProfileUpdateToOneWithWhereWithoutQuestionsInput = {
 export type PreopAssessmentProfileUpdateWithoutQuestionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -503,6 +528,7 @@ export type PreopAssessmentProfileUpdateWithoutQuestionsInput = {
 export type PreopAssessmentProfileUncheckedUpdateWithoutQuestionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -514,6 +540,7 @@ export type PreopAssessmentProfileUncheckedUpdateWithoutQuestionsInput = {
 export type PreopAssessmentProfileCreateWithoutAuditEventsInput = {
   id?: string
   version: number
+  population?: $Enums.ClinicalMode
   catalogVersion: string
   status?: $Enums.PreopProfileStatus
   publishedAt?: Date | string | null
@@ -525,6 +552,7 @@ export type PreopAssessmentProfileCreateWithoutAuditEventsInput = {
 export type PreopAssessmentProfileUncheckedCreateWithoutAuditEventsInput = {
   id?: string
   version: number
+  population?: $Enums.ClinicalMode
   catalogVersion: string
   status?: $Enums.PreopProfileStatus
   publishedAt?: Date | string | null
@@ -552,6 +580,7 @@ export type PreopAssessmentProfileUpdateToOneWithWhereWithoutAuditEventsInput = 
 export type PreopAssessmentProfileUpdateWithoutAuditEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -563,6 +592,7 @@ export type PreopAssessmentProfileUpdateWithoutAuditEventsInput = {
 export type PreopAssessmentProfileUncheckedUpdateWithoutAuditEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   version?: Prisma.IntFieldUpdateOperationsInput | number
+  population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   catalogVersion?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumPreopProfileStatusFieldUpdateOperationsInput | $Enums.PreopProfileStatus
   publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -614,6 +644,7 @@ export type PreopAssessmentProfileCountOutputTypeCountAuditEventsArgs<ExtArgs ex
 export type PreopAssessmentProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   version?: boolean
+  population?: boolean
   catalogVersion?: boolean
   status?: boolean
   publishedAt?: boolean
@@ -627,6 +658,7 @@ export type PreopAssessmentProfileSelect<ExtArgs extends runtime.Types.Extension
 export type PreopAssessmentProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   version?: boolean
+  population?: boolean
   catalogVersion?: boolean
   status?: boolean
   publishedAt?: boolean
@@ -637,6 +669,7 @@ export type PreopAssessmentProfileSelectCreateManyAndReturn<ExtArgs extends runt
 export type PreopAssessmentProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   version?: boolean
+  population?: boolean
   catalogVersion?: boolean
   status?: boolean
   publishedAt?: boolean
@@ -647,6 +680,7 @@ export type PreopAssessmentProfileSelectUpdateManyAndReturn<ExtArgs extends runt
 export type PreopAssessmentProfileSelectScalar = {
   id?: boolean
   version?: boolean
+  population?: boolean
   catalogVersion?: boolean
   status?: boolean
   publishedAt?: boolean
@@ -654,7 +688,7 @@ export type PreopAssessmentProfileSelectScalar = {
   createdAt?: boolean
 }
 
-export type PreopAssessmentProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "version" | "catalogVersion" | "status" | "publishedAt" | "publishedById" | "createdAt", ExtArgs["result"]["preopAssessmentProfile"]>
+export type PreopAssessmentProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "version" | "population" | "catalogVersion" | "status" | "publishedAt" | "publishedById" | "createdAt", ExtArgs["result"]["preopAssessmentProfile"]>
 export type PreopAssessmentProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   questions?: boolean | Prisma.PreopAssessmentProfile$questionsArgs<ExtArgs>
   auditEvents?: boolean | Prisma.PreopAssessmentProfile$auditEventsArgs<ExtArgs>
@@ -672,6 +706,10 @@ export type $PreopAssessmentProfilePayload<ExtArgs extends runtime.Types.Extensi
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     version: number
+    /**
+     * Adults and children each have their own profile (9.14.5).
+     */
+    population: $Enums.ClinicalMode
     catalogVersion: string
     status: $Enums.PreopProfileStatus
     publishedAt: Date | null
@@ -1104,6 +1142,7 @@ export interface Prisma__PreopAssessmentProfileClient<T, Null = never, ExtArgs e
 export interface PreopAssessmentProfileFieldRefs {
   readonly id: Prisma.FieldRef<"PreopAssessmentProfile", 'String'>
   readonly version: Prisma.FieldRef<"PreopAssessmentProfile", 'Int'>
+  readonly population: Prisma.FieldRef<"PreopAssessmentProfile", 'ClinicalMode'>
   readonly catalogVersion: Prisma.FieldRef<"PreopAssessmentProfile", 'String'>
   readonly status: Prisma.FieldRef<"PreopAssessmentProfile", 'PreopProfileStatus'>
   readonly publishedAt: Prisma.FieldRef<"PreopAssessmentProfile", 'DateTime'>

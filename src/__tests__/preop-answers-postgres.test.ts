@@ -126,7 +126,7 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
   // Production (API far from its database, ~90 ms a round trip) had no
   // catalogue and no profile. A nested profile create took 172 queries, 16 s,
   // and every save failed. Round trips, not rows, are what cost there.
-  it("sets up the catalogue and profile on an empty database in a bounded number of queries", async () => {
+  it("sets up the catalogue and both profiles on an empty database in a bounded number of queries", async () => {
     const { PrismaClient } = await import("@/generated/prisma/client")
     const { PrismaPg } = await import("@prisma/adapter-pg")
     const { ensurePreopProfile } = await import("@/lib/preop/service")
@@ -170,7 +170,10 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
       await counted.$disconnect()
     }
     expect(questionCount).toBe(BUNDLED_PREOP_QUESTIONS.length)
-    expect(fromEmpty).toBeLessThanOrEqual(30)
+    // Two profiles since 9.14.5, adult and paediatric, each set up in the same
+    // fixed handful of flat statements: the count does not grow with the
+    // catalogue (row by row it was 172).
+    expect(fromEmpty).toBeLessThanOrEqual(50)
     expect(whenSetUp).toBeLessThanOrEqual(6)
   })
 
