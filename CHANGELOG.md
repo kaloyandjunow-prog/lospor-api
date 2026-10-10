@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [9.14.4] - 2026-10-10
+
+### Security
+
+- **Dependencies patched**: Next.js resolved to 16.3.8 (six high advisories),
+  sharp 0.35.5 (GHSA-wq5f-xc86-pv6w), source-map-js 1.2.2
+  (GHSA-68fv-2mgg-jv7q) and js-yaml 4.3.2. No behaviour change.
+
 ## [9.14.3] - 2026-10-07
 
 ### Fixed
