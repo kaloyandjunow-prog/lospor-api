@@ -2,6 +2,7 @@ import { plannedProcedureText } from "@lospor/core/procedure-codes"
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePreopPatch } from "@lospor/core/case-payloads"
 import { calcApfel, calcRCRI, calcStopBang } from "@lospor/core/scores"
+import { ASA_SUGGESTION_RULES_VERSION, suggestASAFromTags } from "@lospor/core/asa"
 import {
   calculateColds,
   calculatePovoc,
@@ -54,6 +55,19 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     : null
   const bodySurfaceAreaM2 = bsaResult?.available ? bsaResult.value.squareMetres : null
   const pediatric = preop.clinicalMode === "PEDIATRIC"
+  // The ASA suggestion the clients show, worked out here from the same record
+  // with the same Core rules and stored beside the class chosen. Children get
+  // no BMI rule, as on both clients.
+  const comorbidityTags = Array.isArray(preop.comorbidities)
+    ? (preop.comorbidities as Array<{ label?: unknown; code?: unknown; sub?: unknown }>)
+      .filter(tag => tag && typeof tag === "object")
+      .map(tag => ({
+        label: typeof tag.label === "string" ? tag.label : "",
+        code: typeof tag.code === "string" ? tag.code : undefined,
+        sub: typeof tag.sub === "string" ? tag.sub : undefined,
+      }))
+    : []
+  const asaSuggestion = suggestASAFromTags(comorbidityTags, pediatric ? null : bmi)
   const normalizedAge = pediatric
     && preop.ageValue != null
     && preop.ageUnit != null
@@ -170,6 +184,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     aiOptIn:          preop.aiOptIn   ?? false,
 
     comorbidities: preop.comorbidities ?? [],
+    asaSuggestedScore:         asaSuggestion?.cls ?? null,
+    asaSuggestionReasons:      asaSuggestion?.reasonCodes ?? [],
+    asaSuggestionRulesVersion: asaSuggestion ? ASA_SUGGESTION_RULES_VERSION : null,
 
     allergies,
     allergyDetails,
@@ -306,6 +323,11 @@ export function mapPreopUpdate(
   }
 
   // Computed / aliased fields — include when any contributing source key is present
+  if (["comorbidities", "heightCm", "weightKg", "bmi", "clinicalMode"].some(has)) {
+    r.asaSuggestedScore = full.asaSuggestedScore
+    r.asaSuggestionReasons = full.asaSuggestionReasons
+    r.asaSuggestionRulesVersion = full.asaSuggestionRulesVersion
+  }
   if (has("heightCm") || has("weightKg") || has("bmi")) {
     r.bmi = full.bmi
     r.bodySurfaceAreaM2 = full.bodySurfaceAreaM2

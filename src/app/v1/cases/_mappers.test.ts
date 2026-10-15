@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { Prisma } from "@/generated/prisma/client"
-import { mapPreop, mapIntraop, mapIntraopUpdate } from "./_mappers"
+import { ASA_SUGGESTION_RULES_VERSION } from "@lospor/core/asa"
+import { mapPreop, mapPreopUpdate, mapIntraop, mapIntraopUpdate } from "./_mappers"
 
 describe("mapPreop — mobile/legacy aliases → canonical fields", () => {
   it("maps ulbt / difficultAirway / familyProblems aliases", () => {
@@ -155,6 +156,29 @@ describe("mapPreop — adult risk totals are derived server-side, not trusted fr
   // exported (lib/preop/gupta-record.ts); a client-sent total is not stored.
   it("ignores a client-sent gutaScore", () => {
     expect(mapPreop({ gutaScore: 42 }).gutaScore).toBeNull()
+  })
+})
+
+describe("mapPreop — the ASA suggestion is stored beside the class chosen", () => {
+  it("records the suggested class, its deciding rules and the rule version", () => {
+    const r = mapPreop({ heightCm: 175, weightKg: 70, asaScore: "II", comorbidities: [{ label: "COPD", code: "J44.9" }, { label: "Hypertension", code: "I10" }] })
+    expect(r.asaSuggestedScore).toBe("III")
+    expect(r.asaSuggestionReasons).toEqual(["copd"])
+    expect(r.asaSuggestionRulesVersion).toBe(ASA_SUGGESTION_RULES_VERSION)
+    expect(r.asaScore).toBe("II")
+  })
+
+  it("records no suggestion when there is nothing to base one on", () => {
+    const r = mapPreop({ heightCm: 175, weightKg: 70, comorbidities: [] })
+    expect(r.asaSuggestedScore).toBeNull()
+    expect(r.asaSuggestionReasons).toEqual([])
+    expect(r.asaSuggestionRulesVersion).toBeNull()
+  })
+
+  it("recomputes it when a save changes the conditions, from the whole record", () => {
+    const update = mapPreopUpdate({ comorbidities: [{ label: "Heart failure", code: "I50.9" }] }, { heightCm: 175, weightKg: 70, clinicalMode: "ADULT" })
+    expect(update.asaSuggestedScore).toBe("III")
+    expect(mapPreopUpdate({ notes: "No change to the conditions" }, {})).not.toHaveProperty("asaSuggestedScore")
   })
 })
 

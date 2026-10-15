@@ -21,6 +21,7 @@ import {
   RESEARCH_EXPORT_FORMATS,
   RESEARCH_METRIC_IDS,
   RESEARCH_MIN_CELL_SIZE,
+  asaAgreementByRule,
   discloseResearchCount,
   normalizeResearchCohort,
   researchPercent,
@@ -106,10 +107,15 @@ export async function runResearchQuery(
     : DEFAULT_DISTRIBUTIONS
   const total = await prisma.case.count({ where })
   const allowExact = canInspectEntireQueryScope(context)
-  const [metrics, distributions] = await Promise.all([
+  const [metrics, distributions, asaRows] = await Promise.all([
     readResearchMetrics(where, metricIds, allowExact),
     Promise.all(distributionIds.map(id =>
       readResearchDistribution(where, id))),
+    // The suggested class and its deciding rules beside the class chosen.
+    prisma.preoperativeAssessment.findMany({
+      where: { case: where, asaSuggestedScore: { not: null }, asaScore: { not: null } },
+      select: { asaSuggestedScore: true, asaSuggestionReasons: true, asaScore: true },
+    }),
   ])
 
   return {
@@ -120,6 +126,11 @@ export async function runResearchQuery(
     matchingCaseCount: discloseResearchCount(total, allowExact),
     metrics,
     distributions,
+    asaAgreement: asaAgreementByRule(asaRows.map(row => ({
+      suggested: row.asaSuggestedScore,
+      reasons: row.asaSuggestionReasons,
+      chosen: row.asaScore,
+    }))),
     cases: [],
     pagination: null,
     generatedAt: new Date().toISOString(),

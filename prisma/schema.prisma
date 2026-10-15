@@ -1080,6 +1080,12 @@ model PreoperativeAssessment {
   airwayUnobtainable     Boolean           @default(false)
 
   asaScore         ASAScore?
+  // What the ASA suggestion rules said at the last save (Core asa.ts), kept
+  // beside the class chosen so agreement can be read per rule. The deciding
+  // rules only: the reasons of the winning class.
+  asaSuggestedScore         ASAScore?
+  asaSuggestionReasons      String[]  @default([])
+  asaSuggestionRulesVersion String?
   elective         Boolean   @default(false)
   emergencySurgery Boolean   @default(false)
   highRiskSurgery  Boolean   @default(false)
