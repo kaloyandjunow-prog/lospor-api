@@ -151,10 +151,10 @@ describe("mapPreop — adult risk totals are derived server-side, not trusted fr
     expect(mapPreop({ sex: "MALE", smoking: false }).apfelScore).toBe(1)
   })
 
-  it("still leaves gutaScore trusted from the client", () => {
-    // Unchanged by this fix: no factor-based formula exists to recompute it
-    // from, so it is stored as sent, same as before.
-    expect(mapPreop({ gutaScore: 42 }).gutaScore).toBe(42)
+  // Gupta is now derived from its stored inputs where it is shown or
+  // exported (lib/preop/gupta-record.ts); a client-sent total is not stored.
+  it("ignores a client-sent gutaScore", () => {
+    expect(mapPreop({ gutaScore: 42 }).gutaScore).toBeNull()
   })
 })
 

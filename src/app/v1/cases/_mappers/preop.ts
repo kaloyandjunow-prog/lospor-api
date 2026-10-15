@@ -12,7 +12,6 @@ import {
   copyKey,
   safeEnum,
   taggedListToStorage,
-  toFloatOrNull,
   type PreopRawInput,
 } from "./shared"
 
@@ -224,7 +223,8 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     rcriCreatinine: preop.rcriCreatinine ?? null,
 
     rcriScore:     adultScores?.rcriScore ?? null,
-    gutaScore:     pediatric ? null : toFloatOrNull(preop.gutaScore),
+    // Retired: Gupta is derived from its inputs where it is shown or exported.
+    gutaScore:     null,
     apfelScore:    adultScores?.apfelScore ?? null,
     stopBangScore: adultScores?.stopBangScore ?? null,
 

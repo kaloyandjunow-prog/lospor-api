@@ -6,6 +6,7 @@ import {
   bloodGroupConceptFor,
 } from "../concepts"
 import { POVOC_RISK_PERCENT } from "@lospor/core/pediatric"
+import { guptaRiskPercent } from "@/lib/preop/gupta-record"
 import { isoDate } from "../date-helpers"
 import { nextId } from "../ids"
 
@@ -351,7 +352,9 @@ export function mapPreopClinicalToOmop(
       visit_occurrence_id:         ctx.visitId,
     })
   }
-  ctx.sourceObservation("LOSPOR:GUTA_SCORE", preop.gutaScore, preopDate)
+  // Gupta MICA, derived from its stored inputs (lib/preop/gupta-record.ts).
+  // LOSPOR:GUTA_SCORE, its predecessor, was never filled in.
+  ctx.sourceObservation("LOSPOR:GUPTA_MICA_RISK_PERCENT", guptaRiskPercent(preop), preopDate)
 
   // ── The airway examination ───────────────────────────────────────────
   //
@@ -494,8 +497,11 @@ export function mapPreopClinicalToOmop(
       answer.question.omopConceptId ?? 0,
       // An option with its own concept (high/low surgical risk) says what the
       // answer means; otherwise the state does.
+      // A choice that is not yes/no (functional status, a procedure type) has
+      // no answer concept: its YES state means "answered", not "yes".
       answer.option?.omopConceptId
-        ?? (answer.state === "YES" ? YES_CONCEPT_ID : answer.state === "NO" ? NO_CONCEPT_ID : 0),
+        ?? (answer.optionKey && answer.optionKey !== "YES" && answer.optionKey !== "NO" ? 0
+          : answer.state === "YES" ? YES_CONCEPT_ID : answer.state === "NO" ? NO_CONCEPT_ID : 0),
     )
   }
 }

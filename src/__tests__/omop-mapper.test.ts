@@ -115,7 +115,7 @@ describe("mapCasesToOmop", () => {
       // of a procedure this team performed. One row moved between the two
       // tables rather than being added or lost.
       procedure_occurrence: 6,
-      observation: 48,
+      observation: 47, // 48 less the never-filled GUTA_SCORE
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -1227,7 +1227,8 @@ describe("clinical data that used to never leave", () => {
     expect(obs("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")[0]?.value_as_string).toBe("YES")
     expect(obs("LOSPOR:DENTAL_PROSTHETICS")[0]?.value_as_string).toBe("NO")
     expect(obs("LOSPOR:HEART_ARRHYTHMIA")[0]?.value_as_string).toBe("NO")
-    expect(obs("LOSPOR:GUTA_SCORE")[0]?.value_as_number).toBe(2)
+    // Retired: it was never filled in, and Gupta is now derived from its inputs.
+    expect(obs("LOSPOR:GUTA_SCORE")).toHaveLength(0)
   })
 
   it("measures body mass index rather than observing it", () => {

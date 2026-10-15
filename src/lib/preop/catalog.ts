@@ -7,6 +7,8 @@
  * existing bundled row with different clinical metadata.
  */
 
+import { GUPTA_FUNCTIONAL_STATUS, GUPTA_PROCEDURE_TYPES } from "@lospor/core/gupta"
+
 /** The catalogue ships with, and is versioned as, the Hospital release. */
 export const PREOP_CATALOG_VERSION = "1.4.8"
 export const YES_CONCEPT_ID = 4188539
@@ -160,6 +162,12 @@ const adult = [
   question("A13_GESTATIONAL_AGE_KNOWN", "ADULT_ADDITIONS", "Is gestational age known?", "Известна ли е гестационната възраст?", [], { applicability: ["ADULT"], allowNotApplicable: true, conditionalRuleKey: "A13_PREGNANCY_IS_YES" }),
   question("A14_BREASTFEEDING", "ADULT_ADDITIONS", "Breastfeeding", "Кърмене", [], { applicability: ["ADULT"], allowNotApplicable: true, omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_A14_BREASTFEEDING" }),
   question("A14_CONTINUE_BREASTFEEDING", "ADULT_ADDITIONS", "Intends to continue breastfeeding after anaesthesia?", "Възнамерява ли да продължи кърменето след анестезия?", [], { applicability: ["ADULT"], allowNotApplicable: true, conditionalRuleKey: "A14_BREASTFEEDING_IS_YES" }),
+  // Gupta MICA: the two inputs the record does not already hold. Age, ASA and
+  // creatinine come from the form; the risk is derived, never stored.
+  question("A15_FUNCTIONAL_STATUS", "ADULT_ADDITIONS", "Functional status (30 days before surgery)", "Функционален статус (30 дни преди операцията)",
+    GUPTA_FUNCTIONAL_STATUS.map(({ key, labelEn, labelBg }) => ({ key, labelEn, labelBg })), { applicability: ["ADULT"], omopDomain: "observation" }),
+  question("A16_GUPTA_PROCEDURE_TYPE", "ADULT_ADDITIONS", "Procedure type for the Gupta cardiac risk", "Вид операция за сърдечния риск по Gupta",
+    GUPTA_PROCEDURE_TYPES.map(({ key, labelEn, labelBg }) => ({ key, labelEn, labelBg })), { applicability: ["ADULT"], omopDomain: "observation" }),
 ]
 
 const pediatric = [
@@ -258,6 +266,8 @@ const OMOP: Record<string, readonly [number, string]> = {
   A13_GESTATIONAL_AGE_KNOWN: [0, "LOSPOR:PREOP_A13_GESTATIONAL_AGE_KNOWN"],
   A14_BREASTFEEDING: [40766616, "LOSPOR:PREOP_A14_BREASTFEEDING"], // Breastfeeding status (LOINC question)
   A14_CONTINUE_BREASTFEEDING: [0, "LOSPOR:PREOP_A14_CONTINUE_BREASTFEEDING"],
+  A15_FUNCTIONAL_STATUS: [0, "LOSPOR:PREOP_A15_FUNCTIONAL_STATUS"], // NSQIP three-level status; no standard concept
+  A16_GUPTA_PROCEDURE_TYPE: [0, "LOSPOR:PREOP_A16_GUPTA_PROCEDURE_TYPE"], // a model category, not a procedure
   P1_PREMATURITY_NICU: [0, "LOSPOR:PREOP_P1_PREMATURITY_NICU"], // prematurity *or* NICU: the follow-ups carry the concepts
   P1_BORN_BEFORE_37_WEEKS: [36675035, "LOSPOR:PREOP_P1_BORN_BEFORE_37_WEEKS"], // Prematurity of infant
   P1_NICU_ADMISSION: [3661417, "LOSPOR:PREOP_P1_NICU_ADMISSION"], // Admission to neonatal intensive care unit
@@ -287,6 +297,8 @@ const FORM_SECTION: Record<string, PreopFormSection> = {
   A12_PACEMAKER_ICD: "physical_exam",
   A13_PREGNANCY: "demographics",
   A14_BREASTFEEDING: "demographics",
+  A15_FUNCTIONAL_STATUS: "risk_scores",
+  A16_GUPTA_PROCEDURE_TYPE: "risk_scores",
   P3_FEEDING_SWALLOWING: "airway",
   P4_SLEEP_DISORDERED_BREATHING: "airway",
   P8_DIFFICULT_VENOUS_ACCESS: "physical_exam",

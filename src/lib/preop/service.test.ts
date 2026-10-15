@@ -549,6 +549,36 @@ describe("the profiles, one per population", () => {
   })
 })
 
+describe("Gupta, an optional pair of adult questions", () => {
+  it("ships off, so a hospital sees nothing until an operator switches it on", () => {
+    expect(DEFAULT_ENABLED_QUESTION_KEYS.has("A15_FUNCTIONAL_STATUS")).toBe(false)
+    expect(DEFAULT_ENABLED_QUESTION_KEYS.has("A16_GUPTA_PROCEDURE_TYPE")).toBe(false)
+    const procedure = BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === "A16_GUPTA_PROCEDURE_TYPE")!
+    expect(procedure.options).toHaveLength(21)
+    expect(procedure.applicability).toEqual(["ADULT"])
+    expect(procedure.formSection).toBe("risk_scores")
+  })
+
+  it("stores the chosen option once switched on, and refuses one the model does not have", async () => {
+    const env = fakeDb(profileRow({ A15_FUNCTIONAL_STATUS: { enabled: true }, A16_GUPTA_PROCEDURE_TYPE: { enabled: true } }))
+    await env.save({}, { answers: [
+      { stableKey: "A15_FUNCTIONAL_STATUS", state: PreopAnswerState.YES, optionKey: "PARTIALLY_DEPENDENT" },
+      { stableKey: "A16_GUPTA_PROCEDURE_TYPE", state: PreopAnswerState.YES, optionKey: "AORTIC" },
+    ] })
+    expect(env.answers.get("q-A15_FUNCTIONAL_STATUS")).toMatchObject({ state: PreopAnswerState.YES, optionKey: "PARTIALLY_DEPENDENT" })
+    expect(env.answers.get("q-A16_GUPTA_PROCEDURE_TYPE")).toMatchObject({ state: PreopAnswerState.YES, optionKey: "AORTIC" })
+    await expect(env.save({}, { answers: [{ stableKey: "A16_GUPTA_PROCEDURE_TYPE", state: PreopAnswerState.YES, optionKey: "EYE" }] }))
+      .rejects.toMatchObject({ code: "UNKNOWN_PREOP_ANSWER_OPTION" })
+  })
+
+  it("asks nothing of a case while it is off", async () => {
+    const env = fakeDb()
+    await env.save({})
+    expect(env.stateOf("A15_FUNCTIONAL_STATUS")).toBeUndefined()
+    expect(env.stateOf("A16_GUPTA_PROCEDURE_TYPE")).toBeUndefined()
+  })
+})
+
 describe("the catalogue", () => {
   // The Apfel factor is "history of PONV and/or motion sickness" (PONV
   // consensus guidelines), and the form has always asked it that way. The

@@ -13,6 +13,7 @@ import {
   shouldSuppressResearchCell,
 } from "@lospor/core/research"
 import { POVOC_RISK_PERCENT } from "@lospor/core/pediatric"
+import { guptaRiskPercent } from "@/lib/preop/gupta-record"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import type { Prisma } from "@/generated/prisma/client"
 
@@ -451,6 +452,8 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail & 
       povocRiskPercent: row.preop?.povocScore == null ? null : POVOC_RISK_PERCENT[row.preop.povocScore] ?? null,
       coldsApplicable: row.preop?.coldsApplicable ?? false,
       colds: row.preop?.coldsScore ?? null,
+      // Derived from its stored inputs, like the OMOP export.
+      guptaRiskPercent: row.preop ? guptaRiskPercent(row.preop) : null,
     },
     diagnoses: (row.preop?.diagnoses ?? []).map(item => ({
       code: item.code ?? item.sourceCode,

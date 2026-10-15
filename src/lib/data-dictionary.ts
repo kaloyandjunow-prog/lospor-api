@@ -1,3 +1,8 @@
+// 4.5.0 keeps scores as their raw inputs and counts. GUTA_SCORE, never filled
+// in, is replaced by GUPTA_MICA_RISK_PERCENT, derived at export from its stored
+// inputs; POVOC_RISK_PERCENT is now derived from the POVOC count rather than
+// read from a stored column, so older and newer cases export the same value.
+//
 // 4.4.0 adds what three monitors read, rather than only that they were on. The
 // sixteen monitoring flags are yes/no for the whole case, so a BIS that sat at
 // 55 and one that dropped to 22 for twenty minutes were the same record, as
@@ -37,7 +42,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.4.0"
+export const DICTIONARY_VERSION = "4.5.0"
 
 export interface DictionaryEntry {
   name: string
@@ -796,13 +801,16 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.8.0",
   },
   {
-    name: "gutaScore",
-    exportName: "observation.value_as_number (LOSPOR:GUTA_SCORE)",
-    meaning: "GUTA airway assessment score",
+    name: "guptaRiskPercent",
+    exportName: "observation.value_as_number (LOSPOR:GUPTA_MICA_RISK_PERCENT)",
+    meaning: "Gupta perioperative risk of myocardial infarction or cardiac arrest within 30 days (Gupta, Circulation 2011), in percent. Adults only. Replaces LOSPOR:GUTA_SCORE (column gutaScore), which no client ever filled in and which is no longer written or exported",
+    unit: "%",
     type: "float",
-    missingnessRule: "No row = the question was not asked, or the value was not recorded",
-    sourceTable: "PreoperativeAssessment", sourceColumn: "gutaScore",
-    versionIntroduced: "3.8.0",
+    allowedValues: "0–100",
+    missingnessRule: "No row = an input is missing: an adult age, ASA I–V, or either catalogue answer A15_FUNCTIONAL_STATUS / A16_GUPTA_PROCEDURE_TYPE. Both questions are off unless the hospital switches them on. No creatinine result counts as the model's 'unknown', not as normal",
+    derivationRule: "Derived at export from its stored inputs: logit = -5.25 + 0.02 x age + functional status + ASA + creatinine above 1.5 mg/dL + procedure type; risk = 1 / (1 + e^-logit). The inputs export separately: the two answers, ASA, age and the creatinine lab row",
+    sourceTable: "PreopAssessmentAnswer", sourceColumn: "optionKey",
+    versionIntroduced: "4.5.0",
   },
   {
     name: "mouthOpeningCm",
