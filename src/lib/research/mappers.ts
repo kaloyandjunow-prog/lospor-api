@@ -180,6 +180,11 @@ export const RESEARCH_DETAIL_SELECT = {
   },
   postop: {
     select: {
+      aldreteActivity: true,
+      aldreteRespiration: true,
+      aldreteCirculation: true,
+      aldreteConsciousness: true,
+      aldreteSpO2: true,
       aldreteTotal: true,
       painScoreNRS: true,
       ponv: true,
@@ -430,22 +435,28 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail & 
       asa: row.preop?.asaScore ?? null,
       emergency: row.preop?.emergencySurgery ?? false,
       highRisk: row.preop?.highRiskSurgery ?? false,
-      smoking: row.preop?.smoking ?? false,
-      difficultAirwayHistory: row.preop?.difficultAirwayHistory ?? false,
+      // Nullable answers stay null when nobody answered. "?? false" turned an
+      // unasked smoking question into a recorded non-smoker.
+      smoking: row.preop?.smoking ?? null,
+      difficultAirwayHistory: row.preop?.difficultAirwayHistory ?? null,
       mallampati: row.preop?.mallampati ?? null,
+      // Every score is its raw count; the maximum and the band are added
+      // where it is shown (@lospor/core/research-scores), never stored.
       rcri: row.preop?.rcriScore ?? null,
       apfel: row.preop?.apfelScore ?? null,
       stopBang: row.preop?.stopBangScore ?? null,
+      // One per case. They were copied onto every diagnosis row, where no
+      // reader looked for them, so the Browser never showed either.
+      povoc: row.preop?.povocScore ?? null,
+      povocRiskPercent: row.preop?.povocRiskPercent ?? null,
+      coldsApplicable: row.preop?.coldsApplicable ?? false,
+      colds: row.preop?.coldsScore ?? null,
     },
     diagnoses: (row.preop?.diagnoses ?? []).map(item => ({
       code: item.code ?? item.sourceCode,
       label: item.labelEn ?? item.label,
       labelEn: item.labelEn ?? item.label,
       labelBg: item.labelBg,
-      povoc: row.preop?.povocScore ?? null,
-      povocRiskPercent: row.preop?.povocRiskPercent ?? null,
-      coldsApplicable: row.preop?.coldsApplicable ?? false,
-      colds: row.preop?.coldsScore ?? null,
       mappingStatus: item.mappingStatus,
     })),
     // NOT_ASKED is the placeholder for a question that was on and unanswered;
@@ -508,9 +519,15 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail & 
       bloodLossMl: row.intraop?.bloodLossMl ?? null,
     },
     postoperative: {
+      // The five subscores are the raw data; the total is their sum.
+      aldreteActivity: row.postop?.aldreteActivity ?? null,
+      aldreteRespiration: row.postop?.aldreteRespiration ?? null,
+      aldreteCirculation: row.postop?.aldreteCirculation ?? null,
+      aldreteConsciousness: row.postop?.aldreteConsciousness ?? null,
+      aldreteSpO2: row.postop?.aldreteSpO2 ?? null,
       aldreteTotal: row.postop?.aldreteTotal ?? null,
       painScore: row.postop?.painScoreNRS ?? null,
-      ponv: row.postop?.ponv ?? false,
+      ponv: row.postop?.ponv ?? null,
       disposition: row.postop?.disposition ?? null,
       recoveryBpSystolic: row.postop?.recoveryBpSystolic ?? null,
       recoveryBpDiastolic: row.postop?.recoveryBpDiastolic ?? null,
