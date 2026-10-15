@@ -126,7 +126,7 @@ const baseline = [
   question("BASE_POVOC_STRABISMUS_SURGERY", "PEDIATRIC_RISK", "Strabismus surgery", "Операция за страбизъм", [], { applicability: ["PEDIATRIC"] }),
   question("BASE_POVOC_HISTORY", "PEDIATRIC_RISK", "Patient or family history of postoperative vomiting", "Лична или фамилна анамнеза за следоперативно повръщане", [], { applicability: ["PEDIATRIC"] }),
   question("BASE_COLDS_APPLICABLE", "PEDIATRIC_RISK", "Current or recent upper respiratory infection", "Настояща или скорошна инфекция на горните дихателни пътища", [], { applicability: ["PEDIATRIC"] }),
-  question("BASE_PEDIATRIC_FASTING", "PEDIATRIC_SAFETY", "Paediatric fasting assessment", "Педиатрична оценка на гладуването", [], { applicability: ["PEDIATRIC"], answerType: "TEXT" }),
+  question("BASE_PEDIATRIC_FASTING", "PEDIATRIC_SAFETY", "Paediatric nil-by-mouth assignment", "Педиатрично предписание за гладуване", [], { applicability: ["PEDIATRIC"], answerType: "TEXT" }),
 ]
 
 const adult = [
@@ -244,7 +244,7 @@ const OMOP: Record<string, readonly [number, string]> = {
   BASE_POVOC_STRABISMUS_SURGERY: [4214521, "LOSPOR:POVOC_STRABISMUS"], // Strabismus surgery
   BASE_POVOC_HISTORY: [0, "LOSPOR:POVOC_HISTORY"], // patient *or family* history
   BASE_COLDS_APPLICABLE: [4181583, "LOSPOR:COLDS_APPLICABLE"], // Upper respiratory infection
-  BASE_PEDIATRIC_FASTING: [3031632, "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT"], // Fasting status - Reported (LOINC)
+  BASE_PEDIATRIC_FASTING: [0, "LOSPOR:PEDIATRIC_NPO_ASSIGNMENT"], // an instruction, not a reported fasting status (3031632)
   A1_RECENT_INFECTION: [0, "LOSPOR:PREOP_A1_RECENT_INFECTION"], // broader than 4181583 URI
   A1_RECENT_INFECTION_TWO_WEEKS: [0, "LOSPOR:PREOP_A1_RECENT_INFECTION_TWO_WEEKS"],
   A2_REDUCED_EXERCISE_TOLERANCE: [0, "LOSPOR:PREOP_A2_REDUCED_EXERCISE_TOLERANCE"], // 4086848 does not imply reduced

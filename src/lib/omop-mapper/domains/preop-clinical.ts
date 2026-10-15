@@ -81,16 +81,15 @@ export function mapPreopClinicalToOmop(
   ctx.sourceObservation("LOSPOR:COLDS_LUNG_DISEASE", preop.coldsLungDisease, vitDate)
   ctx.sourceObservation("LOSPOR:COLDS_AIRWAY_DEVICE", preop.coldsAirwayDevice, vitDate)
   ctx.sourceObservation("LOSPOR:COLDS_SURGERY", preop.coldsSurgery, vitDate)
-  // 3031632, Fasting status - Reported: the question is coded, and the
-  // JSON detail of which intervals were fasted stays in the value, since
-  // no vocabulary models a per-interval fasting assessment.
-  ctx.sourceObservation(
-    "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT",
-    preop.pediatricFasting == null ? null : JSON.stringify(preop.pediatricFasting),
-    vitDate,
-    null,
-    3031632,
-  )
+  // Nil-by-mouth assignments, one row per intake with its hours before
+  // surgery as the number. They are instructions, not a reported fasting
+  // status, so 3031632 (Fasting status - Reported) no longer applies and no
+  // standard concept says "stop clear fluids N hours before surgery".
+  const assignments = Array.isArray(preop.pediatricFasting) ? preop.pediatricFasting as Array<{ category?: unknown; hoursBefore?: unknown }> : []
+  for (const row of assignments) {
+    if (!row || typeof row.category !== "string" || typeof row.hoursBefore !== "number") continue
+    ctx.sourceObservation(`LOSPOR:PEDIATRIC_NPO_${row.category}_HOURS`, row.hoursBefore, vitDate, row.hoursBefore)
+  }
   // One flag can qualify more than one reading: a blood pressure that could
   // not be obtained is neither a systolic nor a diastolic, so both rows
   // carry the qualifier. Height and weight have no flag — a case cannot

@@ -1,3 +1,8 @@
+// 4.6.0 records paediatric fasting as nil-by-mouth assignments in hours before
+// surgery, one row per intake, rather than a last-intake time judged against
+// the moment of the preop visit. No case holds the old shape: no appliance
+// has been released.
+//
 // 4.5.0 keeps scores as their raw inputs and counts. GUTA_SCORE, never filled
 // in, is replaced by GUPTA_MICA_RISK_PERCENT, derived at export from its stored
 // inputs; POVOC_RISK_PERCENT is now derived from the POVOC count rather than
@@ -42,7 +47,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.5.0"
+export const DICTIONARY_VERSION = "4.6.0"
 
 export interface DictionaryEntry {
   name: string
@@ -2548,14 +2553,54 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "4.0.0",
   },
   {
-    name: "pediatricFasting",
-    exportName: "observation.observation_concept_id (LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
-    meaning: "The recorded fasting assessment for a child, as a JSON object of the fasting intervals entered",
-    type: "json",
-    missingnessRule: "No row = no fasting assessment was recorded",
+    name: "pediatricNpoClearFluidsHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: clear fluids stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = clear fluids was not assigned",
+    derivationRule: "APAGBI 2023 minimum 1 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
     sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
-    versionIntroduced: "4.0.0",
+    versionIntroduced: "4.6.0",
   },
+  {
+    name: "pediatricNpoBreastMilkHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_BREAST_MILK_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: breast milk stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = breast milk was not assigned",
+    derivationRule: "APAGBI 2023 minimum 3 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
+    versionIntroduced: "4.6.0",
+  },
+  {
+    name: "pediatricNpoInfantFormulaHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_INFANT_FORMULA_UNDER_1_YEAR_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: infant formula (under 1 year) stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = infant formula (under 1 year) was not assigned",
+    derivationRule: "APAGBI 2023 minimum 4 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
+    versionIntroduced: "4.6.0",
+  },
+  {
+    name: "pediatricNpoSolidFoodHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_SOLID_FOOD_OR_COW_MILK_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: solid food or cow's milk stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = solid food or cow's milk was not assigned",
+    derivationRule: "APAGBI 2023 minimum 6 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
+    versionIntroduced: "4.6.0",
+  },
+
   {
     name: "clinicalRulesVersion",
     exportName: "observation.value_as_string (LOSPOR:CLINICAL_RULES_VERSION)",

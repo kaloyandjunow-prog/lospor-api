@@ -2355,14 +2355,14 @@ describe("the last concepts the vocabulary bundle was missing", () => {
       .toBe(0)
   })
 
-  it("codes the fasting question while keeping the interval detail in the value", () => {
-    const pediatric = mapCasesToOmop([pediatricCaseFixture() as never]).observation
-      .find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")
-
-    expect(pediatric?.observation_concept_id).toBe(3031632)
-    // No vocabulary models a per-interval fasting assessment, so the JSON
-    // stays as the value rather than being flattened away.
-    expect(pediatric?.value_as_string).toContain("{")
+  // Nil-by-mouth assignments are instructions, one number per intake, not a
+  // reported fasting status.
+  it("exports each nil-by-mouth assignment as its hours before surgery", () => {
+    const observations = mapCasesToOmop([pediatricCaseFixture() as never]).observation
+    const row = (source: string) => observations.find(r => r.observation_source_value === source)
+    expect(row("LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS")).toMatchObject({ value_as_number: 1, observation_concept_id: 0 })
+    expect(row("LOSPOR:PEDIATRIC_NPO_SOLID_FOOD_OR_COW_MILK_HOURS")).toMatchObject({ value_as_number: 6 })
+    expect(row("LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")).toBeUndefined()
   })
 })
 

@@ -182,11 +182,10 @@ export const preopSchema = z.object({
   coldsAirwayDevice:    z.enum(["FACE_MASK_OR_NONE", "SUPRAGLOTTIC", "TRACHEAL_TUBE"]).nullable().optional(),
   coldsSurgery:         z.enum(["NON_AIRWAY", "MINOR_AIRWAY", "MAJOR_AIRWAY"]).nullable().optional(),
 
+  // Nil-by-mouth assignments: stop each intake so many hours before surgery.
   pediatricFasting: z.array(z.object({
     category: z.enum(["CLEAR_FLUIDS", "BREAST_MILK", "INFANT_FORMULA_UNDER_1_YEAR", "SOLID_FOOD_OR_COW_MILK"]),
-    lastIntakeAt: z.string().datetime().nullable(),
-    status: z.enum(["MET", "NOT_MET", "UNKNOWN"]).optional(),
-    requiredHours: z.number().nonnegative().optional(),
+    hoursBefore: z.number().min(0).max(24),
     policyId: z.string().min(1),
     policyVersion: z.string().min(1),
   })).optional(),

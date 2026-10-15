@@ -45,8 +45,8 @@ describe("pediatric OMOP source preservation", () => {
     // "14 DAYS" is a rendering, not a quantity: 14 alone would be meaningless
     // without its unit, and the normalised age above is the numeric form.
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_number).toBeNull()
-    // A fasting assessment is a JSON blob; there is no number to lift out.
-    expect(observations.get("LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")?.value_as_number).toBeNull()
+    // A nil-by-mouth assignment is a number of hours before surgery.
+    expect(observations.get("LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS")?.value_as_number).toBe(1)
 
     for (const source of [
       "LOSPOR:AGE_AT_PROCEDURE_EXACT",
