@@ -194,7 +194,7 @@ const pediatric = [
   question("P4_LOUD_SNORING", "PEDIATRIC_ADDITIONS", "Loud snoring?", "Силно хъркане?", [], { applicability: ["PEDIATRIC"], conditionalRuleKey: "P4_SLEEP_DISORDERED_BREATHING_IS_YES" }),
   question("P4_OBSERVED_PAUSES", "PEDIATRIC_ADDITIONS", "Observed pauses in breathing during sleep?", "Наблюдавани паузи в дишането по време на сън?", [], { applicability: ["PEDIATRIC"], conditionalRuleKey: "P4_SLEEP_DISORDERED_BREATHING_IS_YES" }),
   question("P8_DIFFICULT_VENOUS_ACCESS", "PEDIATRIC_ADDITIONS", "Difficult venous access history", "Анамнеза за труден венозен достъп", [], { applicability: ["PEDIATRIC"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS" }),
-  question("P9_RECENT_VACCINATION", "PEDIATRIC_ADDITIONS", "Vaccinated in the last 12 months", "Ваксинирано през последните 12 месеца", [], { applicability: ["PEDIATRIC"], omopDomain: "observation" }),
+  question("P9_RECENT_VACCINATION", "PEDIATRIC_ADDITIONS", "Vaccinated in the last 2 weeks", "Ваксинирано през последните 2 седмици", [], { applicability: ["PEDIATRIC"], omopDomain: "observation" }),
 ]
 
 /**
@@ -292,7 +292,7 @@ const OMOP: Record<string, readonly [number, string]> = {
   P4_LOUD_SNORING: [4248728, "LOSPOR:PREOP_P4_LOUD_SNORING"], // Snoring
   P4_OBSERVED_PAUSES: [0, "LOSPOR:PREOP_P4_OBSERVED_PAUSES"],
   P8_DIFFICULT_VENOUS_ACCESS: [4115246, "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS"], // Difficult venous access
-  P9_RECENT_VACCINATION: [0, "LOSPOR:PREOP_P9_RECENT_VACCINATION"], // "History of Immunization" names the topic, not the 12-month window
+  P9_RECENT_VACCINATION: [0, "LOSPOR:PREOP_P9_RECENT_VACCINATION"], // "History of Immunization" names the topic, not the 2-week window
   S1_PREVIOUS_ICU_ADMISSION: [4138933, "LOSPOR:PREOP_S1_PREVIOUS_ICU_ADMISSION"], // Admission to intensive care unit (as P1_NICU_ADMISSION)
 }
 

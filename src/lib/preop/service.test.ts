@@ -557,8 +557,11 @@ describe("questions from the children's paper form", () => {
     expect(item("S1_PREVIOUS_ICU_ADMISSION").omopConceptId).toBe(4138933)
   })
 
-  it("asks children about vaccination in the last 12 months", () => {
+  // The window that matters for anaesthesia: post-vaccination fever and live vaccines.
+  it("asks children about vaccination in the last 2 weeks", () => {
     expect(item("P9_RECENT_VACCINATION").applicability).toEqual(["PEDIATRIC"])
+    expect(item("P9_RECENT_VACCINATION").labelEn).toBe("Vaccinated in the last 2 weeks")
+    expect(item("P9_RECENT_VACCINATION").labelBg).toBe("Ваксинирано през последните 2 седмици")
   })
 
   it("asks children the bleeding and transfusion questions too, keeping their keys", () => {
