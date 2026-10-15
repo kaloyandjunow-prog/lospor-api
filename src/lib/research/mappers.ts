@@ -12,6 +12,7 @@ import {
   shouldSuppressResearchBinary,
   shouldSuppressResearchCell,
 } from "@lospor/core/research"
+import { POVOC_RISK_PERCENT } from "@lospor/core/pediatric"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import type { Prisma } from "@/generated/prisma/client"
 
@@ -94,7 +95,6 @@ export const RESEARCH_DETAIL_SELECT = {
       apfelScore: true,
       stopBangScore: true,
       povocScore: true,
-      povocRiskPercent: true,
       coldsApplicable: true,
       coldsScore: true,
       diagnoses: {
@@ -448,7 +448,7 @@ export function mapResearchDetail(row: ResearchDetailRow): ResearchCaseDetail & 
       // One per case. They were copied onto every diagnosis row, where no
       // reader looked for them, so the Browser never showed either.
       povoc: row.preop?.povocScore ?? null,
-      povocRiskPercent: row.preop?.povocRiskPercent ?? null,
+      povocRiskPercent: row.preop?.povocScore == null ? null : POVOC_RISK_PERCENT[row.preop.povocScore] ?? null,
       coldsApplicable: row.preop?.coldsApplicable ?? false,
       colds: row.preop?.coldsScore ?? null,
     },

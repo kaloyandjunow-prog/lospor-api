@@ -234,7 +234,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     stopbangSnoring: preop.stopbangSnoring ?? null,
     stopbangTired: preop.stopbangTired ?? null,
     povocScore:                   povoc?.score ?? null,
-    povocRiskPercent:             povoc?.riskPercent ?? null,
+    // Not stored: the risk is derived from the count wherever it is shown or
+    // exported, so a revised POVOC table cannot leave stale figures behind.
+    povocRiskPercent:             null,
     povocSurgeryAtLeast30Minutes: povoc?.factors.surgeryAtLeast30Minutes ?? false,
     povocAgeAtLeast3Years:        povoc?.factors.ageAtLeast3Years ?? false,
     povocStrabismusSurgery:       povoc?.factors.strabismusSurgery ?? false,
@@ -318,7 +320,7 @@ export function mapPreopUpdate(
     || has("povocStrabismusSurgery") || has("povocHistory")
   ) {
     r.povocScore = full.povocScore
-    r.povocRiskPercent = full.povocRiskPercent
+    r.povocRiskPercent = null
     r.povocAgeAtLeast3Years = full.povocAgeAtLeast3Years
   }
   if (

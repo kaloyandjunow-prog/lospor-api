@@ -5,6 +5,7 @@ import {
   VITAL_CONCEPTS, YES_CONCEPT_ID, NO_CONCEPT_ID, AIRWAY_MEASUREMENTS,
   bloodGroupConceptFor,
 } from "../concepts"
+import { POVOC_RISK_PERCENT } from "@lospor/core/pediatric"
 import { isoDate } from "../date-helpers"
 import { nextId } from "../ids"
 
@@ -58,7 +59,9 @@ export function mapPreopClinicalToOmop(
     })
   }
   ctx.sourceObservation("LOSPOR:POVOC_SCORE", preop.povocScore, vitDate)
-  ctx.sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocRiskPercent, vitDate)
+  // Derived from the count, not read from storage: the stored column is no
+  // longer written, and older rows would otherwise disagree with newer ones.
+  ctx.sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocScore == null ? null : POVOC_RISK_PERCENT[preop.povocScore], vitDate)
   ctx.sourceObservation("LOSPOR:COLDS_SCORE", preop.coldsScore, vitDate)
 
   // The five COLDS factors, and the gate that says the score applies.

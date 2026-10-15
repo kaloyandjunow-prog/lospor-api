@@ -2474,7 +2474,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     type: "float",
     allowedValues: "0–100",
     missingnessRule: "No row = no POVOC score, so no predicted risk",
-    derivationRule: "Derived from povocScore; it is a prediction, not an observed outcome",
+    derivationRule: "Derived at export from povocScore (Eberhart 2004: 9/10/30/55/70%); it is a prediction, not an observed outcome. Not stored since 9.14.6: the column is no longer written, and the export derives the same value for older and newer cases alike",
     sourceTable: "PreoperativeAssessment", sourceColumn: "povocRiskPercent",
     versionIntroduced: "4.0.0",
   },

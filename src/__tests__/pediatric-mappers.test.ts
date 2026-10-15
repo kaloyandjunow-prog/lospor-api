@@ -56,7 +56,8 @@ describe("pediatric preop persistence", () => {
     )
 
     expect(result.povocScore).toBe(3)
-    expect(result.povocRiskPercent).toBe(55)
+    // The risk is derived where it is shown, never stored.
+    expect(result.povocRiskPercent).toBeNull()
     expect(result.povocAgeAtLeast3Years).toBe(true)
   })
 

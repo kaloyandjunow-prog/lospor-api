@@ -762,7 +762,6 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "preop", "apfelScore", p.apfelScore),
       fieldStatus(caseId, "preop", "stopBangScore", p.stopBangScore),
       fieldStatus(caseId, "preop", "povocScore", p.povocScore),
-      fieldStatus(caseId, "preop", "povocRiskPercent", p.povocRiskPercent),
       fieldStatus(caseId, "preop", "coldsApplicable", p.coldsApplicable),
       fieldStatus(caseId, "preop", "coldsScore", p.coldsScore),
       fieldStatus(caseId, "preop", "coldsComponents", p.coldsApplicable ? [p.coldsCurrentSymptoms, p.coldsOnset, p.coldsLungDisease, p.coldsAirwayDevice, p.coldsSurgery] : null),

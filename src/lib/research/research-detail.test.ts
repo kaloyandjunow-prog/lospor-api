@@ -30,7 +30,7 @@ function row(preop: Record<string, unknown>, postop: Record<string, unknown> = {
 
 describe("the scores in a research case", () => {
   it("carries POVOC and COLDS once for the case, not on each diagnosis", () => {
-    const detail = mapResearchDetail(row({ povocScore: 2, povocRiskPercent: 30, coldsApplicable: true, coldsScore: 17 }))
+    const detail = mapResearchDetail(row({ povocScore: 2, povocRiskPercent: null, coldsApplicable: true, coldsScore: 17 }))
     expect(detail.demographics).toMatchObject({ povoc: 2, povocRiskPercent: 30, coldsApplicable: true, colds: 17 })
     expect(detail.diagnoses[0]).not.toHaveProperty("povoc")
     expect(detail.diagnoses[0]).not.toHaveProperty("colds")
