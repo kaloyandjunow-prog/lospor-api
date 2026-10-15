@@ -146,13 +146,6 @@ const adult = [
   question("A7_VTE_HISTORY", "ADULT_ADDITIONS", "History of venous thromboembolism", "Анамнеза за венозен тромбоемболизъм", [], { applicability: ["ADULT"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_A7_VTE_HISTORY" }),
   question("A7_DVT", "ADULT_ADDITIONS", "Deep-vein thrombosis?", "Дълбока венозна тромбоза?", [], { applicability: ["ADULT"], conditionalRuleKey: "A7_VTE_HISTORY_IS_YES" }),
   question("A7_PE", "ADULT_ADDITIONS", "Pulmonary embolism?", "Белодробна емболия?", [], { applicability: ["ADULT"], conditionalRuleKey: "A7_VTE_HISTORY_IS_YES" }),
-  question("A8_ABNORMAL_BLEEDING", "ADULT_ADDITIONS", "Abnormal bleeding history", "Анамнеза за абнормно кървене", [], { applicability: ["ADULT"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_A8_ABNORMAL_BLEEDING" }),
-  question("A8_BLEEDING_AFTER_PROCEDURE", "ADULT_ADDITIONS", "Abnormal bleeding after an operation or dental procedure?", "Абнормно кървене след операция или стоматологична процедура?", [], { applicability: ["ADULT"], conditionalRuleKey: "A8_ABNORMAL_BLEEDING_IS_YES" }),
-  question("A8_FAMILY_BLEEDING", "ADULT_ADDITIONS", "Family history of abnormal bleeding?", "Фамилна анамнеза за абнормно кървене?", [], { applicability: ["ADULT"], conditionalRuleKey: "A8_ABNORMAL_BLEEDING_IS_YES" }),
-  question("A9_TRANSFUSION_HISTORY", "ADULT_ADDITIONS", "Previous blood transfusion / transfusion reaction", "Предишно кръвопреливане / реакция при кръвопреливане", [], { applicability: ["ADULT"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_A9_TRANSFUSION_HISTORY" }),
-  question("A9_PREVIOUS_TRANSFUSION", "ADULT_ADDITIONS", "Previous blood transfusion?", "Предишно кръвопреливане?", [], { applicability: ["ADULT"], conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
-  question("A9_TRANSFUSION_REACTION", "ADULT_ADDITIONS", "Transfusion reaction?", "Реакция при кръвопреливане?", [], { applicability: ["ADULT"], conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
-  question("A9_BLOOD_ANTIBODIES", "ADULT_ADDITIONS", "Known blood antibodies or difficult crossmatch?", "Известни антитела или затруднено пробно съвместяване?", [], { applicability: ["ADULT"], conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
   question("A11_DYSPHAGIA_ASPIRATION", "ADULT_ADDITIONS", "History of dysphagia or aspiration", "Анамнеза за дисфагия или аспирация", [], { applicability: ["ADULT"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_A11_DYSPHAGIA_ASPIRATION" }),
   question("A11_SOLID_FOOD", "ADULT_ADDITIONS", "Difficulty swallowing solid food?", "Затруднения при преглъщане на твърда храна?", [], { applicability: ["ADULT"], conditionalRuleKey: "A11_DYSPHAGIA_ASPIRATION_IS_YES" }),
   question("A11_LIQUIDS", "ADULT_ADDITIONS", "Difficulty swallowing liquids?", "Затруднения при преглъщане на течности?", [], { applicability: ["ADULT"], conditionalRuleKey: "A11_DYSPHAGIA_ASPIRATION_IS_YES" }),
@@ -170,6 +163,23 @@ const adult = [
     GUPTA_PROCEDURE_TYPES.map(({ key, labelEn, labelBg }) => ({ key, labelEn, labelBg })), { applicability: ["ADULT"], omopDomain: "observation" }),
 ]
 
+/**
+ * Asked of adults and children alike (applicability empty), each population
+ * switched on separately in its own profile. A8 and A9 began as adult
+ * questions; the children's paper form asks both, so they moved here and kept
+ * their keys.
+ */
+const shared = [
+  question("S1_PREVIOUS_ICU_ADMISSION", "SHARED_ADDITIONS", "Previous intensive care admission", "Предишен престой в интензивно отделение", [], { omopDomain: "observation" }),
+  question("A8_ABNORMAL_BLEEDING", "SHARED_ADDITIONS", "Abnormal bleeding history", "Анамнеза за абнормно кървене", [], { omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_A8_ABNORMAL_BLEEDING" }),
+  question("A8_BLEEDING_AFTER_PROCEDURE", "SHARED_ADDITIONS", "Abnormal bleeding after an operation or dental procedure?", "Абнормно кървене след операция или стоматологична процедура?", [], { conditionalRuleKey: "A8_ABNORMAL_BLEEDING_IS_YES" }),
+  question("A8_FAMILY_BLEEDING", "SHARED_ADDITIONS", "Family history of abnormal bleeding?", "Фамилна анамнеза за абнормно кървене?", [], { conditionalRuleKey: "A8_ABNORMAL_BLEEDING_IS_YES" }),
+  question("A9_TRANSFUSION_HISTORY", "SHARED_ADDITIONS", "Previous blood transfusion / transfusion reaction", "Предишно кръвопреливане / реакция при кръвопреливане", [], { omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_A9_TRANSFUSION_HISTORY" }),
+  question("A9_PREVIOUS_TRANSFUSION", "SHARED_ADDITIONS", "Previous blood transfusion?", "Предишно кръвопреливане?", [], { conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
+  question("A9_TRANSFUSION_REACTION", "SHARED_ADDITIONS", "Transfusion reaction?", "Реакция при кръвопреливане?", [], { conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
+  question("A9_BLOOD_ANTIBODIES", "SHARED_ADDITIONS", "Known blood antibodies or difficult crossmatch?", "Известни антитела или затруднено пробно съвместяване?", [], { conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
+]
+
 const pediatric = [
   question("P1_PREMATURITY_NICU", "PEDIATRIC_ADDITIONS", "Prematurity / neonatal intensive care history", "Недоносеност / анамнеза за неонатологично интензивно лечение", [], { applicability: ["PEDIATRIC"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_P1_PREMATURITY_NICU" }),
   question("P1_BORN_BEFORE_37_WEEKS", "PEDIATRIC_ADDITIONS", "Born before 37 weeks of gestation?", "Родено ли е детето преди 37-ата гестационна седмица?", [], { applicability: ["PEDIATRIC"], conditionalRuleKey: "P1_PREMATURITY_NICU_IS_YES" }),
@@ -184,6 +194,7 @@ const pediatric = [
   question("P4_LOUD_SNORING", "PEDIATRIC_ADDITIONS", "Loud snoring?", "Силно хъркане?", [], { applicability: ["PEDIATRIC"], conditionalRuleKey: "P4_SLEEP_DISORDERED_BREATHING_IS_YES" }),
   question("P4_OBSERVED_PAUSES", "PEDIATRIC_ADDITIONS", "Observed pauses in breathing during sleep?", "Наблюдавани паузи в дишането по време на сън?", [], { applicability: ["PEDIATRIC"], conditionalRuleKey: "P4_SLEEP_DISORDERED_BREATHING_IS_YES" }),
   question("P8_DIFFICULT_VENOUS_ACCESS", "PEDIATRIC_ADDITIONS", "Difficult venous access history", "Анамнеза за труден венозен достъп", [], { applicability: ["PEDIATRIC"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS" }),
+  question("P9_RECENT_VACCINATION", "PEDIATRIC_ADDITIONS", "Vaccinated in the last 12 months", "Ваксинирано през последните 12 месеца", [], { applicability: ["PEDIATRIC"], omopDomain: "observation" }),
 ]
 
 /**
@@ -281,6 +292,8 @@ const OMOP: Record<string, readonly [number, string]> = {
   P4_LOUD_SNORING: [4248728, "LOSPOR:PREOP_P4_LOUD_SNORING"], // Snoring
   P4_OBSERVED_PAUSES: [0, "LOSPOR:PREOP_P4_OBSERVED_PAUSES"],
   P8_DIFFICULT_VENOUS_ACCESS: [4115246, "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS"], // Difficult venous access
+  P9_RECENT_VACCINATION: [0, "LOSPOR:PREOP_P9_RECENT_VACCINATION"], // "History of Immunization" names the topic, not the 12-month window
+  S1_PREVIOUS_ICU_ADMISSION: [4138933, "LOSPOR:PREOP_S1_PREVIOUS_ICU_ADMISSION"], // Admission to intensive care unit (as P1_NICU_ADMISSION)
 }
 
 /** Where a question renders. Unlisted questions (and follow-ups of listed ones) are anamnesis. */
@@ -341,6 +354,7 @@ function withMapping(items: Omit<PreopCatalogQuestion, "formSection">[]): PreopC
 export const BUNDLED_PREOP_QUESTIONS: readonly PreopCatalogQuestion[] = Object.freeze(withMapping([
   ...baseline,
   ...adult,
+  ...shared,
   ...pediatric,
 ]))
 

@@ -549,6 +549,47 @@ describe("the profiles, one per population", () => {
   })
 })
 
+describe("questions from the children's paper form", () => {
+  const item = (key: string) => BUNDLED_PREOP_QUESTIONS.find(question => question.stableKey === key)!
+
+  it("asks about a previous ICU stay of adults and children, each switched on alone", () => {
+    expect(item("S1_PREVIOUS_ICU_ADMISSION").applicability).toEqual([])
+    expect(item("S1_PREVIOUS_ICU_ADMISSION").omopConceptId).toBe(4138933)
+  })
+
+  it("asks children about vaccination in the last 12 months", () => {
+    expect(item("P9_RECENT_VACCINATION").applicability).toEqual(["PEDIATRIC"])
+  })
+
+  it("asks children the bleeding and transfusion questions too, keeping their keys", () => {
+    for (const key of ["A8_ABNORMAL_BLEEDING", "A8_FAMILY_BLEEDING", "A9_TRANSFUSION_HISTORY", "A9_BLOOD_ANTIBODIES"]) {
+      expect(item(key).applicability, key).toEqual([])
+      expect(item(key).section, key).toBe("SHARED_ADDITIONS")
+    }
+    expect(item("A8_FAMILY_BLEEDING").parentKey).toBe("A8_ABNORMAL_BLEEDING")
+  })
+
+  it("ships all of them off", () => {
+    for (const key of ["S1_PREVIOUS_ICU_ADMISSION", "P9_RECENT_VACCINATION", "A8_ABNORMAL_BLEEDING", "A9_TRANSFUSION_HISTORY"]) {
+      expect(DEFAULT_ENABLED_QUESTION_KEYS.has(key), key).toBe(false)
+    }
+  })
+
+  // Children are asked them only once the hospital switches them on in the
+  // children's profile; an answer is stored like any other.
+  it("stores a child's answers once switched on in the children's profile", async () => {
+    const env = fakeDb(profileRow(), profileRow({ S1_PREVIOUS_ICU_ADMISSION: { enabled: true }, P9_RECENT_VACCINATION: { enabled: true }, A8_ABNORMAL_BLEEDING: { enabled: true } }, "PEDIATRIC"))
+    await env.save({}, { clinicalMode: "PEDIATRIC", answers: [
+      { stableKey: "S1_PREVIOUS_ICU_ADMISSION", state: PreopAnswerState.YES },
+      { stableKey: "P9_RECENT_VACCINATION", state: PreopAnswerState.NO },
+      { stableKey: "A8_ABNORMAL_BLEEDING", state: PreopAnswerState.YES },
+    ] })
+    expect(env.stateOf("S1_PREVIOUS_ICU_ADMISSION")).toBe(PreopAnswerState.YES)
+    expect(env.stateOf("P9_RECENT_VACCINATION")).toBe(PreopAnswerState.NO)
+    expect(env.stateOf("A8_ABNORMAL_BLEEDING")).toBe(PreopAnswerState.YES)
+  })
+})
+
 describe("Gupta, an optional pair of adult questions", () => {
   it("ships off, so a hospital sees nothing until an operator switches it on", () => {
     expect(DEFAULT_ENABLED_QUESTION_KEYS.has("A15_FUNCTIONAL_STATUS")).toBe(false)
