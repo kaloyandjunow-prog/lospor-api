@@ -105,7 +105,7 @@ const baseline = [
   question("BASE_RCRI_CVD", "RISK", "Cerebrovascular disease", "Мозъчносъдова болест"),
   question("BASE_RCRI_INSULIN_DM", "RISK", "Insulin-treated diabetes", "Захарен диабет на инсулиново лечение"),
   question("BASE_RCRI_CREATININE", "RISK", "Raised creatinine", "Повишен креатинин"),
-  question("BASE_APFEL_PONV_HISTORY", "RISK", "Previous postoperative nausea or vomiting", "Предишно следоперативно гадене или повръщане"),
+  question("BASE_APFEL_PONV_HISTORY", "RISK", "History of PONV or motion sickness", "Анамнеза за PONV или кинетоза"),
   question("BASE_APFEL_POSTOP_OPIOIDS", "RISK", "Postoperative opioids planned", "Планирани следоперативни опиоиди"),
   question("BASE_STOPBANG_SNORING", "RISK", "Snoring", "Хъркане"),
   question("BASE_STOPBANG_TIRED", "RISK", "Daytime tiredness", "Дневна сънливост"),
@@ -212,7 +212,7 @@ const OMOP: Record<string, readonly [number, string]> = {
   BASE_RCRI_CVD: [381591, "LOSPOR:RCRI_CVD"], // Cerebrovascular disease
   BASE_RCRI_INSULIN_DM: [3046418, "LOSPOR:RCRI_INSULIN_DM"], // Insulin dependent diabetes mellitus [Presence] (LOINC question)
   BASE_RCRI_CREATININE: [0, "LOSPOR:RCRI_CREATININE"], // a > 2 mg/dL threshold, not a concept
-  BASE_APFEL_PONV_HISTORY: [4032472, "LOSPOR:APFEL_PONV_HISTORY"], // Postoperative nausea and vomiting
+  BASE_APFEL_PONV_HISTORY: [0, "LOSPOR:APFEL_PONV_HISTORY"], // PONV *or motion sickness*: 4032472 covers only PONV
   BASE_APFEL_POSTOP_OPIOIDS: [0, "LOSPOR:APFEL_POSTOP_OPIOIDS"], // a plan, not a finding
   BASE_STOPBANG_SNORING: [4248728, "LOSPOR:STOPBANG_SNORING"], // Snoring
   BASE_STOPBANG_TIRED: [42872394, "LOSPOR:STOPBANG_TIRED"], // Daytime somnolence

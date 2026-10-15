@@ -550,6 +550,18 @@ describe("the profiles, one per population", () => {
 })
 
 describe("the catalogue", () => {
+  // The Apfel factor is "history of PONV and/or motion sickness" (PONV
+  // consensus guidelines), and the form has always asked it that way. The
+  // catalogue said PONV only and exported the PONV concept, so a yes given for
+  // motion sickness left as a coded history of PONV.
+  it("asks the Apfel history as PONV or motion sickness, and codes it as neither alone", () => {
+    const question = BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === "BASE_APFEL_PONV_HISTORY")
+    expect(question?.labelEn).toBe("History of PONV or motion sickness")
+    expect(question?.labelBg).toBe("Анамнеза за PONV или кинетоза")
+    expect(question?.omopConceptId ?? 0).toBe(0)
+    expect(question?.omopSourceCode).toBe("LOSPOR:APFEL_PONV_HISTORY")
+  })
+
   // An upgrade runs inside a clinician's save. Row by row it took about 300
   // round trips and outlived the 5-second transaction on a hosted database, so
   // the save failed and the upgrade never finished. It must stay a fixed, small
