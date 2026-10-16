@@ -3,6 +3,8 @@ import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 import { caseReadWhereForUser } from "@/lib/access-control"
 import { verifyPrintToken } from "@/lib/print-token"
+import { preopDocuments } from "@/lib/preop/documents"
+import { preopSummaryFindings } from "@/lib/preop/findings"
 
 export async function GET(
   req: NextRequest,
@@ -28,7 +30,7 @@ export async function GET(
   const record = await prisma.case.findFirst({
     where,
     include: {
-      preop: true,
+      preop: { include: { assessmentAnswers: { select: { state: true, optionKey: true, valueText: true, question: { select: { stableKey: true } } } } } },
       intraop: true,
       postop: true,
       institution: { select: { name: true, city: true } },
@@ -40,5 +42,13 @@ export async function GET(
   if (!record) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
-  return NextResponse.json(record)
+  // The preop summary sheet prints in headless Chrome with only a print
+  // token, so the switches and consent texts travel with the case.
+  const { assessmentAnswers, ...preop } = record.preop ?? { assessmentAnswers: [] }
+  return NextResponse.json({
+    ...record,
+    preop: record.preop ? preop : null,
+    preopDocuments: await preopDocuments(prisma),
+    preopFindings: preopSummaryFindings(record.preop, assessmentAnswers),
+  })
 }
