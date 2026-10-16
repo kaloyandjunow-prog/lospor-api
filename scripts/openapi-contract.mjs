@@ -1127,6 +1127,11 @@ add("GET", "/v1/preop/profile", "Read the preoperative profiles, adult and paedi
   errors: [401, 500],
   tag: "clinical",
 })
+add("GET", "/v1/preop/documents", "Read whether the preop summary page and the written consent are on, and the consent texts when they are", {
+  result: ref("JsonObject"),
+  errors: [401, 500],
+  tag: "clinical",
+})
 add("DELETE", "/v1/cases/{id}", "Delete a case", { parameters: [id], result: ref("Message") })
 add("GET", "/v1/cases/{id}/version", "Read current section revisions", { parameters: [id], result: ref("CaseVersion") })
 add("GET", "/v1/cases/{id}/calculations", "List accepted pediatric calculations", { parameters: [id], result: arrayOf("PediatricCalculation") })
@@ -1175,8 +1180,15 @@ add("POST", "/v1/cases/{id}/vitals-scan", "Extract preoperative vitals from an i
 
 add("POST", "/v1/cases/{id}/print-token", "Create a short-lived print token", { parameters: [id], result: ref("JsonObject") })
 add("GET", "/v1/cases/{id}/print-data", "Read printable case data", { parameters: [id, query("print_token", { type: "string" })], result: ref("CaseDetail") })
-add("GET", "/v1/cases/{id}/pdf", "Download a case PDF", {
-  parameters: [id, query("print_token", { type: "string" }), query("lang", { type: "string", enum: ["en", "bg"] })],
+add("POST", "/v1/cases/{id}/consent-prints", "Record that the written consent was printed, with the version and fingerprint of its text", {
+  parameters: [id],
+  requestBody: body(ref("JsonObject")),
+  status: 201,
+  result: ref("JsonObject"),
+  errors: [400, 401, 404, 409, 500],
+})
+add("GET", "/v1/cases/{id}/pdf", "Download a case PDF, or the preop summary with ?doc=preop-summary", {
+  parameters: [id, query("print_token", { type: "string" }), query("lang", { type: "string", enum: ["en", "bg"] }), query("doc", { type: "string", enum: ["preop-summary"] })],
   response: response("PDF document", { type: "string", format: "binary" }, "application/pdf"),
 })
 

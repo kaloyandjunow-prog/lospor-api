@@ -74,14 +74,17 @@ export async function GET(
     console.error("[pdf] LOSPOR_WEB_URL must be set in production")
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 })
   }
-  const pageUrl = `${base}/cases/${id}/print?print_token=${navToken}&pdf=1`
+  // ?doc=preop-summary: the preop summary (and consent, when on), A4 portrait.
+  const preopSummary = req.nextUrl.searchParams.get("doc") === "preop-summary"
+  const pagePath = preopSummary ? `/cases/${id}/preop-summary/print` : `/cases/${id}/print`
+  const pageUrl = `${base}${pagePath}?print_token=${navToken}&pdf=1`
 
   // Record language: explicit ?lang= (mobile app) beats the web locale cookie.
   const langParam = req.nextUrl.searchParams.get("lang")
   const lang = langParam === "bg" ? "bg" : langParam === "en" ? "en" : (req.cookies.get("locale")?.value === "bg" ? "bg" : undefined)
 
   try {
-    const pdf = await renderRecordPdf(pageUrl, lang)
+    const pdf = await renderRecordPdf(pageUrl, lang, preopSummary ? { landscape: false, readySelector: "[data-preop-summary-ready]" } : {})
     // Single use: the headless browser has finished with it, so burn it rather
     // than leave a valid token sitting in this process's logs for five minutes.
     // Only on success — the failure path below still needs it to redirect.
@@ -89,7 +92,7 @@ export async function GET(
     return new NextResponse(pdf as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${record.caseCode ?? "case"}-record.pdf"`,
+        "Content-Disposition": `inline; filename="${record.caseCode ?? "case"}-${preopSummary ? "preop-summary" : "record"}.pdf"`,
         "Cache-Control": "no-store",
       },
     })
@@ -97,6 +100,6 @@ export async function GET(
     console.error("record-pdf render failed:", err)
     // No Chrome available / render failed — fall back to the HTML print page
     // so the user still gets something printable.
-    return NextResponse.redirect(`${base}/cases/${id}/print?print_token=${navToken}`)
+    return NextResponse.redirect(`${base}${pagePath}?print_token=${navToken}`)
   }
 }

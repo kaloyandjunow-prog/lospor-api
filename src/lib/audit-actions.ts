@@ -89,6 +89,7 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "CASE_EVENT_ADD", category: "CASE", labels: { bg: "Добавено събитие към случай", en: "Case event added" } },
   { code: "CASE_EVENT_EDIT", category: "CASE", labels: { bg: "Редактирано събитие в случай", en: "Case event edited" } },
   { code: "CASE_EVENT_DELETE", category: "CASE", labels: { bg: "Изтрито събитие от случай", en: "Case event deleted" } },
+  { code: "CASE_CONSENT_PRINTED", category: "CASE", labels: { bg: "Отпечатано информирано съгласие", en: "Informed consent printed" } },
   { code: "CASE_TRANSFER_REQUEST", category: "CASE", labels: { bg: "Заявено предаване на случай", en: "Case handover requested" } },
   { code: "CASE_TRANSFER_ACCEPT", category: "CASE", labels: { bg: "Прието предаване на случай", en: "Case handover accepted" } },
   { code: "CASE_TRANSFER_DECLINE", category: "CASE", labels: { bg: "Отказано предаване на случай", en: "Case handover declined" } },

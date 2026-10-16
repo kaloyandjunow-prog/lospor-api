@@ -311,6 +311,7 @@ model Case {
   fieldChanges         CaseFieldChange[]
   finalizations        CaseFinalization[]
   clinicalCalculations CaseClinicalCalculation[]
+  consentPrints        CaseConsentPrint[]
 
   @@unique([userId, caseCode])
   @@unique([createdById, clientDraftId])
@@ -1214,6 +1215,58 @@ model PreopAssessmentProfile {
   @@index([population, status, version])
 }
 
+
+/// Whether this site shows the preop summary page and prints the written
+/// consent with it. One row; off unless an operator switches them on in
+/// Status (appliance). The serverless demos have no row and no editor.
+model PreopDocumentPolicy {
+  id             String   @id @default("local")
+  summaryEnabled Boolean  @default(false)
+  consentEnabled Boolean  @default(false)
+  changedById    String?
+  changeReason   String?
+  updatedAt      DateTime @updatedAt
+}
+
+/// A hospital's consent text, one row per save. Rows are never edited or
+/// deleted: a printed sheet records the version it carried, and that version
+/// must stay readable for as long as the sheet is in an archive. No row for a
+/// population means the bundled text (version 0, in Core).
+model ConsentTemplateVersion {
+  id           String       @id @default(cuid())
+  population   ClinicalMode
+  version      Int
+  title        String
+  body         String
+  /// SHA-256 of Core's canonical form of the body, hex.
+  sha256       String
+  createdById  String?
+  changeReason String?
+  createdAt    DateTime     @default(now())
+
+  prints CaseConsentPrint[]
+
+  @@unique([population, version])
+}
+
+/// A consent sheet printed for a case: which text it carried and who printed
+/// it. The signed paper is the consent; this row says which words were on it.
+/// No patient name is stored -- the sheet prints blank lines for it.
+model CaseConsentPrint {
+  id                String                  @id @default(cuid())
+  caseId            String
+  case              Case                    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  population        ClinicalMode
+  /// 0 is the bundled text.
+  templateVersion   Int
+  templateVersionId String?
+  template          ConsentTemplateVersion? @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
+  bodySha256        String
+  printedById       String
+  printedAt         DateTime                @default(now())
+
+  @@index([caseId, printedAt])
+}
 
 model PreopProfileQuestion {
   profileId  String

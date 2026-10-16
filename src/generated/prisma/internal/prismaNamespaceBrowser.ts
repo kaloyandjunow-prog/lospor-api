@@ -92,6 +92,9 @@ export const ModelName = {
   PreopQuestionDefinition: 'PreopQuestionDefinition',
   PreopAnswerOption: 'PreopAnswerOption',
   PreopAssessmentProfile: 'PreopAssessmentProfile',
+  PreopDocumentPolicy: 'PreopDocumentPolicy',
+  ConsentTemplateVersion: 'ConsentTemplateVersion',
+  CaseConsentPrint: 'CaseConsentPrint',
   PreopProfileQuestion: 'PreopProfileQuestion',
   PreopAssessmentAnswer: 'PreopAssessmentAnswer',
   PreopAssessmentSuggestion: 'PreopAssessmentSuggestion',
@@ -859,6 +862,47 @@ export const PreopAssessmentProfileScalarFieldEnum = {
 } as const
 
 export type PreopAssessmentProfileScalarFieldEnum = (typeof PreopAssessmentProfileScalarFieldEnum)[keyof typeof PreopAssessmentProfileScalarFieldEnum]
+
+
+export const PreopDocumentPolicyScalarFieldEnum = {
+  id: 'id',
+  summaryEnabled: 'summaryEnabled',
+  consentEnabled: 'consentEnabled',
+  changedById: 'changedById',
+  changeReason: 'changeReason',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PreopDocumentPolicyScalarFieldEnum = (typeof PreopDocumentPolicyScalarFieldEnum)[keyof typeof PreopDocumentPolicyScalarFieldEnum]
+
+
+export const ConsentTemplateVersionScalarFieldEnum = {
+  id: 'id',
+  population: 'population',
+  version: 'version',
+  title: 'title',
+  body: 'body',
+  sha256: 'sha256',
+  createdById: 'createdById',
+  changeReason: 'changeReason',
+  createdAt: 'createdAt'
+} as const
+
+export type ConsentTemplateVersionScalarFieldEnum = (typeof ConsentTemplateVersionScalarFieldEnum)[keyof typeof ConsentTemplateVersionScalarFieldEnum]
+
+
+export const CaseConsentPrintScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  population: 'population',
+  templateVersion: 'templateVersion',
+  templateVersionId: 'templateVersionId',
+  bodySha256: 'bodySha256',
+  printedById: 'printedById',
+  printedAt: 'printedAt'
+} as const
+
+export type CaseConsentPrintScalarFieldEnum = (typeof CaseConsentPrintScalarFieldEnum)[keyof typeof CaseConsentPrintScalarFieldEnum]
 
 
 export const PreopProfileQuestionScalarFieldEnum = {

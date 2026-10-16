@@ -278,6 +278,28 @@ export type PreopAnswerOption = Prisma.PreopAnswerOptionModel
  */
 export type PreopAssessmentProfile = Prisma.PreopAssessmentProfileModel
 /**
+ * Model PreopDocumentPolicy
+ * Whether this site shows the preop summary page and prints the written
+ * consent with it. One row; off unless an operator switches them on in
+ * Status (appliance). The serverless demos have no row and no editor.
+ */
+export type PreopDocumentPolicy = Prisma.PreopDocumentPolicyModel
+/**
+ * Model ConsentTemplateVersion
+ * A hospital's consent text, one row per save. Rows are never edited or
+ * deleted: a printed sheet records the version it carried, and that version
+ * must stay readable for as long as the sheet is in an archive. No row for a
+ * population means the bundled text (version 0, in Core).
+ */
+export type ConsentTemplateVersion = Prisma.ConsentTemplateVersionModel
+/**
+ * Model CaseConsentPrint
+ * A consent sheet printed for a case: which text it carried and who printed
+ * it. The signed paper is the consent; this row says which words were on it.
+ * No patient name is stored -- the sheet prints blank lines for it.
+ */
+export type CaseConsentPrint = Prisma.CaseConsentPrintModel
+/**
  * Model PreopProfileQuestion
  * 
  */

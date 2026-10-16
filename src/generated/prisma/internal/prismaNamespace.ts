@@ -438,6 +438,9 @@ export const ModelName = {
   PreopQuestionDefinition: 'PreopQuestionDefinition',
   PreopAnswerOption: 'PreopAnswerOption',
   PreopAssessmentProfile: 'PreopAssessmentProfile',
+  PreopDocumentPolicy: 'PreopDocumentPolicy',
+  ConsentTemplateVersion: 'ConsentTemplateVersion',
+  CaseConsentPrint: 'CaseConsentPrint',
   PreopProfileQuestion: 'PreopProfileQuestion',
   PreopAssessmentAnswer: 'PreopAssessmentAnswer',
   PreopAssessmentSuggestion: 'PreopAssessmentSuggestion',
@@ -481,7 +484,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopProfileQuestion" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopDocumentPolicy" | "consentTemplateVersion" | "caseConsentPrint" | "preopProfileQuestion" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3519,6 +3522,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PreopDocumentPolicy: {
+      payload: Prisma.$PreopDocumentPolicyPayload<ExtArgs>
+      fields: Prisma.PreopDocumentPolicyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PreopDocumentPolicyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PreopDocumentPolicyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>
+        }
+        findFirst: {
+          args: Prisma.PreopDocumentPolicyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PreopDocumentPolicyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>
+        }
+        findMany: {
+          args: Prisma.PreopDocumentPolicyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>[]
+        }
+        create: {
+          args: Prisma.PreopDocumentPolicyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>
+        }
+        createMany: {
+          args: Prisma.PreopDocumentPolicyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PreopDocumentPolicyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>[]
+        }
+        delete: {
+          args: Prisma.PreopDocumentPolicyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>
+        }
+        update: {
+          args: Prisma.PreopDocumentPolicyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>
+        }
+        deleteMany: {
+          args: Prisma.PreopDocumentPolicyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PreopDocumentPolicyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PreopDocumentPolicyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>[]
+        }
+        upsert: {
+          args: Prisma.PreopDocumentPolicyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PreopDocumentPolicyPayload>
+        }
+        aggregate: {
+          args: Prisma.PreopDocumentPolicyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePreopDocumentPolicy>
+        }
+        groupBy: {
+          args: Prisma.PreopDocumentPolicyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopDocumentPolicyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PreopDocumentPolicyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PreopDocumentPolicyCountAggregateOutputType> | number
+        }
+      }
+    }
+    ConsentTemplateVersion: {
+      payload: Prisma.$ConsentTemplateVersionPayload<ExtArgs>
+      fields: Prisma.ConsentTemplateVersionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ConsentTemplateVersionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ConsentTemplateVersionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>
+        }
+        findFirst: {
+          args: Prisma.ConsentTemplateVersionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ConsentTemplateVersionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>
+        }
+        findMany: {
+          args: Prisma.ConsentTemplateVersionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>[]
+        }
+        create: {
+          args: Prisma.ConsentTemplateVersionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>
+        }
+        createMany: {
+          args: Prisma.ConsentTemplateVersionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ConsentTemplateVersionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>[]
+        }
+        delete: {
+          args: Prisma.ConsentTemplateVersionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>
+        }
+        update: {
+          args: Prisma.ConsentTemplateVersionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>
+        }
+        deleteMany: {
+          args: Prisma.ConsentTemplateVersionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ConsentTemplateVersionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ConsentTemplateVersionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>[]
+        }
+        upsert: {
+          args: Prisma.ConsentTemplateVersionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ConsentTemplateVersionPayload>
+        }
+        aggregate: {
+          args: Prisma.ConsentTemplateVersionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateConsentTemplateVersion>
+        }
+        groupBy: {
+          args: Prisma.ConsentTemplateVersionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ConsentTemplateVersionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ConsentTemplateVersionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ConsentTemplateVersionCountAggregateOutputType> | number
+        }
+      }
+    }
+    CaseConsentPrint: {
+      payload: Prisma.$CaseConsentPrintPayload<ExtArgs>
+      fields: Prisma.CaseConsentPrintFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CaseConsentPrintFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CaseConsentPrintFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>
+        }
+        findFirst: {
+          args: Prisma.CaseConsentPrintFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CaseConsentPrintFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>
+        }
+        findMany: {
+          args: Prisma.CaseConsentPrintFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>[]
+        }
+        create: {
+          args: Prisma.CaseConsentPrintCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>
+        }
+        createMany: {
+          args: Prisma.CaseConsentPrintCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CaseConsentPrintCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>[]
+        }
+        delete: {
+          args: Prisma.CaseConsentPrintDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>
+        }
+        update: {
+          args: Prisma.CaseConsentPrintUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>
+        }
+        deleteMany: {
+          args: Prisma.CaseConsentPrintDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CaseConsentPrintUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CaseConsentPrintUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>[]
+        }
+        upsert: {
+          args: Prisma.CaseConsentPrintUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseConsentPrintPayload>
+        }
+        aggregate: {
+          args: Prisma.CaseConsentPrintAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCaseConsentPrint>
+        }
+        groupBy: {
+          args: Prisma.CaseConsentPrintGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseConsentPrintGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CaseConsentPrintCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseConsentPrintCountAggregateOutputType> | number
+        }
+      }
+    }
     PreopProfileQuestion: {
       payload: Prisma.$PreopProfileQuestionPayload<ExtArgs>
       fields: Prisma.PreopProfileQuestionFieldRefs
@@ -6353,6 +6578,47 @@ export const PreopAssessmentProfileScalarFieldEnum = {
 export type PreopAssessmentProfileScalarFieldEnum = (typeof PreopAssessmentProfileScalarFieldEnum)[keyof typeof PreopAssessmentProfileScalarFieldEnum]
 
 
+export const PreopDocumentPolicyScalarFieldEnum = {
+  id: 'id',
+  summaryEnabled: 'summaryEnabled',
+  consentEnabled: 'consentEnabled',
+  changedById: 'changedById',
+  changeReason: 'changeReason',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PreopDocumentPolicyScalarFieldEnum = (typeof PreopDocumentPolicyScalarFieldEnum)[keyof typeof PreopDocumentPolicyScalarFieldEnum]
+
+
+export const ConsentTemplateVersionScalarFieldEnum = {
+  id: 'id',
+  population: 'population',
+  version: 'version',
+  title: 'title',
+  body: 'body',
+  sha256: 'sha256',
+  createdById: 'createdById',
+  changeReason: 'changeReason',
+  createdAt: 'createdAt'
+} as const
+
+export type ConsentTemplateVersionScalarFieldEnum = (typeof ConsentTemplateVersionScalarFieldEnum)[keyof typeof ConsentTemplateVersionScalarFieldEnum]
+
+
+export const CaseConsentPrintScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  population: 'population',
+  templateVersion: 'templateVersion',
+  templateVersionId: 'templateVersionId',
+  bodySha256: 'bodySha256',
+  printedById: 'printedById',
+  printedAt: 'printedAt'
+} as const
+
+export type CaseConsentPrintScalarFieldEnum = (typeof CaseConsentPrintScalarFieldEnum)[keyof typeof CaseConsentPrintScalarFieldEnum]
+
+
 export const PreopProfileQuestionScalarFieldEnum = {
   profileId: 'profileId',
   questionId: 'questionId',
@@ -7822,6 +8088,9 @@ export type GlobalOmitConfig = {
   preopQuestionDefinition?: Prisma.PreopQuestionDefinitionOmit
   preopAnswerOption?: Prisma.PreopAnswerOptionOmit
   preopAssessmentProfile?: Prisma.PreopAssessmentProfileOmit
+  preopDocumentPolicy?: Prisma.PreopDocumentPolicyOmit
+  consentTemplateVersion?: Prisma.ConsentTemplateVersionOmit
+  caseConsentPrint?: Prisma.CaseConsentPrintOmit
   preopProfileQuestion?: Prisma.PreopProfileQuestionOmit
   preopAssessmentAnswer?: Prisma.PreopAssessmentAnswerOmit
   preopAssessmentSuggestion?: Prisma.PreopAssessmentSuggestionOmit

@@ -32,6 +32,9 @@ export async function GET(
       intraop: true,
       postop: true,
       institution: { select: { name: true, city: true } },
+      // The preop summary names who consulted and who has the case now.
+      createdBy: { select: { name: true, title: true } },
+      user: { select: { name: true, title: true } },
     },
   })
   if (!record) {
