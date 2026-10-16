@@ -100,4 +100,29 @@ describe.skipIf(!runPostgres)("preop documents in PostgreSQL", () => {
         .rejects.toThrow(/CASE_FINALIZED/)
     }, "COMPLETE")
   })
+  it("switches the consent off with the summary, and audits the change", async () => {
+    await inRollback(async (tx, { userId }) => {
+      const policy = await documents.updatePreopDocumentPolicy(tx, userId, { summaryEnabled: false, consentEnabled: true, reason: "Test change" })
+      expect(policy).toMatchObject({ summaryEnabled: false, consentEnabled: false })
+      expect(await tx.auditLog.count({ where: { userId, action: "PREOP_DOCUMENTS_POLICY_UPDATE" } })).toBe(1)
+    })
+  })
+
+  it("numbers saved texts, saves nothing for the same words, and refuses a bad text", async () => {
+    await inRollback(async (tx, { userId }) => {
+      const before = await tx.consentTemplateVersion.count({ where: { population: "PEDIATRIC" } })
+      const first = await documents.saveConsentTemplate(tx, userId, { population: "PEDIATRIC", title: "Съгласие", body: "## Анестезия\r\n\r\nТекст.  ", reason: "Test" })
+      expect(first.version).toBe(before + 1)
+      expect(first.body).toBe("## Анестезия\n\nТекст.")
+      const again = await documents.saveConsentTemplate(tx, userId, { population: "PEDIATRIC", title: "Съгласие", body: "## Анестезия\n\nТекст.", reason: "Test" })
+      expect(again.version).toBe(first.version)
+      const second = await documents.saveConsentTemplate(tx, userId, { population: "PEDIATRIC", title: "Съгласие", body: "Друг текст.", reason: "Test" })
+      expect(second.version).toBe(first.version + 1)
+      const history = await documents.consentTemplateHistory(tx, "PEDIATRIC")
+      expect(history.slice(0, 2).map(row => row.version)).toEqual([second.version, first.version])
+      expect(history[history.length - 1]?.version).toBe(0)
+      await expect(documents.saveConsentTemplate(tx, userId, { population: "PEDIATRIC", title: "Съгласие", body: "{{surgeon}}", reason: "Test" }))
+        .rejects.toMatchObject({ code: "CONSENT_TEXT_INVALID", problems: ["UNKNOWN_FIELD"] })
+    })
+  })
 })

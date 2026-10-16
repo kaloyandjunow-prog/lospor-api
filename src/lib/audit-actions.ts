@@ -61,6 +61,8 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "INSTITUTION_CHANGE_REJECT", category: "INSTITUTION", labels: { bg: "Отказана смяна на лечебно заведение", en: "Institution change rejected" } },
   { code: "INSTITUTION_CHANGE_SELF_LEAVE", category: "INSTITUTION", labels: { bg: "Напуснато лечебно заведение", en: "Institution left" } },
 
+  { code: "PREOP_DOCUMENTS_POLICY_UPDATE", category: "CLINICAL_RULES", labels: { bg: "Променени настройки за предоперативно обобщение и съгласие", en: "Preop summary and consent settings changed" } },
+  { code: "CONSENT_TEMPLATE_SAVE", category: "CLINICAL_RULES", labels: { bg: "Запазен нов вариант на текста на информираното съгласие", en: "New version of the informed consent text saved" } },
   { code: "CLINICAL_RULESET_CREATE", category: "CLINICAL_RULES", labels: { bg: "Създаден набор от клинични правила", en: "Clinical ruleset created" } },
   { code: "CLINICAL_RULESET_RULE_UPSERT", category: "CLINICAL_RULES", labels: { bg: "Запазено клинично правило", en: "Clinical rule saved" } },
   { code: "CLINICAL_RULESET_RULE_DELETE", category: "CLINICAL_RULES", labels: { bg: "Изтрито клинично правило", en: "Clinical rule deleted" } },
