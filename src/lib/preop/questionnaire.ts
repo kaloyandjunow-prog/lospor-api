@@ -1,4 +1,5 @@
 import {
+  PREOP_ADULT_FORM_ONLY_QUESTIONS,
   PREOP_LEGACY_FIELD_BY_QUESTION,
   preopProfileForMode,
   preopQuestionAppliesToMode,
@@ -70,6 +71,7 @@ export function preopQuestionnaire(
   }
 
   const shown = (question: PreopProfileQuestion) => question.enabled && preopQuestionAppliesToMode(question.applicability, mode)
+    && !(mode === "PEDIATRIC" && PREOP_ADULT_FORM_ONLY_QUESTIONS.has(question.stableKey))
   const ordered = [...forMode.questions].sort((left, right) => left.sortOrder - right.sortOrder)
   const byKey = new Map(ordered.map(question => [question.stableKey, question]))
   const items: PreopQuestionnaireItem[] = []

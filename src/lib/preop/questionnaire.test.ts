@@ -45,6 +45,9 @@ describe("the questionnaire on the preop summary", () => {
     const items = preopQuestionnaire({}, [], defaultPreopProfileShape(), "PEDIATRIC")
     expect(items.some(item => item.stableKey === "A11_DYSPHAGIA_ASPIRATION")).toBe(false)
     expect(items.some(item => item.stableKey === "BASE_PEDIATRIC_FASTING")).toBe(false)
+    // The score factors the forms show adults only.
+    expect(items.some(item => item.stableKey === "BASE_RCRI_CHF" || item.stableKey === "BASE_STOPBANG_SNORING")).toBe(false)
+    expect(items.some(item => item.stableKey === "BASE_POVOC_HISTORY")).toBe(true)
   })
 
   it("prints a choice question's chosen option", () => {
