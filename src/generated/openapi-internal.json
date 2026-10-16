@@ -5321,6 +5321,14 @@
                 "preop-summary"
               ]
             }
+          },
+          {
+            "name": "techniques",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

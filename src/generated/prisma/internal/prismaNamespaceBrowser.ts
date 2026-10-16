@@ -868,6 +868,7 @@ export const PreopDocumentPolicyScalarFieldEnum = {
   id: 'id',
   summaryEnabled: 'summaryEnabled',
   consentEnabled: 'consentEnabled',
+  layout: 'layout',
   changedById: 'changedById',
   changeReason: 'changeReason',
   updatedAt: 'updatedAt'
@@ -898,6 +899,8 @@ export const CaseConsentPrintScalarFieldEnum = {
   templateVersion: 'templateVersion',
   templateVersionId: 'templateVersionId',
   bodySha256: 'bodySha256',
+  layout: 'layout',
+  techniques: 'techniques',
   printedById: 'printedById',
   printedAt: 'printedAt'
 } as const

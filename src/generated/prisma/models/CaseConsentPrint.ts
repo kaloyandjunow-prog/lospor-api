@@ -43,6 +43,7 @@ export type CaseConsentPrintMinAggregateOutputType = {
   templateVersion: number | null
   templateVersionId: string | null
   bodySha256: string | null
+  layout: string | null
   printedById: string | null
   printedAt: Date | null
 }
@@ -54,6 +55,7 @@ export type CaseConsentPrintMaxAggregateOutputType = {
   templateVersion: number | null
   templateVersionId: string | null
   bodySha256: string | null
+  layout: string | null
   printedById: string | null
   printedAt: Date | null
 }
@@ -65,6 +67,8 @@ export type CaseConsentPrintCountAggregateOutputType = {
   templateVersion: number
   templateVersionId: number
   bodySha256: number
+  layout: number
+  techniques: number
   printedById: number
   printedAt: number
   _all: number
@@ -86,6 +90,7 @@ export type CaseConsentPrintMinAggregateInputType = {
   templateVersion?: true
   templateVersionId?: true
   bodySha256?: true
+  layout?: true
   printedById?: true
   printedAt?: true
 }
@@ -97,6 +102,7 @@ export type CaseConsentPrintMaxAggregateInputType = {
   templateVersion?: true
   templateVersionId?: true
   bodySha256?: true
+  layout?: true
   printedById?: true
   printedAt?: true
 }
@@ -108,6 +114,8 @@ export type CaseConsentPrintCountAggregateInputType = {
   templateVersion?: true
   templateVersionId?: true
   bodySha256?: true
+  layout?: true
+  techniques?: true
   printedById?: true
   printedAt?: true
   _all?: true
@@ -206,6 +214,8 @@ export type CaseConsentPrintGroupByOutputType = {
   templateVersion: number
   templateVersionId: string | null
   bodySha256: string
+  layout: string | null
+  techniques: string[]
   printedById: string
   printedAt: Date
   _count: CaseConsentPrintCountAggregateOutputType | null
@@ -240,6 +250,8 @@ export type CaseConsentPrintWhereInput = {
   templateVersion?: Prisma.IntFilter<"CaseConsentPrint"> | number
   templateVersionId?: Prisma.StringNullableFilter<"CaseConsentPrint"> | string | null
   bodySha256?: Prisma.StringFilter<"CaseConsentPrint"> | string
+  layout?: Prisma.StringNullableFilter<"CaseConsentPrint"> | string | null
+  techniques?: Prisma.StringNullableListFilter<"CaseConsentPrint">
   printedById?: Prisma.StringFilter<"CaseConsentPrint"> | string
   printedAt?: Prisma.DateTimeFilter<"CaseConsentPrint"> | Date | string
   case?: Prisma.XOR<Prisma.CaseScalarRelationFilter, Prisma.CaseWhereInput>
@@ -253,6 +265,8 @@ export type CaseConsentPrintOrderByWithRelationInput = {
   templateVersion?: Prisma.SortOrder
   templateVersionId?: Prisma.SortOrderInput | Prisma.SortOrder
   bodySha256?: Prisma.SortOrder
+  layout?: Prisma.SortOrderInput | Prisma.SortOrder
+  techniques?: Prisma.SortOrder
   printedById?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
   case?: Prisma.CaseOrderByWithRelationInput
@@ -269,6 +283,8 @@ export type CaseConsentPrintWhereUniqueInput = Prisma.AtLeast<{
   templateVersion?: Prisma.IntFilter<"CaseConsentPrint"> | number
   templateVersionId?: Prisma.StringNullableFilter<"CaseConsentPrint"> | string | null
   bodySha256?: Prisma.StringFilter<"CaseConsentPrint"> | string
+  layout?: Prisma.StringNullableFilter<"CaseConsentPrint"> | string | null
+  techniques?: Prisma.StringNullableListFilter<"CaseConsentPrint">
   printedById?: Prisma.StringFilter<"CaseConsentPrint"> | string
   printedAt?: Prisma.DateTimeFilter<"CaseConsentPrint"> | Date | string
   case?: Prisma.XOR<Prisma.CaseScalarRelationFilter, Prisma.CaseWhereInput>
@@ -282,6 +298,8 @@ export type CaseConsentPrintOrderByWithAggregationInput = {
   templateVersion?: Prisma.SortOrder
   templateVersionId?: Prisma.SortOrderInput | Prisma.SortOrder
   bodySha256?: Prisma.SortOrder
+  layout?: Prisma.SortOrderInput | Prisma.SortOrder
+  techniques?: Prisma.SortOrder
   printedById?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
   _count?: Prisma.CaseConsentPrintCountOrderByAggregateInput
@@ -301,6 +319,8 @@ export type CaseConsentPrintScalarWhereWithAggregatesInput = {
   templateVersion?: Prisma.IntWithAggregatesFilter<"CaseConsentPrint"> | number
   templateVersionId?: Prisma.StringNullableWithAggregatesFilter<"CaseConsentPrint"> | string | null
   bodySha256?: Prisma.StringWithAggregatesFilter<"CaseConsentPrint"> | string
+  layout?: Prisma.StringNullableWithAggregatesFilter<"CaseConsentPrint"> | string | null
+  techniques?: Prisma.StringNullableListFilter<"CaseConsentPrint">
   printedById?: Prisma.StringWithAggregatesFilter<"CaseConsentPrint"> | string
   printedAt?: Prisma.DateTimeWithAggregatesFilter<"CaseConsentPrint"> | Date | string
 }
@@ -310,6 +330,8 @@ export type CaseConsentPrintCreateInput = {
   population: $Enums.ClinicalMode
   templateVersion: number
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
   case: Prisma.CaseCreateNestedOneWithoutConsentPrintsInput
@@ -323,6 +345,8 @@ export type CaseConsentPrintUncheckedCreateInput = {
   templateVersion: number
   templateVersionId?: string | null
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
 }
@@ -332,6 +356,8 @@ export type CaseConsentPrintUpdateInput = {
   population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   case?: Prisma.CaseUpdateOneRequiredWithoutConsentPrintsNestedInput
@@ -345,6 +371,8 @@ export type CaseConsentPrintUncheckedUpdateInput = {
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   templateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -356,6 +384,8 @@ export type CaseConsentPrintCreateManyInput = {
   templateVersion: number
   templateVersionId?: string | null
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
 }
@@ -365,6 +395,8 @@ export type CaseConsentPrintUpdateManyMutationInput = {
   population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -376,6 +408,8 @@ export type CaseConsentPrintUncheckedUpdateManyInput = {
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   templateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -397,6 +431,8 @@ export type CaseConsentPrintCountOrderByAggregateInput = {
   templateVersion?: Prisma.SortOrder
   templateVersionId?: Prisma.SortOrder
   bodySha256?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
+  techniques?: Prisma.SortOrder
   printedById?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
 }
@@ -412,6 +448,7 @@ export type CaseConsentPrintMaxOrderByAggregateInput = {
   templateVersion?: Prisma.SortOrder
   templateVersionId?: Prisma.SortOrder
   bodySha256?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
   printedById?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
 }
@@ -423,6 +460,7 @@ export type CaseConsentPrintMinOrderByAggregateInput = {
   templateVersion?: Prisma.SortOrder
   templateVersionId?: Prisma.SortOrder
   bodySha256?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
   printedById?: Prisma.SortOrder
   printedAt?: Prisma.SortOrder
 }
@@ -515,11 +553,22 @@ export type CaseConsentPrintUncheckedUpdateManyWithoutTemplateNestedInput = {
   deleteMany?: Prisma.CaseConsentPrintScalarWhereInput | Prisma.CaseConsentPrintScalarWhereInput[]
 }
 
+export type CaseConsentPrintCreatetechniquesInput = {
+  set: string[]
+}
+
+export type CaseConsentPrintUpdatetechniquesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
 export type CaseConsentPrintCreateWithoutCaseInput = {
   id?: string
   population: $Enums.ClinicalMode
   templateVersion: number
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
   template?: Prisma.ConsentTemplateVersionCreateNestedOneWithoutPrintsInput
@@ -531,6 +580,8 @@ export type CaseConsentPrintUncheckedCreateWithoutCaseInput = {
   templateVersion: number
   templateVersionId?: string | null
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
 }
@@ -571,6 +622,8 @@ export type CaseConsentPrintScalarWhereInput = {
   templateVersion?: Prisma.IntFilter<"CaseConsentPrint"> | number
   templateVersionId?: Prisma.StringNullableFilter<"CaseConsentPrint"> | string | null
   bodySha256?: Prisma.StringFilter<"CaseConsentPrint"> | string
+  layout?: Prisma.StringNullableFilter<"CaseConsentPrint"> | string | null
+  techniques?: Prisma.StringNullableListFilter<"CaseConsentPrint">
   printedById?: Prisma.StringFilter<"CaseConsentPrint"> | string
   printedAt?: Prisma.DateTimeFilter<"CaseConsentPrint"> | Date | string
 }
@@ -580,6 +633,8 @@ export type CaseConsentPrintCreateWithoutTemplateInput = {
   population: $Enums.ClinicalMode
   templateVersion: number
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
   case: Prisma.CaseCreateNestedOneWithoutConsentPrintsInput
@@ -591,6 +646,8 @@ export type CaseConsentPrintUncheckedCreateWithoutTemplateInput = {
   population: $Enums.ClinicalMode
   templateVersion: number
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
 }
@@ -627,6 +684,8 @@ export type CaseConsentPrintCreateManyCaseInput = {
   templateVersion: number
   templateVersionId?: string | null
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
 }
@@ -636,6 +695,8 @@ export type CaseConsentPrintUpdateWithoutCaseInput = {
   population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   template?: Prisma.ConsentTemplateVersionUpdateOneWithoutPrintsNestedInput
@@ -647,6 +708,8 @@ export type CaseConsentPrintUncheckedUpdateWithoutCaseInput = {
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   templateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -657,6 +720,8 @@ export type CaseConsentPrintUncheckedUpdateManyWithoutCaseInput = {
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   templateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -667,6 +732,8 @@ export type CaseConsentPrintCreateManyTemplateInput = {
   population: $Enums.ClinicalMode
   templateVersion: number
   bodySha256: string
+  layout?: string | null
+  techniques?: Prisma.CaseConsentPrintCreatetechniquesInput | string[]
   printedById: string
   printedAt?: Date | string
 }
@@ -676,6 +743,8 @@ export type CaseConsentPrintUpdateWithoutTemplateInput = {
   population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   case?: Prisma.CaseUpdateOneRequiredWithoutConsentPrintsNestedInput
@@ -687,6 +756,8 @@ export type CaseConsentPrintUncheckedUpdateWithoutTemplateInput = {
   population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -697,6 +768,8 @@ export type CaseConsentPrintUncheckedUpdateManyWithoutTemplateInput = {
   population?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
   templateVersion?: Prisma.IntFieldUpdateOperationsInput | number
   bodySha256?: Prisma.StringFieldUpdateOperationsInput | string
+  layout?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  techniques?: Prisma.CaseConsentPrintUpdatetechniquesInput | string[]
   printedById?: Prisma.StringFieldUpdateOperationsInput | string
   printedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -710,6 +783,8 @@ export type CaseConsentPrintSelect<ExtArgs extends runtime.Types.Extensions.Inte
   templateVersion?: boolean
   templateVersionId?: boolean
   bodySha256?: boolean
+  layout?: boolean
+  techniques?: boolean
   printedById?: boolean
   printedAt?: boolean
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
@@ -723,6 +798,8 @@ export type CaseConsentPrintSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   templateVersion?: boolean
   templateVersionId?: boolean
   bodySha256?: boolean
+  layout?: boolean
+  techniques?: boolean
   printedById?: boolean
   printedAt?: boolean
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
@@ -736,6 +813,8 @@ export type CaseConsentPrintSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   templateVersion?: boolean
   templateVersionId?: boolean
   bodySha256?: boolean
+  layout?: boolean
+  techniques?: boolean
   printedById?: boolean
   printedAt?: boolean
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
@@ -749,11 +828,13 @@ export type CaseConsentPrintSelectScalar = {
   templateVersion?: boolean
   templateVersionId?: boolean
   bodySha256?: boolean
+  layout?: boolean
+  techniques?: boolean
   printedById?: boolean
   printedAt?: boolean
 }
 
-export type CaseConsentPrintOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "population" | "templateVersion" | "templateVersionId" | "bodySha256" | "printedById" | "printedAt", ExtArgs["result"]["caseConsentPrint"]>
+export type CaseConsentPrintOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "population" | "templateVersion" | "templateVersionId" | "bodySha256" | "layout" | "techniques" | "printedById" | "printedAt", ExtArgs["result"]["caseConsentPrint"]>
 export type CaseConsentPrintInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   template?: boolean | Prisma.CaseConsentPrint$templateArgs<ExtArgs>
@@ -783,6 +864,14 @@ export type $CaseConsentPrintPayload<ExtArgs extends runtime.Types.Extensions.In
     templateVersion: number
     templateVersionId: string | null
     bodySha256: string
+    /**
+     * The layout the sheet printed in; null on prints before layouts.
+     */
+    layout: string | null
+    /**
+     * Layout C: the techniques the consent described (general anaesthesia always).
+     */
+    techniques: string[]
     printedById: string
     printedAt: Date
   }, ExtArgs["result"]["caseConsentPrint"]>
@@ -1216,6 +1305,8 @@ export interface CaseConsentPrintFieldRefs {
   readonly templateVersion: Prisma.FieldRef<"CaseConsentPrint", 'Int'>
   readonly templateVersionId: Prisma.FieldRef<"CaseConsentPrint", 'String'>
   readonly bodySha256: Prisma.FieldRef<"CaseConsentPrint", 'String'>
+  readonly layout: Prisma.FieldRef<"CaseConsentPrint", 'String'>
+  readonly techniques: Prisma.FieldRef<"CaseConsentPrint", 'String[]'>
   readonly printedById: Prisma.FieldRef<"CaseConsentPrint", 'String'>
   readonly printedAt: Prisma.FieldRef<"CaseConsentPrint", 'DateTime'>
 }

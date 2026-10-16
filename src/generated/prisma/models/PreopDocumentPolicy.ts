@@ -30,6 +30,7 @@ export type PreopDocumentPolicyMinAggregateOutputType = {
   id: string | null
   summaryEnabled: boolean | null
   consentEnabled: boolean | null
+  layout: string | null
   changedById: string | null
   changeReason: string | null
   updatedAt: Date | null
@@ -39,6 +40,7 @@ export type PreopDocumentPolicyMaxAggregateOutputType = {
   id: string | null
   summaryEnabled: boolean | null
   consentEnabled: boolean | null
+  layout: string | null
   changedById: string | null
   changeReason: string | null
   updatedAt: Date | null
@@ -48,6 +50,7 @@ export type PreopDocumentPolicyCountAggregateOutputType = {
   id: number
   summaryEnabled: number
   consentEnabled: number
+  layout: number
   changedById: number
   changeReason: number
   updatedAt: number
@@ -59,6 +62,7 @@ export type PreopDocumentPolicyMinAggregateInputType = {
   id?: true
   summaryEnabled?: true
   consentEnabled?: true
+  layout?: true
   changedById?: true
   changeReason?: true
   updatedAt?: true
@@ -68,6 +72,7 @@ export type PreopDocumentPolicyMaxAggregateInputType = {
   id?: true
   summaryEnabled?: true
   consentEnabled?: true
+  layout?: true
   changedById?: true
   changeReason?: true
   updatedAt?: true
@@ -77,6 +82,7 @@ export type PreopDocumentPolicyCountAggregateInputType = {
   id?: true
   summaryEnabled?: true
   consentEnabled?: true
+  layout?: true
   changedById?: true
   changeReason?: true
   updatedAt?: true
@@ -159,6 +165,7 @@ export type PreopDocumentPolicyGroupByOutputType = {
   id: string
   summaryEnabled: boolean
   consentEnabled: boolean
+  layout: string
   changedById: string | null
   changeReason: string | null
   updatedAt: Date
@@ -189,6 +196,7 @@ export type PreopDocumentPolicyWhereInput = {
   id?: Prisma.StringFilter<"PreopDocumentPolicy"> | string
   summaryEnabled?: Prisma.BoolFilter<"PreopDocumentPolicy"> | boolean
   consentEnabled?: Prisma.BoolFilter<"PreopDocumentPolicy"> | boolean
+  layout?: Prisma.StringFilter<"PreopDocumentPolicy"> | string
   changedById?: Prisma.StringNullableFilter<"PreopDocumentPolicy"> | string | null
   changeReason?: Prisma.StringNullableFilter<"PreopDocumentPolicy"> | string | null
   updatedAt?: Prisma.DateTimeFilter<"PreopDocumentPolicy"> | Date | string
@@ -198,6 +206,7 @@ export type PreopDocumentPolicyOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   summaryEnabled?: Prisma.SortOrder
   consentEnabled?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
   changedById?: Prisma.SortOrderInput | Prisma.SortOrder
   changeReason?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -210,6 +219,7 @@ export type PreopDocumentPolicyWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.PreopDocumentPolicyWhereInput | Prisma.PreopDocumentPolicyWhereInput[]
   summaryEnabled?: Prisma.BoolFilter<"PreopDocumentPolicy"> | boolean
   consentEnabled?: Prisma.BoolFilter<"PreopDocumentPolicy"> | boolean
+  layout?: Prisma.StringFilter<"PreopDocumentPolicy"> | string
   changedById?: Prisma.StringNullableFilter<"PreopDocumentPolicy"> | string | null
   changeReason?: Prisma.StringNullableFilter<"PreopDocumentPolicy"> | string | null
   updatedAt?: Prisma.DateTimeFilter<"PreopDocumentPolicy"> | Date | string
@@ -219,6 +229,7 @@ export type PreopDocumentPolicyOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   summaryEnabled?: Prisma.SortOrder
   consentEnabled?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
   changedById?: Prisma.SortOrderInput | Prisma.SortOrder
   changeReason?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -234,6 +245,7 @@ export type PreopDocumentPolicyScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"PreopDocumentPolicy"> | string
   summaryEnabled?: Prisma.BoolWithAggregatesFilter<"PreopDocumentPolicy"> | boolean
   consentEnabled?: Prisma.BoolWithAggregatesFilter<"PreopDocumentPolicy"> | boolean
+  layout?: Prisma.StringWithAggregatesFilter<"PreopDocumentPolicy"> | string
   changedById?: Prisma.StringNullableWithAggregatesFilter<"PreopDocumentPolicy"> | string | null
   changeReason?: Prisma.StringNullableWithAggregatesFilter<"PreopDocumentPolicy"> | string | null
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"PreopDocumentPolicy"> | Date | string
@@ -243,6 +255,7 @@ export type PreopDocumentPolicyCreateInput = {
   id?: string
   summaryEnabled?: boolean
   consentEnabled?: boolean
+  layout?: string
   changedById?: string | null
   changeReason?: string | null
   updatedAt?: Date | string
@@ -252,6 +265,7 @@ export type PreopDocumentPolicyUncheckedCreateInput = {
   id?: string
   summaryEnabled?: boolean
   consentEnabled?: boolean
+  layout?: string
   changedById?: string | null
   changeReason?: string | null
   updatedAt?: Date | string
@@ -261,6 +275,7 @@ export type PreopDocumentPolicyUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   summaryEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  layout?: Prisma.StringFieldUpdateOperationsInput | string
   changedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   changeReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -270,6 +285,7 @@ export type PreopDocumentPolicyUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   summaryEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  layout?: Prisma.StringFieldUpdateOperationsInput | string
   changedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   changeReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -279,6 +295,7 @@ export type PreopDocumentPolicyCreateManyInput = {
   id?: string
   summaryEnabled?: boolean
   consentEnabled?: boolean
+  layout?: string
   changedById?: string | null
   changeReason?: string | null
   updatedAt?: Date | string
@@ -288,6 +305,7 @@ export type PreopDocumentPolicyUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   summaryEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  layout?: Prisma.StringFieldUpdateOperationsInput | string
   changedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   changeReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -297,6 +315,7 @@ export type PreopDocumentPolicyUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   summaryEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  layout?: Prisma.StringFieldUpdateOperationsInput | string
   changedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   changeReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -306,6 +325,7 @@ export type PreopDocumentPolicyCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   summaryEnabled?: Prisma.SortOrder
   consentEnabled?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
   changedById?: Prisma.SortOrder
   changeReason?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -315,6 +335,7 @@ export type PreopDocumentPolicyMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   summaryEnabled?: Prisma.SortOrder
   consentEnabled?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
   changedById?: Prisma.SortOrder
   changeReason?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -324,6 +345,7 @@ export type PreopDocumentPolicyMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   summaryEnabled?: Prisma.SortOrder
   consentEnabled?: Prisma.SortOrder
+  layout?: Prisma.SortOrder
   changedById?: Prisma.SortOrder
   changeReason?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -335,6 +357,7 @@ export type PreopDocumentPolicySelect<ExtArgs extends runtime.Types.Extensions.I
   id?: boolean
   summaryEnabled?: boolean
   consentEnabled?: boolean
+  layout?: boolean
   changedById?: boolean
   changeReason?: boolean
   updatedAt?: boolean
@@ -344,6 +367,7 @@ export type PreopDocumentPolicySelectCreateManyAndReturn<ExtArgs extends runtime
   id?: boolean
   summaryEnabled?: boolean
   consentEnabled?: boolean
+  layout?: boolean
   changedById?: boolean
   changeReason?: boolean
   updatedAt?: boolean
@@ -353,6 +377,7 @@ export type PreopDocumentPolicySelectUpdateManyAndReturn<ExtArgs extends runtime
   id?: boolean
   summaryEnabled?: boolean
   consentEnabled?: boolean
+  layout?: boolean
   changedById?: boolean
   changeReason?: boolean
   updatedAt?: boolean
@@ -362,12 +387,13 @@ export type PreopDocumentPolicySelectScalar = {
   id?: boolean
   summaryEnabled?: boolean
   consentEnabled?: boolean
+  layout?: boolean
   changedById?: boolean
   changeReason?: boolean
   updatedAt?: boolean
 }
 
-export type PreopDocumentPolicyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "summaryEnabled" | "consentEnabled" | "changedById" | "changeReason" | "updatedAt", ExtArgs["result"]["preopDocumentPolicy"]>
+export type PreopDocumentPolicyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "summaryEnabled" | "consentEnabled" | "layout" | "changedById" | "changeReason" | "updatedAt", ExtArgs["result"]["preopDocumentPolicy"]>
 
 export type $PreopDocumentPolicyPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PreopDocumentPolicy"
@@ -376,6 +402,10 @@ export type $PreopDocumentPolicyPayload<ExtArgs extends runtime.Types.Extensions
     id: string
     summaryEnabled: boolean
     consentEnabled: boolean
+    /**
+     * How the summary and consent print: A to E (Core PREOP_DOCUMENT_LAYOUTS).
+     */
+    layout: string
     changedById: string | null
     changeReason: string | null
     updatedAt: Date
@@ -805,6 +835,7 @@ export interface PreopDocumentPolicyFieldRefs {
   readonly id: Prisma.FieldRef<"PreopDocumentPolicy", 'String'>
   readonly summaryEnabled: Prisma.FieldRef<"PreopDocumentPolicy", 'Boolean'>
   readonly consentEnabled: Prisma.FieldRef<"PreopDocumentPolicy", 'Boolean'>
+  readonly layout: Prisma.FieldRef<"PreopDocumentPolicy", 'String'>
   readonly changedById: Prisma.FieldRef<"PreopDocumentPolicy", 'String'>
   readonly changeReason: Prisma.FieldRef<"PreopDocumentPolicy", 'String'>
   readonly updatedAt: Prisma.FieldRef<"PreopDocumentPolicy", 'DateTime'>

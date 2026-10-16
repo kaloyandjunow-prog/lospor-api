@@ -48,7 +48,7 @@ describe.skipIf(!runPostgres)("preop documents in PostgreSQL", () => {
   it("is off with no policy row, and sends no texts", async () => {
     await inRollback(async tx => {
       await tx.preopDocumentPolicy.deleteMany({})
-      expect(await documents.preopDocuments(tx)).toEqual({ summaryEnabled: false, consentEnabled: false, templates: null })
+      expect(await documents.preopDocuments(tx)).toEqual({ summaryEnabled: false, consentEnabled: false, layout: "B", templates: null })
     })
   })
 
@@ -79,6 +79,15 @@ describe.skipIf(!runPostgres)("preop documents in PostgreSQL", () => {
     })
   })
 
+  it("records the layout and, for layout C, the techniques the consent described", async () => {
+    await inRollback(async (tx, { userId, caseId }) => {
+      await turnOn(tx)
+      const bundled = (await documents.currentConsentTemplates(tx)).ADULT
+      const print = await documents.recordConsentPrint(tx, { caseId, userId, print: { population: "ADULT", version: bundled.version, sha256: bundled.sha256, layout: "C", techniques: ["block", "general", "block"] } })
+      expect(print).toMatchObject({ layout: "C", techniques: ["block", "general"] })
+    })
+  })
+
   it("records nothing while the consent is switched off", async () => {
     await inRollback(async (tx, { userId, caseId }) => {
       await turnOn(tx, false)
@@ -104,7 +113,13 @@ describe.skipIf(!runPostgres)("preop documents in PostgreSQL", () => {
     await inRollback(async (tx, { userId }) => {
       const policy = await documents.updatePreopDocumentPolicy(tx, userId, { summaryEnabled: false, consentEnabled: true, reason: "Test change" })
       expect(policy).toMatchObject({ summaryEnabled: false, consentEnabled: false })
-      expect(await tx.auditLog.count({ where: { userId, action: "PREOP_DOCUMENTS_POLICY_UPDATE" } })).toBe(1)
+      const chosen = await documents.updatePreopDocumentPolicy(tx, userId, { summaryEnabled: true, consentEnabled: true, layout: "E", reason: "Test change" })
+      expect(chosen.layout).toBe("E")
+      // A request that names no layout keeps the chosen one.
+      expect((await documents.updatePreopDocumentPolicy(tx, userId, { summaryEnabled: true, consentEnabled: false, reason: "Test change" })).layout).toBe("E")
+      expect(await tx.auditLog.count({ where: { userId, action: "PREOP_DOCUMENTS_POLICY_UPDATE" } })).toBe(3)
+      // Last: a refused statement ends the transaction.
+      await expect(tx.preopDocumentPolicy.update({ where: { id: "local" }, data: { layout: "Z" } })).rejects.toThrow()
     })
   })
 

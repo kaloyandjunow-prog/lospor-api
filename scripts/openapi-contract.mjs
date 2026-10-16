@@ -1188,7 +1188,7 @@ add("POST", "/v1/cases/{id}/consent-prints", "Record that the written consent wa
   errors: [400, 401, 404, 409, 500],
 })
 add("GET", "/v1/cases/{id}/pdf", "Download a case PDF, or the preop summary with ?doc=preop-summary", {
-  parameters: [id, query("print_token", { type: "string" }), query("lang", { type: "string", enum: ["en", "bg"] }), query("doc", { type: "string", enum: ["preop-summary"] })],
+  parameters: [id, query("print_token", { type: "string" }), query("lang", { type: "string", enum: ["en", "bg"] }), query("doc", { type: "string", enum: ["preop-summary"] }), query("techniques", { type: "string" })],
   response: response("PDF document", { type: "string", format: "binary" }, "application/pdf"),
 })
 

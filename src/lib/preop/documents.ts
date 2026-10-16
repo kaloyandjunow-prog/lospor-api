@@ -6,10 +6,13 @@ import {
   BUNDLED_CONSENT_TEMPLATES,
   canonicalConsentText,
   CONSENT_POPULATIONS,
+  CONSENT_TECHNIQUES,
   consentTextProblems,
   effectivePreopDocumentSettings,
   type ConsentPopulation,
   type ConsentTemplateVersionView,
+  type PreopDocumentLayout,
+  PREOP_DOCUMENT_LAYOUTS,
   type PreopDocumentsResponse,
 } from "@lospor/core/preop-documents"
 
@@ -23,6 +26,11 @@ export function consentTextSha256(body: string): string {
 function bundledView(population: ConsentPopulation): ConsentTemplateVersionView {
   const template = BUNDLED_CONSENT_TEMPLATES[population]
   return { population, version: 0, title: template.title, body: template.body, sha256: consentTextSha256(template.body) }
+}
+
+/** The settings as stored; no row is both off, layout B. */
+function storedSettings(row: { summaryEnabled: boolean; consentEnabled: boolean; layout: string } | null) {
+  return effectivePreopDocumentSettings(row ? { ...row, layout: row.layout as PreopDocumentLayout } : null)
 }
 
 /** The text a population prints today: the hospital's latest save, or the bundled one. */
@@ -46,8 +54,7 @@ export async function currentConsentTemplates(db: Db): Promise<Record<ConsentPop
  * (every serverless demo, and an appliance nobody has configured).
  */
 export async function preopDocuments(db: Db): Promise<PreopDocumentsResponse> {
-  const policy = await db.preopDocumentPolicy.findUnique({ where: { id: "local" } })
-  const settings = effectivePreopDocumentSettings(policy)
+  const settings = storedSettings(await db.preopDocumentPolicy.findUnique({ where: { id: "local" } }))
   return { ...settings, templates: settings.consentEnabled ? await currentConsentTemplates(db) : null }
 }
 
@@ -55,6 +62,8 @@ export const consentPrintSchema = z.object({
   population: z.enum(["ADULT", "PEDIATRIC"]),
   version: z.number().int().min(0),
   sha256: z.string().regex(/^[0-9a-f]{64}$/),
+  layout: z.enum(PREOP_DOCUMENT_LAYOUTS).optional(),
+  techniques: z.array(z.enum(CONSENT_TECHNIQUES)).max(CONSENT_TECHNIQUES.length).optional(),
 }).strict()
 
 export class ConsentPrintError extends Error {
@@ -73,9 +82,8 @@ export async function recordConsentPrint(
   tx: Prisma.TransactionClient,
   input: { caseId: string; userId: string; print: z.infer<typeof consentPrintSchema> },
 ) {
-  const policy = await tx.preopDocumentPolicy.findUnique({ where: { id: "local" } })
-  if (!effectivePreopDocumentSettings(policy).consentEnabled) throw new ConsentPrintError("CONSENT_DISABLED")
-  const { population, version, sha256 } = input.print
+  if (!storedSettings(await tx.preopDocumentPolicy.findUnique({ where: { id: "local" } })).consentEnabled) throw new ConsentPrintError("CONSENT_DISABLED")
+  const { population, version, sha256, layout, techniques } = input.print
   let templateVersionId: string | null = null
   if (version === 0) {
     if (bundledView(population).sha256 !== sha256) throw new ConsentPrintError("CONSENT_TEXT_MISMATCH")
@@ -87,9 +95,18 @@ export async function recordConsentPrint(
     templateVersionId = saved.id
   }
   const print = await tx.caseConsentPrint.create({
-    data: { caseId: input.caseId, population: population as ClinicalMode, templateVersion: version, templateVersionId, bodySha256: sha256, printedById: input.userId },
+    data: {
+      caseId: input.caseId,
+      population: population as ClinicalMode,
+      templateVersion: version,
+      templateVersionId,
+      bodySha256: sha256,
+      layout: layout ?? null,
+      techniques: [...new Set(techniques ?? [])],
+      printedById: input.userId,
+    },
   })
-  await logAuditInTransaction(tx, input.userId, "CASE_CONSENT_PRINTED", input.caseId, { population, templateVersion: version, bodySha256: sha256 })
+  await logAuditInTransaction(tx, input.userId, "CASE_CONSENT_PRINTED", input.caseId, { population, templateVersion: version, bodySha256: sha256, layout: layout ?? null, techniques: print.techniques })
   return print
 }
 
@@ -101,21 +118,22 @@ export class PreopDocumentsContractError extends Error {
   }
 }
 
-/** Switches the summary page and the consent on or off. The consent needs the summary. */
+/** Switches the summary page and the consent on or off, and picks the print layout. The consent needs the summary. */
 export async function updatePreopDocumentPolicy(
   tx: Prisma.TransactionClient,
   actorId: string,
-  input: { summaryEnabled: boolean; consentEnabled: boolean; reason: string },
+  input: { summaryEnabled: boolean; consentEnabled: boolean; layout?: PreopDocumentLayout; reason: string },
 ) {
-  const settings = effectivePreopDocumentSettings(input)
-  const before = await tx.preopDocumentPolicy.findUnique({ where: { id: "local" } })
+  const before = storedSettings(await tx.preopDocumentPolicy.findUnique({ where: { id: "local" } }))
+  // A request without a layout keeps the one chosen before.
+  const settings = effectivePreopDocumentSettings({ ...input, layout: input.layout ?? before.layout })
   const policy = await tx.preopDocumentPolicy.upsert({
     where: { id: "local" },
     create: { id: "local", ...settings, changedById: actorId, changeReason: input.reason },
     update: { ...settings, changedById: actorId, changeReason: input.reason },
   })
   await logAuditInTransaction(tx, actorId, "PREOP_DOCUMENTS_POLICY_UPDATE", policy.id, {
-    before: effectivePreopDocumentSettings(before),
+    before,
     after: settings,
     reasonRecorded: Boolean(input.reason),
   })

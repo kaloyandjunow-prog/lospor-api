@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { renderRecordPdf } from "@/lib/record-pdf"
 import { revokeToken } from "@/lib/token-blocklist"
 import { verifyPrintToken } from "@/lib/print-token"
+import { parseConsentTechniques } from "@lospor/core/preop-documents"
 
 // Headless Chrome can take a few seconds to boot and render the record.
 export const maxDuration = 60
@@ -77,7 +78,9 @@ export async function GET(
   // ?doc=preop-summary: the preop summary (and consent, when on), A4 portrait.
   const preopSummary = req.nextUrl.searchParams.get("doc") === "preop-summary"
   const pagePath = preopSummary ? `/cases/${id}/preop-summary/print` : `/cases/${id}/print`
-  const pageUrl = `${base}${pagePath}?print_token=${navToken}&pdf=1`
+  // Layout C: the techniques ticked before printing, as known technique keys only.
+  const techniques = preopSummary ? parseConsentTechniques(req.nextUrl.searchParams.get("techniques")) : []
+  const pageUrl = `${base}${pagePath}?print_token=${navToken}&pdf=1${techniques.length > 0 ? `&techniques=${techniques.join(",")}` : ""}`
 
   // Record language: explicit ?lang= (mobile app) beats the web locale cookie.
   const langParam = req.nextUrl.searchParams.get("lang")

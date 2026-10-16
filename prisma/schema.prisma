@@ -1223,6 +1223,8 @@ model PreopDocumentPolicy {
   id             String   @id @default("local")
   summaryEnabled Boolean  @default(false)
   consentEnabled Boolean  @default(false)
+  /// How the summary and consent print: A to E (Core PREOP_DOCUMENT_LAYOUTS).
+  layout         String   @default("B")
   changedById    String?
   changeReason   String?
   updatedAt      DateTime @updatedAt
@@ -1262,6 +1264,10 @@ model CaseConsentPrint {
   templateVersionId String?
   template          ConsentTemplateVersion? @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
   bodySha256        String
+  /// The layout the sheet printed in; null on prints before layouts.
+  layout            String?
+  /// Layout C: the techniques the consent described (general anaesthesia always).
+  techniques        String[]                @default([])
   printedById       String
   printedAt         DateTime                @default(now())
 
