@@ -371,6 +371,7 @@ export type PreoperativeAssessmentCountAggregateOutputType = {
   coldsAirwayDevice: number
   coldsSurgery: number
   pediatricFasting: number
+  plannedAnaesthesia: number
   labResults: number
   aiOptIn: number
   createdAt: number
@@ -725,6 +726,7 @@ export type PreoperativeAssessmentCountAggregateInputType = {
   coldsAirwayDevice?: true
   coldsSurgery?: true
   pediatricFasting?: true
+  plannedAnaesthesia?: true
   labResults?: true
   aiOptIn?: true
   createdAt?: true
@@ -916,6 +918,7 @@ export type PreoperativeAssessmentGroupByOutputType = {
   coldsAirwayDevice: string | null
   coldsSurgery: string | null
   pediatricFasting: runtime.JsonValue
+  plannedAnaesthesia: runtime.JsonValue
   labResults: runtime.JsonValue
   aiOptIn: boolean
   createdAt: Date
@@ -1043,6 +1046,7 @@ export type PreoperativeAssessmentWhereInput = {
   coldsAirwayDevice?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   coldsSurgery?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   pediatricFasting?: Prisma.JsonFilter<"PreoperativeAssessment">
+  plannedAnaesthesia?: Prisma.JsonFilter<"PreoperativeAssessment">
   labResults?: Prisma.JsonFilter<"PreoperativeAssessment">
   aiOptIn?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   createdAt?: Prisma.DateTimeFilter<"PreoperativeAssessment"> | Date | string
@@ -1155,6 +1159,7 @@ export type PreoperativeAssessmentOrderByWithRelationInput = {
   coldsAirwayDevice?: Prisma.SortOrderInput | Prisma.SortOrder
   coldsSurgery?: Prisma.SortOrderInput | Prisma.SortOrder
   pediatricFasting?: Prisma.SortOrder
+  plannedAnaesthesia?: Prisma.SortOrder
   labResults?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1270,6 +1275,7 @@ export type PreoperativeAssessmentWhereUniqueInput = Prisma.AtLeast<{
   coldsAirwayDevice?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   coldsSurgery?: Prisma.StringNullableFilter<"PreoperativeAssessment"> | string | null
   pediatricFasting?: Prisma.JsonFilter<"PreoperativeAssessment">
+  plannedAnaesthesia?: Prisma.JsonFilter<"PreoperativeAssessment">
   labResults?: Prisma.JsonFilter<"PreoperativeAssessment">
   aiOptIn?: Prisma.BoolFilter<"PreoperativeAssessment"> | boolean
   createdAt?: Prisma.DateTimeFilter<"PreoperativeAssessment"> | Date | string
@@ -1382,6 +1388,7 @@ export type PreoperativeAssessmentOrderByWithAggregationInput = {
   coldsAirwayDevice?: Prisma.SortOrderInput | Prisma.SortOrder
   coldsSurgery?: Prisma.SortOrderInput | Prisma.SortOrder
   pediatricFasting?: Prisma.SortOrder
+  plannedAnaesthesia?: Prisma.SortOrder
   labResults?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1494,6 +1501,7 @@ export type PreoperativeAssessmentScalarWhereWithAggregatesInput = {
   coldsAirwayDevice?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
   coldsSurgery?: Prisma.StringNullableWithAggregatesFilter<"PreoperativeAssessment"> | string | null
   pediatricFasting?: Prisma.JsonWithAggregatesFilter<"PreoperativeAssessment">
+  plannedAnaesthesia?: Prisma.JsonWithAggregatesFilter<"PreoperativeAssessment">
   labResults?: Prisma.JsonWithAggregatesFilter<"PreoperativeAssessment">
   aiOptIn?: Prisma.BoolWithAggregatesFilter<"PreoperativeAssessment"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"PreoperativeAssessment"> | Date | string
@@ -1597,6 +1605,7 @@ export type PreoperativeAssessmentCreateInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -1709,6 +1718,7 @@ export type PreoperativeAssessmentUncheckedCreateInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -1819,6 +1829,7 @@ export type PreoperativeAssessmentUpdateInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1931,6 +1942,7 @@ export type PreoperativeAssessmentUncheckedUpdateInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2042,6 +2054,7 @@ export type PreoperativeAssessmentCreateManyInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -2145,6 +2158,7 @@ export type PreoperativeAssessmentUpdateManyMutationInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2249,6 +2263,7 @@ export type PreoperativeAssessmentUncheckedUpdateManyInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2366,6 +2381,7 @@ export type PreoperativeAssessmentCountOrderByAggregateInput = {
   coldsAirwayDevice?: Prisma.SortOrder
   coldsSurgery?: Prisma.SortOrder
   pediatricFasting?: Prisma.SortOrder
+  plannedAnaesthesia?: Prisma.SortOrder
   labResults?: Prisma.SortOrder
   aiOptIn?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -2903,6 +2919,7 @@ export type PreoperativeAssessmentCreateWithoutCaseInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3013,6 +3030,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutCaseInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3139,6 +3157,7 @@ export type PreoperativeAssessmentUpdateWithoutCaseInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3249,6 +3268,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutCaseInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3359,6 +3379,7 @@ export type PreoperativeAssessmentCreateWithoutAssessmentAnswersInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3470,6 +3491,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutAssessmentAnswersInput =
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3595,6 +3617,7 @@ export type PreoperativeAssessmentUpdateWithoutAssessmentAnswersInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3706,6 +3729,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutAssessmentAnswersInput =
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3815,6 +3839,7 @@ export type PreoperativeAssessmentCreateWithoutAssessmentSuggestionsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -3926,6 +3951,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutAssessmentSuggestionsInp
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -4051,6 +4077,7 @@ export type PreoperativeAssessmentUpdateWithoutAssessmentSuggestionsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4162,6 +4189,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutAssessmentSuggestionsInp
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4271,6 +4299,7 @@ export type PreoperativeAssessmentCreateWithoutDiagnosesInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -4382,6 +4411,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutDiagnosesInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -4507,6 +4537,7 @@ export type PreoperativeAssessmentUpdateWithoutDiagnosesInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4618,6 +4649,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutDiagnosesInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4727,6 +4759,7 @@ export type PreoperativeAssessmentCreateWithoutProcedureRowsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -4838,6 +4871,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutProcedureRowsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -4963,6 +4997,7 @@ export type PreoperativeAssessmentUpdateWithoutProcedureRowsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5074,6 +5109,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutProcedureRowsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5183,6 +5219,7 @@ export type PreoperativeAssessmentCreateWithoutComorbidityRowsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -5294,6 +5331,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutComorbidityRowsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -5419,6 +5457,7 @@ export type PreoperativeAssessmentUpdateWithoutComorbidityRowsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5530,6 +5569,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutComorbidityRowsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5639,6 +5679,7 @@ export type PreoperativeAssessmentCreateWithoutLabRowsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -5750,6 +5791,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutLabRowsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -5875,6 +5917,7 @@ export type PreoperativeAssessmentUpdateWithoutLabRowsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5986,6 +6029,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutLabRowsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6095,6 +6139,7 @@ export type PreoperativeAssessmentCreateWithoutMedicationsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -6206,6 +6251,7 @@ export type PreoperativeAssessmentUncheckedCreateWithoutMedicationsInput = {
   coldsAirwayDevice?: string | null
   coldsSurgery?: string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: boolean
   createdAt?: Date | string
@@ -6331,6 +6377,7 @@ export type PreoperativeAssessmentUpdateWithoutMedicationsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6442,6 +6489,7 @@ export type PreoperativeAssessmentUncheckedUpdateWithoutMedicationsInput = {
   coldsAirwayDevice?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coldsSurgery?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pediatricFasting?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  plannedAnaesthesia?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   labResults?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   aiOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6637,6 +6685,7 @@ export type PreoperativeAssessmentSelect<ExtArgs extends runtime.Types.Extension
   coldsAirwayDevice?: boolean
   coldsSurgery?: boolean
   pediatricFasting?: boolean
+  plannedAnaesthesia?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -6750,6 +6799,7 @@ export type PreoperativeAssessmentSelectCreateManyAndReturn<ExtArgs extends runt
   coldsAirwayDevice?: boolean
   coldsSurgery?: boolean
   pediatricFasting?: boolean
+  plannedAnaesthesia?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -6855,6 +6905,7 @@ export type PreoperativeAssessmentSelectUpdateManyAndReturn<ExtArgs extends runt
   coldsAirwayDevice?: boolean
   coldsSurgery?: boolean
   pediatricFasting?: boolean
+  plannedAnaesthesia?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -6960,6 +7011,7 @@ export type PreoperativeAssessmentSelectScalar = {
   coldsAirwayDevice?: boolean
   coldsSurgery?: boolean
   pediatricFasting?: boolean
+  plannedAnaesthesia?: boolean
   labResults?: boolean
   aiOptIn?: boolean
   createdAt?: boolean
@@ -6967,7 +7019,7 @@ export type PreoperativeAssessmentSelectScalar = {
   syncRevision?: boolean
 }
 
-export type PreoperativeAssessmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "ageYears" | "ageValue" | "ageApproxDays" | "ageUnit" | "sex" | "heightCm" | "weightKg" | "bmi" | "bodySurfaceAreaM2" | "bloodType" | "rhFactor" | "diagnosis" | "diagnosesJson" | "plannedProcedure" | "proceduresJson" | "icdCode" | "teamNotes" | "physicalExamReport" | "notes" | "comorbidities" | "allergies" | "allergyDetails" | "latexAllergy" | "currentMedications" | "familyAnesthesiaProblems" | "familyAnesthesiaDetails" | "unexplainedAnaesthesiaComplications" | "malignantHyperthermiaHistory" | "anticipatedDifficultAirway" | "dentalProsthetics" | "looseTeeth" | "smoking" | "substanceAbuse" | "bpSystolic" | "bpDiastolic" | "heartRate" | "heartArrhythmia" | "spO2" | "temperature" | "respiratoryRate" | "bpUnobtainable" | "heartRateUnobtainable" | "spO2Unobtainable" | "temperatureUnobtainable" | "respiratoryRateUnobtainable" | "mallampati" | "mouthOpeningCm" | "thyromental" | "neckMobility" | "upperLipBiteTest" | "retrognathia" | "prominentIncisors" | "facialHair" | "difficultAirwayHistory" | "difficultAirwayNotes" | "cormackLehane" | "airwayUnobtainable" | "asaScore" | "asaSuggestedScore" | "asaSuggestionReasons" | "asaSuggestionRulesVersion" | "elective" | "emergencySurgery" | "highRiskSurgery" | "rcriIschemicHeart" | "rcriCHF" | "rcriCVD" | "rcriInsulinDM" | "rcriCreatinine" | "rcriScore" | "gutaScore" | "apfelScore" | "stopBangScore" | "apfelPONVHistory" | "apfelPostopOpioids" | "stopbangSnoring" | "stopbangTired" | "stopbangObserved" | "stopbangBP" | "stopbangNeck" | "povocScore" | "povocRiskPercent" | "povocSurgeryAtLeast30Minutes" | "povocAgeAtLeast3Years" | "povocStrabismusSurgery" | "povocHistory" | "coldsApplicable" | "coldsScore" | "coldsCurrentSymptoms" | "coldsOnset" | "coldsLungDisease" | "coldsAirwayDevice" | "coldsSurgery" | "pediatricFasting" | "labResults" | "aiOptIn" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["preoperativeAssessment"]>
+export type PreoperativeAssessmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "ageYears" | "ageValue" | "ageApproxDays" | "ageUnit" | "sex" | "heightCm" | "weightKg" | "bmi" | "bodySurfaceAreaM2" | "bloodType" | "rhFactor" | "diagnosis" | "diagnosesJson" | "plannedProcedure" | "proceduresJson" | "icdCode" | "teamNotes" | "physicalExamReport" | "notes" | "comorbidities" | "allergies" | "allergyDetails" | "latexAllergy" | "currentMedications" | "familyAnesthesiaProblems" | "familyAnesthesiaDetails" | "unexplainedAnaesthesiaComplications" | "malignantHyperthermiaHistory" | "anticipatedDifficultAirway" | "dentalProsthetics" | "looseTeeth" | "smoking" | "substanceAbuse" | "bpSystolic" | "bpDiastolic" | "heartRate" | "heartArrhythmia" | "spO2" | "temperature" | "respiratoryRate" | "bpUnobtainable" | "heartRateUnobtainable" | "spO2Unobtainable" | "temperatureUnobtainable" | "respiratoryRateUnobtainable" | "mallampati" | "mouthOpeningCm" | "thyromental" | "neckMobility" | "upperLipBiteTest" | "retrognathia" | "prominentIncisors" | "facialHair" | "difficultAirwayHistory" | "difficultAirwayNotes" | "cormackLehane" | "airwayUnobtainable" | "asaScore" | "asaSuggestedScore" | "asaSuggestionReasons" | "asaSuggestionRulesVersion" | "elective" | "emergencySurgery" | "highRiskSurgery" | "rcriIschemicHeart" | "rcriCHF" | "rcriCVD" | "rcriInsulinDM" | "rcriCreatinine" | "rcriScore" | "gutaScore" | "apfelScore" | "stopBangScore" | "apfelPONVHistory" | "apfelPostopOpioids" | "stopbangSnoring" | "stopbangTired" | "stopbangObserved" | "stopbangBP" | "stopbangNeck" | "povocScore" | "povocRiskPercent" | "povocSurgeryAtLeast30Minutes" | "povocAgeAtLeast3Years" | "povocStrabismusSurgery" | "povocHistory" | "coldsApplicable" | "coldsScore" | "coldsCurrentSymptoms" | "coldsOnset" | "coldsLungDisease" | "coldsAirwayDevice" | "coldsSurgery" | "pediatricFasting" | "plannedAnaesthesia" | "labResults" | "aiOptIn" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["preoperativeAssessment"]>
 export type PreoperativeAssessmentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   diagnoses?: boolean | Prisma.PreoperativeAssessment$diagnosesArgs<ExtArgs>
@@ -7101,6 +7153,11 @@ export type $PreoperativeAssessmentPayload<ExtArgs extends runtime.Types.Extensi
     coldsAirwayDevice: string | null
     coldsSurgery: string | null
     pediatricFasting: runtime.JsonValue
+    /**
+     * The anaesthesia planned at the preop visit (optional): Core PlannedAnaesthesia
+     * (techniques, airway devices and instruments, lines, postop ventilation).
+     */
+    plannedAnaesthesia: runtime.JsonValue
     labResults: runtime.JsonValue
     aiOptIn: boolean
     createdAt: Date
@@ -7633,6 +7690,7 @@ export interface PreoperativeAssessmentFieldRefs {
   readonly coldsAirwayDevice: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
   readonly coldsSurgery: Prisma.FieldRef<"PreoperativeAssessment", 'String'>
   readonly pediatricFasting: Prisma.FieldRef<"PreoperativeAssessment", 'Json'>
+  readonly plannedAnaesthesia: Prisma.FieldRef<"PreoperativeAssessment", 'Json'>
   readonly labResults: Prisma.FieldRef<"PreoperativeAssessment", 'Json'>
   readonly aiOptIn: Prisma.FieldRef<"PreoperativeAssessment", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"PreoperativeAssessment", 'DateTime'>

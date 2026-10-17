@@ -182,6 +182,16 @@ export const preopSchema = z.object({
   coldsAirwayDevice:    z.enum(["FACE_MASK_OR_NONE", "SUPRAGLOTTIC", "TRACHEAL_TUBE"]).nullable().optional(),
   coldsSurgery:         z.enum(["NON_AIRWAY", "MINOR_AIRWAY", "MAJOR_AIRWAY"]).nullable().optional(),
 
+  // The anaesthesia planned at the preop visit (optional), in the intraoperative
+  // record's menus: option codes, and lines in the intraop access shape.
+  plannedAnaesthesia: z.object({
+    techniques: z.array(z.string().min(1).max(200)).max(20).optional(),
+    airwayDevices: z.array(z.string().min(1).max(100)).max(20).optional(),
+    airwayTools: z.array(z.string().min(1).max(100)).max(20).optional(),
+    vascularAccesses: z.array(z.object({ site: z.string().min(1).max(100) }).passthrough()).max(20).optional(),
+    postopVentilation: z.boolean().optional(),
+  }).optional(),
+
   // Nil-by-mouth assignments: stop each intake so many hours before surgery.
   pediatricFasting: z.array(z.object({
     category: z.enum(["CLEAR_FLUIDS", "BREAST_MILK", "INFANT_FORMULA_UNDER_1_YEAR", "SOLID_FOOD_OR_COW_MILK"]),

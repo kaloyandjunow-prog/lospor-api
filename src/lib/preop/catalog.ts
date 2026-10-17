@@ -49,6 +49,8 @@ export type PreopCatalogQuestion = {
   allowUnknown: boolean
   allowNotApplicable: boolean
   conditionalRuleKey?: string
+  /** Asked only from this age in years; a child's profile then skips younger children. */
+  minAgeYears?: number
   /** Follow-up questions: the question whose YES shows this one. Derived from conditionalRuleKey. */
   parentKey?: string
   /** The preoperative form section (core canonical key) the question renders in. */
@@ -178,6 +180,10 @@ const shared = [
   question("A9_PREVIOUS_TRANSFUSION", "SHARED_ADDITIONS", "Previous blood transfusion?", "Предишно кръвопреливане?", [], { conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
   question("A9_TRANSFUSION_REACTION", "SHARED_ADDITIONS", "Transfusion reaction?", "Реакция при кръвопреливане?", [], { conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
   question("A9_BLOOD_ANTIBODIES", "SHARED_ADDITIONS", "Known blood antibodies or difficult crossmatch?", "Известни антитела или затруднено пробно съвместяване?", [], { conditionalRuleKey: "A9_TRANSFUSION_HISTORY_IS_YES" }),
+  // Adults, and children from 14 (the age they also sign the consent, чл. 87).
+  question("S2_ALCOHOL_USE", "SHARED_ADDITIONS", "Alcohol use", "Употреба на алкохол", [], { minAgeYears: 14, omopDomain: "observation" }),
+  question("S2_ALCOHOL_HEAVY", "SHARED_ADDITIONS", "Heavy or daily drinking?", "Злоупотреба или ежедневна употреба?", [], { minAgeYears: 14, conditionalRuleKey: "S2_ALCOHOL_USE_IS_YES" }),
+  question("S2_ALCOHOL_WITHDRAWAL", "SHARED_ADDITIONS", "Previous alcohol withdrawal?", "Предишна алкохолна абстиненция?", [], { minAgeYears: 14, conditionalRuleKey: "S2_ALCOHOL_USE_IS_YES" }),
 ]
 
 const pediatric = [
@@ -294,6 +300,9 @@ const OMOP: Record<string, readonly [number, string]> = {
   P8_DIFFICULT_VENOUS_ACCESS: [4115246, "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS"], // Difficult venous access
   P9_RECENT_VACCINATION: [0, "LOSPOR:PREOP_P9_RECENT_VACCINATION"], // "History of Immunization" names the topic, not the 2-week window
   S1_PREVIOUS_ICU_ADMISSION: [4138933, "LOSPOR:PREOP_S1_PREVIOUS_ICU_ADMISSION"], // Admission to intensive care unit (as P1_NICU_ADMISSION)
+  S2_ALCOHOL_USE: [4074035, "LOSPOR:PREOP_S2_ALCOHOL_USE"], // Current drinker
+  S2_ALCOHOL_HEAVY: [4336673, "LOSPOR:PREOP_S2_ALCOHOL_HEAVY"], // Heavy drinker
+  S2_ALCOHOL_WITHDRAWAL: [375519, "LOSPOR:PREOP_S2_ALCOHOL_WITHDRAWAL"], // Alcohol withdrawal
 }
 
 /** Where a question renders. Unlisted questions (and follow-ups of listed ones) are anamnesis. */

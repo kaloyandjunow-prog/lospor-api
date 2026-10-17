@@ -1131,6 +1131,9 @@ model PreoperativeAssessment {
   coldsSurgery         String?
 
   pediatricFasting Json @default("[]")
+  /// The anaesthesia planned at the preop visit (optional): Core PlannedAnaesthesia
+  /// (techniques, airway devices and instruments, lines, postop ventilation).
+  plannedAnaesthesia Json @default("{}")
 
   labResults Json @default("[]")
 

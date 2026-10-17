@@ -279,3 +279,16 @@ describe("mapIntraopUpdate — a partial save never blanks a stored time", () =>
     expect(r.timezone).toBe("Europe/Sofia")
   })
 })
+
+describe("planned anaesthesia", () => {
+  it("stores the plan in its full shape, codes once", () => {
+    expect(mapPreop({ plannedAnaesthesia: { techniques: ["GENERAL_TIVA", "GENERAL_TIVA"], vascularAccesses: [{ site: "ART_RADIAL" }] } }).plannedAnaesthesia)
+      .toEqual({ techniques: ["GENERAL_TIVA"], airwayDevices: [], airwayTools: [], vascularAccesses: [{ site: "ART_RADIAL" }], postopVentilation: false })
+    expect(mapPreop({}).plannedAnaesthesia).toEqual({ techniques: [], airwayDevices: [], airwayTools: [], vascularAccesses: [], postopVentilation: false })
+  })
+
+  it("is written by an update only when sent", () => {
+    expect(mapPreopUpdate({ plannedAnaesthesia: { airwayDevices: ["LMA"] } }, {}).plannedAnaesthesia).toMatchObject({ airwayDevices: ["LMA"] })
+    expect(mapPreopUpdate({ notes: "x" }, { plannedAnaesthesia: { airwayDevices: ["LMA"] } })).not.toHaveProperty("plannedAnaesthesia")
+  })
+})

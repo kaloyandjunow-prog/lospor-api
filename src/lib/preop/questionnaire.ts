@@ -2,10 +2,11 @@ import {
   PREOP_ADULT_FORM_ONLY_QUESTIONS,
   PREOP_LEGACY_FIELD_BY_QUESTION,
   preopProfileForMode,
+  preopQuestionAppliesToAge,
   preopQuestionAppliesToMode,
   type PreopProfileQuestion,
 } from "@lospor/core/preop-assessment"
-import type { PreopQuestionnaireAnswer, PreopQuestionnaireItem } from "@lospor/core/preop-documents"
+import { preopAgeInYears, type PreopQuestionnaireAnswer, type PreopQuestionnaireItem } from "@lospor/core/preop-documents"
 
 /** Asked through its own control and printed in a section of its own (nil by mouth). */
 const PRINTED_ELSEWHERE = new Set(["BASE_PEDIATRIC_FASTING"])
@@ -70,7 +71,9 @@ export function preopQuestionnaire(
     return { answer: row.state as PreopQuestionnaireAnswer, option }
   }
 
+  const ageYears = preopAgeInYears(preop as Parameters<typeof preopAgeInYears>[0])
   const shown = (question: PreopProfileQuestion) => question.enabled && preopQuestionAppliesToMode(question.applicability, mode)
+    && preopQuestionAppliesToAge(question.minAgeYears, ageYears)
     && !(mode === "PEDIATRIC" && PREOP_ADULT_FORM_ONLY_QUESTIONS.has(question.stableKey))
   const ordered = [...forMode.questions].sort((left, right) => left.sortOrder - right.sortOrder)
   const byKey = new Map(ordered.map(question => [question.stableKey, question]))

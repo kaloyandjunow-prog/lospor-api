@@ -593,6 +593,23 @@ describe("questions from the children's paper form", () => {
   })
 })
 
+describe("alcohol, asked of adults and of children from 14", () => {
+  const item = (key: string) => BUNDLED_PREOP_QUESTIONS.find(question => question.stableKey === key)!
+
+  it("is one question with two follow-ups, in both profiles, off until switched on", () => {
+    expect(item("S2_ALCOHOL_USE")).toMatchObject({ applicability: [], minAgeYears: 14, section: "SHARED_ADDITIONS", formSection: "anamnesis", omopConceptId: 4074035 })
+    expect(item("S2_ALCOHOL_HEAVY")).toMatchObject({ parentKey: "S2_ALCOHOL_USE", omopConceptId: 4336673 })
+    expect(item("S2_ALCOHOL_WITHDRAWAL")).toMatchObject({ parentKey: "S2_ALCOHOL_USE", omopConceptId: 375519 })
+    expect(DEFAULT_ENABLED_QUESTION_KEYS.has("S2_ALCOHOL_USE")).toBe(false)
+  })
+
+  it("is never required of a child under 14", () => {
+    const profile = profileRow({ S2_ALCOHOL_USE: { enabled: true, required: true } }, "PEDIATRIC")
+    expect(missingRequiredPreopQuestions(profile, [], "PEDIATRIC", 10).map(row => row.stableKey)).not.toContain("S2_ALCOHOL_USE")
+    expect(missingRequiredPreopQuestions(profile, [], "PEDIATRIC", 15).map(row => row.stableKey)).toContain("S2_ALCOHOL_USE")
+  })
+})
+
 describe("Gupta, an optional pair of adult questions", () => {
   it("ships off, so a hospital sees nothing until an operator switches it on", () => {
     expect(DEFAULT_ENABLED_QUESTION_KEYS.has("A15_FUNCTIONAL_STATUS")).toBe(false)

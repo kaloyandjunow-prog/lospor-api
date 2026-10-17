@@ -1,4 +1,5 @@
 import { plannedProcedureText } from "@lospor/core/procedure-codes"
+import { normalizePlannedAnaesthesia } from "@lospor/core/preop-plan"
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePreopPatch } from "@lospor/core/case-payloads"
 import { calcApfel, calcRCRI, calcStopBang } from "@lospor/core/scores"
@@ -266,6 +267,7 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     coldsAirwayDevice:            pediatric ? coldsAirwayDevice : null,
     coldsSurgery:                 pediatric ? coldsSurgery : null,
     pediatricFasting:            pediatric ? preop.pediatricFasting ?? [] : [],
+    plannedAnaesthesia:          normalizePlannedAnaesthesia(preop.plannedAnaesthesia) as Prisma.InputJsonObject,
 
     stopbangObserved: preop.stopbangObserved ?? null,
     stopbangBP: preop.stopbangBP ?? null,
@@ -310,7 +312,7 @@ export function mapPreopUpdate(
     "povocAgeAtLeast3Years", "povocStrabismusSurgery", "povocHistory",
     "coldsApplicable", "coldsScore", "coldsCurrentSymptoms", "coldsOnset",
     "coldsLungDisease", "coldsAirwayDevice", "coldsSurgery", "pediatricFasting",
-    "labResults",
+    "plannedAnaesthesia", "labResults",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
     if (has(k)) copyKey(r, full, k)

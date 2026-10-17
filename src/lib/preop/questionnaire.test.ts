@@ -54,4 +54,13 @@ describe("the questionnaire on the preop summary", () => {
     const items = preopQuestionnaire({}, [row("A16_GUPTA_PROCEDURE_TYPE", "YES", "ANORECTAL")], withEnabled(["A16_GUPTA_PROCEDURE_TYPE"]), "ADULT")
     expect(items.find(item => item.stableKey === "A16_GUPTA_PROCEDURE_TYPE")?.option).toEqual({ en: "Anorectal", bg: "Аноректална" })
   })
+
+  it("leaves the alcohol questions off a child under 14", () => {
+    const profile = withEnabled(["S2_ALCOHOL_USE", "S2_ALCOHOL_HEAVY"])
+    const answers = [row("S2_ALCOHOL_USE", "YES"), row("S2_ALCOHOL_HEAVY", "NO")]
+    const keys = (preop: Record<string, unknown>, mode: string) => preopQuestionnaire(preop, answers, profile, mode).map(item => item.stableKey).filter(key => key.startsWith("S2_"))
+    expect(keys({ ageValue: 9, ageUnit: "YEARS" }, "PEDIATRIC")).toEqual([])
+    expect(keys({ ageValue: 15, ageUnit: "YEARS" }, "PEDIATRIC")).toEqual(["S2_ALCOHOL_USE", "S2_ALCOHOL_HEAVY"])
+    expect(keys({ ageYears: 40 }, "ADULT")).toEqual(["S2_ALCOHOL_USE", "S2_ALCOHOL_HEAVY"])
+  })
 })

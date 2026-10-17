@@ -6514,6 +6514,7 @@ export const PreoperativeAssessmentScalarFieldEnum = {
   coldsAirwayDevice: 'coldsAirwayDevice',
   coldsSurgery: 'coldsSurgery',
   pediatricFasting: 'pediatricFasting',
+  plannedAnaesthesia: 'plannedAnaesthesia',
   labResults: 'labResults',
   aiOptIn: 'aiOptIn',
   createdAt: 'createdAt',
