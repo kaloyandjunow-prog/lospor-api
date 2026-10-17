@@ -13,18 +13,21 @@ describe("LOSPOR 9.15.0 v3 baselines", () => {
     expect(() => assertExactBundledBaselineV3Artifacts(v3)).not.toThrow()
   })
 
-  it("records the exact change from v2: plain Ringer added, mannitol and the regrouped drugs changed", () => {
+  it("records the exact change from v2: plain Ringer added; mannitol, adjuvant routes, epidural fentanyl and regrouped drugs changed", () => {
     const [adult, pediatric] = v3
     expect(adult.exactDiff).toMatchObject({ baselinePresetId: "lospor-adults-v2", baselinePresetVersion: 2, removed: [] })
     expect(adult.exactDiff.added.map(item => item.ruleKey)).toEqual(["ADULT_FLUID_PROFILE:RINGER_S_SOLUTION"])
-    expect(adult.exactDiff.changed).toHaveLength(56)
-    expect(adult.exactDiff.unchangedRuleCount).toBe(195)
+    expect(adult.exactDiff.changed).toHaveLength(58)
+    expect(adult.exactDiff.unchangedRuleCount).toBe(193)
     expect(pediatric.exactDiff.added).toHaveLength(1)
     expect(pediatric.exactDiff.removed).toEqual([])
     expect(pediatric.exactDiff.changed).toHaveLength(69)
     const mannitol = adult.exactDiff.changed.find(item => item.ruleKey === "ADULT_FLUID_PROFILE:MANNITOL")
     expect(JSON.stringify(mannitol?.before.payload)).not.toContain("20%")
     expect(JSON.stringify(mannitol?.after.payload)).toContain("20%")
+    const morphine = adult.exactDiff.changed.find(item => item.ruleKey === "ADULT_DRUG_PROFILE:MORPHINE")
+    expect(JSON.stringify(morphine?.after.payload)).toContain("INTRATHECAL")
+    expect(adult.exactDiff.changed.map(item => item.ruleKey)).toContain("ADULT_INFUSION_PROFILE:FENTANYL")
   })
 
   it("stamps every rule with the v3 release", () => {
