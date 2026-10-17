@@ -91,7 +91,7 @@ function question(
 }
 
 const baseline = [
-  question("BASE_ALLERGIES", "SAFETY", "Drug or other allergy", "Алергия към лекарство или друго вещество"),
+  question("BASE_ALLERGIES", "SAFETY", "Drug or other allergy", "Алергия към медикамент или друго вещество"),
   question("BASE_LATEX_ALLERGY", "SAFETY", "Latex allergy", "Алергия към латекс"),
   question("BASE_FAMILY_ANAESTHESIA_PROBLEMS", "SAFETY", "Family anaesthesia problems", "Проблеми с анестезията в семейството"),
   question("BASE_UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", "SAFETY", "Unexplainable complications during anaesthesia", "Необясними усложнения по време на анестезия"),
