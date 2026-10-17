@@ -109,7 +109,7 @@ const baseline = [
   question("BASE_RCRI_CVD", "RISK", "Cerebrovascular disease", "Мозъчносъдова болест"),
   question("BASE_RCRI_INSULIN_DM", "RISK", "Insulin-treated diabetes", "Захарен диабет на инсулиново лечение"),
   question("BASE_RCRI_CREATININE", "RISK", "Raised creatinine", "Повишен креатинин"),
-  question("BASE_APFEL_PONV_HISTORY", "RISK", "History of PONV or motion sickness", "Анамнеза за PONV или кинетоза"),
+  question("BASE_APFEL_PONV_HISTORY", "RISK", "History of PONV or motion sickness", "Анамнеза за следоперативно гадене и повръщане (PONV) или кинетоза"),
   question("BASE_APFEL_POSTOP_OPIOIDS", "RISK", "Postoperative opioids planned", "Планирани следоперативни опиоиди"),
   question("BASE_STOPBANG_SNORING", "RISK", "Snoring", "Хъркане"),
   question("BASE_STOPBANG_TIRED", "RISK", "Daytime tiredness", "Дневна сънливост"),

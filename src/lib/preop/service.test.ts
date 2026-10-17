@@ -648,7 +648,7 @@ describe("the catalogue", () => {
   it("asks the Apfel history as PONV or motion sickness, and codes it as neither alone", () => {
     const question = BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === "BASE_APFEL_PONV_HISTORY")
     expect(question?.labelEn).toBe("History of PONV or motion sickness")
-    expect(question?.labelBg).toBe("Анамнеза за PONV или кинетоза")
+    expect(question?.labelBg).toBe("Анамнеза за следоперативно гадене и повръщане (PONV) или кинетоза")
     expect(question?.omopConceptId ?? 0).toBe(0)
     expect(question?.omopSourceCode).toBe("LOSPOR:APFEL_PONV_HISTORY")
   })
