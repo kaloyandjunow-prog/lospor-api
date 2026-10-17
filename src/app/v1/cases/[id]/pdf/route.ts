@@ -7,6 +7,8 @@ import { renderRecordPdf } from "@/lib/record-pdf"
 import { revokeToken } from "@/lib/token-blocklist"
 import { verifyPrintToken } from "@/lib/print-token"
 import { parseConsentTechniques } from "@lospor/core/preop-documents"
+import { normalizeClinicalPreferences } from "@lospor/core/clinical-preferences"
+import { BULGARIAN_NAME_SWITCH_KEYS } from "@lospor/core/display"
 
 // Headless Chrome can take a few seconds to boot and render the record.
 export const maxDuration = 60
@@ -33,6 +35,7 @@ export async function GET(
   const tokenUserId = qToken ? await verifyPrintToken(qToken, id) : null
 
   let where
+  let requesterId = tokenUserId
   if (tokenUserId) {
     // A valid print token is itself the authorization: it is signed, 5-minute
     // and case-scoped, and only issued after a role-aware ownership check —
@@ -42,6 +45,7 @@ export async function GET(
   } else {
     const user = await getAuthUser(req)
     if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    requesterId = user.id
     // Shared predicate: a case belongs to the institution it was performed at.
     // This route used to scope by the owner's current institution, so a case
     // followed its author to a new hospital.
@@ -82,7 +86,14 @@ export async function GET(
   // Sent even when empty: "nothing ticked" must not fall back to the planned anaesthesia.
   const techniquesParam = preopSummary ? req.nextUrl.searchParams.get("techniques") : null
   const techniques = parseConsentTechniques(techniquesParam)
-  const pageUrl = `${base}${pagePath}?print_token=${navToken}&pdf=1${techniquesParam !== null ? `&techniques=${techniques.join(",")}` : ""}`
+  // The requester's Bulgarian-name switches (Settings → UI): the headless
+  // browser has no stored preferences, so the print page reads them here.
+  const requester = requesterId
+    ? await prisma.user.findUnique({ where: { id: requesterId }, select: { preferences: true } })
+    : null
+  const switches = normalizeClinicalPreferences(requester?.preferences).bulgarianNames
+  const names = BULGARIAN_NAME_SWITCH_KEYS.filter(key => switches[key]).join(",")
+  const pageUrl = `${base}${pagePath}?print_token=${navToken}&pdf=1${techniquesParam !== null ? `&techniques=${techniques.join(",")}` : ""}&names=${names}`
 
   // Record language: explicit ?lang= (mobile app) beats the web locale cookie.
   const langParam = req.nextUrl.searchParams.get("lang")
