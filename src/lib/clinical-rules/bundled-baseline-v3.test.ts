@@ -23,11 +23,12 @@ describe("LOSPOR 9.15.0 v3 baselines", () => {
     expect(adult.exactDiff.changed).toHaveLength(58)
     expect(adult.exactDiff.unchangedRuleCount).toBe(193)
     // Children also get the prefill review: bands split by age or weight
-    // replace the 12 single bands they came from.
-    expect(pediatric.exactDiff.added).toHaveLength(44)
-    expect(pediatric.exactDiff.removed).toHaveLength(12)
+    // replace the 12 single bands they came from; ropivacaine infusions take
+    // the 3-month boundary of the other local anaesthetics (2 more).
+    expect(pediatric.exactDiff.added).toHaveLength(46)
+    expect(pediatric.exactDiff.removed).toHaveLength(14)
     expect(pediatric.exactDiff.removed.map(item => item.ruleKey)).toContain("PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6574.365")
-    expect(pediatric.exactDiff.changed).toHaveLength(180)
+    expect(pediatric.exactDiff.changed).toHaveLength(178)
     const mannitol = adult.exactDiff.changed.find(item => item.ruleKey === "ADULT_FLUID_PROFILE:MANNITOL")
     expect(JSON.stringify(mannitol?.before.payload)).not.toContain("20%")
     expect(JSON.stringify(mannitol?.after.payload)).toContain("20%")

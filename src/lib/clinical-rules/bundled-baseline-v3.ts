@@ -66,11 +66,11 @@ export const BUNDLED_BASELINE_V3_EXPECTATIONS: Readonly<Record<"ADULT" | "PEDIAT
   },
   PEDIATRIC: {
     ruleCount: 367,
-    contentSha256: "7338f5d152eacd4ed6dba9ea4b143a5e1e73c1a29a56bbfe73e4a914c9bb52f8",
-    diffSha256: "4b89f65884542364fd865518c4bf2157f028a2fd680871e5a8df82b2cef43caa",
-    ruleKeysSha256: "1a7628c8c801e84a8aa4729ff5ef5ed36b2fcfbc3f1ab2be2756cefeeead4efc",
-    sourceRefsSha256: "64ce39f84a4664cb70a4d7ae19dcc7748f5bb2025e9f635f00ca5221a5e46c7c",
-    descriptorSha256: "2ed794cc32793230bfeccdd4d877b922df18da4db71bc1fbc5901cc56bbf858b",
+    contentSha256: "2afe61e8cd1783310993cef961c6ffe0ca23cb782766afbed7ac77997d3880e6",
+    diffSha256: "917bcd2467912ef1d44a9c415dc68b8371f31b76318b537341eedd03b0242710",
+    ruleKeysSha256: "4ba05219e32843c6a19f53e99490437348940dba3200947028e8e6e0f11dcdb5",
+    sourceRefsSha256: "d6c00da357e1f66e1fc737ce64b34e06eeff0f3c11f16ce2620dc685ce331a69",
+    descriptorSha256: "21963098b8ced86aff75db9e4fd6c5000e71eb38a637d944b189bf43f41019a9",
   },
 }
 
