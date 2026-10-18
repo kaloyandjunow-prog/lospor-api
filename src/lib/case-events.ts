@@ -490,6 +490,7 @@ export async function rebuildProjection(
       crystalloidsMl: true,
       colloidsMl: true,
       bloodMl: true,
+      infusionsMl: true,
     },
   })
   const existingKeyEvents = (intraopRec?.keyEvents as LegacyKeyEvents | null) ?? {}
@@ -514,7 +515,8 @@ export async function rebuildProjection(
   // (the single source of truth) rather than PATCHed separately by each client
   // — the case-PATCH mapper no longer accepts them. Same core function both
   // apps used, so values are identical to before, just server-authoritative.
-  const fluidTotals = fluidTotalsPatch(calculateFluidTotals(projected.fluids))
+  // Drug infusions count in the balance by their recorded pump rates (2026-10-18).
+  const fluidTotals = fluidTotalsPatch(calculateFluidTotals(projected.fluids, projected.infusions, new Date()))
   const projectionUnchanged = !!intraopRec
     && sameContent(
       intraopRec.keyEvents as Record<string, unknown>,
@@ -523,6 +525,7 @@ export async function rebuildProjection(
     && intraopRec.crystalloidsMl === fluidTotals.crystalloidsMl
     && intraopRec.colloidsMl === fluidTotals.colloidsMl
     && intraopRec.bloodMl === fluidTotals.bloodMl
+    && intraopRec.infusionsMl === fluidTotals.infusionsMl
   if (projectionUnchanged) return
 
   await tx.intraoperativeRecord.upsert({

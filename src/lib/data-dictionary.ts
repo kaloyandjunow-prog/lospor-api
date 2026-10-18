@@ -1,3 +1,8 @@
+// 4.7.0 records both rates of a drug infusion: the dose rate as before, and
+// the pump rate in mL/h worked out from the syringe strength, with the
+// strength itself. Their millilitres count in the fluid balance as
+// infusionsMl. Additive: older events simply have no pump rate.
+//
 // 4.6.0 records paediatric fasting as nil-by-mouth assignments in hours before
 // surgery, one row per intake, rather than a last-intake time judged against
 // the moment of the preop visit. No case holds the old shape: no appliance
@@ -47,7 +52,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.6.0"
+export const DICTIONARY_VERSION = "4.7.0"
 
 export interface DictionaryEntry {
   name: string
@@ -1284,6 +1289,21 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.0.0",
   },
   {
+    name: "infusionsMl",
+    exportName: "observation.value_as_number (LOSPOR:DRUG_INFUSIONS_ML)",
+    meaning: "Millilitres given through drug infusions, from the pump rate "
+      + "recorded with every start and rate change (the syringe strength "
+      + "turns the dose rate into mL/hr). Counted in the fluid balance. An "
+      + "infusion whose syringe step was skipped has no known volume and adds "
+      + "nothing, so this is a lower bound when any infusion ran without one.",
+    unit: "mL",
+    type: "integer",
+    allowedValues: "0–20000",
+    missingnessRule: "NULL = no infusion with a known volume",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "infusionsMl",
+    versionIntroduced: "4.7.0",
+  },
+  {
     name: "urineMl",
     exportName: "measurement.value_as_number (LOSPOR:URINE_OUTPUT_ML)",
     meaning: "Urine output during the procedure, as LOINC 3014315 (Urine "
@@ -1470,6 +1490,19 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = legacy event, no concentration required, or not recorded",
     sourceTable: "CaseEvent", sourceColumn: "concentrationValue",
     versionIntroduced: "3.1.0",
+  },
+  {
+    name: "event.volumeRateMlPerHour",
+    exportName: "observation.value_as_number (LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR)",
+    meaning: "An infusion's pump rate at its start, recorded beside the dose rate "
+      + "(drug_exposure.dose_value, in dose_unit_source_value). Worked out from the "
+      + "syringe strength and, for a per-kilogram rate, the recorded weight; "
+      + "the strength itself is exported as LOSPOR:INFUSION_STRENGTH (\"4 mg/50 mL\").",
+    unit: "mL/h",
+    type: "float",
+    missingnessRule: "NULL = syringe step skipped, or legacy event",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.7.0",
   },
   {
     name: "event.concentrationUnit",

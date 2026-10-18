@@ -188,3 +188,15 @@ describe("caseEventSchema entry times (9.13.0)", () => {
     expect(caseEventSchema.safeParse({ ...stop, stopConfirmed: "yes" }).success).toBe(false)
   })
 })
+
+describe("an infusion pump rate (2026-10-18)", () => {
+  const start = { id: "inf-1", type: "infusion_start", infId: "i", name: "Norepinephrine / Noradrenaline", rate: "0.1", unit: "mcg/kg/min", concentration: "4 mg/50 mL", calculationWeightKg: 70 }
+  it("is accepted beside the dose rate and kept", () => {
+    expect(caseEventSchema.parse({ ...start, volumeRateMlPerHour: 5.25 })).toMatchObject({ volumeRateMlPerHour: 5.25, rate: "0.1" })
+    expect(caseEventSchema.parse(start)).not.toHaveProperty("volumeRateMlPerHour")
+  })
+  it("is refused when negative or beyond a pump", () => {
+    expect(caseEventSchema.safeParse({ ...start, volumeRateMlPerHour: -1 }).success).toBe(false)
+    expect(caseEventSchema.safeParse({ ...start, volumeRateMlPerHour: 5000 }).success).toBe(false)
+  })
+})

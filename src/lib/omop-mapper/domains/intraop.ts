@@ -583,6 +583,14 @@ export function mapIntraopToOmop(
       route_source_value:         ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV"),
       visit_occurrence_id:        ctx.visitId,
     })
+    // An infusion's two rates (2026-10-18): the dose rate is the row above;
+    // the pump rate and the syringe it was worked out from go beside it.
+    if (ev.type === "infusion_start") {
+      const pumpRate = numOrNull(meta.volumeRateMlPerHour)
+      const syringe = ev.concentration ?? (typeof meta.concentration === "string" ? meta.concentration : null)
+      if (pumpRate != null) ctx.sourceObservation("LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR", String(pumpRate), isoDate(ev.timestamp), pumpRate)
+      if (syringe) ctx.sourceObservation("LOSPOR:INFUSION_STRENGTH", syringe, isoDate(ev.timestamp), null)
+    }
     if (ev.type === "drug") {
       const concentration = ev.concentration
         ?? formatCanonicalConcentration(ev.concentrationValue, ev.concentrationUnit)
@@ -800,6 +808,7 @@ export function mapIntraopToOmop(
   ctx.sourceObservation("LOSPOR:CRYSTALLOIDS_ML", ia.crystalloidsMl, ctx.endDate)
   ctx.sourceObservation("LOSPOR:COLLOIDS_ML", ia.colloidsMl, ctx.endDate)
   ctx.sourceObservation("LOSPOR:BLOOD_PRODUCTS_ML", ia.bloodMl, ctx.endDate)
+  ctx.sourceObservation("LOSPOR:DRUG_INFUSIONS_ML", ia.infusionsMl ?? null, ctx.endDate)
 
   // The volume stays uncoded above -- PROCEDURE_OCCURRENCE has no volume
   // or unit column to put it in, in this export or in the CDM's own

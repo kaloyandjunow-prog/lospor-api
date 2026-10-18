@@ -38,6 +38,7 @@ export type IntraoperativeRecordAvgAggregateOutputType = {
   crystalloidsMl: number | null
   colloidsMl: number | null
   bloodMl: number | null
+  infusionsMl: number | null
   urineMl: number | null
   bloodLossMl: number | null
   syncRevision: number | null
@@ -55,6 +56,7 @@ export type IntraoperativeRecordSumAggregateOutputType = {
   crystalloidsMl: number | null
   colloidsMl: number | null
   bloodMl: number | null
+  infusionsMl: number | null
   urineMl: number | null
   bloodLossMl: number | null
   syncRevision: number | null
@@ -114,6 +116,7 @@ export type IntraoperativeRecordMinAggregateOutputType = {
   crystalloidsMl: number | null
   colloidsMl: number | null
   bloodMl: number | null
+  infusionsMl: number | null
   bloodProductsNote: string | null
   urineMl: number | null
   bloodLossMl: number | null
@@ -177,6 +180,7 @@ export type IntraoperativeRecordMaxAggregateOutputType = {
   crystalloidsMl: number | null
   colloidsMl: number | null
   bloodMl: number | null
+  infusionsMl: number | null
   bloodProductsNote: string | null
   urineMl: number | null
   bloodLossMl: number | null
@@ -247,6 +251,7 @@ export type IntraoperativeRecordCountAggregateOutputType = {
   crystalloidsMl: number
   colloidsMl: number
   bloodMl: number
+  infusionsMl: number
   bloodProductsNote: number
   urineMl: number
   bloodLossMl: number
@@ -273,6 +278,7 @@ export type IntraoperativeRecordAvgAggregateInputType = {
   crystalloidsMl?: true
   colloidsMl?: true
   bloodMl?: true
+  infusionsMl?: true
   urineMl?: true
   bloodLossMl?: true
   syncRevision?: true
@@ -290,6 +296,7 @@ export type IntraoperativeRecordSumAggregateInputType = {
   crystalloidsMl?: true
   colloidsMl?: true
   bloodMl?: true
+  infusionsMl?: true
   urineMl?: true
   bloodLossMl?: true
   syncRevision?: true
@@ -349,6 +356,7 @@ export type IntraoperativeRecordMinAggregateInputType = {
   crystalloidsMl?: true
   colloidsMl?: true
   bloodMl?: true
+  infusionsMl?: true
   bloodProductsNote?: true
   urineMl?: true
   bloodLossMl?: true
@@ -412,6 +420,7 @@ export type IntraoperativeRecordMaxAggregateInputType = {
   crystalloidsMl?: true
   colloidsMl?: true
   bloodMl?: true
+  infusionsMl?: true
   bloodProductsNote?: true
   urineMl?: true
   bloodLossMl?: true
@@ -482,6 +491,7 @@ export type IntraoperativeRecordCountAggregateInputType = {
   crystalloidsMl?: true
   colloidsMl?: true
   bloodMl?: true
+  infusionsMl?: true
   bloodProductsNote?: true
   urineMl?: true
   bloodLossMl?: true
@@ -642,6 +652,7 @@ export type IntraoperativeRecordGroupByOutputType = {
   crystalloidsMl: number | null
   colloidsMl: number | null
   bloodMl: number | null
+  infusionsMl: number | null
   bloodProductsNote: string | null
   urineMl: number | null
   bloodLossMl: number | null
@@ -738,6 +749,7 @@ export type IntraoperativeRecordWhereInput = {
   crystalloidsMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   colloidsMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   bloodMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
+  infusionsMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   bloodProductsNote?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
   urineMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   bloodLossMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
@@ -815,6 +827,7 @@ export type IntraoperativeRecordOrderByWithRelationInput = {
   crystalloidsMl?: Prisma.SortOrderInput | Prisma.SortOrder
   colloidsMl?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodMl?: Prisma.SortOrderInput | Prisma.SortOrder
+  infusionsMl?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodProductsNote?: Prisma.SortOrderInput | Prisma.SortOrder
   urineMl?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodLossMl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -895,6 +908,7 @@ export type IntraoperativeRecordWhereUniqueInput = Prisma.AtLeast<{
   crystalloidsMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   colloidsMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   bloodMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
+  infusionsMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   bloodProductsNote?: Prisma.StringNullableFilter<"IntraoperativeRecord"> | string | null
   urineMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
   bloodLossMl?: Prisma.IntNullableFilter<"IntraoperativeRecord"> | number | null
@@ -972,6 +986,7 @@ export type IntraoperativeRecordOrderByWithAggregationInput = {
   crystalloidsMl?: Prisma.SortOrderInput | Prisma.SortOrder
   colloidsMl?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodMl?: Prisma.SortOrderInput | Prisma.SortOrder
+  infusionsMl?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodProductsNote?: Prisma.SortOrderInput | Prisma.SortOrder
   urineMl?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodLossMl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1053,6 +1068,7 @@ export type IntraoperativeRecordScalarWhereWithAggregatesInput = {
   crystalloidsMl?: Prisma.IntNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   colloidsMl?: Prisma.IntNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   bloodMl?: Prisma.IntNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
+  infusionsMl?: Prisma.IntNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   bloodProductsNote?: Prisma.StringNullableWithAggregatesFilter<"IntraoperativeRecord"> | string | null
   urineMl?: Prisma.IntNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   bloodLossMl?: Prisma.IntNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
@@ -1125,6 +1141,7 @@ export type IntraoperativeRecordCreateInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -1202,6 +1219,7 @@ export type IntraoperativeRecordUncheckedCreateInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -1277,6 +1295,7 @@ export type IntraoperativeRecordUpdateInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1354,6 +1373,7 @@ export type IntraoperativeRecordUncheckedUpdateInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1430,6 +1450,7 @@ export type IntraoperativeRecordCreateManyInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -1502,6 +1523,7 @@ export type IntraoperativeRecordUpdateManyMutationInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1575,6 +1597,7 @@ export type IntraoperativeRecordUncheckedUpdateManyInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1653,6 +1676,7 @@ export type IntraoperativeRecordCountOrderByAggregateInput = {
   crystalloidsMl?: Prisma.SortOrder
   colloidsMl?: Prisma.SortOrder
   bloodMl?: Prisma.SortOrder
+  infusionsMl?: Prisma.SortOrder
   bloodProductsNote?: Prisma.SortOrder
   urineMl?: Prisma.SortOrder
   bloodLossMl?: Prisma.SortOrder
@@ -1677,6 +1701,7 @@ export type IntraoperativeRecordAvgOrderByAggregateInput = {
   crystalloidsMl?: Prisma.SortOrder
   colloidsMl?: Prisma.SortOrder
   bloodMl?: Prisma.SortOrder
+  infusionsMl?: Prisma.SortOrder
   urineMl?: Prisma.SortOrder
   bloodLossMl?: Prisma.SortOrder
   syncRevision?: Prisma.SortOrder
@@ -1736,6 +1761,7 @@ export type IntraoperativeRecordMaxOrderByAggregateInput = {
   crystalloidsMl?: Prisma.SortOrder
   colloidsMl?: Prisma.SortOrder
   bloodMl?: Prisma.SortOrder
+  infusionsMl?: Prisma.SortOrder
   bloodProductsNote?: Prisma.SortOrder
   urineMl?: Prisma.SortOrder
   bloodLossMl?: Prisma.SortOrder
@@ -1799,6 +1825,7 @@ export type IntraoperativeRecordMinOrderByAggregateInput = {
   crystalloidsMl?: Prisma.SortOrder
   colloidsMl?: Prisma.SortOrder
   bloodMl?: Prisma.SortOrder
+  infusionsMl?: Prisma.SortOrder
   bloodProductsNote?: Prisma.SortOrder
   urineMl?: Prisma.SortOrder
   bloodLossMl?: Prisma.SortOrder
@@ -1820,6 +1847,7 @@ export type IntraoperativeRecordSumOrderByAggregateInput = {
   crystalloidsMl?: Prisma.SortOrder
   colloidsMl?: Prisma.SortOrder
   bloodMl?: Prisma.SortOrder
+  infusionsMl?: Prisma.SortOrder
   urineMl?: Prisma.SortOrder
   bloodLossMl?: Prisma.SortOrder
   syncRevision?: Prisma.SortOrder
@@ -1974,6 +2002,7 @@ export type IntraoperativeRecordCreateWithoutCaseInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -2049,6 +2078,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutCaseInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -2140,6 +2170,7 @@ export type IntraoperativeRecordUpdateWithoutCaseInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2215,6 +2246,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutCaseInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2290,6 +2322,7 @@ export type IntraoperativeRecordCreateWithoutLabRowsInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -2366,6 +2399,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutLabRowsInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -2456,6 +2490,7 @@ export type IntraoperativeRecordUpdateWithoutLabRowsInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2532,6 +2567,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutLabRowsInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2606,6 +2642,7 @@ export type IntraoperativeRecordCreateWithoutVascularAccessRowsInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -2682,6 +2719,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutVascularAccessRowsInput = 
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -2772,6 +2810,7 @@ export type IntraoperativeRecordUpdateWithoutVascularAccessRowsInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2848,6 +2887,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutVascularAccessRowsInput = 
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2922,6 +2962,7 @@ export type IntraoperativeRecordCreateWithoutPremedicationRowsInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -2998,6 +3039,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutPremedicationRowsInput = {
   crystalloidsMl?: number | null
   colloidsMl?: number | null
   bloodMl?: number | null
+  infusionsMl?: number | null
   bloodProductsNote?: string | null
   urineMl?: number | null
   bloodLossMl?: number | null
@@ -3088,6 +3130,7 @@ export type IntraoperativeRecordUpdateWithoutPremedicationRowsInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3164,6 +3207,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutPremedicationRowsInput = {
   crystalloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   colloidsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  infusionsMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodProductsNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   urineMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bloodLossMl?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3288,6 +3332,7 @@ export type IntraoperativeRecordSelect<ExtArgs extends runtime.Types.Extensions.
   crystalloidsMl?: boolean
   colloidsMl?: boolean
   bloodMl?: boolean
+  infusionsMl?: boolean
   bloodProductsNote?: boolean
   urineMl?: boolean
   bloodLossMl?: boolean
@@ -3366,6 +3411,7 @@ export type IntraoperativeRecordSelectCreateManyAndReturn<ExtArgs extends runtim
   crystalloidsMl?: boolean
   colloidsMl?: boolean
   bloodMl?: boolean
+  infusionsMl?: boolean
   bloodProductsNote?: boolean
   urineMl?: boolean
   bloodLossMl?: boolean
@@ -3440,6 +3486,7 @@ export type IntraoperativeRecordSelectUpdateManyAndReturn<ExtArgs extends runtim
   crystalloidsMl?: boolean
   colloidsMl?: boolean
   bloodMl?: boolean
+  infusionsMl?: boolean
   bloodProductsNote?: boolean
   urineMl?: boolean
   bloodLossMl?: boolean
@@ -3514,6 +3561,7 @@ export type IntraoperativeRecordSelectScalar = {
   crystalloidsMl?: boolean
   colloidsMl?: boolean
   bloodMl?: boolean
+  infusionsMl?: boolean
   bloodProductsNote?: boolean
   urineMl?: boolean
   bloodLossMl?: boolean
@@ -3526,7 +3574,7 @@ export type IntraoperativeRecordSelectScalar = {
   syncRevision?: boolean
 }
 
-export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "autoEndedAt" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
+export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "autoEndedAt" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "infusionsMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
 export type IntraoperativeRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   vascularAccessRows?: boolean | Prisma.IntraoperativeRecord$vascularAccessRowsArgs<ExtArgs>
@@ -3626,6 +3674,12 @@ export type $IntraoperativeRecordPayload<ExtArgs extends runtime.Types.Extension
     crystalloidsMl: number | null
     colloidsMl: number | null
     bloodMl: number | null
+    /**
+     * Millilitres given through drug infusions, from their recorded pump rates
+     * (2026-10-18). Derived from the events like the three above; counted in
+     * the fluid balance. NULL = none with a known volume.
+     */
+    infusionsMl: number | null
     bloodProductsNote: string | null
     urineMl: number | null
     bloodLossMl: number | null
@@ -4123,6 +4177,7 @@ export interface IntraoperativeRecordFieldRefs {
   readonly crystalloidsMl: Prisma.FieldRef<"IntraoperativeRecord", 'Int'>
   readonly colloidsMl: Prisma.FieldRef<"IntraoperativeRecord", 'Int'>
   readonly bloodMl: Prisma.FieldRef<"IntraoperativeRecord", 'Int'>
+  readonly infusionsMl: Prisma.FieldRef<"IntraoperativeRecord", 'Int'>
   readonly bloodProductsNote: Prisma.FieldRef<"IntraoperativeRecord", 'String'>
   readonly urineMl: Prisma.FieldRef<"IntraoperativeRecord", 'Int'>
   readonly bloodLossMl: Prisma.FieldRef<"IntraoperativeRecord", 'Int'>

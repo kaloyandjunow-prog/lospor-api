@@ -1496,6 +1496,10 @@ model IntraoperativeRecord {
   crystalloidsMl    Int?
   colloidsMl        Int?
   bloodMl           Int?
+  /// Millilitres given through drug infusions, from their recorded pump rates
+  /// (2026-10-18). Derived from the events like the three above; counted in
+  /// the fluid balance. NULL = none with a known volume.
+  infusionsMl       Int?
   bloodProductsNote String?
   urineMl           Int?
   // Clinician-entered, unlike crystalloidsMl/colloidsMl/bloodMl which are

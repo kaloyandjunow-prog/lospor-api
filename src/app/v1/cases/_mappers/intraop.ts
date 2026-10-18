@@ -248,6 +248,7 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     crystalloidsMl:    intraop.crystalloidsMl    ?? null,
     colloidsMl:        intraop.colloidsMl        ?? null,
     bloodMl:           intraop.bloodMl           ?? null,
+    infusionsMl:       intraop.infusionsMl       ?? null,
     bloodProductsNote: intraop.bloodProductsNote ?? null,
     urineMl:           intraop.urineMl           ?? null,
     bloodLossMl:       intraop.bloodLossMl       ?? null,

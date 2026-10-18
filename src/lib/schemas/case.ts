@@ -283,6 +283,7 @@ export const intraopSchema = z.object({
   crystalloidsMl:    cInt("intraop", "crystalloidsMl"),
   colloidsMl:        cInt("intraop", "colloidsMl"),
   bloodMl:           cInt("intraop", "bloodMl"),
+  infusionsMl:       cInt("intraop", "infusionsMl"),
   bloodProductsNote: z.string().max(1000).nullable().optional(),
   urineMl:           cInt("intraop", "urineMl"),
   bloodLossMl:       cInt("intraop", "bloodLossMl"),

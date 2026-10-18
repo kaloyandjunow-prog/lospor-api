@@ -75,6 +75,9 @@ export const caseEventSchema = z.object({
   formulation: z.enum(["HYPOBARIC", "ISOBARIC", "HYPERBARIC"]).optional(),
   calculationBasis: calculationBasis.optional(),
   calculationWeightKg: numericValue.positive().optional(),
+  // An infusion's pump rate beside its dose rate (2026-10-18). Bounded: a
+  // pump does not run a litre an hour of a drug syringe.
+  volumeRateMlPerHour: numericValue.nonnegative().max(1000).optional(),
   calculationMethod: z.string().min(1).max(80).optional(),
   clinicalRuleKey: z.string().min(1).max(240).optional(),
   clinicalRuleVersion: z.string().min(1).max(160).optional(),

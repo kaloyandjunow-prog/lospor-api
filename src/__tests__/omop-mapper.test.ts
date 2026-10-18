@@ -304,6 +304,29 @@ describe("mapCasesToOmop", () => {
     expect(bundle.person[0].year_of_birth).toBe(1986)
   })
 
+  it("exports both rates of an infusion, its strength, and the infused millilitres (2026-10-18)", () => {
+    const base = completeCase()
+    const events = (base.events as Array<Record<string, unknown>>).map(event =>
+      event.type === "infusion_start"
+        ? { ...event, concentration: "500 mg/50 mL", metadataJson: { name: "Propofol", volumeRateMlPerHour: 48, concentration: "500 mg/50 mL" } }
+        : event,
+    )
+    const intraop = { ...(base.intraop as Record<string, unknown>), infusionsMl: 36 }
+    const bundle = mapCasesToOmop([completeCase({ events, intraop }) as never])
+    // The dose rate stays the drug_exposure row; the pump rate and the syringe sit beside it.
+    expect(bundle.drug_exposure).toContainEqual(expect.objectContaining({ dose_value: 6, dose_unit_source_value: "mg/kg/h" }))
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR", value_as_number: 48 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:INFUSION_STRENGTH", value_as_string: "500 mg/50 mL" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_INFUSIONS_ML", value_as_number: 36 }),
+    ]))
+  })
+
+  it("exports no pump rate when the syringe step was skipped", () => {
+    const bundle = mapCasesToOmop([completeCase() as never])
+    expect(bundle.observation.some(row => row.observation_source_value === "LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR")).toBe(false)
+  })
+
   it("exports frozen drug route-profile inputs and rule provenance", () => {
     const base = completeCase()
     const events = (base.events as Array<Record<string, unknown>>).map(event =>
