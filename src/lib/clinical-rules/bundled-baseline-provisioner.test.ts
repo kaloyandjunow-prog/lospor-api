@@ -183,8 +183,8 @@ describe("bundled clinical baseline provisioner", () => {
         outcome: "installed",
         releaseVersion: "9.15.0",
         baselines: [
-          { clinicalMode: "ADULT", presetId: "lospor-adults-v3", presetVersion: 3, ruleCount: 252, selected: true },
-          { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetVersion: 3, ruleCount: 336, selected: true },
+          { clinicalMode: "ADULT", presetId: "lospor-adults-v3", presetVersion: 3, ruleCount: 267, selected: true },
+          { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetVersion: 3, ruleCount: 351, selected: true },
         ],
       },
     })
@@ -373,7 +373,7 @@ describe("bundled clinical baseline provisioner", () => {
     const evidence = db.state.presets.find(row => row.id === "lospor-adults-v3")?.publicationEvidence as Row
     expect(evidence).toMatchObject({ baselinePresetId: "lospor-adults-v2", baselinePresetVersion: 2 })
     const diff = evidence.exactDiff as { added: unknown[]; removed: unknown[]; changed: unknown[]; unchangedRuleCount: number }
-    expect([diff.added.length, diff.removed.length, diff.changed.length, diff.unchangedRuleCount]).toEqual([1, 0, 58, 193])
+    expect([diff.added.length, diff.removed.length, diff.changed.length, diff.unchangedRuleCount]).toEqual([16, 0, 58, 193])
 
     // The next update verifies both releases without writing.
     db.writes.length = 0

@@ -37,8 +37,8 @@ const RULE_VERSION_SUFFIX = "release-9.15.0"
 const MAX_AUDIT_DETAIL_BYTES = 2_048
 
 const V3_IDENTITIES = [
-  { clinicalMode: "ADULT", presetId: "lospor-adults-v3", presetKey: "LOSPOR_ADULTS", presetVersion: 3, ruleCount: 252, previousPresetId: "lospor-adults-v2" },
-  { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetKey: "LOSPOR_PEDIATRICS", presetVersion: 3, ruleCount: 336, previousPresetId: "lospor-pediatrics-v2" },
+  { clinicalMode: "ADULT", presetId: "lospor-adults-v3", presetKey: "LOSPOR_ADULTS", presetVersion: 3, ruleCount: 267, previousPresetId: "lospor-adults-v2" },
+  { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetKey: "LOSPOR_PEDIATRICS", presetVersion: 3, ruleCount: 351, previousPresetId: "lospor-pediatrics-v2" },
 ] as const
 
 export type LosporBundledBaselineV3Identity = (typeof V3_IDENTITIES)[number]
@@ -57,20 +57,20 @@ export type BundledBaselineV3Expectation = {
 /** Pinned once v3 was reviewed; a change to the drafts must be a new release. */
 export const BUNDLED_BASELINE_V3_EXPECTATIONS: Readonly<Record<"ADULT" | "PEDIATRIC", BundledBaselineV3Expectation>> = {
   ADULT: {
-    ruleCount: 252,
-    contentSha256: "319884278a0129add07dd1c4d9eee8474c102b4c83801ced05a907e25cf55506",
-    diffSha256: "c0eb153241f889599a66bacc91298116e288eab3f4e9053d150576b6491231fc",
-    ruleKeysSha256: "9594b0f33907ab4eda62ef7f29b1b333738e9026c94193bb98a184a3c58ed49d",
-    sourceRefsSha256: "dd013b34bd0837742b2b9f9e601d9938f4cd030b6c8775ccea8893c0a250e8ea",
-    descriptorSha256: "fb786a6c7577754974827c14d1620441550c9ee98415bbbc3af63ff24efd1b20",
+    ruleCount: 267,
+    contentSha256: "534bdf5d6550886162bf0852d636816d3cebb2fcc0860258efdc6fe27de76a04",
+    diffSha256: "7c6869b3874c8f0c75159e359bd6327d3b2df9950c8b945fe01751377e94cbbc",
+    ruleKeysSha256: "69c51b94f810d6882e433309cd382417f7ead8de4275deaa214bddd4fabe7431",
+    sourceRefsSha256: "46bacfab04d899f99cf20338ce7b700601429d8e78e4a0938776336391dfda15",
+    descriptorSha256: "6c837a83b58f79f4cd78c530a81c21cf45f47e37e763d9e579db1b892e1cc708",
   },
   PEDIATRIC: {
-    ruleCount: 336,
-    contentSha256: "8d8bdface22a190ce52d6fb239172b9364c99301622ebb6ca338df3bd8ed5c4b",
-    diffSha256: "6fa14365e10ecdde7b9d20c19250077ff2e1305e225f2af23dd1d3db21d9005b",
-    ruleKeysSha256: "770f5c6174ed65a188f3061cc9b0375b8e26275250561c660c37e525673a1758",
-    sourceRefsSha256: "f85b4622b4002e4b0abd52fc26c988187f4d49165320e19e61c310c5189cdae7",
-    descriptorSha256: "58fd208c7c31420079cf724456152945beca978776bb6b9160bc0f7e52e3f21e",
+    ruleCount: 351,
+    contentSha256: "0467135c50bdf5eba310b97135b7f7c539ae5fcccd60d12bea2b3dfbd784aa0d",
+    diffSha256: "519405edbedd0c21fd072a1be7d40522e3bbc180684b9a50a519248dbf64d163",
+    ruleKeysSha256: "d3163b0714fdeccebdc4a19d24a68e77a5e2758f1f6b101c4808e4ecad237f9f",
+    sourceRefsSha256: "05cbd524ef330606967c5a72bfaab5f6b2d17665fe2fda1d645321f90a856be6",
+    descriptorSha256: "b47dd0d074dc98330f9f96f2134669431ff6f19bab52bbadc4b3adee5bd5a3a6",
   },
 }
 

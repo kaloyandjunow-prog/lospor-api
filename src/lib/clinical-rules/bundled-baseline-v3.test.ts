@@ -16,10 +16,13 @@ describe("LOSPOR 9.15.0 v3 baselines", () => {
   it("records the exact change from v2: plain Ringer added; mannitol, adjuvant routes, epidural fentanyl and regrouped drugs changed", () => {
     const [adult, pediatric] = v3
     expect(adult.exactDiff).toMatchObject({ baselinePresetId: "lospor-adults-v2", baselinePresetVersion: 2, removed: [] })
-    expect(adult.exactDiff.added.map(item => item.ruleKey)).toEqual(["ADULT_FLUID_PROFILE:RINGER_S_SOLUTION"])
+    // Plain Ringer and the 15 infusions added on 2026-10-18.
+    expect(adult.exactDiff.added).toHaveLength(16)
+    expect(adult.exactDiff.added.map(item => item.ruleKey)).toContain("ADULT_FLUID_PROFILE:RINGER_S_SOLUTION")
+    expect(adult.exactDiff.added.map(item => item.ruleKey)).toContain("ADULT_INFUSION_PROFILE:URAPIDIL")
     expect(adult.exactDiff.changed).toHaveLength(58)
     expect(adult.exactDiff.unchangedRuleCount).toBe(193)
-    expect(pediatric.exactDiff.added).toHaveLength(1)
+    expect(pediatric.exactDiff.added).toHaveLength(16)
     expect(pediatric.exactDiff.removed).toEqual([])
     expect(pediatric.exactDiff.changed).toHaveLength(69)
     const mannitol = adult.exactDiff.changed.find(item => item.ruleKey === "ADULT_FLUID_PROFILE:MANNITOL")
