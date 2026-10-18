@@ -60,7 +60,7 @@ describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
       })).resolves.toBe(2)
       await expect(tx.clinicalPresetRule.count({
         where: { presetId: { in: v3PresetIds } },
-      })).resolves.toBe(618)
+      })).resolves.toBe(634)
       await expect(tx.platformClinicalPresetSelection.findMany({
         orderBy: { clinicalMode: "asc" },
         select: { presetId: true, selectedByTechnicalPrincipalId: true },

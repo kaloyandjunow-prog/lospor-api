@@ -38,7 +38,7 @@ const MAX_AUDIT_DETAIL_BYTES = 2_048
 
 const V3_IDENTITIES = [
   { clinicalMode: "ADULT", presetId: "lospor-adults-v3", presetKey: "LOSPOR_ADULTS", presetVersion: 3, ruleCount: 267, previousPresetId: "lospor-adults-v2" },
-  { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetKey: "LOSPOR_PEDIATRICS", presetVersion: 3, ruleCount: 351, previousPresetId: "lospor-pediatrics-v2" },
+  { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetKey: "LOSPOR_PEDIATRICS", presetVersion: 3, ruleCount: 367, previousPresetId: "lospor-pediatrics-v2" },
 ] as const
 
 export type LosporBundledBaselineV3Identity = (typeof V3_IDENTITIES)[number]
@@ -65,12 +65,12 @@ export const BUNDLED_BASELINE_V3_EXPECTATIONS: Readonly<Record<"ADULT" | "PEDIAT
     descriptorSha256: "6c837a83b58f79f4cd78c530a81c21cf45f47e37e763d9e579db1b892e1cc708",
   },
   PEDIATRIC: {
-    ruleCount: 351,
-    contentSha256: "0467135c50bdf5eba310b97135b7f7c539ae5fcccd60d12bea2b3dfbd784aa0d",
-    diffSha256: "519405edbedd0c21fd072a1be7d40522e3bbc180684b9a50a519248dbf64d163",
-    ruleKeysSha256: "d3163b0714fdeccebdc4a19d24a68e77a5e2758f1f6b101c4808e4ecad237f9f",
-    sourceRefsSha256: "05cbd524ef330606967c5a72bfaab5f6b2d17665fe2fda1d645321f90a856be6",
-    descriptorSha256: "b47dd0d074dc98330f9f96f2134669431ff6f19bab52bbadc4b3adee5bd5a3a6",
+    ruleCount: 367,
+    contentSha256: "7338f5d152eacd4ed6dba9ea4b143a5e1e73c1a29a56bbfe73e4a914c9bb52f8",
+    diffSha256: "4b89f65884542364fd865518c4bf2157f028a2fd680871e5a8df82b2cef43caa",
+    ruleKeysSha256: "1a7628c8c801e84a8aa4729ff5ef5ed36b2fcfbc3f1ab2be2756cefeeead4efc",
+    sourceRefsSha256: "64ce39f84a4664cb70a4d7ae19dcc7748f5bb2025e9f635f00ca5221a5e46c7c",
+    descriptorSha256: "2ed794cc32793230bfeccdd4d877b922df18da4db71bc1fbc5901cc56bbf858b",
   },
 }
 

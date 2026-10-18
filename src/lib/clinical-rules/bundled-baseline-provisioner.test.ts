@@ -184,7 +184,7 @@ describe("bundled clinical baseline provisioner", () => {
         releaseVersion: "9.15.0",
         baselines: [
           { clinicalMode: "ADULT", presetId: "lospor-adults-v3", presetVersion: 3, ruleCount: 267, selected: true },
-          { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetVersion: 3, ruleCount: 351, selected: true },
+          { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetVersion: 3, ruleCount: 367, selected: true },
         ],
       },
     })

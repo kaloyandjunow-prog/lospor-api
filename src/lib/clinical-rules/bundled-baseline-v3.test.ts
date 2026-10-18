@@ -22,9 +22,12 @@ describe("LOSPOR 9.15.0 v3 baselines", () => {
     expect(adult.exactDiff.added.map(item => item.ruleKey)).toContain("ADULT_INFUSION_PROFILE:URAPIDIL")
     expect(adult.exactDiff.changed).toHaveLength(58)
     expect(adult.exactDiff.unchangedRuleCount).toBe(193)
-    expect(pediatric.exactDiff.added).toHaveLength(16)
-    expect(pediatric.exactDiff.removed).toEqual([])
-    expect(pediatric.exactDiff.changed).toHaveLength(69)
+    // Children also get the prefill review: bands split by age or weight
+    // replace the 12 single bands they came from.
+    expect(pediatric.exactDiff.added).toHaveLength(44)
+    expect(pediatric.exactDiff.removed).toHaveLength(12)
+    expect(pediatric.exactDiff.removed.map(item => item.ruleKey)).toContain("PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6574.365")
+    expect(pediatric.exactDiff.changed).toHaveLength(180)
     const mannitol = adult.exactDiff.changed.find(item => item.ruleKey === "ADULT_FLUID_PROFILE:MANNITOL")
     expect(JSON.stringify(mannitol?.before.payload)).not.toContain("20%")
     expect(JSON.stringify(mannitol?.after.payload)).toContain("20%")
