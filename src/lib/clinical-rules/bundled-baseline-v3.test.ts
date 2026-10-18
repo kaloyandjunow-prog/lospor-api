@@ -20,8 +20,8 @@ describe("LOSPOR 9.15.0 v3 baselines", () => {
     expect(adult.exactDiff.added).toHaveLength(16)
     expect(adult.exactDiff.added.map(item => item.ruleKey)).toContain("ADULT_FLUID_PROFILE:RINGER_S_SOLUTION")
     expect(adult.exactDiff.added.map(item => item.ruleKey)).toContain("ADULT_INFUSION_PROFILE:URAPIDIL")
-    expect(adult.exactDiff.changed).toHaveLength(58)
-    expect(adult.exactDiff.unchangedRuleCount).toBe(193)
+    expect(adult.exactDiff.changed).toHaveLength(59)
+    expect(adult.exactDiff.unchangedRuleCount).toBe(192)
     // Children also get the prefill review: bands split by age or weight
     // replace the 12 single bands they came from; ropivacaine infusions take
     // the 3-month boundary of the other local anaesthetics (2 more).

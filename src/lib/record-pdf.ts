@@ -66,9 +66,12 @@ export async function renderRecordPdf(
     // Desktop-sized viewport so the page renders its normal (approved) layout.
     await page.setViewport({ width: 1280, height: 900 })
     await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 })
-    // Wait for the timetable SVG to be built; print whatever rendered on timeout.
+    // Wait until the page is drawn. The record prints whatever rendered of its
+    // timetable on timeout; the preop summary is not printed at all.
     if (options.readySelector) {
-      await page.waitForSelector(options.readySelector, { timeout: 20_000 }).catch(() => {})
+      // A page that never says it is ready is not printed: the caller falls back
+      // to the live page, which shows what went wrong, rather than a broken sheet.
+      await page.waitForSelector(options.readySelector, { timeout: 20_000 })
     } else {
       await page
         .waitForFunction(

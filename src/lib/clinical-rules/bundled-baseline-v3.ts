@@ -58,19 +58,19 @@ export type BundledBaselineV3Expectation = {
 export const BUNDLED_BASELINE_V3_EXPECTATIONS: Readonly<Record<"ADULT" | "PEDIATRIC", BundledBaselineV3Expectation>> = {
   ADULT: {
     ruleCount: 267,
-    contentSha256: "534bdf5d6550886162bf0852d636816d3cebb2fcc0860258efdc6fe27de76a04",
-    diffSha256: "7c6869b3874c8f0c75159e359bd6327d3b2df9950c8b945fe01751377e94cbbc",
+    contentSha256: "b88f8247c62cbef2069e662ff4e688153cda8c51174c1a45c9834d942382c92e",
+    diffSha256: "622b647de0cc20f73d445edd3c13e8558df0adbd9606ce34dad53b38e14fe272",
     ruleKeysSha256: "69c51b94f810d6882e433309cd382417f7ead8de4275deaa214bddd4fabe7431",
     sourceRefsSha256: "46bacfab04d899f99cf20338ce7b700601429d8e78e4a0938776336391dfda15",
-    descriptorSha256: "6c837a83b58f79f4cd78c530a81c21cf45f47e37e763d9e579db1b892e1cc708",
+    descriptorSha256: "ad461447a50a0925a7a83431badeaa6209081d14f2948937b48df7598f0b441e",
   },
   PEDIATRIC: {
     ruleCount: 367,
-    contentSha256: "2afe61e8cd1783310993cef961c6ffe0ca23cb782766afbed7ac77997d3880e6",
-    diffSha256: "917bcd2467912ef1d44a9c415dc68b8371f31b76318b537341eedd03b0242710",
+    contentSha256: "4ca6048cc5603bf92d6e4eb31cc4dde328708ef26abcc8686403a6da5da401a1",
+    diffSha256: "ca80140147f2af4db5555a3b02d99fdc216a38ce54f3eb029eedd394ef6f4914",
     ruleKeysSha256: "4ba05219e32843c6a19f53e99490437348940dba3200947028e8e6e0f11dcdb5",
     sourceRefsSha256: "d6c00da357e1f66e1fc737ce64b34e06eeff0f3c11f16ce2620dc685ce331a69",
-    descriptorSha256: "21963098b8ced86aff75db9e4fd6c5000e71eb38a637d944b189bf43f41019a9",
+    descriptorSha256: "53e685300c08cad273aac60a7f44c38e5e8ee1739d4c7c08f4004b85928680fe",
   },
 }
 
