@@ -11,6 +11,7 @@ import {
 import { isoDate, numOrNull } from "../date-helpers"
 import { nextId } from "../ids"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
+import { TCI_MODELS, tciPatientFrom, tciTotal, type TciModel, type TciSite } from "@lospor/core/tci"
 
 /**
  * Everything witnessed during the case: airway management, ventilation,
@@ -375,6 +376,33 @@ export function mapIntraopToOmop(
       openAgentIndex = null
     }
   })
+  // A target-controlled infusion (2026-10-18): its amount is the pump's own
+  // total when entered, else the model's calculation over its targets; null
+  // while it has no end. The patient comes from the preoperative record.
+  const tciPatient = c.preop ? tciPatientFrom(c.preop) : null
+  const tciFor = (ev: typeof drugEvents[number]) => {
+    const meta = (ev.metadataJson ?? {}) as Record<string, unknown>
+    const model = meta.tciModel as TciModel | undefined
+    if (ev.type !== "infusion_start" || !ev.infId || !model || !TCI_MODELS.includes(model)) return null
+    const stop = ordered.find(other => other.type === "infusion_stop" && other.infId === ev.infId)
+    const stopMeta = (stop?.metadataJson ?? {}) as Record<string, unknown>
+    const endMs = stop?.timestamp.getTime() ?? ia.endedAt?.getTime() ?? null
+    const targets = [
+      { atMs: ev.timestamp.getTime(), target: numOrNull(ev.rate) ?? 0 },
+      ...ordered.filter(other => other.type === "infusion_rate" && other.infId === ev.infId)
+        .map(other => ({ atMs: other.timestamp.getTime(), target: numOrNull(other.rate) ?? 0 })),
+    ]
+    const total = endMs == null ? null : tciTotal({
+      tciModel: model,
+      tciSite: meta.tciSite as TciSite | undefined,
+      tciOpioids: typeof meta.tciOpioids === "boolean" ? meta.tciOpioids : undefined,
+      concentration: ev.concentration ?? (typeof meta.concentration === "string" ? meta.concentration : undefined),
+      pumpTotal: numOrNull(stopMeta.pumpTotal) ?? undefined,
+      pumpTotalUnit: stopMeta.pumpTotalUnit === "mL" || stopMeta.pumpTotalUnit === "mg" || stopMeta.pumpTotalUnit === "mcg" ? stopMeta.pumpTotalUnit : undefined,
+    }, targets, endMs, tciPatient)
+    return { model, site: (meta.tciSite as string | undefined) ?? "EFFECT", opioids: meta.tciOpioids, targets, total }
+  }
+
   const endFor = (ev: typeof drugEvents[number], index: number): string | null => {
     if (ev.type === "infusion_start") return ev.infId ? isoDate(infusionEnd.get(ev.infId)) : null
     if (ev.type === "fluid_start") return ev.fluidId ? isoDate(fluidEnd.get(ev.fluidId)) : null
@@ -550,6 +578,9 @@ export function mapIntraopToOmop(
     // an infusion charted as running at 0 mL/h while paused -- must
     // survive as 0, not collapse into the same row as no dose recorded.
     const dose = numOrNull(doseSource)
+    // A TCI infusion's rate is a target concentration, not a dose: the row
+    // carries the amount given, and the targets go beside it as observations.
+    const tci = tciFor(ev)
     ctx.drugs.push({
       drug_exposure_id:           nextId(),
       person_id:                  ctx.personId,
@@ -578,8 +609,8 @@ export function mapIntraopToOmop(
         ? `INTRAOP:ATC:${ev.atcCode} - ${(meta.name as string | undefined) ?? ev.label ?? ""}`.trimEnd()
         : `INTRAOP:${(meta.name as string | undefined) ?? ev.label ?? "unknown"}`,
       drug_source_concept_id:     null,
-      dose_value:                 dose,
-      dose_unit_source_value:     ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
+      dose_value:                 tci ? tci.total?.amount ?? null : dose,
+      dose_unit_source_value:     tci ? tci.total?.units.amount ?? null : ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
       route_source_value:         ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV"),
       visit_occurrence_id:        ctx.visitId,
     })
@@ -590,6 +621,17 @@ export function mapIntraopToOmop(
       const syringe = ev.concentration ?? (typeof meta.concentration === "string" ? meta.concentration : null)
       if (pumpRate != null) ctx.sourceObservation("LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR", String(pumpRate), isoDate(ev.timestamp), pumpRate)
       if (syringe) ctx.sourceObservation("LOSPOR:INFUSION_STRENGTH", syringe, isoDate(ev.timestamp), null)
+      if (tci) {
+        const on = isoDate(ev.timestamp)
+        ctx.sourceObservation("LOSPOR:TCI_MODEL", tci.model, on, null)
+        ctx.sourceObservation("LOSPOR:TCI_SITE", tci.site, on, null)
+        if (typeof tci.opioids === "boolean") ctx.sourceObservation("LOSPOR:TCI_WITH_OPIOIDS", String(tci.opioids), on, null)
+        for (const target of tci.targets) {
+          ctx.sourceObservation("LOSPOR:TCI_TARGET", String(target.target), isoDate(new Date(target.atMs)), target.target)
+        }
+        if (tci.total?.calculated != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_CALCULATED", String(tci.total.calculated), on, tci.total.calculated)
+        if (tci.total?.pump != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_PUMP", String(tci.total.pump), on, tci.total.pump)
+      }
     }
     if (ev.type === "drug") {
       const concentration = ev.concentration

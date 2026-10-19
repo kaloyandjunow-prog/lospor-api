@@ -1,3 +1,8 @@
+// 4.8.0 records target-controlled infusions: the model and site, each target
+// (TCI_TARGET), and the amount -- the pump's own total when entered on the
+// stop, else the model's calculation -- as the drug_exposure dose. Both totals
+// are kept beside it. Additive: no earlier event is a TCI infusion.
+//
 // 4.7.0 records both rates of a drug infusion: the dose rate as before, and
 // the pump rate in mL/h worked out from the syringe strength, with the
 // strength itself. Their millilitres count in the fluid balance as
@@ -52,7 +57,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.7.0"
+export const DICTIONARY_VERSION = "4.8.0"
 
 export interface DictionaryEntry {
   name: string
@@ -1490,6 +1495,60 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = legacy event, no concentration required, or not recorded",
     sourceTable: "CaseEvent", sourceColumn: "concentrationValue",
     versionIntroduced: "3.1.0",
+  },
+  {
+    name: "event.tciModel",
+    exportName: "observation.value_as_string (LOSPOR:TCI_MODEL)",
+    meaning: "A target-controlled infusion's pharmacokinetic model: MARSH, SCHNIDER, ELEVELD_PROPOFOL, PAEDFUSOR, KATARIA, MINTO, ELEVELD_REMIFENTANIL, GEPTS or MAITRE. With it, the infusion's rate is a target concentration and the drug_exposure dose_value is the amount given (dose_unit_source_value mg or mcg).",
+    type: "string",
+    missingnessRule: "NULL = not a TCI infusion",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciSite",
+    exportName: "observation.value_as_string (LOSPOR:TCI_SITE)",
+    meaning: "Whether the TCI targeted the plasma (PLASMA) or the effect site (EFFECT).",
+    type: "string",
+    missingnessRule: "NULL = not a TCI infusion",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciOpioids",
+    exportName: "observation.value_as_string (LOSPOR:TCI_WITH_OPIOIDS)",
+    meaning: "Eleveld propofol only: whether the model was run as given with an opioid (lower clearance and V3 with age).",
+    type: "boolean",
+    missingnessRule: "NULL = not Eleveld propofol",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciTarget",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TARGET)",
+    meaning: "Each target set on a TCI infusion, at the instant it was set: µg/mL for propofol, ng/mL for the opioids. Read from the start and rate-change events' rate.",
+    type: "float",
+    missingnessRule: "NULL = not a TCI infusion",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciTotalCalculated",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TOTAL_CALCULATED)",
+    meaning: "The amount the TCI model calculates was given (the same calculation on every device): the published model run over the targets, effect-site by Shafer & Gregg and plasma by Jacobs, limited to 1200 mL/h of the syringe.",
+    type: "float",
+    missingnessRule: "NULL = still running at export, or the patient's age, weight, height or sex is missing",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.pumpTotal",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TOTAL_PUMP)",
+    meaning: "The total the pump showed, entered on the stop, in the drug's amount unit (a volume is converted by the syringe strength). When present it is the drug_exposure dose_value.",
+    type: "float",
+    missingnessRule: "NULL = not entered",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
   },
   {
     name: "event.volumeRateMlPerHour",

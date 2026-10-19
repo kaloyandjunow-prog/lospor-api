@@ -322,6 +322,38 @@ describe("mapCasesToOmop", () => {
     ]))
   })
 
+  it("exports a TCI infusion as the amount given, with its model, targets and both totals (2026-10-18)", () => {
+    const base = completeCase()
+    const tciEvents = (withPump: boolean) => (base.events as Array<Record<string, unknown>>).flatMap(event =>
+      event.type === "infusion_start"
+        ? [
+            { ...event, rate: "4", unit: "mcg/mL", concentration: "1%", metadataJson: { name: "Propofol", tciModel: "SCHNIDER", tciSite: "EFFECT", concentration: "1%" } },
+            { type: "infusion_rate", timestamp: new Date("2026-06-01T08:45:00Z"), label: "Propofol TCI", value: null, unit: "mcg/mL", infId: "inf-1", rate: "3", metadataJson: {} },
+          ]
+        : event.type === "infusion_stop"
+          ? [{ ...event, metadataJson: withPump ? { pumpTotal: 30, pumpTotalUnit: "mL" } : {} }]
+          : [event],
+    )
+    const calculated = mapCasesToOmop([completeCase({ events: tciEvents(false) }) as never])
+    const row = calculated.drug_exposure.find(item => String(item.drug_source_value).includes("Propofol"))!
+    expect(row.dose_unit_source_value).toBe("mg")
+    expect(row.dose_value).toBeGreaterThan(100)
+    expect(calculated.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_MODEL", value_as_string: "SCHNIDER" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_SITE", value_as_string: "EFFECT" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TARGET", value_as_number: 4 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TARGET", value_as_number: 3 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_CALCULATED", value_as_number: row.dose_value }),
+    ]))
+    // The pump total of 30 mL of 10 mg/mL wins: 300 mg, and both totals are kept.
+    const pumped = mapCasesToOmop([completeCase({ events: tciEvents(true) }) as never])
+    expect(pumped.drug_exposure).toContainEqual(expect.objectContaining({ dose_value: 300, dose_unit_source_value: "mg" }))
+    expect(pumped.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_PUMP", value_as_number: 300 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_CALCULATED" }),
+    ]))
+  })
+
   it("exports no pump rate when the syringe step was skipped", () => {
     const bundle = mapCasesToOmop([completeCase() as never])
     expect(bundle.observation.some(row => row.observation_source_value === "LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR")).toBe(false)
