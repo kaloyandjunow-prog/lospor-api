@@ -555,6 +555,13 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
         actionCodes: ["CLINICAL_RULESET_PUBLISH_AND_SELECT"],
         auditPath: "DIRECT_TRANSACTION_ROW",
       },
+      {
+        // The v3 rows are written and audited by the bundled v3 provisioner it
+        // calls; the selection row is the script's own.
+        path: "scripts/install-v3-platform-baselines.ts",
+        actionCodes: ["CLINICAL_RULESET_SELECT"],
+        auditPath: "DIRECT_TRANSACTION_ROW",
+      },
     ],
     rollback: {
       kind: "SOURCE_ONLY_SCRIPT",
