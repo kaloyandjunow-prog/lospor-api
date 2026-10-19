@@ -352,6 +352,12 @@ describe("mapCasesToOmop", () => {
       expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_PUMP", value_as_number: 300 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_CALCULATED" }),
     ]))
+    // No strength recorded: the 30 mL cannot become mg, so it is kept as mL and the calculation counts (2026-10-19).
+    const noStrength = mapCasesToOmop([completeCase({ events: tciEvents(true).map(event => event.type === "infusion_start"
+      ? { ...event, concentration: undefined, metadataJson: { ...(event.metadataJson as object), concentration: undefined } }
+      : event) }) as never])
+    expect(noStrength.observation).toContainEqual(expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_PUMP_ML", value_as_number: 30 }))
+    expect(noStrength.observation.some(item => item.observation_source_value === "LOSPOR:TCI_TOTAL_PUMP")).toBe(false)
   })
 
   it("exports no pump rate when the syringe step was skipped", () => {

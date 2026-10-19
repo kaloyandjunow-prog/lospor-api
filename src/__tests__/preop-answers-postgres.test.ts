@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 import { config as loadDotenv } from "dotenv"
+import { holdPostgresSuiteLock } from "./postgres-suite-lock"
 
 vi.mock("server-only", () => ({}))
 
@@ -33,7 +34,11 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
     return { caseId, preopId: preop.id }
   }
 
+  let releaseLock: (() => Promise<void>) | undefined
+
   beforeAll(async () => {
+    // The profile suite switches questions off; wait for it rather than race it.
+    releaseLock = await holdPostgresSuiteLock("preop-profile")
     ;({ prisma } = await import("@/lib/prisma"))
     ;({ savePreopAnswers } = await import("@/lib/preop/service"))
     ;({ withLockedCaseTransaction, disconnectClinicalPrismaForTests } = await import("@/lib/clinical-transaction"))
@@ -55,10 +60,14 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
   })
 
   afterAll(async () => {
-    if (!prisma) return
-    await prisma.user.deleteMany({ where: { id: userId } })
-    await disconnectClinicalPrismaForTests()
-    await prisma.$disconnect()
+    try {
+      if (!prisma) return
+      await prisma.user.deleteMany({ where: { id: userId } })
+      await disconnectClinicalPrismaForTests()
+      await prisma.$disconnect()
+    } finally {
+      await releaseLock?.()
+    }
   })
 
   it("writes one row per question that is on, and bumps the case revision", async () => {

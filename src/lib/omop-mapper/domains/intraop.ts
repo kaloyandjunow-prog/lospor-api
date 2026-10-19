@@ -631,6 +631,8 @@ export function mapIntraopToOmop(
         }
         if (tci.total?.calculated != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_CALCULATED", String(tci.total.calculated), on, tci.total.calculated)
         if (tci.total?.pump != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_PUMP", String(tci.total.pump), on, tci.total.pump)
+        // Entered in mL with no syringe strength: kept as the volume it is, not dropped (2026-10-19).
+        if (tci.total?.pumpNeedsStrength && tci.total.volumeMl != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_PUMP_ML", String(tci.total.volumeMl), on, tci.total.volumeMl)
       }
     }
     if (ev.type === "drug") {

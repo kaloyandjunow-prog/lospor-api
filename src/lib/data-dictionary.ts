@@ -1551,6 +1551,15 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "4.8.0",
   },
   {
+    name: "event.pumpTotal (mL, no strength)",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TOTAL_PUMP_ML)",
+    meaning: "The pump's total entered in mL on a TCI infusion with no syringe strength recorded, so it cannot become an amount; the calculated total is the dose_value.",
+    type: "float",
+    missingnessRule: "NULL = not entered, or entered with a strength (then LOSPOR:TCI_TOTAL_PUMP)",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
     name: "event.volumeRateMlPerHour",
     exportName: "observation.value_as_number (LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR)",
     meaning: "An infusion's pump rate at its start, recorded beside the dose rate "
