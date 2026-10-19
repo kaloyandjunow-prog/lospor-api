@@ -1,5 +1,19 @@
 # Changelog - LOSPOR API
 
+## [9.15.1] - 2026-10-20
+
+On Core 9.15.0. Released with web, phone and docs 9.15.1; the phone's Start at
+sheet gained the start date.
+
+### Added
+
+- **`clinical-rules:install-v3`**: installs the 9.15.0 (v3) clinical baselines
+  on a deployment whose v2 was arranged by hand, by running only the v3 step
+  of the bundled provisioner, so the rows are the release's exactly; v2 is
+  untouched. `--select` points the platform selections at v3 under a named
+  administrator. A dry run, rolled back, unless `--apply`. Used on the public
+  deployment on 2026-10-19.
+
 ## [9.15.0] - 2026-10-19
 
 Data dictionary 4.5.0 → 4.8.0. Nothing has been exported for research yet,
