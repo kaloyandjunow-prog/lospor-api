@@ -1,7 +1,9 @@
 import { plannedProcedureText } from "@lospor/core/procedure-codes"
+import { normalizePlannedAnaesthesia } from "@lospor/core/preop-plan"
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePreopPatch } from "@lospor/core/case-payloads"
 import { calcApfel, calcRCRI, calcStopBang } from "@lospor/core/scores"
+import { ASA_SUGGESTION_RULES_VERSION, suggestASAFromTags } from "@lospor/core/asa"
 import {
   calculateColds,
   calculatePovoc,
@@ -12,7 +14,6 @@ import {
   copyKey,
   safeEnum,
   taggedListToStorage,
-  toFloatOrNull,
   type PreopRawInput,
 } from "./shared"
 
@@ -55,6 +56,19 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     : null
   const bodySurfaceAreaM2 = bsaResult?.available ? bsaResult.value.squareMetres : null
   const pediatric = preop.clinicalMode === "PEDIATRIC"
+  // The ASA suggestion the clients show, worked out here from the same record
+  // with the same Core rules and stored beside the class chosen. Children get
+  // no BMI rule, as on both clients.
+  const comorbidityTags = Array.isArray(preop.comorbidities)
+    ? (preop.comorbidities as Array<{ label?: unknown; code?: unknown; sub?: unknown }>)
+      .filter(tag => tag && typeof tag === "object")
+      .map(tag => ({
+        label: typeof tag.label === "string" ? tag.label : "",
+        code: typeof tag.code === "string" ? tag.code : undefined,
+        sub: typeof tag.sub === "string" ? tag.sub : undefined,
+      }))
+    : []
+  const asaSuggestion = suggestASAFromTags(comorbidityTags, pediatric ? null : bmi)
   const normalizedAge = pediatric
     && preop.ageValue != null
     && preop.ageUnit != null
@@ -171,6 +185,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     aiOptIn:          preop.aiOptIn   ?? false,
 
     comorbidities: preop.comorbidities ?? [],
+    asaSuggestedScore:         asaSuggestion?.cls ?? null,
+    asaSuggestionReasons:      asaSuggestion?.reasonCodes ?? [],
+    asaSuggestionRulesVersion: asaSuggestion ? ASA_SUGGESTION_RULES_VERSION : null,
 
     allergies,
     allergyDetails,
@@ -224,7 +241,8 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     rcriCreatinine: preop.rcriCreatinine ?? null,
 
     rcriScore:     adultScores?.rcriScore ?? null,
-    gutaScore:     pediatric ? null : toFloatOrNull(preop.gutaScore),
+    // Retired: Gupta is derived from its inputs where it is shown or exported.
+    gutaScore:     null,
     apfelScore:    adultScores?.apfelScore ?? null,
     stopBangScore: adultScores?.stopBangScore ?? null,
 
@@ -234,7 +252,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     stopbangSnoring: preop.stopbangSnoring ?? null,
     stopbangTired: preop.stopbangTired ?? null,
     povocScore:                   povoc?.score ?? null,
-    povocRiskPercent:             povoc?.riskPercent ?? null,
+    // Not stored: the risk is derived from the count wherever it is shown or
+    // exported, so a revised POVOC table cannot leave stale figures behind.
+    povocRiskPercent:             null,
     povocSurgeryAtLeast30Minutes: povoc?.factors.surgeryAtLeast30Minutes ?? false,
     povocAgeAtLeast3Years:        povoc?.factors.ageAtLeast3Years ?? false,
     povocStrabismusSurgery:       povoc?.factors.strabismusSurgery ?? false,
@@ -247,6 +267,7 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     coldsAirwayDevice:            pediatric ? coldsAirwayDevice : null,
     coldsSurgery:                 pediatric ? coldsSurgery : null,
     pediatricFasting:            pediatric ? preop.pediatricFasting ?? [] : [],
+    plannedAnaesthesia:          normalizePlannedAnaesthesia(preop.plannedAnaesthesia) as Prisma.InputJsonObject,
 
     stopbangObserved: preop.stopbangObserved ?? null,
     stopbangBP: preop.stopbangBP ?? null,
@@ -291,7 +312,7 @@ export function mapPreopUpdate(
     "povocAgeAtLeast3Years", "povocStrabismusSurgery", "povocHistory",
     "coldsApplicable", "coldsScore", "coldsCurrentSymptoms", "coldsOnset",
     "coldsLungDisease", "coldsAirwayDevice", "coldsSurgery", "pediatricFasting",
-    "labResults",
+    "plannedAnaesthesia", "labResults",
   ] as const satisfies readonly (keyof typeof full)[]
   for (const k of DIRECT) {
     if (has(k)) copyKey(r, full, k)
@@ -304,6 +325,11 @@ export function mapPreopUpdate(
   }
 
   // Computed / aliased fields — include when any contributing source key is present
+  if (["comorbidities", "heightCm", "weightKg", "bmi", "clinicalMode"].some(has)) {
+    r.asaSuggestedScore = full.asaSuggestedScore
+    r.asaSuggestionReasons = full.asaSuggestionReasons
+    r.asaSuggestionRulesVersion = full.asaSuggestionRulesVersion
+  }
   if (has("heightCm") || has("weightKg") || has("bmi")) {
     r.bmi = full.bmi
     r.bodySurfaceAreaM2 = full.bodySurfaceAreaM2
@@ -318,7 +344,7 @@ export function mapPreopUpdate(
     || has("povocStrabismusSurgery") || has("povocHistory")
   ) {
     r.povocScore = full.povocScore
-    r.povocRiskPercent = full.povocRiskPercent
+    r.povocRiskPercent = null
     r.povocAgeAtLeast3Years = full.povocAgeAtLeast3Years
   }
   if (

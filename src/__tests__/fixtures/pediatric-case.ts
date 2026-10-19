@@ -26,7 +26,10 @@ export function pediatricCaseFixture(): AnyCase {
       ageUnit: "DAYS",
       ageApproxDays: 14,
       bodySurfaceAreaM2: 0.35,
-      pediatricFasting: { ruleVersion: "APAGBI-2018", compliant: true },
+      pediatricFasting: [
+        { category: "CLEAR_FLUIDS", hoursBefore: 1, policyId: "APAGBI_FASTING", policyVersion: "2023" },
+        { category: "SOLID_FOOD_OR_COW_MILK", hoursBefore: 6, policyId: "APAGBI_FASTING", policyVersion: "2023" },
+      ],
       sex: "FEMALE",
       povocScore: 2,
       povocRiskPercent: 30,

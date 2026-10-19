@@ -161,6 +161,13 @@ export async function compileResearchWhere(
   }
   if (filters.aldreteTotal) postop.aldreteTotal = numberFilter(filters.aldreteTotal)
   if (filters.painScore) postop.painScoreNRS = numberFilter(filters.painScore)
+  if (filters.paedScore) postop.paedScore = numberFilter(filters.paedScore)
+  // Raw counts, filtered as stored.
+  if (filters.rcri) preop.rcriScore = numberFilter(filters.rcri)
+  if (filters.apfel) preop.apfelScore = numberFilter(filters.apfel)
+  if (filters.stopBang) preop.stopBangScore = numberFilter(filters.stopBang)
+  if (filters.povoc) preop.povocScore = numberFilter(filters.povoc)
+  if (filters.colds) preop.coldsScore = numberFilter(filters.colds)
   if (filters.ponv !== undefined) postop.ponv = filters.ponv
   if (filters.dispositions?.length) postop.disposition = { in: filters.dispositions as never }
 

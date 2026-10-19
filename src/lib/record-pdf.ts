@@ -53,7 +53,12 @@ async function launchBrowser() {
 
 // url must be a full absolute URL to /cases/[id]/print with a valid print_token.
 // lang ("bg") localizes the record — the print page reads the locale cookie.
-export async function renderRecordPdf(url: string, lang?: string): Promise<Uint8Array> {
+export async function renderRecordPdf(
+  url: string,
+  lang?: string,
+  // The preop summary is A4 portrait and has no timetable to wait for.
+  options: { landscape?: boolean; readySelector?: string } = {},
+): Promise<Uint8Array> {
   const browser = await launchBrowser()
   try {
     const page = await browser.newPage()
@@ -61,20 +66,27 @@ export async function renderRecordPdf(url: string, lang?: string): Promise<Uint8
     // Desktop-sized viewport so the page renders its normal (approved) layout.
     await page.setViewport({ width: 1280, height: 900 })
     await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 })
-    // Wait for the timetable SVG to be built; print whatever rendered on timeout.
-    await page
-      .waitForFunction(
-        () => {
-          const svg = document.querySelector(".timetable-svg")
-          return !!svg && svg.childNodes.length > 5
-        },
-        { timeout: 20_000 },
-      )
-      .catch(() => {})
+    // Wait until the page is drawn. The record prints whatever rendered of its
+    // timetable on timeout; the preop summary is not printed at all.
+    if (options.readySelector) {
+      // A page that never says it is ready is not printed: the caller falls back
+      // to the live page, which shows what went wrong, rather than a broken sheet.
+      await page.waitForSelector(options.readySelector, { timeout: 20_000 })
+    } else {
+      await page
+        .waitForFunction(
+          () => {
+            const svg = document.querySelector(".timetable-svg")
+            return !!svg && svg.childNodes.length > 5
+          },
+          { timeout: 20_000 },
+        )
+        .catch(() => {})
+    }
     await new Promise(r => setTimeout(r, 400))
     return await page.pdf({
       format: "a4",
-      landscape: true,
+      landscape: options.landscape ?? true,
       printBackground: true,
       preferCSSPageSize: true,
       margin: { top: 0, right: 0, bottom: 0, left: 0 },

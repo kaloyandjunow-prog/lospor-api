@@ -18,7 +18,13 @@ import { LOSPOR_BUNDLED_BASELINE_RELEASE } from "../src/lib/clinical-rules/bundl
  * and that choice is governed, not incidental.
  */
 const principal = LOSPOR_BUNDLED_BASELINE_RELEASE.technicalPrincipal
+// The 1.2.0 baselines, whose rows this reads and counts.
 const EXPECTED_PRESETS = ["lospor-adults-v2", "lospor-pediatrics-v2"]
+// The bundled baselines a release itself selects: v2 (1.2.0), then v3 (9.15.0).
+const BUNDLED_PRESETS: Record<string, string[]> = {
+  ADULT: ["lospor-adults-v2", "lospor-adults-v3"],
+  PEDIATRIC: ["lospor-pediatrics-v2", "lospor-pediatrics-v3"],
+}
 
 async function main(): Promise<void> {
   const connectionString = process.env.DATABASE_URL
@@ -76,8 +82,8 @@ async function main(): Promise<void> {
 
     console.log("\nPlatform selections:")
     for (const s of selections) {
-      const expected = s.clinicalMode === "ADULT" ? EXPECTED_PRESETS[0] : EXPECTED_PRESETS[1]
-      console.log(`  ${s.clinicalMode} -> ${s.presetId}${s.presetId === expected ? "" : "   <-- NOT the bundled baseline; a deliberate choice must not be overwritten"}`)
+      const bundled = (BUNDLED_PRESETS[s.clinicalMode] ?? []).includes(s.presetId)
+      console.log(`  ${s.clinicalMode} -> ${s.presetId}${bundled ? "" : "   <-- NOT the bundled baseline; a deliberate choice must not be overwritten"}`)
     }
     if (selections.length === 0) console.log("  (none) — no ruleset is in force for any mode")
 

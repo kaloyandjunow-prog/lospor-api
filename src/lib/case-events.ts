@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma/client"
 import { calculateFluidTotals, fluidTotalsPatch } from "@lospor/core/intraop-totals"
+import { tciPatientFrom } from "@lospor/core/tci"
 import { canonicalConcentrationUnit } from "@lospor/core/clinical-rule-vocabulary"
 import {
   gasFractions,
@@ -30,7 +31,11 @@ import type { CaseEventInput } from "@/lib/case-event-schema"
 
 // Clinical routes pass a transaction client. The structural fallback keeps pure
 // projection tests and migration utilities decoupled from the full Prisma client.
-type Tx = Prisma.TransactionClient | { caseEvent: Prisma.TransactionClient["caseEvent"]; intraoperativeRecord: Prisma.TransactionClient["intraoperativeRecord"] }
+type Tx = Prisma.TransactionClient | {
+  caseEvent: Prisma.TransactionClient["caseEvent"]
+  intraoperativeRecord: Prisma.TransactionClient["intraoperativeRecord"]
+  preoperativeAssessment?: Prisma.TransactionClient["preoperativeAssessment"]
+}
 
 export type { LogEvent }
 
@@ -490,6 +495,7 @@ export async function rebuildProjection(
       crystalloidsMl: true,
       colloidsMl: true,
       bloodMl: true,
+      infusionsMl: true,
     },
   })
   const existingKeyEvents = (intraopRec?.keyEvents as LegacyKeyEvents | null) ?? {}
@@ -514,7 +520,13 @@ export async function rebuildProjection(
   // (the single source of truth) rather than PATCHed separately by each client
   // — the case-PATCH mapper no longer accepts them. Same core function both
   // apps used, so values are identical to before, just server-authoritative.
-  const fluidTotals = fluidTotalsPatch(calculateFluidTotals(projected.fluids))
+  // Drug infusions count in the balance by their recorded pump rates (2026-10-18).
+  // A target-controlled infusion counts by its model, which needs the patient (2026-10-18).
+  const preop = tx.preoperativeAssessment ? await tx.preoperativeAssessment.findUnique({
+    where: { caseId },
+    select: { ageYears: true, ageValue: true, ageUnit: true, weightKg: true, heightCm: true, sex: true },
+  }) : null
+  const fluidTotals = fluidTotalsPatch(calculateFluidTotals(projected.fluids, projected.infusions, new Date(), preop ? tciPatientFrom(preop) : null))
   const projectionUnchanged = !!intraopRec
     && sameContent(
       intraopRec.keyEvents as Record<string, unknown>,
@@ -523,6 +535,7 @@ export async function rebuildProjection(
     && intraopRec.crystalloidsMl === fluidTotals.crystalloidsMl
     && intraopRec.colloidsMl === fluidTotals.colloidsMl
     && intraopRec.bloodMl === fluidTotals.bloodMl
+    && intraopRec.infusionsMl === fluidTotals.infusionsMl
   if (projectionUnchanged) return
 
   await tx.intraoperativeRecord.upsert({

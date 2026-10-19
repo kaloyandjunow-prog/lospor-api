@@ -8,9 +8,10 @@ import {
   YES_CONCEPT_ID, NO_CONCEPT_ID, techniqueConceptFor, vascularAccessConceptFor,
   doseUnitOf,
 } from "../concepts"
-import { isoDate, numOrNull } from "../date-helpers"
+import { isoDate, isoInstant, numOrNull } from "../date-helpers"
 import { nextId } from "../ids"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
+import { TCI_MODELS, tciPatientFrom, tciTotal, type TciModel, type TciSite } from "@lospor/core/tci"
 
 /**
  * Everything witnessed during the case: airway management, ventilation,
@@ -213,7 +214,7 @@ export function mapIntraopToOmop(
       person_id:                 ctx.personId,
       procedure_concept_id:      AIRWAY_ACT_CONCEPTS[act] ?? 0,
       procedure_date:            preciseTs ? isoDate(preciseTs) : ctx.startDate,
-      procedure_datetime:        preciseTs ? preciseTs.toISOString() : null,
+      procedure_datetime:        isoInstant(preciseTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -237,7 +238,7 @@ export function mapIntraopToOmop(
       person_id:                 ctx.personId,
       procedure_concept_id:      conceptId,
       procedure_date:            isoDate(ts),
-      procedure_datetime:        ts.toISOString(),
+      procedure_datetime:        isoInstant(ts),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -307,7 +308,7 @@ export function mapIntraopToOmop(
       // anaesthetist actually chose stays in the source value.
       procedure_concept_id:      techConceptId,
       procedure_date:            preciseTs ? isoDate(preciseTs) : ctx.startDate,
-      procedure_datetime:        preciseTs ? preciseTs.toISOString() : null,
+      procedure_datetime:        isoInstant(preciseTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -327,7 +328,7 @@ export function mapIntraopToOmop(
       person_id:                  ctx.personId,
       procedure_concept_id:       37165151, // Removal of intrathecal catheter
       procedure_date:             isoDate(spinalRemovedTs),
-      procedure_datetime:         spinalRemovedTs.toISOString(),
+      procedure_datetime:         isoInstant(spinalRemovedTs),
       procedure_type_concept_id:  32817,
       modifier_concept_id:        0,
       modifier_source_value:      null,
@@ -375,6 +376,33 @@ export function mapIntraopToOmop(
       openAgentIndex = null
     }
   })
+  // A target-controlled infusion (2026-10-18): its amount is the pump's own
+  // total when entered, else the model's calculation over its targets; null
+  // while it has no end. The patient comes from the preoperative record.
+  const tciPatient = c.preop ? tciPatientFrom(c.preop) : null
+  const tciFor = (ev: typeof drugEvents[number]) => {
+    const meta = (ev.metadataJson ?? {}) as Record<string, unknown>
+    const model = meta.tciModel as TciModel | undefined
+    if (ev.type !== "infusion_start" || !ev.infId || !model || !TCI_MODELS.includes(model)) return null
+    const stop = ordered.find(other => other.type === "infusion_stop" && other.infId === ev.infId)
+    const stopMeta = (stop?.metadataJson ?? {}) as Record<string, unknown>
+    const endMs = stop?.timestamp.getTime() ?? ia.endedAt?.getTime() ?? null
+    const targets = [
+      { atMs: ev.timestamp.getTime(), target: numOrNull(ev.rate) ?? 0 },
+      ...ordered.filter(other => other.type === "infusion_rate" && other.infId === ev.infId)
+        .map(other => ({ atMs: other.timestamp.getTime(), target: numOrNull(other.rate) ?? 0 })),
+    ]
+    const total = endMs == null ? null : tciTotal({
+      tciModel: model,
+      tciSite: meta.tciSite as TciSite | undefined,
+      tciOpioids: typeof meta.tciOpioids === "boolean" ? meta.tciOpioids : undefined,
+      concentration: ev.concentration ?? (typeof meta.concentration === "string" ? meta.concentration : undefined),
+      pumpTotal: numOrNull(stopMeta.pumpTotal) ?? undefined,
+      pumpTotalUnit: stopMeta.pumpTotalUnit === "mL" || stopMeta.pumpTotalUnit === "mg" || stopMeta.pumpTotalUnit === "mcg" ? stopMeta.pumpTotalUnit : undefined,
+    }, targets, endMs, tciPatient)
+    return { model, site: (meta.tciSite as string | undefined) ?? "EFFECT", opioids: meta.tciOpioids, targets, total }
+  }
+
   const endFor = (ev: typeof drugEvents[number], index: number): string | null => {
     if (ev.type === "infusion_start") return ev.infId ? isoDate(infusionEnd.get(ev.infId)) : null
     if (ev.type === "fluid_start") return ev.fluidId ? isoDate(fluidEnd.get(ev.fluidId)) : null
@@ -407,7 +435,7 @@ export function mapIntraopToOmop(
           person_id:                 ctx.personId,
           measurement_concept_id:    cfg.concept_id,
           measurement_date:          isoDate(ev.timestamp),
-          measurement_datetime:      ev.timestamp.toISOString(),
+          measurement_datetime:      isoInstant(ev.timestamp),
           measurement_type_concept_id: 32817,
           value_as_number:           val,
           value_as_concept_id: null,
@@ -432,7 +460,7 @@ export function mapIntraopToOmop(
         person_id:                   ctx.personId,
         measurement_concept_id:      4354275,
         measurement_date:            isoDate(ev.timestamp),
-        measurement_datetime:        ev.timestamp.toISOString(),
+        measurement_datetime:        isoInstant(ev.timestamp),
         measurement_type_concept_id: 32817,
         value_as_number:             ev.agentPercent,
         value_as_concept_id:         null,
@@ -465,7 +493,7 @@ export function mapIntraopToOmop(
           measurement_id: nextId(), person_id: ctx.personId,
           measurement_concept_id: conceptId,
           measurement_date: isoDate(ev.timestamp),
-          measurement_datetime: ev.timestamp.toISOString(),
+          measurement_datetime: isoInstant(ev.timestamp),
           measurement_type_concept_id: 32817,
           value_as_number: val,
           value_as_concept_id: null,
@@ -529,7 +557,7 @@ export function mapIntraopToOmop(
           person_id:                 ctx.personId,
           procedure_concept_id:      fluid.table === "device" ? fluid.transfusionConceptId : fluid.conceptId,
           procedure_date:            givenOn,
-          procedure_datetime:        ev.timestamp.toISOString(),
+          procedure_datetime:        isoInstant(ev.timestamp),
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,
           modifier_source_value:     null,
@@ -550,6 +578,9 @@ export function mapIntraopToOmop(
     // an infusion charted as running at 0 mL/h while paused -- must
     // survive as 0, not collapse into the same row as no dose recorded.
     const dose = numOrNull(doseSource)
+    // A TCI infusion's rate is a target concentration, not a dose: the row
+    // carries the amount given, and the targets go beside it as observations.
+    const tci = tciFor(ev)
     ctx.drugs.push({
       drug_exposure_id:           nextId(),
       person_id:                  ctx.personId,
@@ -578,11 +609,32 @@ export function mapIntraopToOmop(
         ? `INTRAOP:ATC:${ev.atcCode} - ${(meta.name as string | undefined) ?? ev.label ?? ""}`.trimEnd()
         : `INTRAOP:${(meta.name as string | undefined) ?? ev.label ?? "unknown"}`,
       drug_source_concept_id:     null,
-      dose_value:                 dose,
-      dose_unit_source_value:     ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
+      dose_value:                 tci ? tci.total?.amount ?? null : dose,
+      dose_unit_source_value:     tci ? tci.total?.units.amount ?? null : ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
       route_source_value:         ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV"),
       visit_occurrence_id:        ctx.visitId,
     })
+    // An infusion's two rates (2026-10-18): the dose rate is the row above;
+    // the pump rate and the syringe it was worked out from go beside it.
+    if (ev.type === "infusion_start") {
+      const pumpRate = numOrNull(meta.volumeRateMlPerHour)
+      const syringe = ev.concentration ?? (typeof meta.concentration === "string" ? meta.concentration : null)
+      if (pumpRate != null) ctx.sourceObservation("LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR", String(pumpRate), isoDate(ev.timestamp), pumpRate)
+      if (syringe) ctx.sourceObservation("LOSPOR:INFUSION_STRENGTH", syringe, isoDate(ev.timestamp), null)
+      if (tci) {
+        const on = isoDate(ev.timestamp)
+        ctx.sourceObservation("LOSPOR:TCI_MODEL", tci.model, on, null)
+        ctx.sourceObservation("LOSPOR:TCI_SITE", tci.site, on, null)
+        if (typeof tci.opioids === "boolean") ctx.sourceObservation("LOSPOR:TCI_WITH_OPIOIDS", String(tci.opioids), on, null)
+        for (const target of tci.targets) {
+          ctx.sourceObservation("LOSPOR:TCI_TARGET", String(target.target), isoDate(new Date(target.atMs)), target.target)
+        }
+        if (tci.total?.calculated != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_CALCULATED", String(tci.total.calculated), on, tci.total.calculated)
+        if (tci.total?.pump != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_PUMP", String(tci.total.pump), on, tci.total.pump)
+        // Entered in mL with no syringe strength: kept as the volume it is, not dropped (2026-10-19).
+        if (tci.total?.pumpNeedsStrength && tci.total.volumeMl != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_PUMP_ML", String(tci.total.volumeMl), on, tci.total.volumeMl)
+      }
+    }
     if (ev.type === "drug") {
       const concentration = ev.concentration
         ?? formatCanonicalConcentration(ev.concentrationValue, ev.concentrationUnit)
@@ -621,7 +673,7 @@ export function mapIntraopToOmop(
           person_id: ctx.personId,
           measurement_concept_id: 0,
           measurement_date: isoDate(ev.timestamp),
-          measurement_datetime: ev.timestamp.toISOString(),
+          measurement_datetime: isoInstant(ev.timestamp),
           measurement_type_concept_id: 32817,
           value_as_number: ev.calculationWeightKg,
           value_as_concept_id: null,
@@ -738,7 +790,7 @@ export function mapIntraopToOmop(
         // anaesthetist chose stays in the source value either way.
         procedure_concept_id: resolvedConcept,
         procedure_date: preciseTs ? isoDate(preciseTs) : ctx.startDate,
-        procedure_datetime: preciseTs ? preciseTs.toISOString() : null,
+        procedure_datetime: isoInstant(preciseTs),
         procedure_type_concept_id: 32817,
         modifier_concept_id:       0,
         modifier_source_value:     null,
@@ -771,7 +823,7 @@ export function mapIntraopToOmop(
       // no route detail either, since the event does not capture one.
       procedure_concept_id:      4052529,
       procedure_date:            isoDate(paCathTs),
-      procedure_datetime:        paCathTs.toISOString(),
+      procedure_datetime:        isoInstant(paCathTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -786,7 +838,7 @@ export function mapIntraopToOmop(
       person_id:                 ctx.personId,
       procedure_concept_id:      4257889, // Insertion of needle for intraosseous infusion
       procedure_date:            isoDate(ioAccessTs),
-      procedure_datetime:        ioAccessTs.toISOString(),
+      procedure_datetime:        isoInstant(ioAccessTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -800,6 +852,7 @@ export function mapIntraopToOmop(
   ctx.sourceObservation("LOSPOR:CRYSTALLOIDS_ML", ia.crystalloidsMl, ctx.endDate)
   ctx.sourceObservation("LOSPOR:COLLOIDS_ML", ia.colloidsMl, ctx.endDate)
   ctx.sourceObservation("LOSPOR:BLOOD_PRODUCTS_ML", ia.bloodMl, ctx.endDate)
+  ctx.sourceObservation("LOSPOR:DRUG_INFUSIONS_ML", ia.infusionsMl ?? null, ctx.endDate)
 
   // The volume stays uncoded above -- PROCEDURE_OCCURRENCE has no volume
   // or unit column to put it in, in this export or in the CDM's own

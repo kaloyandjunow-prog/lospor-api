@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { config as loadDotenv } from "dotenv"
+import { holdPostgresSuiteLock } from "./postgres-suite-lock"
 
 vi.mock("server-only", () => ({}))
 
@@ -54,7 +55,11 @@ describe.skipIf(!runPostgres)("adult and paediatric preop profiles in PostgreSQL
     return { save, rows, missing }
   }
 
+  let releaseLock: (() => Promise<void>) | undefined
+
   beforeAll(async () => {
+    // Appliance-wide settings: no other preop suite may run while they change.
+    releaseLock = await holdPostgresSuiteLock("preop-profile")
     ;({ prisma } = await import("@/lib/prisma"))
     service = await import("@/lib/preop/service")
     ;({ withLockedCaseTransaction, disconnectClinicalPrismaForTests } = await import("@/lib/clinical-transaction"))
@@ -69,18 +74,22 @@ describe.skipIf(!runPostgres)("adult and paediatric preop profiles in PostgreSQL
   })
 
   afterAll(async () => {
-    if (!prisma) return
-    await prisma.case.deleteMany({ where: { id: { in: caseIds } } })
-    for (const row of saved) {
-      await prisma.preopProfileQuestion.update({
-        where: { profileId_questionId: { profileId: row.profileId, questionId: row.questionId } },
-        data: { enabled: row.enabled, required: row.required, sortOrder: row.sortOrder },
-      })
+    try {
+      if (!prisma) return
+      await prisma.case.deleteMany({ where: { id: { in: caseIds } } })
+      for (const row of saved) {
+        await prisma.preopProfileQuestion.update({
+          where: { profileId_questionId: { profileId: row.profileId, questionId: row.questionId } },
+          data: { enabled: row.enabled, required: row.required, sortOrder: row.sortOrder },
+        })
+      }
+      await prisma.preopAssessmentAuditEvent.deleteMany({ where: { actorId: userId } })
+      await prisma.user.deleteMany({ where: { id: userId } })
+      await disconnectClinicalPrismaForTests()
+      await prisma.$disconnect()
+    } finally {
+      await releaseLock?.()
     }
-    await prisma.preopAssessmentAuditEvent.deleteMany({ where: { actorId: userId } })
-    await prisma.user.deleteMany({ where: { id: userId } })
-    await disconnectClinicalPrismaForTests()
-    await prisma.$disconnect()
   })
 
   it("keeps one published profile per population", async () => {

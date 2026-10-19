@@ -2,6 +2,7 @@ import { z } from "zod"
 import { canonicalConcentrationUnit } from "@lospor/core/clinical-rule-vocabulary"
 import { isBloodProductFluid } from "@lospor/core/intraop-fluids"
 import { INTRAOP_VITAL_RULES } from "@lospor/core/intraop-vitals"
+import { TCI_DRUG_SPECS, TCI_MODEL_DRUG, TCI_MODELS, TCI_SITES } from "@lospor/core/tci"
 
 const numericValue = z.number().finite()
 const doseValue = z.union([z.string().max(80), numericValue])
@@ -75,6 +76,16 @@ export const caseEventSchema = z.object({
   formulation: z.enum(["HYPOBARIC", "ISOBARIC", "HYPERBARIC"]).optional(),
   calculationBasis: calculationBasis.optional(),
   calculationWeightKg: numericValue.positive().optional(),
+  // An infusion's pump rate beside its dose rate (2026-10-18). Bounded: a
+  // pump does not run a litre an hour of a drug syringe.
+  volumeRateMlPerHour: numericValue.nonnegative().max(1000).optional(),
+  // A target-controlled infusion (2026-10-18): the model and site on the
+  // start, the target in rate/unit, the pump's own total on the stop.
+  tciModel: z.enum(TCI_MODELS).optional(),
+  tciSite: z.enum(TCI_SITES).optional(),
+  tciOpioids: z.boolean().optional(),
+  pumpTotal: numericValue.nonnegative().max(100_000).optional(),
+  pumpTotalUnit: z.enum(["mL", "mg", "mcg"]).optional(),
   calculationMethod: z.string().min(1).max(80).optional(),
   clinicalRuleKey: z.string().min(1).max(240).optional(),
   clinicalRuleVersion: z.string().min(1).max(160).optional(),
@@ -95,6 +106,30 @@ export const caseEventSchema = z.object({
   // refused rather than clamped: a clamped reading is an invented one.
   ...vitalFields(),
 }).passthrough().superRefine((event, context) => {
+  // TCI: the model belongs to the start; its target is in the model's unit and
+  // within twice the screens' range (a typo, not a dose, beyond that).
+  if (event.tciModel || event.tciSite || event.tciOpioids != null) {
+    if (event.type !== "infusion_start") {
+      context.addIssue({ code: "custom", path: ["tciModel"], message: "A TCI model is set when the infusion starts" })
+    } else if (!event.tciModel || !event.tciSite) {
+      context.addIssue({ code: "custom", path: ["tciModel"], message: "A TCI infusion needs both its model and its site" })
+    } else {
+      const spec = TCI_DRUG_SPECS[TCI_MODEL_DRUG[event.tciModel]]
+      if (event.unit !== spec.units.target) {
+        context.addIssue({ code: "custom", path: ["unit"], message: `A ${event.tciModel} target is in ${spec.units.target}` })
+      }
+      const target = Number(event.rate)
+      if (!Number.isFinite(target) || target <= 0 || target > spec.target.max * 2) {
+        context.addIssue({ code: "custom", path: ["rate"], message: `TCI target must be above 0 and at most ${spec.target.max * 2} ${spec.units.target}` })
+      }
+    }
+  }
+  if ((event.pumpTotal != null || event.pumpTotalUnit) && event.type !== "infusion_stop") {
+    context.addIssue({ code: "custom", path: ["pumpTotal"], message: "A pump total is entered on the stop" })
+  }
+  if ((event.pumpTotal != null) !== (event.pumpTotalUnit != null)) {
+    context.addIssue({ code: "custom", path: ["pumpTotalUnit"], message: "A pump total needs its unit" })
+  }
   const isFluidRate = event.type === "fluid_rate"
   const isRateStart = event.type === "fluid_start" && event.fluidEntryMode === "RATE"
   if (isFluidRate || isRateStart) {

@@ -115,7 +115,7 @@ describe("mapCasesToOmop", () => {
       // of a procedure this team performed. One row moved between the two
       // tables rather than being added or lost.
       procedure_occurrence: 6,
-      observation: 48,
+      observation: 47, // 48 less the never-filled GUTA_SCORE
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -302,6 +302,67 @@ describe("mapCasesToOmop", () => {
       observation_period_end_date: "2026-07-21",
     }))
     expect(bundle.person[0].year_of_birth).toBe(1986)
+  })
+
+  it("exports both rates of an infusion, its strength, and the infused millilitres (2026-10-18)", () => {
+    const base = completeCase()
+    const events = (base.events as Array<Record<string, unknown>>).map(event =>
+      event.type === "infusion_start"
+        ? { ...event, concentration: "500 mg/50 mL", metadataJson: { name: "Propofol", volumeRateMlPerHour: 48, concentration: "500 mg/50 mL" } }
+        : event,
+    )
+    const intraop = { ...(base.intraop as Record<string, unknown>), infusionsMl: 36 }
+    const bundle = mapCasesToOmop([completeCase({ events, intraop }) as never])
+    // The dose rate stays the drug_exposure row; the pump rate and the syringe sit beside it.
+    expect(bundle.drug_exposure).toContainEqual(expect.objectContaining({ dose_value: 6, dose_unit_source_value: "mg/kg/h" }))
+    expect(bundle.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR", value_as_number: 48 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:INFUSION_STRENGTH", value_as_string: "500 mg/50 mL" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_INFUSIONS_ML", value_as_number: 36 }),
+    ]))
+  })
+
+  it("exports a TCI infusion as the amount given, with its model, targets and both totals (2026-10-18)", () => {
+    const base = completeCase()
+    const tciEvents = (withPump: boolean) => (base.events as Array<Record<string, unknown>>).flatMap(event =>
+      event.type === "infusion_start"
+        ? [
+            { ...event, rate: "4", unit: "mcg/mL", concentration: "1%", metadataJson: { name: "Propofol", tciModel: "SCHNIDER", tciSite: "EFFECT", concentration: "1%" } },
+            { type: "infusion_rate", timestamp: new Date("2026-06-01T08:45:00Z"), label: "Propofol TCI", value: null, unit: "mcg/mL", infId: "inf-1", rate: "3", metadataJson: {} },
+          ]
+        : event.type === "infusion_stop"
+          ? [{ ...event, metadataJson: withPump ? { pumpTotal: 30, pumpTotalUnit: "mL" } : {} }]
+          : [event],
+    )
+    const calculated = mapCasesToOmop([completeCase({ events: tciEvents(false) }) as never])
+    const row = calculated.drug_exposure.find(item => String(item.drug_source_value).includes("Propofol"))!
+    expect(row.dose_unit_source_value).toBe("mg")
+    expect(row.dose_value).toBeGreaterThan(100)
+    expect(calculated.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_MODEL", value_as_string: "SCHNIDER" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_SITE", value_as_string: "EFFECT" }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TARGET", value_as_number: 4 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TARGET", value_as_number: 3 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_CALCULATED", value_as_number: row.dose_value }),
+    ]))
+    // The pump total of 30 mL of 10 mg/mL wins: 300 mg, and both totals are kept.
+    const pumped = mapCasesToOmop([completeCase({ events: tciEvents(true) }) as never])
+    expect(pumped.drug_exposure).toContainEqual(expect.objectContaining({ dose_value: 300, dose_unit_source_value: "mg" }))
+    expect(pumped.observation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_PUMP", value_as_number: 300 }),
+      expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_CALCULATED" }),
+    ]))
+    // No strength recorded: the 30 mL cannot become mg, so it is kept as mL and the calculation counts (2026-10-19).
+    const noStrength = mapCasesToOmop([completeCase({ events: tciEvents(true).map(event => event.type === "infusion_start"
+      ? { ...event, concentration: undefined, metadataJson: { ...(event.metadataJson as object), concentration: undefined } }
+      : event) }) as never])
+    expect(noStrength.observation).toContainEqual(expect.objectContaining({ observation_source_value: "LOSPOR:TCI_TOTAL_PUMP_ML", value_as_number: 30 }))
+    expect(noStrength.observation.some(item => item.observation_source_value === "LOSPOR:TCI_TOTAL_PUMP")).toBe(false)
+  })
+
+  it("exports no pump rate when the syringe step was skipped", () => {
+    const bundle = mapCasesToOmop([completeCase() as never])
+    expect(bundle.observation.some(row => row.observation_source_value === "LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR")).toBe(false)
   })
 
   it("exports frozen drug route-profile inputs and rule provenance", () => {
@@ -1227,7 +1288,8 @@ describe("clinical data that used to never leave", () => {
     expect(obs("LOSPOR:FAMILY_ANAESTHESIA_PROBLEMS")[0]?.value_as_string).toBe("YES")
     expect(obs("LOSPOR:DENTAL_PROSTHETICS")[0]?.value_as_string).toBe("NO")
     expect(obs("LOSPOR:HEART_ARRHYTHMIA")[0]?.value_as_string).toBe("NO")
-    expect(obs("LOSPOR:GUTA_SCORE")[0]?.value_as_number).toBe(2)
+    // Retired: it was never filled in, and Gupta is now derived from its inputs.
+    expect(obs("LOSPOR:GUTA_SCORE")).toHaveLength(0)
   })
 
   it("measures body mass index rather than observing it", () => {
@@ -2354,14 +2416,14 @@ describe("the last concepts the vocabulary bundle was missing", () => {
       .toBe(0)
   })
 
-  it("codes the fasting question while keeping the interval detail in the value", () => {
-    const pediatric = mapCasesToOmop([pediatricCaseFixture() as never]).observation
-      .find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")
-
-    expect(pediatric?.observation_concept_id).toBe(3031632)
-    // No vocabulary models a per-interval fasting assessment, so the JSON
-    // stays as the value rather than being flattened away.
-    expect(pediatric?.value_as_string).toContain("{")
+  // Nil-by-mouth assignments are instructions, one number per intake, not a
+  // reported fasting status.
+  it("exports each nil-by-mouth assignment as its hours before surgery", () => {
+    const observations = mapCasesToOmop([pediatricCaseFixture() as never]).observation
+    const row = (source: string) => observations.find(r => r.observation_source_value === source)
+    expect(row("LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS")).toMatchObject({ value_as_number: 1, observation_concept_id: 0 })
+    expect(row("LOSPOR:PEDIATRIC_NPO_SOLID_FOOD_OR_COW_MILK_HOURS")).toMatchObject({ value_as_number: 6 })
+    expect(row("LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")).toBeUndefined()
   })
 })
 
@@ -2750,5 +2812,31 @@ describe("a line the patient arrived with, and a line placed on top of it", () =
       "Peripheral IV=true",
       "Radial=false",
     ]))
+  })
+
+})
+
+describe("research dates and times are the theatre clock (2026-10-19)", () => {
+  const caseAt = (timezone: string | null) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.startedAt = new Date("2026-06-01T22:30:00Z") // 01:30 on 2 June in Sofia
+    c.intraop.endedAt = new Date("2026-06-01T23:45:00Z")
+    c.intraop.timezone = timezone
+    return mapCasesToOmop([c as never])
+  }
+
+  it("dates a case begun at 01:30 in Sofia on its own day, with the local clock and offset", () => {
+    expect(caseAt("Europe/Sofia").visit_occurrence[0]).toEqual(expect.objectContaining({
+      visit_start_date: "2026-06-02",
+      visit_start_datetime: "2026-06-02T01:30:00+03:00",
+      visit_end_datetime: "2026-06-02T02:45:00+03:00",
+    }))
+  })
+
+  it("keeps UTC for an old case that never recorded its zone", () => {
+    expect(caseAt(null).visit_occurrence[0]).toEqual(expect.objectContaining({
+      visit_start_date: "2026-06-01",
+      visit_start_datetime: "2026-06-01T22:30:00.000Z",
+    }))
   })
 })

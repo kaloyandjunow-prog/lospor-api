@@ -1,3 +1,30 @@
+// 4.8.0 records target-controlled infusions: the model and site, each target
+// (TCI_TARGET), and the amount -- the pump's own total when entered on the
+// stop, else the model's calculation -- as the drug_exposure dose. Both totals
+// are kept beside it. Additive: no earlier event is a TCI infusion.
+// It also dates and times every row on the theatre's clock: *_date is the
+// local calendar date in the case's zone (IntraoperativeRecord.timezone) and
+// *_datetime the local time with its offset ("2026-06-02T01:30:00+03:00"),
+// the same instant as before. A case begun between midnight and the UTC
+// offset used to be dated the day before. A case with no recorded zone keeps
+// UTC. Nothing has been exported for research yet, so no dataset needs
+// migrating.
+//
+// 4.7.0 records both rates of a drug infusion: the dose rate as before, and
+// the pump rate in mL/h worked out from the syringe strength, with the
+// strength itself. Their millilitres count in the fluid balance as
+// infusionsMl. Additive: older events simply have no pump rate.
+//
+// 4.6.0 records paediatric fasting as nil-by-mouth assignments in hours before
+// surgery, one row per intake, rather than a last-intake time judged against
+// the moment of the preop visit. No case holds the old shape: no appliance
+// has been released.
+//
+// 4.5.0 keeps scores as their raw inputs and counts. GUTA_SCORE, never filled
+// in, is replaced by GUPTA_MICA_RISK_PERCENT, derived at export from its stored
+// inputs; POVOC_RISK_PERCENT is now derived from the POVOC count rather than
+// read from a stored column, so older and newer cases export the same value.
+//
 // 4.4.0 adds what three monitors read, rather than only that they were on. The
 // sixteen monitoring flags are yes/no for the whole case, so a BIS that sat at
 // 55 and one that dropped to 22 for twenty minutes were the same record, as
@@ -37,7 +64,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.4.0"
+export const DICTIONARY_VERSION = "4.8.0"
 
 export interface DictionaryEntry {
   name: string
@@ -796,13 +823,16 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.8.0",
   },
   {
-    name: "gutaScore",
-    exportName: "observation.value_as_number (LOSPOR:GUTA_SCORE)",
-    meaning: "GUTA airway assessment score",
+    name: "guptaRiskPercent",
+    exportName: "observation.value_as_number (LOSPOR:GUPTA_MICA_RISK_PERCENT)",
+    meaning: "Gupta perioperative risk of myocardial infarction or cardiac arrest within 30 days (Gupta, Circulation 2011), in percent. Adults only. Replaces LOSPOR:GUTA_SCORE (column gutaScore), which no client ever filled in and which is no longer written or exported",
+    unit: "%",
     type: "float",
-    missingnessRule: "No row = the question was not asked, or the value was not recorded",
-    sourceTable: "PreoperativeAssessment", sourceColumn: "gutaScore",
-    versionIntroduced: "3.8.0",
+    allowedValues: "0–100",
+    missingnessRule: "No row = an input is missing: an adult age, ASA I–V, or either catalogue answer A15_FUNCTIONAL_STATUS / A16_GUPTA_PROCEDURE_TYPE. Both questions are off unless the hospital switches them on. No creatinine result counts as the model's 'unknown', not as normal",
+    derivationRule: "Derived at export from its stored inputs: logit = -5.25 + 0.02 x age + functional status + ASA + creatinine above 1.5 mg/dL + procedure type; risk = 1 / (1 + e^-logit). The inputs export separately: the two answers, ASA, age and the creatinine lab row",
+    sourceTable: "PreopAssessmentAnswer", sourceColumn: "optionKey",
+    versionIntroduced: "4.5.0",
   },
   {
     name: "mouthOpeningCm",
@@ -1271,6 +1301,21 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.0.0",
   },
   {
+    name: "infusionsMl",
+    exportName: "observation.value_as_number (LOSPOR:DRUG_INFUSIONS_ML)",
+    meaning: "Millilitres given through drug infusions, from the pump rate "
+      + "recorded with every start and rate change (the syringe strength "
+      + "turns the dose rate into mL/hr). Counted in the fluid balance. An "
+      + "infusion whose syringe step was skipped has no known volume and adds "
+      + "nothing, so this is a lower bound when any infusion ran without one.",
+    unit: "mL",
+    type: "integer",
+    allowedValues: "0–20000",
+    missingnessRule: "NULL = no infusion with a known volume",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "infusionsMl",
+    versionIntroduced: "4.7.0",
+  },
+  {
     name: "urineMl",
     exportName: "measurement.value_as_number (LOSPOR:URINE_OUTPUT_ML)",
     meaning: "Urine output during the procedure, as LOINC 3014315 (Urine "
@@ -1457,6 +1502,82 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = legacy event, no concentration required, or not recorded",
     sourceTable: "CaseEvent", sourceColumn: "concentrationValue",
     versionIntroduced: "3.1.0",
+  },
+  {
+    name: "event.tciModel",
+    exportName: "observation.value_as_string (LOSPOR:TCI_MODEL)",
+    meaning: "A target-controlled infusion's pharmacokinetic model: MARSH, SCHNIDER, ELEVELD_PROPOFOL, PAEDFUSOR, KATARIA, MINTO, ELEVELD_REMIFENTANIL, GEPTS or MAITRE. With it, the infusion's rate is a target concentration and the drug_exposure dose_value is the amount given (dose_unit_source_value mg or mcg).",
+    type: "string",
+    missingnessRule: "NULL = not a TCI infusion",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciSite",
+    exportName: "observation.value_as_string (LOSPOR:TCI_SITE)",
+    meaning: "Whether the TCI targeted the plasma (PLASMA) or the effect site (EFFECT).",
+    type: "string",
+    missingnessRule: "NULL = not a TCI infusion",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciOpioids",
+    exportName: "observation.value_as_string (LOSPOR:TCI_WITH_OPIOIDS)",
+    meaning: "Eleveld propofol only: whether the model was run as given with an opioid (lower clearance and V3 with age).",
+    type: "boolean",
+    missingnessRule: "NULL = not Eleveld propofol",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciTarget",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TARGET)",
+    meaning: "Each target set on a TCI infusion, at the instant it was set: µg/mL for propofol, ng/mL for the opioids. Read from the start and rate-change events' rate.",
+    type: "float",
+    missingnessRule: "NULL = not a TCI infusion",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.tciTotalCalculated",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TOTAL_CALCULATED)",
+    meaning: "The amount the TCI model calculates was given (the same calculation on every device): the published model run over the targets, effect-site by Shafer & Gregg and plasma by Jacobs, limited to 1200 mL/h of the syringe.",
+    type: "float",
+    missingnessRule: "NULL = still running at export, or the patient's age, weight, height or sex is missing",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.pumpTotal",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TOTAL_PUMP)",
+    meaning: "The total the pump showed, entered on the stop, in the drug's amount unit (a volume is converted by the syringe strength). When present it is the drug_exposure dose_value.",
+    type: "float",
+    missingnessRule: "NULL = not entered",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.pumpTotal (mL, no strength)",
+    exportName: "observation.value_as_number (LOSPOR:TCI_TOTAL_PUMP_ML)",
+    meaning: "The pump's total entered in mL on a TCI infusion with no syringe strength recorded, so it cannot become an amount; the calculated total is the dose_value.",
+    type: "float",
+    missingnessRule: "NULL = not entered, or entered with a strength (then LOSPOR:TCI_TOTAL_PUMP)",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.8.0",
+  },
+  {
+    name: "event.volumeRateMlPerHour",
+    exportName: "observation.value_as_number (LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR)",
+    meaning: "An infusion's pump rate at its start, recorded beside the dose rate "
+      + "(drug_exposure.dose_value, in dose_unit_source_value). Worked out from the "
+      + "syringe strength and, for a per-kilogram rate, the recorded weight; "
+      + "the strength itself is exported as LOSPOR:INFUSION_STRENGTH (\"4 mg/50 mL\").",
+    unit: "mL/h",
+    type: "float",
+    missingnessRule: "NULL = syringe step skipped, or legacy event",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.7.0",
   },
   {
     name: "event.concentrationUnit",
@@ -2086,7 +2207,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "event.timestamp",
     exportName: "measurement.measurement_datetime (and the equivalent date/datetime column on every other table an event becomes)",
-    meaning: "When the event happened, to the minute. This is the column that makes the intraoperative record a timeline rather than a summary: it is why a drug given at induction and one given at closure are separable, and why a vitals trend exists.",
+    meaning: "When the event happened, to the minute, on the theatre's clock: the local time with its UTC offset in the case's zone (UTC for a case with no recorded zone). This is the column that makes the intraoperative record a timeline rather than a summary: it is why a drug given at induction and one given at closure are separable, and why a vitals trend exists.",
     type: "datetime",
     missingnessRule: "Never absent. The server stamps the current instant when a client sends none, so an event always has a place on the timeline even if the client clock was wrong",
     sourceTable: "CaseEvent", sourceColumn: "timestamp",
@@ -2474,7 +2595,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     type: "float",
     allowedValues: "0–100",
     missingnessRule: "No row = no POVOC score, so no predicted risk",
-    derivationRule: "Derived from povocScore; it is a prediction, not an observed outcome",
+    derivationRule: "Derived at export from povocScore (Eberhart 2004: 9/10/30/55/70%); it is a prediction, not an observed outcome. Not stored since 9.14.6: the column is no longer written, and the export derives the same value for older and newer cases alike",
     sourceTable: "PreoperativeAssessment", sourceColumn: "povocRiskPercent",
     versionIntroduced: "4.0.0",
   },
@@ -2540,14 +2661,54 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "4.0.0",
   },
   {
-    name: "pediatricFasting",
-    exportName: "observation.observation_concept_id (LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
-    meaning: "The recorded fasting assessment for a child, as a JSON object of the fasting intervals entered",
-    type: "json",
-    missingnessRule: "No row = no fasting assessment was recorded",
+    name: "pediatricNpoClearFluidsHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: clear fluids stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = clear fluids was not assigned",
+    derivationRule: "APAGBI 2023 minimum 1 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
     sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
-    versionIntroduced: "4.0.0",
+    versionIntroduced: "4.6.0",
   },
+  {
+    name: "pediatricNpoBreastMilkHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_BREAST_MILK_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: breast milk stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = breast milk was not assigned",
+    derivationRule: "APAGBI 2023 minimum 3 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
+    versionIntroduced: "4.6.0",
+  },
+  {
+    name: "pediatricNpoInfantFormulaHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_INFANT_FORMULA_UNDER_1_YEAR_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: infant formula (under 1 year) stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = infant formula (under 1 year) was not assigned",
+    derivationRule: "APAGBI 2023 minimum 4 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
+    versionIntroduced: "4.6.0",
+  },
+  {
+    name: "pediatricNpoSolidFoodHours",
+    exportName: "observation.value_as_number (LOSPOR:PEDIATRIC_NPO_SOLID_FOOD_OR_COW_MILK_HOURS)",
+    meaning: "Nil-by-mouth assignment for a child: solid food or cow's milk stops this many hours before surgery. An instruction given at the preop visit, not a record of the last intake (until 4.6.0 a last-intake time judged against the moment of the visit, exported as JSON under LOSPOR:PEDIATRIC_FASTING_ASSESSMENT)",
+    unit: "h",
+    type: "float",
+    allowedValues: "0–24",
+    missingnessRule: "No row = solid food or cow's milk was not assigned",
+    derivationRule: "APAGBI 2023 minimum 6 h is offered as the starting assignment; the anaesthetist may assign longer or shorter",
+    sourceTable: "PreoperativeAssessment", sourceColumn: "pediatricFasting",
+    versionIntroduced: "4.6.0",
+  },
+
   {
     name: "clinicalRulesVersion",
     exportName: "observation.value_as_string (LOSPOR:CLINICAL_RULES_VERSION)",

@@ -48,6 +48,8 @@ const MAINTENANCE_AUDIT_WRITER = "writeMaintenanceAuditRow"
 const INVENTORIED_TRANSACTION_HELPERS: Readonly<Record<string, string>> = {
   "src/lib/clinical-rules/maintenance-actor.ts":
     "Actor resolution and audit-row writer shared by the inventoried clinical-rules maintenance and publication scripts",
+  "src/lib/clinical-rules/bundled-baseline-v3-provisioner.ts":
+    "The 9.15.0 v3 baseline step, run inside the inventoried bundled-baseline provisioner transaction",
 }
 
 // These mutate only short-lived authentication/session bookkeeping or

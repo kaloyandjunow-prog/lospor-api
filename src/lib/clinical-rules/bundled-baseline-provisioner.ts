@@ -11,6 +11,16 @@ import {
   LOSPOR_BUNDLED_BASELINE_RELEASE,
   type BundledBaselineArtifact,
 } from "./bundled-baseline-contract"
+import {
+  assertExactBundledBaselineV3Artifacts,
+  computeBundledBaselineV3Artifacts,
+  type BundledBaselineV3Artifact,
+} from "./bundled-baseline-v3"
+import {
+  isBundledV3Selection,
+  provisionBundledBaselineV3InTransaction,
+  type BundledBaselineV3ProvisionResult,
+} from "./bundled-baseline-v3-provisioner"
 
 const AUDIT_ACTION = "CLINICAL_BUNDLED_BASELINE_PROVISION" satisfies AuditActionCode
 const PUBLICATION_REASON = "Exact immutable canonical baseline bundled with LOSPOR 1.2.0"
@@ -60,13 +70,17 @@ export type BundledBaselineProvisionResult = {
     contentSha256: string
     descriptorSha256: string
   }>
+  /** The v3 baselines of LOSPOR 9.15.0, installed beside these or verified. */
+  v3: BundledBaselineV3ProvisionResult
 }
 
 function result(
   outcome: BundledBaselineProvisionResult["outcome"],
   artifacts: readonly BundledBaselineArtifact[],
+  v3: BundledBaselineV3ProvisionResult,
 ): BundledBaselineProvisionResult {
   return {
+    v3,
     outcome,
     releaseVersion: LOSPOR_BUNDLED_BASELINE_RELEASE.releaseVersion,
     technicalPrincipalId: LOSPOR_BUNDLED_BASELINE_RELEASE.technicalPrincipal.id,
@@ -157,6 +171,7 @@ function sameInstant(left: Date | null, right: Date | null): boolean {
 function verifyCompleteState(
   inspection: Inspection,
   artifacts: readonly BundledBaselineArtifact[],
+  v3Artifacts: readonly BundledBaselineV3Artifact[],
 ): void {
   const principal = LOSPOR_BUNDLED_BASELINE_RELEASE.technicalPrincipal
   if (inspection.accountCount !== 0 || inspection.sessionCount !== 0) {
@@ -170,7 +185,8 @@ function verifyCompleteState(
     const selection = inspection.selections.find(item => (
       item.clinicalMode === artifact.identity.clinicalMode
     ))
-    if (selection && selection.presetId !== artifact.identity.presetId) {
+    // LOSPOR 9.15.0 moves this release's own selection on to its v3 baseline.
+    if (selection && selection.presetId !== artifact.identity.presetId && !isBundledV3Selection(selection, v3Artifacts)) {
       throw new BundledBaselineProvisionError(
         "BUNDLED_BASELINE_SELECTION_CONFLICT",
         `Refusing to replace the governed ${artifact.identity.clinicalMode} platform selection`,
@@ -281,13 +297,15 @@ function verifyCompleteState(
     const selection = inspection.selections.find(item => (
       item.clinicalMode === artifact.identity.clinicalMode
     ))
-    if (!selection
+    // Superseded by v3: that release verifies the selection it made.
+    const superseded = !!selection && isBundledV3Selection(selection, v3Artifacts)
+    if (!superseded && (!selection
       || selection.presetId !== artifact.identity.presetId
       || selection.selectedById !== null
       || selection.selectedByTechnicalPrincipalId !== principal.id
       || !sameInstant(selection.selectedAt, preset.publishedAt)
       || !sameInstant(selection.selectedAt, storedPrincipal.createdAt)
-      || !sameInstant(selection.updatedAt, storedPrincipal.createdAt)) {
+      || !sameInstant(selection.updatedAt, storedPrincipal.createdAt))) {
       throw new BundledBaselineProvisionError(
         "BUNDLED_BASELINE_VERIFICATION_FAILED",
         `Stored ${artifact.identity.clinicalMode} platform selection differs`,
@@ -418,16 +436,29 @@ function prismaErrorCode(error: unknown): string {
 async function provisionInTransaction(
   tx: Prisma.TransactionClient,
   artifacts: readonly BundledBaselineArtifact[],
+  v3Artifacts: readonly BundledBaselineV3Artifact[],
   installedAt: Date,
 ): Promise<BundledBaselineProvisionResult> {
   const inspection = await inspectState(tx, artifacts)
+  let outcome: BundledBaselineProvisionResult["outcome"] = "verified"
   if (isPristine(inspection)) {
     await installPristineState(tx, artifacts, installedAt)
-    verifyCompleteState(await inspectState(tx, artifacts), artifacts)
-    return result("installed", artifacts)
+    verifyCompleteState(await inspectState(tx, artifacts), artifacts, v3Artifacts)
+    outcome = "installed"
+  } else {
+    verifyCompleteState(inspection, artifacts, v3Artifacts)
   }
-  verifyCompleteState(inspection, artifacts)
-  return result("verified", artifacts)
+  // Then the later release, on top of the verified 1.2.0 state.
+  const v3 = await provisionBundledBaselineV3InTransaction(tx, v3Artifacts, installedAt)
+  return result(outcome, artifacts, v3)
+}
+
+function releaseArtifacts() {
+  const artifacts = computeBundledBaselineArtifacts()
+  assertExactBundledBaselineArtifacts(artifacts)
+  const v3Artifacts = computeBundledBaselineV3Artifacts(artifacts)
+  assertExactBundledBaselineV3Artifacts(v3Artifacts)
+  return { artifacts, v3Artifacts }
 }
 
 /**
@@ -439,26 +470,24 @@ export async function provisionBundledClinicalBaselinesInSerializableTransaction
   tx: Prisma.TransactionClient,
   options: { installedAt?: Date } = {},
 ): Promise<BundledBaselineProvisionResult> {
-  const artifacts = computeBundledBaselineArtifacts()
-  assertExactBundledBaselineArtifacts(artifacts)
+  const { artifacts, v3Artifacts } = releaseArtifacts()
   const installedAt = options.installedAt ?? new Date()
   if (!Number.isFinite(installedAt.getTime())) throw new Error("installedAt must be a valid instant")
-  return provisionInTransaction(tx, artifacts, installedAt)
+  return provisionInTransaction(tx, artifacts, v3Artifacts, installedAt)
 }
 
 export async function provisionBundledClinicalBaselines(
   db: PrismaClient | TransactionRunner,
   options: { installedAt?: Date } = {},
 ): Promise<BundledBaselineProvisionResult> {
-  const artifacts = computeBundledBaselineArtifacts()
-  assertExactBundledBaselineArtifacts(artifacts)
+  const { artifacts, v3Artifacts } = releaseArtifacts()
   const installedAt = options.installedAt ?? new Date()
   if (!Number.isFinite(installedAt.getTime())) throw new Error("installedAt must be a valid instant")
 
   for (let attempt = 1; attempt <= MAX_SERIALIZABLE_ATTEMPTS; attempt += 1) {
     try {
       return await (db as TransactionRunner).$transaction(async tx => {
-        return provisionInTransaction(tx, artifacts, installedAt)
+        return provisionInTransaction(tx, artifacts, v3Artifacts, installedAt)
       }, {
         isolationLevel: PrismaNamespace.TransactionIsolationLevel.Serializable,
         maxWait: 10_000,

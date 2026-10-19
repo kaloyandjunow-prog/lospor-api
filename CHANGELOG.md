@@ -1,5 +1,98 @@
 # Changelog - LOSPOR API
 
+## [9.15.0] - 2026-10-19
+
+Data dictionary 4.5.0 → 4.8.0. Nothing has been exported for research yet,
+so no dataset needs migrating.
+
+### Added
+
+- **Target-controlled infusions.**
+  - **Accepted events:** the event schema accepts the model and site on a
+    start only, a target in the model's unit and range, and a pump total only
+    on a stop, with its unit.
+  - **Totals:** fluid totals use the model with the preop patient.
+  - **Research export:** the dose is the model's amount, or the pump's own
+    total when entered. Observations record the model, site, opioid switch,
+    every target, and both the calculated and the pump total. A pump total in
+    mL that cannot become an amount (no syringe strength) is kept as
+    `LOSPOR:TCI_TOTAL_PUMP_ML`.
+- **Both infusion rates.**
+  - **Events:** `volumeRateMlPerHour` is validated on events.
+  - **Fluid balance:** `IntraoperativeRecord.infusionsMl` (migration
+    `20261018120000`) is derived from the pump rates and counted in the
+    fluid balance.
+  - **Export:** `LOSPOR:DRUG_INFUSIONS_ML`, with each start's pump rate and
+    strength.
+- **Preop summary and written consent** (migration
+  `20261016120000_preop_documents`).
+  - **Settings:** `PreopDocumentPolicy` holds the two switches (both off) and
+    the print layout, A to E, B by default.
+  - **Consent texts:** `ConsentTemplateVersion` is append-only, enforced by a
+    trigger.
+  - **Print records:** `CaseConsentPrint` records the version, fingerprint,
+    layout and techniques of every printed consent, and refuses a print onto
+    a finalised case.
+  - **Routes:** `GET /v1/preop/documents`, `POST /v1/cases/:id/consent-prints`,
+    and `?doc=preop-summary` on the PDF route.
+  - **What Status saves:** the policy, consent versions and history, each
+    audited.
+  - **Print data:** carries the whole questionnaire and the planned
+    anaesthesia.
+  - **Blank pages:** a PDF whose page never signals ready falls back to the
+    live page instead of printing blank.
+- **Planned anaesthesia**: `PreoperativeAssessment.plannedAnaesthesia`
+  (JSONB object, migration `20261017120000`).
+- **ASA suggestion stored beside the class chosen** (migration
+  `20261015120000_asa_suggestion`). Each preop save stores the class, the
+  deciding rules and the rule version. The research query reports agreement
+  for each rule, with small groups hidden.
+- **Preop catalogue: 82 questions** (30 baseline, 52 additions). New ones:
+  - Gupta's functional status and procedure type, adult choice questions
+    whose risk is derived on export (`LOSPOR:GUPTA_MICA_RISK_PERCENT`);
+  - previous ICU admission;
+  - alcohol use from 14, with heavy drinking and withdrawal follow-ups;
+  - children's vaccination in the last 2 weeks;
+  - bleeding and transfusion asked of children too.
+
+  All are off by default. A choice answer exports concept 0 with its option
+  key.
+- **Paediatric fasting as nil-by-mouth assignments**, one export row per
+  intake (`LOSPOR:PEDIATRIC_NPO_<CATEGORY>_HOURS`).
+- **Clinical rule baselines v3** (release 9.15.0), installed beside v2 in the
+  same transaction; the platform selection moves from v2 to v3 only where the
+  1.2.0 release made it. Fingerprints pinned.
+- **Bulgarian for every API error message**, and a test that fails when a new
+  message has none. Bulgarian-name switches in the preference schema and the
+  case PDF.
+
+### Changed
+
+- **Research dates and times are the theatre's clock.**
+  - **Dates:** every `*_date` is the local date in the case's zone.
+  - **Times:** every `*_datetime` is the local time with its offset
+    (`2026-06-02T01:30:00+03:00`), the same moment as before.
+  - **Before:** a case begun between midnight and the UTC offset was dated the
+    day before.
+  - **No zone:** a case with no recorded zone keeps UTC.
+- **Research record**: POVOC, POVOC risk and COLDS are recorded once per case;
+  they were copied onto every diagnosis row. The five Aldrete subscores are
+  included. Smoking, difficult-airway history and PONV stay unknown when
+  unanswered, instead of being read as No.
+- **POVOC risk and Gupta are derived, not stored.** New saves leave the POVOC
+  risk column empty, and the export derives it from the count. `gutaScore` is
+  no longer written or exported.
+- **Apfel history question** asks "PONV or motion sickness", as the form
+  always did, and exports concept 0 (a combined question).
+
+### Fixed
+
+- **A flaky database test.** The preop profile and preop answers PostgreSQL
+  tests failed about one run in three when run in parallel. They now take
+  turns.
+
+## [9.14.5] - 2026-10-11
+
 ## [9.14.5] - 2026-10-11
 
 ### Added

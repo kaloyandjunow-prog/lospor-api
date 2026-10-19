@@ -549,7 +549,110 @@ describe("the profiles, one per population", () => {
   })
 })
 
+describe("questions from the children's paper form", () => {
+  const item = (key: string) => BUNDLED_PREOP_QUESTIONS.find(question => question.stableKey === key)!
+
+  it("asks about a previous ICU stay of adults and children, each switched on alone", () => {
+    expect(item("S1_PREVIOUS_ICU_ADMISSION").applicability).toEqual([])
+    expect(item("S1_PREVIOUS_ICU_ADMISSION").omopConceptId).toBe(4138933)
+  })
+
+  // The window that matters for anaesthesia: post-vaccination fever and live vaccines.
+  it("asks children about vaccination in the last 2 weeks", () => {
+    expect(item("P9_RECENT_VACCINATION").applicability).toEqual(["PEDIATRIC"])
+    expect(item("P9_RECENT_VACCINATION").labelEn).toBe("Vaccinated in the last 2 weeks")
+    expect(item("P9_RECENT_VACCINATION").labelBg).toBe("Ваксинирано през последните 2 седмици")
+  })
+
+  it("asks children the bleeding and transfusion questions too, keeping their keys", () => {
+    for (const key of ["A8_ABNORMAL_BLEEDING", "A8_FAMILY_BLEEDING", "A9_TRANSFUSION_HISTORY", "A9_BLOOD_ANTIBODIES"]) {
+      expect(item(key).applicability, key).toEqual([])
+      expect(item(key).section, key).toBe("SHARED_ADDITIONS")
+    }
+    expect(item("A8_FAMILY_BLEEDING").parentKey).toBe("A8_ABNORMAL_BLEEDING")
+  })
+
+  it("ships all of them off", () => {
+    for (const key of ["S1_PREVIOUS_ICU_ADMISSION", "P9_RECENT_VACCINATION", "A8_ABNORMAL_BLEEDING", "A9_TRANSFUSION_HISTORY"]) {
+      expect(DEFAULT_ENABLED_QUESTION_KEYS.has(key), key).toBe(false)
+    }
+  })
+
+  // Children are asked them only once the hospital switches them on in the
+  // children's profile; an answer is stored like any other.
+  it("stores a child's answers once switched on in the children's profile", async () => {
+    const env = fakeDb(profileRow(), profileRow({ S1_PREVIOUS_ICU_ADMISSION: { enabled: true }, P9_RECENT_VACCINATION: { enabled: true }, A8_ABNORMAL_BLEEDING: { enabled: true } }, "PEDIATRIC"))
+    await env.save({}, { clinicalMode: "PEDIATRIC", answers: [
+      { stableKey: "S1_PREVIOUS_ICU_ADMISSION", state: PreopAnswerState.YES },
+      { stableKey: "P9_RECENT_VACCINATION", state: PreopAnswerState.NO },
+      { stableKey: "A8_ABNORMAL_BLEEDING", state: PreopAnswerState.YES },
+    ] })
+    expect(env.stateOf("S1_PREVIOUS_ICU_ADMISSION")).toBe(PreopAnswerState.YES)
+    expect(env.stateOf("P9_RECENT_VACCINATION")).toBe(PreopAnswerState.NO)
+    expect(env.stateOf("A8_ABNORMAL_BLEEDING")).toBe(PreopAnswerState.YES)
+  })
+})
+
+describe("alcohol, asked of adults and of children from 14", () => {
+  const item = (key: string) => BUNDLED_PREOP_QUESTIONS.find(question => question.stableKey === key)!
+
+  it("is one question with two follow-ups, in both profiles, off until switched on", () => {
+    expect(item("S2_ALCOHOL_USE")).toMatchObject({ applicability: [], minAgeYears: 14, section: "SHARED_ADDITIONS", formSection: "anamnesis", omopConceptId: 4074035 })
+    expect(item("S2_ALCOHOL_HEAVY")).toMatchObject({ parentKey: "S2_ALCOHOL_USE", omopConceptId: 4336673 })
+    expect(item("S2_ALCOHOL_WITHDRAWAL")).toMatchObject({ parentKey: "S2_ALCOHOL_USE", omopConceptId: 375519 })
+    expect(DEFAULT_ENABLED_QUESTION_KEYS.has("S2_ALCOHOL_USE")).toBe(false)
+  })
+
+  it("is never required of a child under 14", () => {
+    const profile = profileRow({ S2_ALCOHOL_USE: { enabled: true, required: true } }, "PEDIATRIC")
+    expect(missingRequiredPreopQuestions(profile, [], "PEDIATRIC", 10).map(row => row.stableKey)).not.toContain("S2_ALCOHOL_USE")
+    expect(missingRequiredPreopQuestions(profile, [], "PEDIATRIC", 15).map(row => row.stableKey)).toContain("S2_ALCOHOL_USE")
+  })
+})
+
+describe("Gupta, an optional pair of adult questions", () => {
+  it("ships off, so a hospital sees nothing until an operator switches it on", () => {
+    expect(DEFAULT_ENABLED_QUESTION_KEYS.has("A15_FUNCTIONAL_STATUS")).toBe(false)
+    expect(DEFAULT_ENABLED_QUESTION_KEYS.has("A16_GUPTA_PROCEDURE_TYPE")).toBe(false)
+    const procedure = BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === "A16_GUPTA_PROCEDURE_TYPE")!
+    expect(procedure.options).toHaveLength(21)
+    expect(procedure.applicability).toEqual(["ADULT"])
+    expect(procedure.formSection).toBe("risk_scores")
+  })
+
+  it("stores the chosen option once switched on, and refuses one the model does not have", async () => {
+    const env = fakeDb(profileRow({ A15_FUNCTIONAL_STATUS: { enabled: true }, A16_GUPTA_PROCEDURE_TYPE: { enabled: true } }))
+    await env.save({}, { answers: [
+      { stableKey: "A15_FUNCTIONAL_STATUS", state: PreopAnswerState.YES, optionKey: "PARTIALLY_DEPENDENT" },
+      { stableKey: "A16_GUPTA_PROCEDURE_TYPE", state: PreopAnswerState.YES, optionKey: "AORTIC" },
+    ] })
+    expect(env.answers.get("q-A15_FUNCTIONAL_STATUS")).toMatchObject({ state: PreopAnswerState.YES, optionKey: "PARTIALLY_DEPENDENT" })
+    expect(env.answers.get("q-A16_GUPTA_PROCEDURE_TYPE")).toMatchObject({ state: PreopAnswerState.YES, optionKey: "AORTIC" })
+    await expect(env.save({}, { answers: [{ stableKey: "A16_GUPTA_PROCEDURE_TYPE", state: PreopAnswerState.YES, optionKey: "EYE" }] }))
+      .rejects.toMatchObject({ code: "UNKNOWN_PREOP_ANSWER_OPTION" })
+  })
+
+  it("asks nothing of a case while it is off", async () => {
+    const env = fakeDb()
+    await env.save({})
+    expect(env.stateOf("A15_FUNCTIONAL_STATUS")).toBeUndefined()
+    expect(env.stateOf("A16_GUPTA_PROCEDURE_TYPE")).toBeUndefined()
+  })
+})
+
 describe("the catalogue", () => {
+  // The Apfel factor is "history of PONV and/or motion sickness" (PONV
+  // consensus guidelines), and the form has always asked it that way. The
+  // catalogue said PONV only and exported the PONV concept, so a yes given for
+  // motion sickness left as a coded history of PONV.
+  it("asks the Apfel history as PONV or motion sickness, and codes it as neither alone", () => {
+    const question = BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === "BASE_APFEL_PONV_HISTORY")
+    expect(question?.labelEn).toBe("History of PONV or motion sickness")
+    expect(question?.labelBg).toBe("Анамнеза за следоперативно гадене и повръщане (PONV) или кинетоза")
+    expect(question?.omopConceptId ?? 0).toBe(0)
+    expect(question?.omopSourceCode).toBe("LOSPOR:APFEL_PONV_HISTORY")
+  })
+
   // An upgrade runs inside a clinician's save. Row by row it took about 300
   // round trips and outlived the 5-second transaction on a hosted database, so
   // the save failed and the upgrade never finished. It must stay a fixed, small

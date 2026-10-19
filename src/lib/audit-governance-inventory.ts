@@ -515,7 +515,7 @@ export const AUDIT_GOVERNANCE_INVENTORY = [
   {
     id: "bundled-clinical-baseline-provision",
     requirement: "CLINICAL_RULE_GOVERNANCE",
-    transition: "Install, publish, and select the exact adult-v2 and pediatric-v2 release baselines",
+    transition: "Install, publish, and select the exact adult/pediatric v2 (1.2.0) and v3 (9.15.0) release baselines",
     disposition: "OWNER_TRANSACTIONAL",
     sources: [{
       path: "src/lib/clinical-rules/bundled-baseline-provisioner.ts",

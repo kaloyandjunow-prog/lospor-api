@@ -311,6 +311,7 @@ model Case {
   fieldChanges         CaseFieldChange[]
   finalizations        CaseFinalization[]
   clinicalCalculations CaseClinicalCalculation[]
+  consentPrints        CaseConsentPrint[]
 
   @@unique([userId, caseCode])
   @@unique([createdById, clientDraftId])
@@ -1080,6 +1081,12 @@ model PreoperativeAssessment {
   airwayUnobtainable     Boolean           @default(false)
 
   asaScore         ASAScore?
+  // What the ASA suggestion rules said at the last save (Core asa.ts), kept
+  // beside the class chosen so agreement can be read per rule. The deciding
+  // rules only: the reasons of the winning class.
+  asaSuggestedScore         ASAScore?
+  asaSuggestionReasons      String[]  @default([])
+  asaSuggestionRulesVersion String?
   elective         Boolean   @default(false)
   emergencySurgery Boolean   @default(false)
   highRiskSurgery  Boolean   @default(false)
@@ -1124,6 +1131,9 @@ model PreoperativeAssessment {
   coldsSurgery         String?
 
   pediatricFasting Json @default("[]")
+  /// The anaesthesia planned at the preop visit (optional): Core PlannedAnaesthesia
+  /// (techniques, airway devices and instruments, lines, postop ventilation).
+  plannedAnaesthesia Json @default("{}")
 
   labResults Json @default("[]")
 
@@ -1208,6 +1218,64 @@ model PreopAssessmentProfile {
   @@index([population, status, version])
 }
 
+
+/// Whether this site shows the preop summary page and prints the written
+/// consent with it. One row; off unless an operator switches them on in
+/// Status (appliance). The serverless demos have no row and no editor.
+model PreopDocumentPolicy {
+  id             String   @id @default("local")
+  summaryEnabled Boolean  @default(false)
+  consentEnabled Boolean  @default(false)
+  /// How the summary and consent print: A to E (Core PREOP_DOCUMENT_LAYOUTS).
+  layout         String   @default("B")
+  changedById    String?
+  changeReason   String?
+  updatedAt      DateTime @updatedAt
+}
+
+/// A hospital's consent text, one row per save. Rows are never edited or
+/// deleted: a printed sheet records the version it carried, and that version
+/// must stay readable for as long as the sheet is in an archive. No row for a
+/// population means the bundled text (version 0, in Core).
+model ConsentTemplateVersion {
+  id           String       @id @default(cuid())
+  population   ClinicalMode
+  version      Int
+  title        String
+  body         String
+  /// SHA-256 of Core's canonical form of the body, hex.
+  sha256       String
+  createdById  String?
+  changeReason String?
+  createdAt    DateTime     @default(now())
+
+  prints CaseConsentPrint[]
+
+  @@unique([population, version])
+}
+
+/// A consent sheet printed for a case: which text it carried and who printed
+/// it. The signed paper is the consent; this row says which words were on it.
+/// No patient name is stored -- the sheet prints blank lines for it.
+model CaseConsentPrint {
+  id                String                  @id @default(cuid())
+  caseId            String
+  case              Case                    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  population        ClinicalMode
+  /// 0 is the bundled text.
+  templateVersion   Int
+  templateVersionId String?
+  template          ConsentTemplateVersion? @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
+  bodySha256        String
+  /// The layout the sheet printed in; null on prints before layouts.
+  layout            String?
+  /// Layout C: the techniques the consent described (general anaesthesia always).
+  techniques        String[]                @default([])
+  printedById       String
+  printedAt         DateTime                @default(now())
+
+  @@index([caseId, printedAt])
+}
 
 model PreopProfileQuestion {
   profileId  String
@@ -1428,6 +1496,10 @@ model IntraoperativeRecord {
   crystalloidsMl    Int?
   colloidsMl        Int?
   bloodMl           Int?
+  /// Millilitres given through drug infusions, from their recorded pump rates
+  /// (2026-10-18). Derived from the events like the three above; counted in
+  /// the fluid balance. NULL = none with a known volume.
+  infusionsMl       Int?
   bloodProductsNote String?
   urineMl           Int?
   // Clinician-entered, unlike crystalloidsMl/colloidsMl/bloodMl which are

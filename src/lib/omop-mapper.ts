@@ -88,7 +88,7 @@
 import { DICTIONARY_VERSION } from "@/lib/data-dictionary"
 import { deriveQualityStatus } from "@lospor/core/omop"
 import { nextId, resetIds, pseudonymId } from "./omop-mapper/ids"
-import { isoDate, isoInstant } from "./omop-mapper/date-helpers"
+import { inCaseZone, isoDate, isoInstant } from "./omop-mapper/date-helpers"
 import {
   AIRWAY_ACTS,
   UNOBTAINABLE_CONCEPT_ID,
@@ -165,7 +165,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
   const sourceValue = (prefix: string, sourceVocabulary?: string | null, sourceCode?: string | null, label?: string | null) =>
     sourceVocabulary && sourceCode ? `${sourceVocabulary}:${sourceCode}${label ? ` - ${label}` : ""}` : `${prefix}:${label ?? "unknown"}`
 
-  for (const c of cases) {
+  // Each case in its own zone: research dates and times are the theatre's (2026-10-19).
+  for (const c of cases) inCaseZone(c.intraop?.timezone, () => {
     const personId = pseudonymId("person", c.id)
     const visitId  = pseudonymId("visit", c.id)
     // Prefer the real instants. The legacy startTime/endTime columns hold a bare
@@ -183,8 +184,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // clock time, not just a day -- case duration, turnover and first-case
     // metrics all need it -- but visit_occurrence only ever carried the
     // truncated date.
-    const startDateTime = startInstant ? startInstant.toISOString() : null
-    const endDateTime   = endInstant ? endInstant.toISOString() : null
+    const startDateTime = isoInstant(startInstant)
+    const endDateTime   = isoInstant(endInstant)
 
     // The case's own institution, stamped at creation and never updated,
     // because a case belongs to the institution it was performed at — see
@@ -427,7 +428,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     mapSelectionsToOmop(ctx, c)
     mapComplicationsToOmop(ctx, c)
     if (c.postop) mapPostopToOmop(ctx, c, c.postop)
-  }
+  })
 
   const tableCounts = {
     person: persons.length,

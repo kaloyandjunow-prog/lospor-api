@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { Prisma } from "@/generated/prisma/client"
-import { mapPreop, mapIntraop, mapIntraopUpdate } from "./_mappers"
+import { ASA_SUGGESTION_RULES_VERSION } from "@lospor/core/asa"
+import { mapPreop, mapPreopUpdate, mapIntraop, mapIntraopUpdate } from "./_mappers"
 
 describe("mapPreop — mobile/legacy aliases → canonical fields", () => {
   it("maps ulbt / difficultAirway / familyProblems aliases", () => {
@@ -151,10 +152,33 @@ describe("mapPreop — adult risk totals are derived server-side, not trusted fr
     expect(mapPreop({ sex: "MALE", smoking: false }).apfelScore).toBe(1)
   })
 
-  it("still leaves gutaScore trusted from the client", () => {
-    // Unchanged by this fix: no factor-based formula exists to recompute it
-    // from, so it is stored as sent, same as before.
-    expect(mapPreop({ gutaScore: 42 }).gutaScore).toBe(42)
+  // Gupta is now derived from its stored inputs where it is shown or
+  // exported (lib/preop/gupta-record.ts); a client-sent total is not stored.
+  it("ignores a client-sent gutaScore", () => {
+    expect(mapPreop({ gutaScore: 42 }).gutaScore).toBeNull()
+  })
+})
+
+describe("mapPreop — the ASA suggestion is stored beside the class chosen", () => {
+  it("records the suggested class, its deciding rules and the rule version", () => {
+    const r = mapPreop({ heightCm: 175, weightKg: 70, asaScore: "II", comorbidities: [{ label: "COPD", code: "J44.9" }, { label: "Hypertension", code: "I10" }] })
+    expect(r.asaSuggestedScore).toBe("III")
+    expect(r.asaSuggestionReasons).toEqual(["copd"])
+    expect(r.asaSuggestionRulesVersion).toBe(ASA_SUGGESTION_RULES_VERSION)
+    expect(r.asaScore).toBe("II")
+  })
+
+  it("records no suggestion when there is nothing to base one on", () => {
+    const r = mapPreop({ heightCm: 175, weightKg: 70, comorbidities: [] })
+    expect(r.asaSuggestedScore).toBeNull()
+    expect(r.asaSuggestionReasons).toEqual([])
+    expect(r.asaSuggestionRulesVersion).toBeNull()
+  })
+
+  it("recomputes it when a save changes the conditions, from the whole record", () => {
+    const update = mapPreopUpdate({ comorbidities: [{ label: "Heart failure", code: "I50.9" }] }, { heightCm: 175, weightKg: 70, clinicalMode: "ADULT" })
+    expect(update.asaSuggestedScore).toBe("III")
+    expect(mapPreopUpdate({ notes: "No change to the conditions" }, {})).not.toHaveProperty("asaSuggestedScore")
   })
 })
 
@@ -253,5 +277,18 @@ describe("mapIntraopUpdate — a partial save never blanks a stored time", () =>
     expect((r.startTime as Date).toISOString()).toBe("2000-01-01T08:00:00.000Z")
     expect((r.startedAt as Date).toISOString()).toBe("2026-07-21T05:00:00.000Z")
     expect(r.timezone).toBe("Europe/Sofia")
+  })
+})
+
+describe("planned anaesthesia", () => {
+  it("stores the plan in its full shape, codes once", () => {
+    expect(mapPreop({ plannedAnaesthesia: { techniques: ["GENERAL_TIVA", "GENERAL_TIVA"], vascularAccesses: [{ site: "ART_RADIAL" }] } }).plannedAnaesthesia)
+      .toEqual({ techniques: ["GENERAL_TIVA"], airwayDevices: [], airwayTools: [], vascularAccesses: [{ site: "ART_RADIAL" }], postopVentilation: false })
+    expect(mapPreop({}).plannedAnaesthesia).toEqual({ techniques: [], airwayDevices: [], airwayTools: [], vascularAccesses: [], postopVentilation: false })
+  })
+
+  it("is written by an update only when sent", () => {
+    expect(mapPreopUpdate({ plannedAnaesthesia: { airwayDevices: ["LMA"] } }, {}).plannedAnaesthesia).toMatchObject({ airwayDevices: ["LMA"] })
+    expect(mapPreopUpdate({ notes: "x" }, { plannedAnaesthesia: { airwayDevices: ["LMA"] } })).not.toHaveProperty("plannedAnaesthesia")
   })
 })

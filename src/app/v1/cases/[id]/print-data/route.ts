@@ -3,6 +3,9 @@ import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 import { caseReadWhereForUser } from "@/lib/access-control"
 import { verifyPrintToken } from "@/lib/print-token"
+import { preopDocuments } from "@/lib/preop/documents"
+import { preopQuestionnaire } from "@/lib/preop/questionnaire"
+import { defaultPreopProfileShape, readPreopProfiles, serializePreopProfiles } from "@/lib/preop/service"
 
 export async function GET(
   req: NextRequest,
@@ -28,14 +31,28 @@ export async function GET(
   const record = await prisma.case.findFirst({
     where,
     include: {
-      preop: true,
+      preop: { include: { assessmentAnswers: { select: { state: true, optionKey: true, valueText: true, question: { select: { stableKey: true } } } } } },
       intraop: true,
       postop: true,
       institution: { select: { name: true, city: true } },
+      // The preop summary names who consulted and who has the case now.
+      createdBy: { select: { name: true, title: true } },
+      user: { select: { name: true, title: true } },
     },
   })
   if (!record) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
-  return NextResponse.json(record)
+  // The preop summary sheet prints in headless Chrome with only a print
+  // token, so the switches and consent texts travel with the case.
+  const { assessmentAnswers, ...preop } = record.preop ?? { assessmentAnswers: [] }
+  // The summary prints the questionnaire the form showed: this population's profile.
+  const profiles = record.preop ? await readPreopProfiles(prisma) : null
+  const profile = profiles ? serializePreopProfiles(profiles) : defaultPreopProfileShape()
+  return NextResponse.json({
+    ...record,
+    preop: record.preop ? preop : null,
+    preopDocuments: await preopDocuments(prisma),
+    preopQuestionnaire: preopQuestionnaire(record.preop, assessmentAnswers, profile, record.clinicalMode),
+  })
 }

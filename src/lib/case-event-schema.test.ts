@@ -188,3 +188,45 @@ describe("caseEventSchema entry times (9.13.0)", () => {
     expect(caseEventSchema.safeParse({ ...stop, stopConfirmed: "yes" }).success).toBe(false)
   })
 })
+
+describe("an infusion pump rate (2026-10-18)", () => {
+  const start = { id: "inf-1", type: "infusion_start", infId: "i", name: "Norepinephrine / Noradrenaline", rate: "0.1", unit: "mcg/kg/min", concentration: "4 mg/50 mL", calculationWeightKg: 70 }
+  it("is accepted beside the dose rate and kept", () => {
+    expect(caseEventSchema.parse({ ...start, volumeRateMlPerHour: 5.25 })).toMatchObject({ volumeRateMlPerHour: 5.25, rate: "0.1" })
+    expect(caseEventSchema.parse(start)).not.toHaveProperty("volumeRateMlPerHour")
+  })
+  it("is refused when negative or beyond a pump", () => {
+    expect(caseEventSchema.safeParse({ ...start, volumeRateMlPerHour: -1 }).success).toBe(false)
+    expect(caseEventSchema.safeParse({ ...start, volumeRateMlPerHour: 5000 }).success).toBe(false)
+  })
+})
+
+describe("a target-controlled infusion (2026-10-18)", () => {
+  const tci = { id: "t", ts: "2026-10-18T08:00:00Z", type: "infusion_start", infId: "i", name: "Propofol", rate: "4", unit: "mcg/mL", tciModel: "SCHNIDER", tciSite: "EFFECT" }
+  const issue = (value: Record<string, unknown>) => {
+    const result = caseEventSchema.safeParse(value)
+    return result.success ? null : result.error.issues.map(item => item.message).join(" | ")
+  }
+
+  it("is accepted with its model, site and a target in the model's unit", () => {
+    expect(issue(tci)).toBeNull()
+    expect(issue({ ...tci, name: "Remifentanil", rate: "3", unit: "ng/mL", tciModel: "MINTO" })).toBeNull()
+  })
+
+  it("is refused, saying why, with a wrong unit, no site, an unknown model or a target far out of range", () => {
+    expect(issue({ ...tci, unit: "mg/kg/hr" })).toMatch(/SCHNIDER target is in mcg\/mL/)
+    expect(issue({ ...tci, tciSite: undefined })).toMatch(/both its model and its site/)
+    expect(issue({ ...tci, tciModel: "HOMEMADE" })).not.toBeNull()
+    expect(issue({ ...tci, rate: "40" })).toMatch(/at most 16 mcg\/mL/)
+    expect(issue({ ...tci, rate: "0" })).toMatch(/above 0/)
+  })
+
+  it("keeps the model on the start, and the pump total on the stop with its unit", () => {
+    expect(issue({ ...tci, type: "infusion_rate" })).toMatch(/set when the infusion starts/)
+    const stop = { id: "x", ts: "2026-10-18T09:00:00Z", type: "infusion_stop", infId: "i" }
+    expect(issue({ ...stop, pumpTotal: 61.5, pumpTotalUnit: "mL" })).toBeNull()
+    expect(issue({ ...stop, pumpTotal: 61.5 })).toMatch(/needs its unit/)
+    expect(issue({ ...tci, pumpTotal: 10, pumpTotalUnit: "mL" })).toMatch(/entered on the stop/)
+    expect(issue({ ...stop, pumpTotal: -1, pumpTotalUnit: "mL" })).not.toBeNull()
+  })
+})

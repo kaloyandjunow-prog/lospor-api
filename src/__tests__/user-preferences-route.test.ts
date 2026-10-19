@@ -182,6 +182,26 @@ describe("/api/user preferences", () => {
     expect(response.status).toBe(400)
   })
 
+  it("stores each Bulgarian-name switch and refuses one it does not know", async () => {
+    findUniqueMock.mockResolvedValue({ firstName: "Ana", lastName: "User", title: "Dr", preferences: {} })
+    updateMock.mockResolvedValue({ name: "Dr Ana User", firstName: "Ana", lastName: "User", title: "Dr", institution: null, preferences: {} })
+    const { PATCH } = await import("@/app/v1/user/route")
+    const patch = (bulgarianNames: unknown) => PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences: { bulgarianNames } }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect((await patch({ drugs: true, fluids: true })).status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: {
+        preferences: expect.objectContaining({
+          bulgarianNames: { premed: false, drugs: true, infusions: false, agents: false, fluids: true },
+        }),
+      },
+    }))
+    expect((await patch({ labs: true })).status).toBe(400)
+  })
+
   it("rejects invalid preference payloads", async () => {
     const { PATCH } = await import("@/app/v1/user/route")
     const response = await PATCH(new Request("http://localhost/api/user", {

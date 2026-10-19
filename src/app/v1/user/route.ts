@@ -60,6 +60,15 @@ const autoFillPatchSchema = z.object({
   backfillOnReopen: z.boolean().optional(),
 }).strict()
 
+// Which catalogues show Bulgarian names (Settings → UI); display only.
+const bulgarianNamesPatchSchema = z.object({
+  premed: z.boolean().optional(),
+  drugs: z.boolean().optional(),
+  infusions: z.boolean().optional(),
+  agents: z.boolean().optional(),
+  fluids: z.boolean().optional(),
+}).strict()
+
 const preferencesPatchSchema = z.object({
   ui: z.object({ locale: z.enum(["bg", "en"]) }).partial().strict().optional(),
   clinicalPreferencesVersion: z.number().int().optional(),
@@ -68,6 +77,7 @@ const preferencesPatchSchema = z.object({
   autoFillVitals: z.union([z.boolean(), autoFillPatchSchema]).optional(),
   intraopFavouriteDrugs: z.array(z.string()).optional(),
   intraopFavouriteInfusions: z.array(z.string()).optional(),
+  bulgarianNames: bulgarianNamesPatchSchema.optional(),
   heightUnit: z.enum(["cm", "in"]).optional(),
   weightUnit: z.enum(["kg", "lb"]).optional(),
   temperatureUnit: z.enum(["C", "F"]).optional(),

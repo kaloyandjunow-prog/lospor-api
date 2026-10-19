@@ -16,6 +16,22 @@ type FakeState = {
   sessionCount: number
 }
 
+/** The subset of a Prisma `where` the provisioners use: equality, `in`, `is`, `OR`. */
+function matches(row: unknown, where: unknown): boolean {
+  if (!where || typeof where !== "object") return true
+  const record = (row ?? {}) as Row
+  const filter = where as Row
+  if (Array.isArray(filter.OR)) return filter.OR.some(item => matches(row, item))
+  return Object.entries(filter).every(([key, value]) => {
+    if (value && typeof value === "object" && !(value instanceof Date)) {
+      if ("in" in value) return ((value as { in: unknown[] }).in).includes(record[key])
+      if ("is" in value) return record[key] != null && matches(record[key], (value as { is: unknown }).is)
+      return matches(record[key], value)
+    }
+    return record[key] === value
+  })
+}
+
 class InMemoryPrisma {
   state: FakeState = {
     principals: [],
@@ -36,7 +52,7 @@ class InMemoryPrisma {
   private transactionClient() {
     return {
       technicalPrincipal: {
-        findMany: async () => this.state.principals,
+        findMany: async ({ where }: { where?: unknown } = {}) => this.state.principals.filter(row => matches(row, where)),
         create: async ({ data }: { data: Row }) => {
           this.writes.push("technicalPrincipal.create")
           this.state.principals.push({ ...data })
@@ -46,7 +62,7 @@ class InMemoryPrisma {
       user: { count: async () => this.state.accountCount },
       authSession: { count: async () => this.state.sessionCount },
       clinicalPreset: {
-        findMany: async () => this.state.presets,
+        findMany: async ({ where }: { where?: unknown } = {}) => this.state.presets.filter(row => matches(row, where)),
         create: async ({ data }: { data: Row }) => {
           this.writes.push(`clinicalPreset.create:${String(data.status)}`)
           const nestedRules = ((data.rules as Row | undefined)?.create ?? []) as Row[]
@@ -95,7 +111,14 @@ class InMemoryPrisma {
         },
       },
       platformClinicalPresetSelection: {
-        findMany: async () => this.state.selections,
+        findMany: async ({ where }: { where?: unknown } = {}) => this.state.selections.filter(row => matches(row, where)),
+        update: async ({ where, data }: { where: { clinicalMode: string }; data: Row }) => {
+          this.writes.push("platformSelection.update")
+          const selection = this.state.selections.find(item => item.clinicalMode === where.clinicalMode)
+          if (!selection) throw new Error("missing fake selection")
+          Object.assign(selection, data)
+          return selection
+        },
         create: async ({ data }: { data: Row }) => {
           this.writes.push("platformSelection.create")
           const selection = {
@@ -110,7 +133,7 @@ class InMemoryPrisma {
       auditLog: {
         findMany: async ({ where }: { where: unknown }) => {
           this.auditFindQueries.push(where)
-          return this.state.audits
+          return this.state.audits.filter(row => matches(row, where))
         },
         create: async ({ data }: { data: Row }) => {
           this.writes.push("auditLog.create")
@@ -156,11 +179,20 @@ describe("bundled clinical baseline provisioner", () => {
         { clinicalMode: "ADULT", presetVersion: 2, ruleCount: 251 },
         { clinicalMode: "PEDIATRIC", presetVersion: 2, ruleCount: 335 },
       ],
+      v3: {
+        outcome: "installed",
+        releaseVersion: "9.15.0",
+        baselines: [
+          { clinicalMode: "ADULT", presetId: "lospor-adults-v3", presetVersion: 3, ruleCount: 267, selected: true },
+          { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetVersion: 3, ruleCount: 367, selected: true },
+        ],
+      },
     })
-    expect(db.state.principals).toHaveLength(1)
-    expect(db.state.presets).toHaveLength(2)
-    expect(db.state.selections).toHaveLength(2)
-    expect(db.state.audits).toHaveLength(2)
+    // A fresh appliance gets both releases and ends on v3.
+    expect(db.state.principals.map(row => row.id)).toEqual(["lospor-release:1.2.0", "lospor-release:9.15.0"])
+    expect(db.state.presets).toHaveLength(4)
+    expect(db.state.selections.map(row => row.presetId)).toEqual(["lospor-adults-v3", "lospor-pediatrics-v3"])
+    expect(db.state.audits).toHaveLength(4)
     expect(db.writes).toEqual([
       "technicalPrincipal.create",
       "clinicalPreset.create:DRAFT",
@@ -172,6 +204,17 @@ describe("bundled clinical baseline provisioner", () => {
       "publicationEvidence.create",
       "clinicalPreset.update:PUBLISHED",
       "platformSelection.create",
+      "auditLog.create",
+      "technicalPrincipal.create",
+      "clinicalPreset.create:DRAFT",
+      "publicationEvidence.create",
+      "clinicalPreset.update:PUBLISHED",
+      "platformSelection.update",
+      "auditLog.create",
+      "clinicalPreset.create:DRAFT",
+      "publicationEvidence.create",
+      "clinicalPreset.update:PUBLISHED",
+      "platformSelection.update",
       "auditLog.create",
     ])
   })
@@ -279,7 +322,7 @@ describe("bundled clinical baseline provisioner", () => {
       outcome: "installed",
     })
     expect(db.transactionAttempts).toBe(2)
-    expect(db.state.presets).toHaveLength(2)
+    expect(db.state.presets).toHaveLength(4)
   })
 
   it("turns a repeated concurrent unique claim into a typed fail-closed collision", async () => {
@@ -289,5 +332,84 @@ describe("bundled clinical baseline provisioner", () => {
     await expect(provisionBundledClinicalBaselines({ $transaction: transaction } as never))
       .rejects.toMatchObject({ code: "BUNDLED_BASELINE_COLLISION" })
     expect(transaction).toHaveBeenCalledTimes(3)
+  })
+
+  /** An appliance updated to 1.2.0 but not yet to 9.15.0: v2 installed and selected, nothing of v3. */
+  async function applianceOnV2(): Promise<InMemoryPrisma> {
+    const db = new InMemoryPrisma()
+    const installedAt = new Date("2026-08-23T12:00:00.000Z")
+    await provisionBundledClinicalBaselines(db as never, { installedAt })
+    const v3 = new Set(["lospor-adults-v3", "lospor-pediatrics-v3"])
+    db.state.principals = db.state.principals.filter(row => row.id === "lospor-release:1.2.0")
+    db.state.presets = db.state.presets.filter(row => !v3.has(String(row.id)))
+    db.state.audits = db.state.audits.filter(row => row.userId === "lospor-release:1.2.0")
+    for (const selection of db.state.selections) {
+      Object.assign(selection, {
+        presetId: selection.clinicalMode === "ADULT" ? "lospor-adults-v2" : "lospor-pediatrics-v2",
+        selectedByTechnicalPrincipalId: "lospor-release:1.2.0",
+        selectedAt: installedAt,
+        updatedAt: installedAt,
+      })
+    }
+    db.writes.length = 0
+    return db
+  }
+
+  it("upgrades a v2 appliance: installs v3 beside v2, moves the release selection, leaves v2 untouched", async () => {
+    const db = await applianceOnV2()
+    const v2Before = structuredClone(db.state.presets)
+    const upgradedAt = new Date("2026-10-20T08:00:00.000Z")
+
+    const result = await provisionBundledClinicalBaselines(db as never, { installedAt: upgradedAt })
+
+    expect(result.outcome).toBe("verified")
+    expect(result.v3.outcome).toBe("installed")
+    expect(result.v3.baselines.map(item => item.selected)).toEqual([true, true])
+    expect(db.state.presets.filter(row => String(row.id).endsWith("-v2"))).toEqual(v2Before)
+    expect(db.state.selections).toEqual([
+      expect.objectContaining({ clinicalMode: "ADULT", presetId: "lospor-adults-v3", selectedByTechnicalPrincipalId: "lospor-release:9.15.0", selectedAt: upgradedAt }),
+      expect.objectContaining({ clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", selectedByTechnicalPrincipalId: "lospor-release:9.15.0", selectedAt: upgradedAt }),
+    ])
+    const evidence = db.state.presets.find(row => row.id === "lospor-adults-v3")?.publicationEvidence as Row
+    expect(evidence).toMatchObject({ baselinePresetId: "lospor-adults-v2", baselinePresetVersion: 2 })
+    const diff = evidence.exactDiff as { added: unknown[]; removed: unknown[]; changed: unknown[]; unchangedRuleCount: number }
+    expect([diff.added.length, diff.removed.length, diff.changed.length, diff.unchangedRuleCount]).toEqual([16, 0, 59, 192])
+
+    // The next update verifies both releases without writing.
+    db.writes.length = 0
+    const retry = await provisionBundledClinicalBaselines(db as never, { installedAt: new Date("2031-01-01T00:00:00.000Z") })
+    expect([retry.outcome, retry.v3.outcome]).toEqual(["verified", "verified"])
+    expect(db.writes).toEqual([])
+  })
+
+  it("refuses to install v3 over a platform version 3 that an administrator made", async () => {
+    const db = await applianceOnV2()
+    db.state.presets.push({
+      id: "ruleset-admin-made",
+      key: "LOSPOR_ADULTS",
+      clinicalMode: "ADULT",
+      scope: "PLATFORM",
+      version: 3,
+      status: "DRAFT",
+      rules: [],
+      publicationEvidence: null,
+    })
+    await expect(provisionBundledClinicalBaselines(db as never)).rejects.toMatchObject({
+      code: "BUNDLED_BASELINE_PARTIAL_STATE",
+    })
+    expect(db.writes).toEqual([])
+  })
+
+  it("fails closed when stored v3 content drifts", async () => {
+    const db = await applianceOnV2()
+    await provisionBundledClinicalBaselines(db as never)
+    const rule = db.state.presets.find(row => row.id === "lospor-pediatrics-v3")?.rules[0]
+    if (!rule) throw new Error("missing fake v3 rule")
+    rule.payload = { drifted: true }
+    db.writes.length = 0
+    await expect(provisionBundledClinicalBaselines(db as never)).rejects.toMatchObject({
+      code: "BUNDLED_BASELINE_VERIFICATION_FAILED",
+    })
+    expect(db.writes).toEqual([])
   })
 })

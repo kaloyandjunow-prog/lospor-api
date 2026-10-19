@@ -5,6 +5,8 @@ import {
   VITAL_CONCEPTS, YES_CONCEPT_ID, NO_CONCEPT_ID, AIRWAY_MEASUREMENTS,
   bloodGroupConceptFor,
 } from "../concepts"
+import { POVOC_RISK_PERCENT } from "@lospor/core/pediatric"
+import { guptaRiskPercent } from "@/lib/preop/gupta-record"
 import { isoDate } from "../date-helpers"
 import { nextId } from "../ids"
 
@@ -58,7 +60,9 @@ export function mapPreopClinicalToOmop(
     })
   }
   ctx.sourceObservation("LOSPOR:POVOC_SCORE", preop.povocScore, vitDate)
-  ctx.sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocRiskPercent, vitDate)
+  // Derived from the count, not read from storage: the stored column is no
+  // longer written, and older rows would otherwise disagree with newer ones.
+  ctx.sourceObservation("LOSPOR:POVOC_RISK_PERCENT", preop.povocScore == null ? null : POVOC_RISK_PERCENT[preop.povocScore], vitDate)
   ctx.sourceObservation("LOSPOR:COLDS_SCORE", preop.coldsScore, vitDate)
 
   // The five COLDS factors, and the gate that says the score applies.
@@ -77,16 +81,15 @@ export function mapPreopClinicalToOmop(
   ctx.sourceObservation("LOSPOR:COLDS_LUNG_DISEASE", preop.coldsLungDisease, vitDate)
   ctx.sourceObservation("LOSPOR:COLDS_AIRWAY_DEVICE", preop.coldsAirwayDevice, vitDate)
   ctx.sourceObservation("LOSPOR:COLDS_SURGERY", preop.coldsSurgery, vitDate)
-  // 3031632, Fasting status - Reported: the question is coded, and the
-  // JSON detail of which intervals were fasted stays in the value, since
-  // no vocabulary models a per-interval fasting assessment.
-  ctx.sourceObservation(
-    "LOSPOR:PEDIATRIC_FASTING_ASSESSMENT",
-    preop.pediatricFasting == null ? null : JSON.stringify(preop.pediatricFasting),
-    vitDate,
-    null,
-    3031632,
-  )
+  // Nil-by-mouth assignments, one row per intake with its hours before
+  // surgery as the number. They are instructions, not a reported fasting
+  // status, so 3031632 (Fasting status - Reported) no longer applies and no
+  // standard concept says "stop clear fluids N hours before surgery".
+  const assignments = Array.isArray(preop.pediatricFasting) ? preop.pediatricFasting as Array<{ category?: unknown; hoursBefore?: unknown }> : []
+  for (const row of assignments) {
+    if (!row || typeof row.category !== "string" || typeof row.hoursBefore !== "number") continue
+    ctx.sourceObservation(`LOSPOR:PEDIATRIC_NPO_${row.category}_HOURS`, row.hoursBefore, vitDate, row.hoursBefore)
+  }
   // One flag can qualify more than one reading: a blood pressure that could
   // not be obtained is neither a systolic nor a diastolic, so both rows
   // carry the qualifier. Height and weight have no flag — a case cannot
@@ -348,7 +351,9 @@ export function mapPreopClinicalToOmop(
       visit_occurrence_id:         ctx.visitId,
     })
   }
-  ctx.sourceObservation("LOSPOR:GUTA_SCORE", preop.gutaScore, preopDate)
+  // Gupta MICA, derived from its stored inputs (lib/preop/gupta-record.ts).
+  // LOSPOR:GUTA_SCORE, its predecessor, was never filled in.
+  ctx.sourceObservation("LOSPOR:GUPTA_MICA_RISK_PERCENT", guptaRiskPercent(preop), preopDate)
 
   // ── The airway examination ───────────────────────────────────────────
   //
@@ -491,8 +496,11 @@ export function mapPreopClinicalToOmop(
       answer.question.omopConceptId ?? 0,
       // An option with its own concept (high/low surgical risk) says what the
       // answer means; otherwise the state does.
+      // A choice that is not yes/no (functional status, a procedure type) has
+      // no answer concept: its YES state means "answered", not "yes".
       answer.option?.omopConceptId
-        ?? (answer.state === "YES" ? YES_CONCEPT_ID : answer.state === "NO" ? NO_CONCEPT_ID : 0),
+        ?? (answer.optionKey && answer.optionKey !== "YES" && answer.optionKey !== "NO" ? 0
+          : answer.state === "YES" ? YES_CONCEPT_ID : answer.state === "NO" ? NO_CONCEPT_ID : 0),
     )
   }
 }

@@ -206,6 +206,27 @@ describe("research access and query contracts", () => {
     expect(() => researchCohortSchema.parse({ version: 1, filters: { preopAnswers: [{ stableKey: "A1", states: ["MAYBE"] }] } })).toThrow()
   })
 
+  it("filters on each raw score as stored", async () => {
+    findSelfAuthorization.mockResolvedValue({ institution: { id: "inst-1", name: "Hospital A" } })
+    const context = await resolveResearchContext({ ...baseUser, role: "HEAD_OF_DEPT" })
+    const where = await compileResearchWhere(researchCohortSchema.parse({
+      version: 1,
+      filters: { apfel: { min: 3 }, rcri: { min: 2, max: 6 }, stopBang: { min: 5 }, povoc: { min: 2 }, colds: { min: 19 }, paedScore: { min: 13 } },
+    }), context!)
+    expect(where).toEqual({
+      AND: expect.arrayContaining([
+        { preop: { is: expect.objectContaining({
+          apfelScore: { gte: 3 },
+          rcriScore: { gte: 2, lte: 6 },
+          stopBangScore: { gte: 5 },
+          povocScore: { gte: 2 },
+          coldsScore: { gte: 19 },
+        }) } },
+        { postop: { is: expect.objectContaining({ paedScore: { gte: 13 } }) } },
+      ]),
+    })
+  })
+
   it("compiles clinical filters into fixed Prisma predicates", async () => {
     findSelfAuthorization.mockResolvedValue({
       institution: { id: "inst-1", name: "Hospital A" },

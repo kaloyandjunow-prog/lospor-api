@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma"
 import { renderRecordPdf } from "@/lib/record-pdf"
 import { revokeToken } from "@/lib/token-blocklist"
 import { verifyPrintToken } from "@/lib/print-token"
+import { parseConsentTechniques } from "@lospor/core/preop-documents"
+import { normalizeClinicalPreferences } from "@lospor/core/clinical-preferences"
+import { BULGARIAN_NAME_SWITCH_KEYS } from "@lospor/core/display"
 
 // Headless Chrome can take a few seconds to boot and render the record.
 export const maxDuration = 60
@@ -32,6 +35,7 @@ export async function GET(
   const tokenUserId = qToken ? await verifyPrintToken(qToken, id) : null
 
   let where
+  let requesterId = tokenUserId
   if (tokenUserId) {
     // A valid print token is itself the authorization: it is signed, 5-minute
     // and case-scoped, and only issued after a role-aware ownership check —
@@ -41,6 +45,7 @@ export async function GET(
   } else {
     const user = await getAuthUser(req)
     if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    requesterId = user.id
     // Shared predicate: a case belongs to the institution it was performed at.
     // This route used to scope by the owner's current institution, so a case
     // followed its author to a new hospital.
@@ -74,14 +79,28 @@ export async function GET(
     console.error("[pdf] LOSPOR_WEB_URL must be set in production")
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 })
   }
-  const pageUrl = `${base}/cases/${id}/print?print_token=${navToken}&pdf=1`
+  // ?doc=preop-summary: the preop summary (and consent, when on), A4 portrait.
+  const preopSummary = req.nextUrl.searchParams.get("doc") === "preop-summary"
+  const pagePath = preopSummary ? `/cases/${id}/preop-summary/print` : `/cases/${id}/print`
+  // Layout C: the techniques ticked before printing, as known technique keys only.
+  // Sent even when empty: "nothing ticked" must not fall back to the planned anaesthesia.
+  const techniquesParam = preopSummary ? req.nextUrl.searchParams.get("techniques") : null
+  const techniques = parseConsentTechniques(techniquesParam)
+  // The requester's Bulgarian-name switches (Settings → UI): the headless
+  // browser has no stored preferences, so the print page reads them here.
+  const requester = requesterId
+    ? await prisma.user.findUnique({ where: { id: requesterId }, select: { preferences: true } })
+    : null
+  const switches = normalizeClinicalPreferences(requester?.preferences).bulgarianNames
+  const names = BULGARIAN_NAME_SWITCH_KEYS.filter(key => switches[key]).join(",")
+  const pageUrl = `${base}${pagePath}?print_token=${navToken}&pdf=1${techniquesParam !== null ? `&techniques=${techniques.join(",")}` : ""}&names=${names}`
 
   // Record language: explicit ?lang= (mobile app) beats the web locale cookie.
   const langParam = req.nextUrl.searchParams.get("lang")
   const lang = langParam === "bg" ? "bg" : langParam === "en" ? "en" : (req.cookies.get("locale")?.value === "bg" ? "bg" : undefined)
 
   try {
-    const pdf = await renderRecordPdf(pageUrl, lang)
+    const pdf = await renderRecordPdf(pageUrl, lang, preopSummary ? { landscape: false, readySelector: "[data-preop-summary-ready]" } : {})
     // Single use: the headless browser has finished with it, so burn it rather
     // than leave a valid token sitting in this process's logs for five minutes.
     // Only on success — the failure path below still needs it to redirect.
@@ -89,7 +108,7 @@ export async function GET(
     return new NextResponse(pdf as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${record.caseCode ?? "case"}-record.pdf"`,
+        "Content-Disposition": `inline; filename="${record.caseCode ?? "case"}-${preopSummary ? "preop-summary" : "record"}.pdf"`,
         "Cache-Control": "no-store",
       },
     })
@@ -97,6 +116,6 @@ export async function GET(
     console.error("record-pdf render failed:", err)
     // No Chrome available / render failed — fall back to the HTML print page
     // so the user still gets something printable.
-    return NextResponse.redirect(`${base}/cases/${id}/print?print_token=${navToken}`)
+    return NextResponse.redirect(`${base}${pagePath}?print_token=${navToken}`)
   }
 }

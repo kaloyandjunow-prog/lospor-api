@@ -563,6 +563,7 @@ export type CaseRow = {
     crystalloidsMl: number | null
     colloidsMl: number | null
     bloodMl: number | null
+    infusionsMl?: number | null
     urineMl: number | null
     bloodLossMl: number | null
     complications: string | null

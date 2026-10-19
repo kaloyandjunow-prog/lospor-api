@@ -61,6 +61,8 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "INSTITUTION_CHANGE_REJECT", category: "INSTITUTION", labels: { bg: "Отказана смяна на лечебно заведение", en: "Institution change rejected" } },
   { code: "INSTITUTION_CHANGE_SELF_LEAVE", category: "INSTITUTION", labels: { bg: "Напуснато лечебно заведение", en: "Institution left" } },
 
+  { code: "PREOP_DOCUMENTS_POLICY_UPDATE", category: "CLINICAL_RULES", labels: { bg: "Променени настройки за предоперативно обобщение и съгласие", en: "Preop summary and consent settings changed" } },
+  { code: "CONSENT_TEMPLATE_SAVE", category: "CLINICAL_RULES", labels: { bg: "Запазен нов вариант на текста на информираното съгласие", en: "New version of the informed consent text saved" } },
   { code: "CLINICAL_RULESET_CREATE", category: "CLINICAL_RULES", labels: { bg: "Създаден набор от клинични правила", en: "Clinical ruleset created" } },
   { code: "CLINICAL_RULESET_RULE_UPSERT", category: "CLINICAL_RULES", labels: { bg: "Запазено клинично правило", en: "Clinical rule saved" } },
   { code: "CLINICAL_RULESET_RULE_DELETE", category: "CLINICAL_RULES", labels: { bg: "Изтрито клинично правило", en: "Clinical rule deleted" } },
@@ -89,6 +91,7 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "CASE_EVENT_ADD", category: "CASE", labels: { bg: "Добавено събитие към случай", en: "Case event added" } },
   { code: "CASE_EVENT_EDIT", category: "CASE", labels: { bg: "Редактирано събитие в случай", en: "Case event edited" } },
   { code: "CASE_EVENT_DELETE", category: "CASE", labels: { bg: "Изтрито събитие от случай", en: "Case event deleted" } },
+  { code: "CASE_CONSENT_PRINTED", category: "CASE", labels: { bg: "Отпечатано информирано съгласие", en: "Informed consent printed" } },
   { code: "CASE_TRANSFER_REQUEST", category: "CASE", labels: { bg: "Заявено предаване на случай", en: "Case handover requested" } },
   { code: "CASE_TRANSFER_ACCEPT", category: "CASE", labels: { bg: "Прието предаване на случай", en: "Case handover accepted" } },
   { code: "CASE_TRANSFER_DECLINE", category: "CASE", labels: { bg: "Отказано предаване на случай", en: "Case handover declined" } },

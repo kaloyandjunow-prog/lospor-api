@@ -9,6 +9,8 @@ if (runPostgres && !process.env.DATABASE_URL) loadDotenv({ quiet: true })
 
 const principalId = "lospor-release:1.2.0"
 const presetIds = ["lospor-adults-v2", "lospor-pediatrics-v2"]
+const v3PrincipalId = "lospor-release:9.15.0"
+const v3PresetIds = ["lospor-adults-v3", "lospor-pediatrics-v3"]
 
 describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
   let prisma: typeof import("@/lib/prisma").prisma
@@ -19,9 +21,9 @@ describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
 
   async function expectPristine(): Promise<void> {
     const [principals, presets, audits] = await Promise.all([
-      prisma.technicalPrincipal.count({ where: { id: principalId } }),
-      prisma.clinicalPreset.count({ where: { id: { in: presetIds } } }),
-      prisma.auditLog.count({ where: { userId: principalId } }),
+      prisma.technicalPrincipal.count({ where: { id: { in: [principalId, v3PrincipalId] } } }),
+      prisma.clinicalPreset.count({ where: { id: { in: [...presetIds, ...v3PresetIds] } } }),
+      prisma.auditLog.count({ where: { userId: { in: [principalId, v3PrincipalId] } } }),
     ])
     expect({ principals, presets, audits }).toEqual({ principals: 0, presets: 0, audits: 0 })
   }
@@ -51,6 +53,21 @@ describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
       })
       expect(installed.outcome).toBe("installed")
       expect(retry.outcome).toBe("verified")
+      expect([installed.v3.outcome, retry.v3.outcome]).toEqual(["installed", "verified"])
+      // v3 beside v2, published through the same triggers, and selected.
+      await expect(tx.clinicalPreset.count({
+        where: { id: { in: v3PresetIds }, status: "PUBLISHED", publishedByTechnicalPrincipalId: v3PrincipalId },
+      })).resolves.toBe(2)
+      await expect(tx.clinicalPresetRule.count({
+        where: { presetId: { in: v3PresetIds } },
+      })).resolves.toBe(634)
+      await expect(tx.platformClinicalPresetSelection.findMany({
+        orderBy: { clinicalMode: "asc" },
+        select: { presetId: true, selectedByTechnicalPrincipalId: true },
+      })).resolves.toEqual([
+        { presetId: "lospor-adults-v3", selectedByTechnicalPrincipalId: v3PrincipalId },
+        { presetId: "lospor-pediatrics-v3", selectedByTechnicalPrincipalId: v3PrincipalId },
+      ])
       await expect(tx.clinicalPreset.count({
         where: { id: { in: presetIds }, status: "PUBLISHED" },
       })).resolves.toBe(2)

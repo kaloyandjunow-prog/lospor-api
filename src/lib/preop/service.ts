@@ -8,7 +8,7 @@ import {
   type PreopCatalogQuestion,
   type PreopFormSection,
 } from "./catalog"
-import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION } from "@lospor/core/preop-assessment"
+import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION, preopQuestionAppliesToAge } from "@lospor/core/preop-assessment"
 
 /**
  * The preoperative assessment: one bundled catalogue, one profile for adults
@@ -102,6 +102,7 @@ export type PreopProfileShape = {
     section: string
     formSection: PreopFormSection
     parentKey: string | null
+    minAgeYears: number | null
     labelEn: string
     labelBg: string
     answerType: string
@@ -873,12 +874,14 @@ export function missingRequiredPreopQuestions(
   }> } | null | undefined,
   answers: ReadonlyArray<{ questionId: string; state: string }> | null | undefined,
   clinicalMode: string | null | undefined,
+  ageYears?: number | null,
 ): MissingRequiredPreopQuestion[] {
   if (!profile) return []
   const states = new Map((answers ?? []).map(answer => [answer.questionId, answer.state]))
   const stateByKey = new Map(profile.questions.map(row => [row.question.stableKey, states.get(row.questionId)]))
   return profile.questions
-    .filter(row => row.enabled && row.required && questionAppliesToMode(row.question.applicability, clinicalMode))
+    .filter(row => row.enabled && row.required && questionAppliesToMode(row.question.applicability, clinicalMode)
+      && preopQuestionAppliesToAge(bundledQuestion(row.question.stableKey)?.minAgeYears, ageYears))
     .filter(row => {
       // A required follow-up only counts while its parent is YES.
       const parentKey = bundledQuestion(row.question.stableKey)?.parentKey
@@ -911,6 +914,7 @@ function serializeQuestion(row: {
     section: row.question.section,
     formSection: bundled?.formSection ?? "anamnesis",
     parentKey: bundled?.parentKey ?? null,
+    minAgeYears: bundled?.minAgeYears ?? null,
     labelEn: row.question.labelEn,
     labelBg: row.question.labelBg,
     answerType: row.question.answerType,
