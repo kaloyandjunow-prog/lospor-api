@@ -49,7 +49,8 @@
     "clinical-rules:publish-adult-v2": "tsx scripts/publish-adult-v2-platform-ruleset.ts",
     "clinical-rules:prune": "tsx scripts/prune-clinical-rulesets.ts",
     "clinical-rules:provision-bundled-baselines": "tsx scripts/provision-bundled-clinical-baselines.ts",
-    "clinical-rules:inspect-bundled-baselines": "tsx scripts/inspect-bundled-baseline-state.ts"
+    "clinical-rules:inspect-bundled-baselines": "tsx scripts/inspect-bundled-baseline-state.ts",
+    "clinical-rules:install-v3": "tsx scripts/install-v3-platform-baselines.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
