@@ -8,7 +8,7 @@ import {
   YES_CONCEPT_ID, NO_CONCEPT_ID, techniqueConceptFor, vascularAccessConceptFor,
   doseUnitOf,
 } from "../concepts"
-import { isoDate, numOrNull } from "../date-helpers"
+import { isoDate, isoInstant, numOrNull } from "../date-helpers"
 import { nextId } from "../ids"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import { TCI_MODELS, tciPatientFrom, tciTotal, type TciModel, type TciSite } from "@lospor/core/tci"
@@ -214,7 +214,7 @@ export function mapIntraopToOmop(
       person_id:                 ctx.personId,
       procedure_concept_id:      AIRWAY_ACT_CONCEPTS[act] ?? 0,
       procedure_date:            preciseTs ? isoDate(preciseTs) : ctx.startDate,
-      procedure_datetime:        preciseTs ? preciseTs.toISOString() : null,
+      procedure_datetime:        isoInstant(preciseTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -238,7 +238,7 @@ export function mapIntraopToOmop(
       person_id:                 ctx.personId,
       procedure_concept_id:      conceptId,
       procedure_date:            isoDate(ts),
-      procedure_datetime:        ts.toISOString(),
+      procedure_datetime:        isoInstant(ts),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -308,7 +308,7 @@ export function mapIntraopToOmop(
       // anaesthetist actually chose stays in the source value.
       procedure_concept_id:      techConceptId,
       procedure_date:            preciseTs ? isoDate(preciseTs) : ctx.startDate,
-      procedure_datetime:        preciseTs ? preciseTs.toISOString() : null,
+      procedure_datetime:        isoInstant(preciseTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -328,7 +328,7 @@ export function mapIntraopToOmop(
       person_id:                  ctx.personId,
       procedure_concept_id:       37165151, // Removal of intrathecal catheter
       procedure_date:             isoDate(spinalRemovedTs),
-      procedure_datetime:         spinalRemovedTs.toISOString(),
+      procedure_datetime:         isoInstant(spinalRemovedTs),
       procedure_type_concept_id:  32817,
       modifier_concept_id:        0,
       modifier_source_value:      null,
@@ -435,7 +435,7 @@ export function mapIntraopToOmop(
           person_id:                 ctx.personId,
           measurement_concept_id:    cfg.concept_id,
           measurement_date:          isoDate(ev.timestamp),
-          measurement_datetime:      ev.timestamp.toISOString(),
+          measurement_datetime:      isoInstant(ev.timestamp),
           measurement_type_concept_id: 32817,
           value_as_number:           val,
           value_as_concept_id: null,
@@ -460,7 +460,7 @@ export function mapIntraopToOmop(
         person_id:                   ctx.personId,
         measurement_concept_id:      4354275,
         measurement_date:            isoDate(ev.timestamp),
-        measurement_datetime:        ev.timestamp.toISOString(),
+        measurement_datetime:        isoInstant(ev.timestamp),
         measurement_type_concept_id: 32817,
         value_as_number:             ev.agentPercent,
         value_as_concept_id:         null,
@@ -493,7 +493,7 @@ export function mapIntraopToOmop(
           measurement_id: nextId(), person_id: ctx.personId,
           measurement_concept_id: conceptId,
           measurement_date: isoDate(ev.timestamp),
-          measurement_datetime: ev.timestamp.toISOString(),
+          measurement_datetime: isoInstant(ev.timestamp),
           measurement_type_concept_id: 32817,
           value_as_number: val,
           value_as_concept_id: null,
@@ -557,7 +557,7 @@ export function mapIntraopToOmop(
           person_id:                 ctx.personId,
           procedure_concept_id:      fluid.table === "device" ? fluid.transfusionConceptId : fluid.conceptId,
           procedure_date:            givenOn,
-          procedure_datetime:        ev.timestamp.toISOString(),
+          procedure_datetime:        isoInstant(ev.timestamp),
           procedure_type_concept_id: 32817,
           modifier_concept_id:       0,
           modifier_source_value:     null,
@@ -673,7 +673,7 @@ export function mapIntraopToOmop(
           person_id: ctx.personId,
           measurement_concept_id: 0,
           measurement_date: isoDate(ev.timestamp),
-          measurement_datetime: ev.timestamp.toISOString(),
+          measurement_datetime: isoInstant(ev.timestamp),
           measurement_type_concept_id: 32817,
           value_as_number: ev.calculationWeightKg,
           value_as_concept_id: null,
@@ -790,7 +790,7 @@ export function mapIntraopToOmop(
         // anaesthetist chose stays in the source value either way.
         procedure_concept_id: resolvedConcept,
         procedure_date: preciseTs ? isoDate(preciseTs) : ctx.startDate,
-        procedure_datetime: preciseTs ? preciseTs.toISOString() : null,
+        procedure_datetime: isoInstant(preciseTs),
         procedure_type_concept_id: 32817,
         modifier_concept_id:       0,
         modifier_source_value:     null,
@@ -823,7 +823,7 @@ export function mapIntraopToOmop(
       // no route detail either, since the event does not capture one.
       procedure_concept_id:      4052529,
       procedure_date:            isoDate(paCathTs),
-      procedure_datetime:        paCathTs.toISOString(),
+      procedure_datetime:        isoInstant(paCathTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
@@ -838,7 +838,7 @@ export function mapIntraopToOmop(
       person_id:                 ctx.personId,
       procedure_concept_id:      4257889, // Insertion of needle for intraosseous infusion
       procedure_date:            isoDate(ioAccessTs),
-      procedure_datetime:        ioAccessTs.toISOString(),
+      procedure_datetime:        isoInstant(ioAccessTs),
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,

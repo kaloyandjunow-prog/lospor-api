@@ -2,6 +2,13 @@
 // (TCI_TARGET), and the amount -- the pump's own total when entered on the
 // stop, else the model's calculation -- as the drug_exposure dose. Both totals
 // are kept beside it. Additive: no earlier event is a TCI infusion.
+// It also dates and times every row on the theatre's clock: *_date is the
+// local calendar date in the case's zone (IntraoperativeRecord.timezone) and
+// *_datetime the local time with its offset ("2026-06-02T01:30:00+03:00"),
+// the same instant as before. A case begun between midnight and the UTC
+// offset used to be dated the day before. A case with no recorded zone keeps
+// UTC. Nothing has been exported for research yet, so no dataset needs
+// migrating.
 //
 // 4.7.0 records both rates of a drug infusion: the dose rate as before, and
 // the pump rate in mL/h worked out from the syringe strength, with the
@@ -2200,7 +2207,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "event.timestamp",
     exportName: "measurement.measurement_datetime (and the equivalent date/datetime column on every other table an event becomes)",
-    meaning: "When the event happened, to the minute. This is the column that makes the intraoperative record a timeline rather than a summary: it is why a drug given at induction and one given at closure are separable, and why a vitals trend exists.",
+    meaning: "When the event happened, to the minute, on the theatre's clock: the local time with its UTC offset in the case's zone (UTC for a case with no recorded zone). This is the column that makes the intraoperative record a timeline rather than a summary: it is why a drug given at induction and one given at closure are separable, and why a vitals trend exists.",
     type: "datetime",
     missingnessRule: "Never absent. The server stamps the current instant when a client sends none, so an event always has a place on the timeline even if the client clock was wrong",
     sourceTable: "CaseEvent", sourceColumn: "timestamp",

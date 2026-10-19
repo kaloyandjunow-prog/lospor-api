@@ -2813,4 +2813,30 @@ describe("a line the patient arrived with, and a line placed on top of it", () =
       "Radial=false",
     ]))
   })
+
+})
+
+describe("research dates and times are the theatre clock (2026-10-19)", () => {
+  const caseAt = (timezone: string | null) => {
+    const c = completeCase() as unknown as { intraop: Record<string, unknown> }
+    c.intraop.startedAt = new Date("2026-06-01T22:30:00Z") // 01:30 on 2 June in Sofia
+    c.intraop.endedAt = new Date("2026-06-01T23:45:00Z")
+    c.intraop.timezone = timezone
+    return mapCasesToOmop([c as never])
+  }
+
+  it("dates a case begun at 01:30 in Sofia on its own day, with the local clock and offset", () => {
+    expect(caseAt("Europe/Sofia").visit_occurrence[0]).toEqual(expect.objectContaining({
+      visit_start_date: "2026-06-02",
+      visit_start_datetime: "2026-06-02T01:30:00+03:00",
+      visit_end_datetime: "2026-06-02T02:45:00+03:00",
+    }))
+  })
+
+  it("keeps UTC for an old case that never recorded its zone", () => {
+    expect(caseAt(null).visit_occurrence[0]).toEqual(expect.objectContaining({
+      visit_start_date: "2026-06-01",
+      visit_start_datetime: "2026-06-01T22:30:00.000Z",
+    }))
+  })
 })
