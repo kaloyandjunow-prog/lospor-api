@@ -1,6 +1,7 @@
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePostopPatch } from "@lospor/core/case-payloads"
-import { aldreteTotal as coreAldreteTotal } from "@lospor/core/postop"
+import { aldreteTotal as coreAldreteTotal, stewardTotal as coreStewardTotal } from "@lospor/core/postop"
+import { FLACC_FIELDS, NIPS_FIELDS, PAED_FIELDS } from "@lospor/core/postop-pain"
 import { copyKey, safeEnum, toFloatOrNull, toIntOrNull } from "./shared"
 
 export function mapPostopUpdate(postop: Record<string, unknown>) {
@@ -31,7 +32,23 @@ export function mapPostopUpdate(postop: Record<string, unknown>) {
     r.aldreteTotal = full.aldreteTotal
   }
 
+  // A child's Steward score: the same rule, three components.
+  const stewardKeys = ["stewardConsciousness", "stewardAirway", "stewardMovement"] as const
+  if (stewardKeys.some(has) || has("stewardTotal")) {
+    for (const key of stewardKeys) if (has(key)) r[key] = full[key]
+    r.stewardTotal = full.stewardTotal
+  }
+
+  // Item-scored pain and delirium (10.0.0): each total follows its items.
+  for (const [fields, total] of [[FLACC_FIELDS, "flaccTotal"], [NIPS_FIELDS, "nipsTotal"], [PAED_FIELDS, "paedScore"]] as const) {
+    if (!fields.some(has)) continue
+    for (const key of fields) if (has(key)) r[key] = full[key]
+    r[total] = full[total]
+  }
+  if (has("fpsrScore")) r.fpsrScore = full.fpsrScore
+
   if (has("temperatureCelsius") || has("temperaturePostop")) r.temperatureCelsius = full.temperatureCelsius
+  if (has("performedProcedures")) r.performedProceduresJson = full.performedProceduresJson
 
   if (has("disposition") && full.disposition !== "WARD" && full.disposition !== "PACU") {
     r.handoverItems = []
@@ -52,6 +69,7 @@ type PostopRawInput = Partial<Prisma.PostoperativeRecordUncheckedCreateWithoutCa
 
 export function mapPostop(rawPostop: Record<string, unknown>): Prisma.PostoperativeRecordUncheckedCreateWithoutCaseInput {
   const postop = canonicalizePostopPatch(rawPostop) as PostopRawInput
+  const performedProcedures = Array.isArray(rawPostop.performedProcedures) ? rawPostop.performedProcedures : []
   const aldreteActivity = postop.aldreteActivity ?? postop.activityScore
   const aldreteRespiration = postop.aldreteRespiration ?? postop.respirationScore
   const aldreteCirculation = postop.aldreteCirculation ?? postop.circulationScore
@@ -74,6 +92,12 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
   })
   const aldreteTotal =
     postop.aldreteTotal != null ? toIntOrNull(postop.aldreteTotal) : computedTotal
+  const steward = {
+    stewardConsciousness: toIntOrNull(postop.stewardConsciousness),
+    stewardAirway:        toIntOrNull(postop.stewardAirway),
+    stewardMovement:      toIntOrNull(postop.stewardMovement),
+  }
+  const stewardTotal = postop.stewardTotal != null ? toIntOrNull(postop.stewardTotal) : coreStewardTotal(steward)
 
   return {
     aldreteActivity:      toIntOrNull(aldreteActivity),
@@ -82,6 +106,8 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
     aldreteConsciousness: toIntOrNull(aldreteConsciousness),
     aldreteSpO2:          toIntOrNull(aldreteSpO2),
     aldreteTotal,
+    ...steward,
+    stewardTotal,
     recoveryBpSystolic:  toIntOrNull(postop.recoveryBpSystolic),
     recoveryBpDiastolic: toIntOrNull(postop.recoveryBpDiastolic),
     recoveryHeartRate:   toIntOrNull(postop.recoveryHeartRate),
@@ -89,6 +115,25 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
     pediatricPainScale: safeEnum(postop.pediatricPainScale, ["FLACC", "FPS_R", "NRS"] as const),
     pediatricPainScore: toIntOrNull(postop.pediatricPainScore),
     paedScore:          toIntOrNull(postop.paedScore),
+    flaccFace:          toIntOrNull(postop.flaccFace),
+    flaccLegs:          toIntOrNull(postop.flaccLegs),
+    flaccActivity:      toIntOrNull(postop.flaccActivity),
+    flaccCry:           toIntOrNull(postop.flaccCry),
+    flaccConsolability: toIntOrNull(postop.flaccConsolability),
+    fpsrScore:          toIntOrNull(postop.fpsrScore),
+    nipsFacialExpression:toIntOrNull(postop.nipsFacialExpression),
+    nipsCry:            toIntOrNull(postop.nipsCry),
+    nipsBreathing:      toIntOrNull(postop.nipsBreathing),
+    nipsArms:           toIntOrNull(postop.nipsArms),
+    nipsLegs:           toIntOrNull(postop.nipsLegs),
+    nipsArousal:        toIntOrNull(postop.nipsArousal),
+    paedEyeContact:     toIntOrNull(postop.paedEyeContact),
+    paedPurposeful:     toIntOrNull(postop.paedPurposeful),
+    paedAware:          toIntOrNull(postop.paedAware),
+    paedRestless:       toIntOrNull(postop.paedRestless),
+    paedInconsolable:   toIntOrNull(postop.paedInconsolable),
+    flaccTotal:         toIntOrNull(postop.flaccTotal),
+    nipsTotal:          toIntOrNull(postop.nipsTotal),
     painScoreNRS:       toIntOrNull(postop.painScoreNRS),
     ponv: postop.ponv ?? null,
     temperatureCelsius: toFloatOrNull(postop.temperatureCelsius ?? postop.temperaturePostop),
@@ -100,5 +145,7 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
     handoverItems:      (postop.disposition === "WARD" || postop.disposition === "PACU") ? postop.handoverItems ?? [] : [],
     disposition:        postop.disposition        ?? null,
     dispositionNotes:   (postop.disposition === "WARD" || postop.disposition === "PACU") ? postop.dispositionNotes ?? null : null,
+    // The procedure done (10.0.0), as the planned procedures are kept.
+    performedProceduresJson: performedProcedures.length > 0 ? performedProcedures as Prisma.InputJsonValue : Prisma.JsonNull,
   }
 }

@@ -109,6 +109,8 @@ describe("POST /api/cases/:id/submit-for-review", () => {
       clinicalMode: "PEDIATRIC", awaitingReviewAt: null,
     })
     findPreopMock.mockResolvedValue(COMPLETE_PAEDIATRIC_PREOP)
+    // A child is scored on Steward (10.0.0).
+    findPostopMock.mockResolvedValue({ stewardConsciousness: 2, stewardAirway: 2, stewardMovement: 2, disposition: "WARD" })
 
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
 

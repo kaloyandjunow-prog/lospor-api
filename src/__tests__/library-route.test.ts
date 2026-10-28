@@ -3,11 +3,13 @@ import type { NextRequest } from "next/server"
 
 const getAuthUserMock = vi.fn()
 const findManyMock = vi.fn()
+const drugColorFindManyMock = vi.fn()
 
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: getAuthUserMock }))
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     optionLibrary: { findMany: findManyMock },
+    drugColor: { findMany: drugColorFindManyMock },
   },
 }))
 
@@ -73,5 +75,32 @@ describe("GET /api/library/:category", () => {
         metadata: null,
       },
     ])
+    expect(drugColorFindManyMock).not.toHaveBeenCalled()
+  })
+
+  it("gives each drug the hospital's colour: its own, else its group's (10.0.0)", async () => {
+    getAuthUserMock.mockResolvedValue({ id: "user-1" })
+    const row = (labelEn: string) => ({
+      id: labelEn, value: labelEn.toUpperCase(), labelEn, labelBg: null, group: "Opioid analgesics", parentId: null,
+      color: "#f97316", description: null, drugId: null, drug: null, metadata: null,
+    })
+    findManyMock.mockResolvedValue([row("Fentanyl"), row("Remifentanil"), { ...row("Ondansetron"), group: "Antiemetics / prokinetics" }])
+    drugColorFindManyMock.mockResolvedValue([
+      { scope: "GROUP", name: "Opioid analgesics", color: "#3b82f6" },
+      { scope: "DRUG", name: "Remifentanil", color: "#EC4899" },
+    ])
+
+    const res = await GET(new Request("http://localhost/api/library/INTRAOP_INFUSION") as NextRequest, {
+      params: Promise.resolve({ category: "INTRAOP_INFUSION" }),
+    })
+
+    const body = await res.json() as { label: string; color: string; customColor?: string; customGroupColor?: string }[]
+    expect(body.map(option => [option.label, option.customColor, option.customGroupColor])).toEqual([
+      ["Fentanyl", "#3b82f6", "#3b82f6"],
+      ["Remifentanil", "#ec4899", "#3b82f6"],
+      ["Ondansetron", undefined, undefined],
+    ])
+    // The bundled colour still travels, for a client that predates the custom one.
+    expect(body[0].color).toBe("#f97316")
   })
 })

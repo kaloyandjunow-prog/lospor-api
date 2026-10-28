@@ -132,6 +132,8 @@ describe("POST /api/cases/:id/finalize", () => {
       clinicalMode: "PEDIATRIC",
     })
     findPreopMock.mockResolvedValue(COMPLETE_PAEDIATRIC_PREOP)
+    // A child is scored on Steward (10.0.0).
+    findPostopMock.mockResolvedValue({ stewardConsciousness: 2, stewardAirway: 2, stewardMovement: 2, disposition: "WARD" })
 
     const res = await POST(makeRequest("case-1", "9.13.4"), { params: Promise.resolve({ id: "case-1" }) })
 
@@ -139,6 +141,25 @@ describe("POST /api/cases/:id/finalize", () => {
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: "COMPLETE" }),
     }))
+  })
+
+  it("asks a child for the Steward score, which an Aldrete score does not replace", async () => {
+    findUniqueMock.mockResolvedValue({
+      userId: VALID_CASE.userId,
+      status: VALID_CASE.status,
+      institutionId: "inst-1",
+      clinicalMode: "PEDIATRIC",
+    })
+    findPreopMock.mockResolvedValue(COMPLETE_PAEDIATRIC_PREOP)
+    findPostopMock.mockResolvedValue({ ...VALID_CASE.postop, stewardMovement: null })
+
+    const res = await POST(makeRequest("case-1", "9.13.4"), { params: Promise.resolve({ id: "case-1" }) })
+    expect(res.status).toBe(422)
+    expect((await res.json()).reason).toBe("missing_steward")
+    // The gate reads the three components from the record.
+    expect(findPostopMock.mock.calls[0]?.[0]).toMatchObject({
+      select: { stewardConsciousness: true, stewardAirway: true, stewardMovement: true },
+    })
   })
 
   it("accepts the current startedAt and endedAt fields", async () => {

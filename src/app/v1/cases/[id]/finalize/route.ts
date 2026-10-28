@@ -24,6 +24,7 @@ const FINALIZATION_ERRORS: Partial<Record<ClinicalIssueCode, string>> = {
   invalid_intraop_times: "Cannot finalise: intraop end time must be after start time",
   missing_postop: "Cannot finalise: postoperative record is missing",
   missing_aldrete: "Cannot finalise: every Aldrete component must be recorded",
+  missing_steward: "Cannot finalise: every Steward component must be recorded",
   missing_disposition: "Cannot finalise: patient disposition (Ward/PACU/ICU) must be recorded",
 }
 
@@ -52,6 +53,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
+      if (caseRecord.status === "CANCELLED") {
+        return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
       }
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is already finalised" }, { status: 409 })

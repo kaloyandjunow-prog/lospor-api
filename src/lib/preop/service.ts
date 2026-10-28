@@ -1,3 +1,4 @@
+import type { PremedicationOrders } from "@lospor/core/premedication"
 import { randomUUID } from "node:crypto"
 import { ClinicalMode, Prisma, PreopAnswerState, PreopProfileStatus, type PrismaClient } from "@/generated/prisma/client"
 import {
@@ -8,7 +9,21 @@ import {
   type PreopCatalogQuestion,
   type PreopFormSection,
 } from "./catalog"
-import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION, preopQuestionAppliesToAge } from "@lospor/core/preop-assessment"
+import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION, preopQuestionAppliesToAge, preopQuestionAppliesToSex } from "@lospor/core/preop-assessment"
+import { defaultPreopSectionConfig, isFormSectionOn, type PreopSectionConfig } from "@lospor/core/preop-orders"
+import {
+  PROFILE_SECTION_INCLUDE,
+  PreopSectionsError,
+  provisionSectionRows,
+  saveMedicationInstructions,
+  savePremedicationOrders,
+  saveWardOrders,
+  sectionConfigOf,
+  updateSectionRows,
+  type ProfileSectionRows,
+  type SectionConfigInput,
+} from "./sections"
+import type { PreopMedicationInstructionInput, PreopWardOrderInput } from "@lospor/core/preop-orders"
 
 /**
  * The preoperative assessment: one bundled catalogue, one profile for adults
@@ -27,7 +42,7 @@ import { hasDedicatedPreopControl, PREOP_LEGACY_FIELD_BY_QUESTION, preopQuestion
  */
 
 type Db = Prisma.TransactionClient | PrismaClientLike
-type PrismaClientLike = Pick<PrismaClient, "$executeRaw" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopProfileQuestion" | "preopAssessmentAnswer" | "preopAssessmentAuditEvent" | "preopAssessmentSuggestion">
+type PrismaClientLike = Pick<PrismaClient, "$executeRaw" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopProfileQuestion" | "preopAssessmentAnswer" | "preopAssessmentAuditEvent" | "preopAssessmentSuggestion" | "preopProfileSection" | "preopProfileOrderOption" | "preopProfileConsultSpecialty">
 
 type PreopQuestionOptionRow = {
   key: string
@@ -60,7 +75,7 @@ type PreopProfileQuestionRow = {
   }
 }
 
-type PreopProfileRow = {
+type PreopProfileRow = ProfileSectionRows & {
   id: string
   version: number
   population: ClinicalMode
@@ -124,6 +139,10 @@ export type PreopProfileShape = {
     /** Each population's settings; see serializePreopProfiles. */
     byMode?: Partial<Record<ClinicalMode, { enabled: boolean; required: boolean; sortOrder: number }>>
   }>
+  /** The population's sections and order rows (Core preop-orders), as Status edits them. */
+  sectionConfig?: PreopSectionConfig
+  /** Both populations', in the shape the forms read. */
+  sectionConfigs?: Partial<Record<ClinicalMode, PreopSectionConfig>>
 }
 
 export const PREOP_POPULATIONS = [ClinicalMode.ADULT, ClinicalMode.PEDIATRIC] as const
@@ -160,6 +179,12 @@ export function preopContractBlockedKeys(error: PreopContractError): string[] | 
   switch (error.code) {
     case "MUTUALLY_EXCLUSIVE_SURGERY_URGENCY":
       return ["elective", "emergencySurgery"]
+    case "PREOP_WARD_ORDERS_REFUSED":
+      return ["preopWardOrders"]
+    case "PREOP_MEDICATION_INSTRUCTIONS_REFUSED":
+      return ["preopMedicationInstructions"]
+    case "PREOP_PREMEDICATION_REFUSED":
+      return ["preopPremedicationOrders"]
     case "UNKNOWN_PREOP_QUESTION":
     case "NOT_ASKED_IS_SERVER_GENERATED":
     case "UNKNOWN_NOT_ALLOWED":
@@ -321,11 +346,18 @@ const PROFILE_INCLUDE = {
   },
 } as const
 
-export async function activePreopProfile(db: Db, population: ClinicalMode = ClinicalMode.ADULT) {
+/**
+ * The profile with its sections and order rows, for the reads that draw a form
+ * or an editor. A save's fast path reads the questions alone: each relation is
+ * a query of its own, and a hosted database pays ~90 ms for each.
+ */
+const PROFILE_WITH_SECTIONS_INCLUDE = { ...PROFILE_INCLUDE, ...PROFILE_SECTION_INCLUDE } as const
+
+export async function activePreopProfile(db: Db, population: ClinicalMode = ClinicalMode.ADULT, withSections = false) {
   return db.preopAssessmentProfile.findFirst({
     where: { status: PreopProfileStatus.PUBLISHED, population },
     orderBy: { version: "desc" },
-    include: PROFILE_INCLUDE,
+    include: withSections ? PROFILE_WITH_SECTIONS_INCLUDE : PROFILE_INCLUDE,
   })
 }
 
@@ -337,6 +369,12 @@ async function lockProfile(db: Db): Promise<void> {
   }
 }
 
+/**
+ * Recorded against this catalogue with every bundled question. The section
+ * rows are provisioned with the catalogue (on creation and on each upgrade),
+ * so a release that ships a new section, row or specialty bumps
+ * PREOP_CATALOG_VERSION as one that ships a question does.
+ */
 function isCurrent(profile: PreopProfileRow | null): boolean {
   return profile != null && profile.catalogVersion === PREOP_CATALOG_VERSION
     && profile.questions.length === BUNDLED_PREOP_QUESTIONS.length
@@ -384,9 +422,9 @@ export async function ensurePreopProfile(
  * reads as the copy of the adult one that save will make.
  */
 export async function readPreopProfiles(db: Db): Promise<Record<ClinicalMode, PreopProfileRow> | null> {
-  const adult = await activePreopProfile(db, ClinicalMode.ADULT)
+  const adult = await activePreopProfile(db, ClinicalMode.ADULT, true)
   if (!adult) return null
-  const pediatric = await activePreopProfile(db, ClinicalMode.PEDIATRIC)
+  const pediatric = await activePreopProfile(db, ClinicalMode.PEDIATRIC, true)
   return { ADULT: adult, PEDIATRIC: pediatric ?? adult }
 }
 
@@ -460,11 +498,20 @@ async function ensurePopulationProfile(
         detail: json({ catalogVersion: PREOP_CATALOG_VERSION, population, copiedFromProfileId: copyFrom?.id ?? null }),
       },
     })
+    await provisionSectionRows(db as Prisma.TransactionClient, created.id, population, true)
     return
   }
   // A release that adds questions adds them switched off, after the
-  // operator's existing order. Nothing the operator chose is changed.
+  // operator's existing order. Nothing the operator chose is changed. The one
+  // exception is a default-on follow-up of a question the operator has on
+  // (10.0.0: what the family history names): off, its parent's YES would lead
+  // nowhere.
   const present = new Set(profile.questions.map(row => row.question.stableKey))
+  const enabledNow = new Set(profile.questions.filter(row => row.enabled).map(row => row.question.stableKey))
+  const switchedOnWithParent = (stableKey: string) => {
+    const parentKey = BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === stableKey)?.parentKey
+    return DEFAULT_ENABLED_QUESTION_KEYS.has(stableKey) && !!parentKey && enabledNow.has(parentKey)
+  }
   const added = BUNDLED_PREOP_QUESTIONS.map(item => item.stableKey).filter(key => !present.has(key))
   if (added.length > 0) {
     // One read and one insert, however many questions a release adds.
@@ -478,7 +525,7 @@ async function ensurePopulationProfile(
       data: added.map((stableKey, index) => ({
         profileId: profile.id,
         questionId: idOf.get(stableKey)!,
-        enabled: false,
+        enabled: switchedOnWithParent(stableKey),
         required: false,
         sortOrder: first + index,
       })),
@@ -493,6 +540,7 @@ async function ensurePopulationProfile(
       detail: json({ from: profile.catalogVersion, to: PREOP_CATALOG_VERSION, population, added }),
     },
   })
+  await provisionSectionRows(db as Prisma.TransactionClient, profile.id, population)
 }
 
 /**
@@ -550,7 +598,36 @@ export async function updatePreopProfile(
   await db.preopAssessmentAuditEvent.create({
     data: { profileId: profile.id, actorId, action: "PROFILE_UPDATED", detail: json({ reason, population, changes }) },
   })
-  const result = await activePreopProfile(db, population)
+  const result = await activePreopProfile(db, population, true)
+  if (!result) throw new PreopContractError("PREOP_PROFILE_NOT_PROVISIONED")
+  return result
+}
+
+/**
+ * An operator's change to one population's sections, order rows and
+ * consultation specialties, applied in place and audited like a question
+ * change. Cases keep the orders they already hold.
+ */
+export async function updatePreopSectionConfig(
+  db: Prisma.TransactionClient,
+  actorId: string,
+  input: SectionConfigInput,
+  reason: string,
+  population: ClinicalMode = ClinicalMode.ADULT,
+): Promise<PreopProfileRow> {
+  await lockProfile(db)
+  const profile = await ensurePreopProfile(db, actorId, population)
+  let change: Awaited<ReturnType<typeof updateSectionRows>>
+  try {
+    change = await updateSectionRows(db, profile.id, population, input)
+  } catch (error) {
+    if (error instanceof PreopSectionsError) throw new PreopContractError(error.code, error.details)
+    throw error
+  }
+  await db.preopAssessmentAuditEvent.create({
+    data: { profileId: profile.id, actorId, action: "PROFILE_SECTIONS_UPDATED", detail: json({ reason, population, before: change.before, after: change.after }) },
+  })
+  const result = await activePreopProfile(db, population, true)
   if (!result) throw new PreopContractError("PREOP_PROFILE_NOT_PROVISIONED")
   return result
 }
@@ -854,6 +931,38 @@ export async function savePreopAnswers(
   return { profile, answersWritten: resetToNotAsked.length + created.length + changed.length }
 }
 
+/**
+ * A case's ward orders and medication instructions, saved beside its answers
+ * in the same transaction. Either list left out of the payload is left as it is.
+ */
+export async function savePreopOrders(
+  db: Prisma.TransactionClient,
+  args: {
+    caseId: string
+    preopId: string
+    actorId: string
+    clinicalMode: string | null | undefined
+    wardOrders: PreopWardOrderInput[] | undefined
+    medicationInstructions: PreopMedicationInstructionInput[] | undefined
+    premedicationOrders?: PremedicationOrders | undefined
+  },
+): Promise<void> {
+  if (args.wardOrders === undefined && args.medicationInstructions === undefined && args.premedicationOrders === undefined) return
+  const population = populationForMode(args.clinicalMode)
+  await ensurePreopProfile(db, args.actorId, population)
+  const profile = await activePreopProfile(db, population, true)
+  if (!profile) throw new PreopContractError("PREOP_PROFILE_NOT_PROVISIONED")
+  const config = sectionConfigOf(profile as ProfileSectionRows, population)
+  try {
+    await saveWardOrders(db, { ...args, population, config, orders: args.wardOrders })
+    await saveMedicationInstructions(db, { ...args, config, instructions: args.medicationInstructions })
+    await savePremedicationOrders(db, { ...args, config, orders: args.premedicationOrders })
+  } catch (error) {
+    if (error instanceof PreopSectionsError) throw new PreopContractError(error.code, error.details)
+    throw error
+  }
+}
+
 export type MissingRequiredPreopQuestion = {
   stableKey: string
   labelEn: string
@@ -875,13 +984,20 @@ export function missingRequiredPreopQuestions(
   answers: ReadonlyArray<{ questionId: string; state: string }> | null | undefined,
   clinicalMode: string | null | undefined,
   ageYears?: number | null,
+  sex?: string | null,
 ): MissingRequiredPreopQuestion[] {
   if (!profile) return []
+  // A question in a section the hospital switched off is not asked.
+  const sections = "sections" in profile && profile.sections
+    ? sectionConfigOf(profile as ProfileSectionRows, populationForMode(clinicalMode))
+    : null
   const states = new Map((answers ?? []).map(answer => [answer.questionId, answer.state]))
   const stateByKey = new Map(profile.questions.map(row => [row.question.stableKey, states.get(row.questionId)]))
   return profile.questions
     .filter(row => row.enabled && row.required && questionAppliesToMode(row.question.applicability, clinicalMode)
-      && preopQuestionAppliesToAge(bundledQuestion(row.question.stableKey)?.minAgeYears, ageYears))
+      && preopQuestionAppliesToAge(bundledQuestion(row.question.stableKey)?.minAgeYears, ageYears)
+      && preopQuestionAppliesToSex(row.question.stableKey, sex)
+      && (!sections || isFormSectionOn(sections, bundledQuestion(row.question.stableKey)?.formSection ?? "anamnesis")))
     .filter(row => {
       // A required follow-up only counts while its parent is YES.
       const parentKey = bundledQuestion(row.question.stableKey)?.parentKey
@@ -945,6 +1061,8 @@ export function serializePreopProfile(profile: PreopProfileRow): PreopProfileSha
     status: profile.status,
     publishedAt: profile.publishedAt,
     questions: profile.questions.map(serializeQuestion),
+    // Only when read with its rows: defaults here would misstate the site's choices.
+    ...(profile.sections ? { sectionConfig: sectionConfigOf(profile, profile.population) } : {}),
   }
 }
 
@@ -961,7 +1079,7 @@ type ProfileSettings = { enabled: boolean; required: boolean; sortOrder: number 
  * paediatric profile's for a children-only question.
  */
 export function serializePreopProfiles(
-  profiles: Record<ClinicalMode, Pick<PreopProfileRow, "id" | "version" | "catalogVersion" | "status" | "publishedAt" | "questions">>,
+  profiles: Record<ClinicalMode, Pick<PreopProfileRow, "id" | "version" | "catalogVersion" | "status" | "publishedAt" | "questions"> & ProfileSectionRows>,
 ): PreopProfileShape {
   const settings = (population: ClinicalMode) => new Map<string, ProfileSettings>(profiles[population].questions.map(row => [
     row.question.stableKey,
@@ -985,6 +1103,12 @@ export function serializePreopProfiles(
       const legacy = byMode.ADULT ?? byMode.PEDIATRIC
       return { ...question, ...(legacy ?? {}), byMode }
     }),
+    ...(profiles.ADULT.sections && profiles.PEDIATRIC.sections ? {
+      sectionConfigs: {
+        ADULT: sectionConfigOf(profiles.ADULT, ClinicalMode.ADULT),
+        PEDIATRIC: sectionConfigOf(profiles.PEDIATRIC, ClinicalMode.PEDIATRIC),
+      },
+    } : {}),
   }
 }
 
@@ -1005,6 +1129,7 @@ export function defaultPreopProfileShape(): PreopProfileShape {
       }
       return { ...question, byMode }
     }),
+    sectionConfigs: { ADULT: defaultPreopSectionConfig("ADULT"), PEDIATRIC: defaultPreopSectionConfig("PEDIATRIC") },
   }
 }
 

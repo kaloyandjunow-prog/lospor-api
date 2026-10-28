@@ -269,7 +269,21 @@ model Case {
   createdBy            User         @relation("CaseCreator", fields: [createdById], references: [id])
   institutionId        String?
   institution          Institution? @relation(fields: [institutionId], references: [id])
+  /// The operating theatre (10.0.0), optional; assigned until intraop starts.
+  operatingTheatreId   String?
+  operatingTheatre     OperatingTheatre? @relation(fields: [operatingTheatreId], references: [id])
+  /// The theatre's name when intraop started, kept so a later rename does not
+  /// rewrite where the case happened. Null until then.
+  operatingTheatreName String?
+  indicatorSummary     CaseIndicatorSummary?
   status               CaseStatus   @default(DRAFT)
+  /// A cancelled procedure (10.0.0): when, by whom, why (Core
+  /// CANCELLATION_REASONS) and the status to return to if it is undone.
+  cancelledAt          DateTime?
+  cancelledById        String?
+  cancellationReason   String?
+  cancellationNote     String?
+  statusBeforeCancel   CaseStatus?
   clinicalMode         ClinicalMode @default(ADULT)
   clinicalRulesVersion String?
   /// Set once, the moment status first transitions to AWAITING_REVIEW (never
@@ -318,6 +332,59 @@ model Case {
   @@index([status])
   @@index([userId, createdAt])
   @@index([createdById, createdAt])
+  @@index([operatingTheatreId])
+}
+
+/// A hospital's operating theatres (10.0.0), named in Status; nothing is
+/// bundled. Never deleted: a retired theatre leaves the pickers but stays on
+/// the cases that had it.
+model OperatingTheatre {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cases Case[]
+
+  @@index([active, sortOrder])
+}
+
+/// The unit indicators' thresholds and whether colleagues are named (10.0.0),
+/// set in Status. One row; no row means the bundled defaults (Core).
+model IndicatorPolicy {
+  id        String   @id @default("local")
+  config    Json
+  updatedAt DateTime @updatedAt
+}
+
+/// One case's figures for the unit indicators (10.0.0), worked out from its
+/// record and kept until the case or the thresholds change. A derived cache,
+/// not part of the record: it can be dropped and rebuilt at any time, and no
+/// export reads it.
+model CaseIndicatorSummary {
+  caseId             String   @id
+  case               Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  institutionId      String?
+  startedAt          DateTime
+  clinicalRevision   Int
+  eventRevision      Int
+  relationalRevision Int
+  configKey          String
+  version            Int
+  payload            Json
+  computedAt         DateTime @default(now())
+
+  @@index([institutionId, startedAt])
+}
+
+/// Whether this site assigns operating theatres. One row; off unless an
+/// operator switches it on in Status (appliance). No row means off.
+model OperatingTheatrePolicy {
+  id        String   @id @default("local")
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
 }
 
 model CaseLock {
@@ -400,6 +467,9 @@ enum CaseStatus {
   IN_PROGRESS
   AWAITING_REVIEW
   COMPLETE
+  /// The procedure was cancelled before anaesthesia started (10.0.0). The
+  /// record is kept, closed to editing, and exported with its cancellation.
+  CANCELLED
 }
 
 enum ClinicalMode {
@@ -606,6 +676,19 @@ model OptionLibrary {
   @@unique([category, value])
   @@index([category, active, sortOrder])
   @@index([parentId])
+}
+
+/// A hospital's own drug colours (10.0.0), chosen in Status: a drug group's
+/// colour, or one drug's, which overrides its group's. Keyed by the group or
+/// the drug's English label, shared by its bolus and its infusion. Only
+/// presentation: no case records a colour, so every case is drawn in these.
+model DrugColor {
+  scope     String // "GROUP" | "DRUG"
+  name      String
+  color     String // #rrggbb
+  updatedAt DateTime @updatedAt
+
+  @@id([scope, name])
 }
 
 enum ConceptMappingStatus {
@@ -1023,6 +1106,8 @@ model PreoperativeAssessment {
   diagnosesJson      Json?
   plannedProcedure   String
   proceduresJson     Json?
+  /// The planned procedure is not yet known: decided during surgery (10.0.0).
+  procedureUndetermined Boolean @default(false)
   /// LEGACY, read-only. The first diagnosis code, denormalised. The diagnoses
   /// themselves export properly through the PreopDiagnosis mirror, so nothing
   /// is lost by this not being exported; it survives because the printed
@@ -1147,6 +1232,9 @@ model PreoperativeAssessment {
   medications     Medication[]
   assessmentAnswers     PreopAssessmentAnswer[]
   assessmentSuggestions PreopAssessmentSuggestion[]
+  wardOrders             PreopWardOrder[]
+  medicationInstructions PreopMedicationInstruction[]
+  premedicationOrders    PreopPremedicationOrder[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1213,6 +1301,9 @@ model PreopAssessmentProfile {
   createdAt      DateTime           @default(now())
 
   questions   PreopProfileQuestion[]
+  sections           PreopProfileSection[]
+  orderOptions       PreopProfileOrderOption[]
+  consultSpecialties PreopProfileConsultSpecialty[]
   auditEvents PreopAssessmentAuditEvent[]
 
   @@index([population, status, version])
@@ -1288,6 +1379,146 @@ model PreopProfileQuestion {
 
   @@id([profileId, questionId])
   @@index([profileId, enabled, sortOrder])
+}
+
+/// Whether a switchable preop section (Core preop-orders) is on in this
+/// population's profile. The required sections have no row: they are always on.
+model PreopProfileSection {
+  profileId  String
+  profile    PreopAssessmentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  sectionKey String
+  enabled    Boolean                @default(true)
+
+  @@id([profileId, sectionKey])
+}
+
+/// A row the ward orders or the medication instructions offer. Bundled rows
+/// can be switched off but not removed or renamed; a hospital's own rows
+/// (key CUSTOM_...) can be removed. A case keeps its own copy of what it
+/// ordered, so removing a row changes no case.
+model PreopProfileOrderOption {
+  profileId String
+  profile   PreopAssessmentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  key       String
+  /// WARD_ORDER | MEDICATION_INSTRUCTION
+  list      String
+  /// NONE | SIMPLE | CONSULT | LAB | MEDICATION
+  kind      String
+  labelEn   String
+  labelBg   String
+  conceptId Int                    @default(0)
+  bundled   Boolean                @default(false)
+  enabled   Boolean                @default(true)
+  sortOrder Int                    @default(0)
+  /// REQUIRED | OPTIONAL | NONE: whether a medication row takes hours before surgery.
+  hoursMode String                 @default("NONE")
+  /// A lab row's fixed test (Core lab library name); null when the test is picked.
+  labTest   String?
+
+  @@id([profileId, key])
+  @@index([profileId, list, sortOrder])
+}
+
+/// Whether a consultation order can name this NHIS CL006 specialty.
+model PreopProfileConsultSpecialty {
+  profileId    String
+  profile      PreopAssessmentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  specialtyKey String
+  enabled      Boolean                @default(false)
+
+  @@id([profileId, specialtyKey])
+}
+
+enum PreopOrderStatus {
+  ACTIVE
+  CANCELLED
+}
+
+/// An order the anaesthetist leaves for the preoperative ward. It keeps its
+/// own copy of the row's code, labels and concept. Unticked, it is cancelled,
+/// not deleted: what was ordered and when stays on record.
+model PreopWardOrder {
+  id               String                 @id @default(cuid())
+  preopId          String
+  preop            PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId           String
+  optionKey        String
+  kind             String
+  labelEn          String
+  labelBg          String
+  conceptId        Int                    @default(0)
+  /// CONSULT: the NHIS CL006 key and its names.
+  specialtyKey     String?
+  specialtyLabelEn String?
+  specialtyLabelBg String?
+  /// LAB: the Core lab library test, its LOINC code and standard concept.
+  labTest          String?
+  labLoinc         String?
+  labConceptId     Int?
+  status           PreopOrderStatus       @default(ACTIVE)
+  authorId         String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  cancelledAt      DateTime?
+
+  @@index([preopId, status])
+  @@index([caseId])
+  @@index([optionKey])
+}
+
+/// A medication instruction: stop, or do not stop, one of the patient's
+/// current medications. clientId is the form's own id for the row, so an
+/// autosave never doubles it.
+model PreopMedicationInstruction {
+  id              String                 @id @default(cuid())
+  preopId         String
+  preop           PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId          String
+  clientId        String
+  optionKey       String
+  labelEn         String
+  labelBg         String
+  conceptId       Int                    @default(0)
+  medicationLabel String
+  medicationInn   String?
+  medicationAtc   String?
+  hoursBefore     Int?
+  status          PreopOrderStatus       @default(ACTIVE)
+  authorId        String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  cancelledAt     DateTime?
+
+  @@unique([preopId, clientId])
+  @@index([preopId, status])
+  @@index([caseId])
+}
+
+// Premedication ordered at the preop visit (1.7.0): one row per drug, in the
+// picker's own words, with the drug read back out of it. The intraoperative
+// record starts from these while its premedication is still empty.
+model PreopPremedicationOrder {
+  id          String                 @id @default(cuid())
+  preopId     String
+  preop       PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId      String
+  phase       String // DAY_BEFORE | MORNING
+  entry       String
+  drug        String?
+  atcCode     String?
+  dose        Float?
+  unit        String?
+  route       String?
+  conceptId   Int?
+  ordinal     Int                    @default(0)
+  status      PreopOrderStatus       @default(ACTIVE)
+  authorId    String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  cancelledAt DateTime?
+
+  @@index([preopId, status])
+  @@index([caseId])
 }
 
 model PreopAssessmentAnswer {
@@ -1546,6 +1777,12 @@ model PostoperativeRecord {
   aldreteSpO2          Int?
   aldreteTotal         Int?
 
+  // A child's recovery score, in place of Aldrete (10.0.0): 0-2 each, 0-6 summed.
+  stewardConsciousness Int?
+  stewardAirway        Int?
+  stewardMovement      Int?
+  stewardTotal         Int?
+
   recoveryBpSystolic              Int?
   recoveryBpDiastolic             Int?
   recoveryHeartRate               Int?
@@ -1554,6 +1791,27 @@ model PostoperativeRecord {
   pediatricPainScale              PediatricPainScale?
   pediatricPainScore              Int?
   paedScore                       Int?
+  /// Pain and emergence delirium item by item, with totals (10.0.0). PAED's
+  /// total is paedScore. Which pain scales are offered follows the age.
+  flaccFace                       Int?
+  flaccLegs                       Int?
+  flaccActivity                   Int?
+  flaccCry                        Int?
+  flaccConsolability              Int?
+  flaccTotal                      Int?
+  fpsrScore                       Int?
+  nipsFacialExpression            Int?
+  nipsCry                         Int?
+  nipsBreathing                   Int?
+  nipsArms                        Int?
+  nipsLegs                        Int?
+  nipsArousal                     Int?
+  nipsTotal                       Int?
+  paedEyeContact                  Int?
+  paedPurposeful                  Int?
+  paedAware                       Int?
+  paedRestless                    Int?
+  paedInconsolable                Int?
   ponv                            Boolean?
   temperatureCelsius              Float?
   recoveryBpUnobtainable          Boolean             @default(false)
@@ -1564,6 +1822,10 @@ model PostoperativeRecord {
   complications    String?
   disposition      Disposition?
   dispositionNotes String?
+  /// The procedure done (10.0.0), as the planned procedures are kept; filled
+  /// in with the planned ones, changed when the operation differed.
+  performedProceduresJson Json?
+  performedProcedureRows  PerformedProcedure[]
   handoverItems    Json         @default("[]")
 
   createdAt    DateTime @default(now())
@@ -1911,6 +2173,33 @@ model PreopDiagnosis {
   @@index([preopId])
   @@index([code])
   @@index([sourceVocabulary, sourceCode])
+  @@index([standardConceptId])
+}
+
+/// The procedure done (10.0.0), coded as the planned ones are (PreopProcedure),
+/// from PostoperativeRecord.performedProceduresJson by relational sync. What
+/// the export takes as the operation performed.
+model PerformedProcedure {
+  id                String               @id @default(cuid())
+  postopId          String
+  postop            PostoperativeRecord  @relation(fields: [postopId], references: [id], onDelete: Cascade)
+  caseId            String
+  code              String?
+  group             String?
+  domain            String?
+  description       String?
+  sourceVocabulary  String?
+  sourceCode        String?
+  standardConceptId Int?
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
+  source            String               @default("sync")
+  clinicalSource    String?
+  sourceVersion     String?
+  ordinal           Int                  @default(0)
+  createdAt         DateTime             @default(now())
+
+  @@index([caseId])
+  @@index([postopId])
   @@index([standardConceptId])
 }
 

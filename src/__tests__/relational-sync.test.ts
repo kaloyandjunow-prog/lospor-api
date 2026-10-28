@@ -62,6 +62,7 @@ function makeDb(caseRow: Record<string, unknown>) {
     },
     preopDiagnosis: delegate(),
     preopProcedure: delegate(),
+    performedProcedure: delegate(),
     comorbidity: delegate(),
     labResult: delegate(),
     medication: delegate(),

@@ -118,14 +118,15 @@ export async function dashboardCaseCounts(
         ],
       },
     }),
-    prisma.case.count({ where: { ...where, status: { not: "COMPLETE" } } }),
+    // A cancelled procedure is closed, not active (10.0.0).
+    prisma.case.count({ where: { ...where, status: { notIn: ["COMPLETE", "CANCELLED"] } } }),
     prisma.case.count({ where: { ...where, status: "DRAFT" } }),
     prisma.case.count({ where: { ...where, status: "COMPLETE" } }),
     // "Awaiting postop": the case has ended intraoperatively but is not yet
     // finalised -- the same predicate the web dashboard's own row status uses,
     // not merely "an intraop record exists" (which mobile's local filter used
     // to check, before this counted from the server).
-    prisma.case.count({ where: { ...where, status: { not: "COMPLETE" }, intraop: { endTime: { not: null } } } }),
+    prisma.case.count({ where: { ...where, status: { notIn: ["COMPLETE", "CANCELLED"] }, intraop: { endTime: { not: null } } } }),
     prisma.case.count({ where: { ...where, postop: { disposition: "ICU" } } }),
     // "Handovers awaiting action by me" -- the one definition, matching
     // /v1/cases/transfers/pending's own default (incoming, toUserId = me).

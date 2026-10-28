@@ -61,6 +61,21 @@ describe("pediatric preop persistence", () => {
     expect(result.povocAgeAtLeast3Years).toBe(true)
   })
 
+  // 10.0.0: an unanswered POVOC question was stored as "no" and the child
+  // scored on it. Not asked stays not asked, and there is no score until all
+  // three are answered.
+  it("keeps an unanswered POVOC question unanswered, and has no score until all three are in", () => {
+    const partial = mapPreop({ clinicalMode: "PEDIATRIC", ageValue: 4, ageUnit: "YEARS", povocHistory: true })
+    expect(partial.povocHistory).toBe(true)
+    expect(partial.povocSurgeryAtLeast30Minutes).toBeNull()
+    expect(partial.povocStrabismusSurgery).toBeNull()
+    expect(partial.povocScore).toBeNull()
+    expect(partial.povocAgeAtLeast3Years).toBe(true)
+
+    const answered = mapPreop({ clinicalMode: "PEDIATRIC", ageValue: 4, ageUnit: "YEARS", povocHistory: true, povocSurgeryAtLeast30Minutes: false, povocStrabismusSurgery: false })
+    expect(answered.povocScore).toBe(2)
+  })
+
   it("clears every adult-only risk value when a case switches to pediatric mode", () => {
     const result = mapPreopUpdate(
       { clinicalMode: "PEDIATRIC" },

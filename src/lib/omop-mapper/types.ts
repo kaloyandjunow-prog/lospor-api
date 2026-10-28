@@ -290,6 +290,12 @@ export interface OmopObservation {
    * observation.
    */
   value_as_concept_id: number
+  /** A modifier of the fact, e.g. a planned operation's urgency. Standard OMOP columns; absent on most rows. */
+  qualifier_concept_id: number
+  qualifier_source_value: string | null
+  /** The unit of value_as_number: hours before surgery on a medication instruction. */
+  unit_concept_id: number
+  unit_source_value: string | null
   observation_source_value: string | null
   visit_occurrence_id: number
 }
@@ -300,6 +306,9 @@ export type CaseRow = {
   researchId: string
   createdAt: Date
   status: string
+  /** A cancelled procedure (10.0.0). */
+  cancelledAt?: Date | null
+  cancellationReason?: string | null
   clinicalMode?: "ADULT" | "PEDIATRIC"
   clinicalRulesVersion?: string | null
   institutionId?: string | null
@@ -396,6 +405,8 @@ export type CaseRow = {
     diagnosesJson: unknown
     plannedProcedure: string
     proceduresJson: unknown
+    /** The planned procedure is not yet known (10.0.0). */
+    procedureUndetermined?: boolean
     comorbidities: unknown
     asaScore: string | null
     emergencySurgery: boolean
@@ -545,6 +556,41 @@ export type CaseRow = {
       }
       option?: { omopConceptId?: number | null } | null
     }[]
+    /** Active orders only; a cancelled order was not left for the ward. */
+    wardOrders?: {
+      optionKey: string
+      kind: string
+      labelEn: string
+      labelBg: string
+      conceptId: number
+      specialtyKey: string | null
+      specialtyLabelEn: string | null
+      specialtyLabelBg: string | null
+      labTest: string | null
+      labLoinc: string | null
+      labConceptId: number | null
+      createdAt: Date
+    }[]
+    medicationInstructions?: {
+      optionKey: string
+      conceptId: number
+      medicationLabel: string
+      medicationInn: string | null
+      medicationAtc: string | null
+      hoursBefore: number | null
+      createdAt: Date
+    }[]
+    /** Active premedication orders only. */
+    premedicationOrders?: {
+      phase: string
+      entry: string
+      atcCode: string | null
+      dose: number | null
+      unit: string | null
+      route: string | null
+      conceptId: number | null
+      createdAt: Date
+    }[]
   } | null
   intraop?: {
     // Real instants when the record has them — the only form that can be placed
@@ -625,12 +671,47 @@ export type CaseRow = {
     labRows?: OmopLabRow[]
   } | null
   postop?: {
+    /** The procedure done (10.0.0), coded. */
+    performedProcedureRows?: {
+      code: string | null
+      group: string | null
+      domain: string | null
+      description: string | null
+      sourceVocabulary?: string | null
+      sourceCode?: string | null
+      standardConceptId?: number | null
+      mappingStatus?: string
+      ordinal: number
+    }[]
     aldreteActivity: number | null
     aldreteRespiration: number | null
     aldreteCirculation: number | null
     aldreteConsciousness: number | null
     aldreteSpO2: number | null
     aldreteTotal: number | null
+    stewardConsciousness?: number | null
+    stewardAirway?: number | null
+    stewardMovement?: number | null
+    stewardTotal?: number | null
+    flaccFace?: number | null
+    flaccLegs?: number | null
+    flaccActivity?: number | null
+    flaccCry?: number | null
+    flaccConsolability?: number | null
+    flaccTotal?: number | null
+    fpsrScore?: number | null
+    nipsFacialExpression?: number | null
+    nipsCry?: number | null
+    nipsBreathing?: number | null
+    nipsArms?: number | null
+    nipsLegs?: number | null
+    nipsArousal?: number | null
+    nipsTotal?: number | null
+    paedEyeContact?: number | null
+    paedPurposeful?: number | null
+    paedAware?: number | null
+    paedRestless?: number | null
+    paedInconsolable?: number | null
     recoveryBpUnobtainable?: boolean | null
     recoveryHeartRateUnobtainable?: boolean | null
     recoverySpO2Unobtainable?: boolean | null

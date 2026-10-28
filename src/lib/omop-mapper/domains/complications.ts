@@ -24,6 +24,10 @@ export function mapComplicationsToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
         value_as_number: null,
         value_as_string: comp.note ? `${comp.label}; ${comp.note}` : comp.label,
         value_as_concept_id: 0,
+        qualifier_concept_id: 0,
+        qualifier_source_value: null,
+        unit_concept_id: 0,
+        unit_source_value: null,
         observation_source_value: ctx.sourceValue("LOSPOR_COMPLICATION", comp.sourceVocabulary, comp.sourceCode, comp.label),
         visit_occurrence_id: ctx.visitId,
       })
@@ -80,6 +84,10 @@ export function mapComplicationsToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
         value_as_number: null,
         value_as_string: comp.note ? `${comp.label}; ${comp.note}` : comp.label,
         value_as_concept_id: 0,
+        qualifier_concept_id: 0,
+        qualifier_source_value: null,
+        unit_concept_id: 0,
+        unit_source_value: null,
         observation_source_value: `LOSPOR:${comp.section.toUpperCase()}_COMPLICATION`,
         visit_occurrence_id: ctx.visitId,
       })

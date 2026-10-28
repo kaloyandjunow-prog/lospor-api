@@ -111,6 +111,8 @@ export const preopSchema = z.object({
   diagnoses:            z.array(labelledItem).optional(),
   plannedProcedure:     z.string().max(1000).optional(),
   procedures:           z.array(labelledItem).optional(),
+  // The planned procedure is not yet known (10.0.0); ticked, it replaces the procedures.
+  procedureUndetermined: z.boolean().optional(),
   icdCode:              z.string().max(20).nullable().optional(),
   teamNotes:            z.string().max(500).nullable().optional(),
   physicalExamReport:   z.string().max(500).nullable().optional(),
@@ -212,6 +214,29 @@ export const preopSchema = z.object({
     valueDate: z.string().datetime().nullable().optional(),
   })).optional(),
 
+  // Orders for the preoperative ward and medication instructions (9.16.0).
+  // When present each is the form's complete list: an order it no longer
+  // holds is cancelled. Checked against the hospital's rows in the save.
+  preopWardOrders: z.array(z.object({
+    optionKey: z.string().min(1).max(80),
+    specialtyKey: z.string().min(1).max(20).nullable().optional(),
+    labTest: z.string().min(1).max(120).nullable().optional(),
+  })).max(60).optional(),
+  preopMedicationInstructions: z.array(z.object({
+    id: z.string().min(1).max(64),
+    optionKey: z.string().min(1).max(80),
+    medicationLabel: z.string().max(200),
+    medicationInn: z.string().max(200).nullable().optional(),
+    medicationAtc: z.string().max(20).nullable().optional(),
+    hoursBefore: z.number().int().nullable().optional(),
+  })).max(60).optional(),
+  // Premedication ordered at the preop visit (1.7.0), each phase in the
+  // picker's words; a phase left out is left as it is.
+  preopPremedicationOrders: z.object({
+    DAY_BEFORE: z.string().max(5000).nullable().optional(),
+    MORNING: z.string().max(5000).nullable().optional(),
+  }).strict().optional(),
+
   // Item 27: Strict lab result shape matching the lab scan extractor output
   //
   // This object is closed (no .passthrough()), and the outer preopSchema's
@@ -303,6 +328,10 @@ export const postopSchema = z.object({
   aldreteConsciousness: cInt("postop", "aldreteConsciousness"),
   aldreteSpO2:          cInt("postop", "aldreteSpO2"),
   aldreteTotal:         cInt("postop", "aldreteTotal"),
+  stewardConsciousness: cInt("postop", "stewardConsciousness"),
+  stewardAirway:        cInt("postop", "stewardAirway"),
+  stewardMovement:      cInt("postop", "stewardMovement"),
+  stewardTotal:         cInt("postop", "stewardTotal"),
 
   recoveryBpSystolic:  cInt("postop", "recoveryBpSystolic"),
   recoveryBpDiastolic: cInt("postop", "recoveryBpDiastolic"),
@@ -312,6 +341,25 @@ export const postopSchema = z.object({
   pediatricPainScale:  z.enum(["FLACC", "FPS_R", "NRS"]).nullable().optional(),
   pediatricPainScore:  cInt("postop", "pediatricPainScore"),
   paedScore:           cInt("postop", "paedScore"),
+  flaccFace:           cInt("postop", "flaccFace"),
+  flaccLegs:           cInt("postop", "flaccLegs"),
+  flaccActivity:       cInt("postop", "flaccActivity"),
+  flaccCry:            cInt("postop", "flaccCry"),
+  flaccConsolability:  cInt("postop", "flaccConsolability"),
+  fpsrScore:           cInt("postop", "fpsrScore"),
+  nipsFacialExpression:cInt("postop", "nipsFacialExpression"),
+  nipsCry:             cInt("postop", "nipsCry"),
+  nipsBreathing:       cInt("postop", "nipsBreathing"),
+  nipsArms:            cInt("postop", "nipsArms"),
+  nipsLegs:            cInt("postop", "nipsLegs"),
+  nipsArousal:         cInt("postop", "nipsArousal"),
+  paedEyeContact:      cInt("postop", "paedEyeContact"),
+  paedPurposeful:      cInt("postop", "paedPurposeful"),
+  paedAware:           cInt("postop", "paedAware"),
+  paedRestless:        cInt("postop", "paedRestless"),
+  paedInconsolable:    cInt("postop", "paedInconsolable"),
+  flaccTotal:          cInt("postop", "flaccTotal"),
+  nipsTotal:           cInt("postop", "nipsTotal"),
   ponv:               z.boolean().nullable().optional(),
   temperatureCelsius: cNum("postop", "temperatureCelsius"),
   recoveryBpUnobtainable:          z.boolean().optional(),
@@ -323,4 +371,6 @@ export const postopSchema = z.object({
   disposition:      z.enum(["WARD", "PACU", "ICU"]).nullable().optional(),
   dispositionNotes: z.string().max(1000).nullable().optional(),
   handoverItems:    z.array(z.unknown()).optional(),
+  // The procedure done (10.0.0), kept as the planned procedures are.
+  performedProcedures: z.array(labelledItem).max(20).optional(),
 }).passthrough().superRefine((data, ctx) => addCoreIssues(validatePostopPatch(data), ctx))

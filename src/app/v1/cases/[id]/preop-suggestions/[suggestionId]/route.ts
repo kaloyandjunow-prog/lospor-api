@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const result = await withLockedCaseTransaction(id, async tx => {
       const record = await tx.case.findUnique({ where: { id }, select: { userId: true, createdById: true, institutionId: true, status: true } })
       if (!record) return null
-      if (record.status === "COMPLETE") return "FROZEN" as const
+      if (record.status === "COMPLETE" || record.status === "CANCELLED") return "FROZEN" as const
       if (!await canWriteCaseWithOwnerFallback(tx, user, record)) return "FORBIDDEN" as const
       return reviewPreopSuggestion(tx, { caseId: id, suggestionId, reviewerId: user.id, status: body.status })
     })

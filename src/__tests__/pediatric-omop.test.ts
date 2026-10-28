@@ -31,12 +31,18 @@ describe("pediatric OMOP source preservation", () => {
     expect(observations.get("LOSPOR:POVOC_SCORE")?.value_as_number).toBe(2)
     expect(observations.get("LOSPOR:POVOC_RISK_PERCENT")?.value_as_number).toBe(30)
     expect(observations.get("LOSPOR:COLDS_SCORE")?.value_as_number).toBe(8)
-    // FLACC moved to measurement.value_as_number (3037051, a real SNOMED
+    // FLACC moved to measurement.value_as_number (3036118, the LOINC FLACC total; the panel 3037051 until 10.0.0
     // concept), the same way RCRI, STOP-BANG and the Aldrete total did — it is
     // no longer a LOSPOR-only observation at concept 0.
     expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.value_as_number).toBe(3)
-    expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.measurement_concept_id).toBe(3037051)
+    expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.measurement_concept_id).toBe(3036118)
     expect(observations.get("LOSPOR:PAED_SCORE")?.value_as_number).toBe(7)
+    // Steward (10.0.0) has no concept of its own, and is not filed under the
+    // Aldrete/PAR one: four numeric observations at concept 0.
+    for (const [code, value] of [["TOTAL", 5], ["CONSCIOUSNESS", 2], ["AIRWAY", 1], ["MOVEMENT", 2]] as const) {
+      expect(observations.get(`LOSPOR:STEWARD_${code}`)).toMatchObject({ observation_concept_id: 0, value_as_number: value })
+    }
+    expect(measurements.has("LOSPOR:STEWARD_TOTAL")).toBe(false)
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS")?.value_as_number).toBe(14)
     // Moved to measurement with concept 3005424, whose domain is Measurement.
     expect(measurements.get("LOSPOR:BODY_SURFACE_AREA_M2")).toMatchObject({

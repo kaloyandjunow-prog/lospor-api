@@ -94,6 +94,10 @@ export async function PUT(
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
+      // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
+      if (caseRecord.status === "CANCELLED") {
+        return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
+      }
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
@@ -168,6 +172,10 @@ export async function DELETE(
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
+      if (caseRecord.status === "CANCELLED") {
+        return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
       }
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })

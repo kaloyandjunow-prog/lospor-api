@@ -77,7 +77,12 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
         unit: preop.ageUnit,
       })
     : null
-  const povoc = pediatric && normalizedAge
+  // A score only once all three questions are answered (10.0.0). An unanswered
+  // one was counted, and stored, as "no": a child nobody had asked about
+  // vomiting was documented as having no history of it, and scored on that.
+  const povocAnswered = [preop.povocSurgeryAtLeast30Minutes, preop.povocStrabismusSurgery, preop.povocHistory]
+    .every(answer => answer === true || answer === false)
+  const povoc = pediatric && normalizedAge && povocAnswered
     ? calculatePovoc({
         ageYears: normalizedAge.approximateDays / 365.2425,
         surgeryMinutes: preop.povocSurgeryAtLeast30Minutes ? 30 : 0,
@@ -155,7 +160,9 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
 
   // Item 26: Build JSON arrays for diagnoses/procedures; keep legacy string columns for compat
   const diagnosesArr = Array.isArray(preop.diagnoses) ? preop.diagnoses : []
-  const proceduresArr = Array.isArray(preop.procedures) ? preop.procedures : []
+  // "Not yet known" replaces any procedure chosen (10.0.0): the two cannot both stand.
+  const procedureUndetermined = (preop as { procedureUndetermined?: unknown }).procedureUndetermined === true
+  const proceduresArr = !procedureUndetermined && Array.isArray(preop.procedures) ? preop.procedures : []
 
   return {
     // Items 18 + 19: Use null instead of 0 for missing biometrics — 0 corrupts risk scores
@@ -178,6 +185,7 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     // Item 26: JSON columns for structured diagnoses/procedures — use Prisma.JsonNull (not undefined) so Prisma clears the column when array is empty
     diagnosesJson:    diagnosesArr.length > 0 ? diagnosesArr : Prisma.JsonNull,
     proceduresJson:   proceduresArr.length > 0 ? proceduresArr : Prisma.JsonNull,
+    procedureUndetermined,
     icdCode:          diagnosesArr[0]?.sub ?? null,
     teamNotes:        preop.teamNotes ?? null,
     physicalExamReport: preop.physicalExamReport ?? null,
@@ -255,10 +263,11 @@ export function mapPreop(rawPreop: Record<string, unknown>): Prisma.Preoperative
     // Not stored: the risk is derived from the count wherever it is shown or
     // exported, so a revised POVOC table cannot leave stale figures behind.
     povocRiskPercent:             null,
-    povocSurgeryAtLeast30Minutes: povoc?.factors.surgeryAtLeast30Minutes ?? false,
-    povocAgeAtLeast3Years:        povoc?.factors.ageAtLeast3Years ?? false,
-    povocStrabismusSurgery:       povoc?.factors.strabismusSurgery ?? false,
-    povocHistory:                 povoc?.factors.patientOrFamilyHistory ?? false,
+    // The answers as given: null is "not asked", never "no".
+    povocSurgeryAtLeast30Minutes: pediatric ? preop.povocSurgeryAtLeast30Minutes ?? null : null,
+    povocAgeAtLeast3Years:        normalizedAge ? normalizedAge.approximateDays / 365.2425 >= 3 : null,
+    povocStrabismusSurgery:       pediatric ? preop.povocStrabismusSurgery ?? null : null,
+    povocHistory:                 pediatric ? preop.povocHistory ?? null : null,
     coldsApplicable:              pediatric ? preop.coldsApplicable ?? false : false,
     coldsScore:                   colds?.score ?? null,
     coldsCurrentSymptoms:         pediatric ? coldsCurrentSymptoms : null,
@@ -358,10 +367,11 @@ export function mapPreopUpdate(
     r.diagnosesJson  = full.diagnosesJson
     r.icdCode        = full.icdCode
   }
-  if (has("procedures")) {
+  if (has("procedures") || has("procedureUndetermined")) {
     r.plannedProcedure = full.plannedProcedure
     r.proceduresJson   = full.proceduresJson
   }
+  if (has("procedureUndetermined")) r.procedureUndetermined = full.procedureUndetermined
   if (has("familyAnesthesiaProblems") || has("familyProblems")) {
     r.familyAnesthesiaProblems = full.familyAnesthesiaProblems
     if (full.familyAnesthesiaProblems === false) r.familyAnesthesiaDetails = null

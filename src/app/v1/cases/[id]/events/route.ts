@@ -125,6 +125,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
+      // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
+      if (caseRecord.status === "CANCELLED") {
+        return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
+      }
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }

@@ -87,6 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (found.status === "COMPLETE") {
         throw new CaseWriteError("CASE_FINALIZED", 403, "Case is finalised")
       }
+      if (found.status === "CANCELLED") throw new CaseWriteError("CASE_CANCELLED", 409, "CASE_CANCELLED")
       if (found.clinicalMode !== "PEDIATRIC") {
         throw new CaseWriteError("PEDIATRIC_CASE_REQUIRED", 409, "Pediatric case required")
       }

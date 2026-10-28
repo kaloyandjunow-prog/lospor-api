@@ -356,6 +356,11 @@ function procedureRows(preopId: string, caseId: string, json: unknown, concepts:
   })
 }
 
+/** The procedure done (10.0.0), coded the same way as the planned procedures. */
+function performedProcedureRows(postopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {
+  return procedureRows("", caseId, json, concepts).map(({ preopId: _preopId, ...row }) => ({ postopId, ...row }))
+}
+
 function comorbidityRows(preopId: string, caseId: string, json: unknown, concepts: Map<string, ConceptInfo>) {
   return arr(json).map((c: JsonItem, i: number) => {
     const rawCode = str(c?.sub ?? c?.code)
@@ -644,7 +649,7 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       ageYears: true, ageValue: true, ageUnit: true, ageApproxDays: true,
       sex: true, heightCm: true, weightKg: true,
       bmi: true, bodySurfaceAreaM2: true, bloodType: true, rhFactor: true,
-      diagnosesJson: true, proceduresJson: true, comorbidities: true, labResults: true,
+      diagnosesJson: true, proceduresJson: true, procedureUndetermined: true, comorbidities: true, labResults: true,
       currentMedications: true, allergies: true, allergyDetails: true, latexAllergy: true,
       familyAnesthesiaProblems: true, familyAnesthesiaDetails: true,
       unexplainedAnaesthesiaComplications: true, malignantHyperthermiaHistory: true,
@@ -686,10 +691,13 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     select: {
       id: true, aldreteActivity: true, aldreteRespiration: true, aldreteCirculation: true, aldreteConsciousness: true,
       aldreteSpO2: true, aldreteTotal: true, recoveryBpSystolic: true, recoveryBpDiastolic: true,
+      stewardConsciousness: true, stewardAirway: true, stewardMovement: true, stewardTotal: true,
+      flaccFace: true, flaccLegs: true, flaccActivity: true, flaccCry: true, flaccConsolability: true, flaccTotal: true, fpsrScore: true, nipsFacialExpression: true, nipsCry: true, nipsBreathing: true, nipsArms: true, nipsLegs: true, nipsArousal: true, nipsTotal: true, paedEyeContact: true, paedPurposeful: true, paedAware: true, paedRestless: true, paedInconsolable: true,
       recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true, painScoreNRS: true,
       pediatricPainScale: true, pediatricPainScore: true, paedScore: true, ponv: true,
       recoveryBpUnobtainable: true, recoveryHeartRateUnobtainable: true, recoverySpO2Unobtainable: true,
       recoveryTemperatureUnobtainable: true, disposition: true, dispositionNotes: true, handoverItems: true, complications: true,
+      performedProceduresJson: true,
     },
   })
   const loincMap = await getLoincMap(db)
@@ -720,7 +728,8 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "preop", "bloodType", p.bloodType),
       fieldStatus(caseId, "preop", "rhFactor", p.rhFactor),
       fieldStatus(caseId, "preop", "diagnoses", p.diagnosesJson),
-      fieldStatus(caseId, "preop", "procedures", p.proceduresJson),
+      // A procedure planned as not yet known is UNKNOWN, not missing (10.0.0).
+      fieldStatus(caseId, "preop", "procedures", p.procedureUndetermined ? "unknown" : p.proceduresJson),
       fieldStatus(caseId, "preop", "comorbidities", p.comorbidities),
       fieldStatus(caseId, "preop", "labResults", p.labResults),
       fieldStatus(caseId, "preop", "currentMedications", p.currentMedications),
@@ -882,6 +891,13 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       fieldStatus(caseId, "postop", "aldreteConsciousness", c.postop.aldreteConsciousness),
       fieldStatus(caseId, "postop", "aldreteSpO2", c.postop.aldreteSpO2),
       fieldStatus(caseId, "postop", "aldreteTotal", c.postop.aldreteTotal),
+      fieldStatus(caseId, "postop", "stewardConsciousness", c.postop.stewardConsciousness),
+      fieldStatus(caseId, "postop", "stewardAirway", c.postop.stewardAirway),
+      fieldStatus(caseId, "postop", "stewardMovement", c.postop.stewardMovement),
+      fieldStatus(caseId, "postop", "stewardTotal", c.postop.stewardTotal),
+      fieldStatus(caseId, "postop", "flaccTotal", c.postop.flaccTotal),
+      fieldStatus(caseId, "postop", "fpsrScore", c.postop.fpsrScore),
+      fieldStatus(caseId, "postop", "nipsTotal", c.postop.nipsTotal),
       fieldStatus(caseId, "postop", "recoveryBpSystolic", c.postop.recoveryBpUnobtainable ? "not-applicable" : c.postop.recoveryBpSystolic),
       fieldStatus(caseId, "postop", "recoveryBpDiastolic", c.postop.recoveryBpUnobtainable ? "not-applicable" : c.postop.recoveryBpDiastolic),
       fieldStatus(caseId, "postop", "recoveryHeartRate", c.postop.recoveryHeartRateUnobtainable ? "not-applicable" : c.postop.recoveryHeartRate),
@@ -901,6 +917,9 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
     await db.caseComplication.createMany({ data: complicationRows(caseId, "postop", c.postop.complications, concepts) })
     await db.caseSelection.deleteMany({ where: { caseId, section: "postop" } })
     await db.caseSelection.createMany({ data: selections })
+    statuses.push(fieldStatus(caseId, "postop", "performedProcedures", c.postop.performedProceduresJson))
+    await db.performedProcedure.deleteMany({ where: { postopId: c.postop.id } })
+    await db.performedProcedure.createMany({ data: performedProcedureRows(c.postop.id, caseId, c.postop.performedProceduresJson, concepts) })
   }
 
   await db.clinicalFieldStatus.deleteMany({ where: { caseId } })

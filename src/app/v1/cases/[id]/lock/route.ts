@@ -52,7 +52,8 @@ export async function POST(
   if (resolved instanceof NextResponse) return resolved
   const { userId, status } = resolved
 
-  if (status === "COMPLETE") {
+  // A closed case is only read: nothing to lock (a cancelled procedure, 10.0.0).
+  if (status === "COMPLETE" || status === "CANCELLED") {
     return NextResponse.json({ acquired: true, locked: false, yours: true })
   }
 
