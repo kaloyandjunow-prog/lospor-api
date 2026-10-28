@@ -80,6 +80,8 @@ export function redactEventFreeText<T>(keyEvents: T): T {
 export const CASE_SELECT = {
   id: true, researchId: true, createdAt: true, status: true, clinicalMode: true, clinicalRulesVersion: true,
   institutionId: true,
+  // A cancelled procedure (10.0.0): exported with its cancellation.
+  cancelledAt: true, cancellationReason: true,
   user: { select: { institution: { select: { name: true } } } },
   fieldStatuses: {
     select: { section: true, fieldKey: true, presence: true },
@@ -156,7 +158,7 @@ export const CASE_SELECT = {
       bpUnobtainable: true, heartRateUnobtainable: true, spO2Unobtainable: true,
       temperatureUnobtainable: true, respiratoryRateUnobtainable: true,
       airwayUnobtainable: true,
-      diagnosis: true, diagnosesJson: true, plannedProcedure: true, proceduresJson: true,
+      diagnosis: true, diagnosesJson: true, plannedProcedure: true, proceduresJson: true, procedureUndetermined: true,
       comorbidities: true, asaScore: true, emergencySurgery: true, highRiskSurgery: true,
       allergies: true, allergyDetails: true, smoking: true, substanceAbuse: true,
       // Clinical detail that was read into the mapper's row types but never
@@ -231,6 +233,28 @@ export const CASE_SELECT = {
         },
         orderBy: { questionId: "asc" },
       },
+      wardOrders: {
+        where: { status: "ACTIVE" },
+        select: {
+          optionKey: true, kind: true, labelEn: true, labelBg: true, conceptId: true,
+          specialtyKey: true, specialtyLabelEn: true, specialtyLabelBg: true,
+          labTest: true, labLoinc: true, labConceptId: true, createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      },
+      medicationInstructions: {
+        where: { status: "ACTIVE" },
+        select: {
+          optionKey: true, conceptId: true, medicationLabel: true, medicationInn: true,
+          medicationAtc: true, hoursBefore: true, createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      },
+      premedicationOrders: {
+        where: { status: "ACTIVE" },
+        select: { phase: true, entry: true, atcCode: true, dose: true, unit: true, route: true, conceptId: true, createdAt: true },
+        orderBy: [{ phase: "asc" }, { ordinal: "asc" }],
+      },
     },
   },
   intraop: {
@@ -268,11 +292,18 @@ export const CASE_SELECT = {
     select: {
       aldreteActivity: true, aldreteRespiration: true, aldreteCirculation: true, aldreteConsciousness: true, aldreteSpO2: true,
       aldreteTotal: true, painScoreNRS: true, pediatricPainScale: true,
+      stewardConsciousness: true, stewardAirway: true, stewardMovement: true, stewardTotal: true,
+      flaccFace: true, flaccLegs: true, flaccActivity: true, flaccCry: true, flaccConsolability: true, flaccTotal: true, fpsrScore: true, nipsFacialExpression: true, nipsCry: true, nipsBreathing: true, nipsArms: true, nipsLegs: true, nipsArousal: true, nipsTotal: true, paedEyeContact: true, paedPurposeful: true, paedAware: true, paedRestless: true, paedInconsolable: true,
       pediatricPainScore: true, paedScore: true, ponv: true, disposition: true,
       recoveryBpSystolic: true, recoveryBpDiastolic: true, recoveryHeartRate: true, recoverySpO2: true, temperatureCelsius: true,
       recoveryBpUnobtainable: true, recoveryHeartRateUnobtainable: true,
       recoverySpO2Unobtainable: true, recoveryTemperatureUnobtainable: true,
       complications: true,
+      // The procedure done (10.0.0), coded: what the export takes as performed.
+      performedProcedureRows: {
+        select: { code: true, group: true, domain: true, description: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, ordinal: true },
+        orderBy: { ordinal: "asc" },
+      },
     },
   },
   finalizations: {

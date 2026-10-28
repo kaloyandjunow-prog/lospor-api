@@ -10,7 +10,7 @@
 import { GUPTA_FUNCTIONAL_STATUS, GUPTA_PROCEDURE_TYPES } from "@lospor/core/gupta"
 
 /** The catalogue ships with, and is versioned as, the Hospital release. */
-export const PREOP_CATALOG_VERSION = "1.4.8"
+export const PREOP_CATALOG_VERSION = "1.6.2"
 export const YES_CONCEPT_ID = 4188539
 export const NO_CONCEPT_ID = 4188540
 export const A3_WEIGHT_LOSS_CONCEPT_ID = 40491502
@@ -92,10 +92,15 @@ function question(
   }
 }
 
+/** The catalogue group drawn under its own "malignant hyperthermia susceptibility" heading. */
+const MH_SUSCEPTIBILITY = "MH_SUSCEPTIBILITY"
+
 const baseline = [
   question("BASE_ALLERGIES", "SAFETY", "Drug or other allergy", "Алергия към медикамент или друго вещество"),
   question("BASE_LATEX_ALLERGY", "SAFETY", "Latex allergy", "Алергия към латекс"),
-  question("BASE_FAMILY_ANAESTHESIA_PROBLEMS", "SAFETY", "Family anaesthesia problems", "Проблеми с анестезията в семейството"),
+  // One family-history question (10.0.0): anaesthesia problems or a
+  // neuromuscular disease in the family, its follow-ups naming which.
+  question("BASE_FAMILY_ANAESTHESIA_PROBLEMS", "SAFETY", "Family history of anaesthesia problems or neuromuscular disease", "Фамилна анамнеза за проблеми с анестезията или нервно-мускулно заболяване"),
   question("BASE_UNEXPLAINED_ANAESTHESIA_COMPLICATIONS", "SAFETY", "Unexplainable complications during anaesthesia", "Необясними усложнения по време на анестезия"),
   question("BASE_MALIGNANT_HYPERTHERMIA_HISTORY", "SAFETY", "Personal malignant hyperthermia history", "Лична анамнеза за малигнена хипертермия"),
   question("BASE_ANTICIPATED_DIFFICULT_AIRWAY", "AIRWAY", "Anticipated difficult airway", "Очакван труден дихателен път"),
@@ -184,6 +189,17 @@ const shared = [
   question("S2_ALCOHOL_USE", "SHARED_ADDITIONS", "Alcohol use", "Употреба на алкохол", [], { minAgeYears: 14, omopDomain: "observation" }),
   question("S2_ALCOHOL_HEAVY", "SHARED_ADDITIONS", "Heavy or daily drinking?", "Злоупотреба или ежедневна употреба?", [], { minAgeYears: 14, conditionalRuleKey: "S2_ALCOHOL_USE_IS_YES" }),
   question("S2_ALCOHOL_WITHDRAWAL", "SHARED_ADDITIONS", "Previous alcohol withdrawal?", "Предишна алкохолна абстиненция?", [], { minAgeYears: 14, conditionalRuleKey: "S2_ALCOHOL_USE_IS_YES" }),
+  // Susceptibility to malignant hyperthermia and to myopathy, asked of both
+  // populations: none of these depends on age. They render together under one
+  // heading with the baseline MH questions (10.0.0).
+  question("S3_DARK_URINE", MH_SUSCEPTIBILITY, "Dark urine after physical strain or for no apparent reason", "Потъмняване на урината след физическо натоварване или без видима причина", [], { omopDomain: "observation" }),
+  question("S4_HEAT_STROKE", MH_SUSCEPTIBILITY, "Heat stroke in the past", "Прекаран топлинен удар", [], { omopDomain: "observation" }),
+  // Which condition, when the family question is answered yes. They are on
+  // with it by default (DEFAULT_ENABLED_QUESTION_KEYS), one fact per row.
+  question("S5_FAMILY_MALIGNANT_HYPERTHERMIA", MH_SUSCEPTIBILITY, "Malignant hyperthermia in the family?", "Малигнена хипертермия в семейството?", [], { conditionalRuleKey: "BASE_FAMILY_ANAESTHESIA_PROBLEMS_IS_YES" }),
+  question("S5_FAMILY_SUXAMETHONIUM_APNOEA", MH_SUSCEPTIBILITY, "Prolonged paralysis after suxamethonium (pseudocholinesterase deficiency) in the family?", "Удължена релаксация след сукцинилхолин (дефицит на псевдохолинестераза) в семейството?", [], { conditionalRuleKey: "BASE_FAMILY_ANAESTHESIA_PROBLEMS_IS_YES" }),
+  question("S5_FAMILY_MUSCULAR_DYSTROPHY", MH_SUSCEPTIBILITY, "Muscular dystrophy in the family?", "Мускулна дистрофия в семейството?", [], { conditionalRuleKey: "BASE_FAMILY_ANAESTHESIA_PROBLEMS_IS_YES" }),
+  question("S5_FAMILY_MYASTHENIA", MH_SUSCEPTIBILITY, "Myasthenia in the family?", "Миастения в семейството?", [], { conditionalRuleKey: "BASE_FAMILY_ANAESTHESIA_PROBLEMS_IS_YES" }),
 ]
 
 const pediatric = [
@@ -201,6 +217,8 @@ const pediatric = [
   question("P4_OBSERVED_PAUSES", "PEDIATRIC_ADDITIONS", "Observed pauses in breathing during sleep?", "Наблюдавани паузи в дишането по време на сън?", [], { applicability: ["PEDIATRIC"], conditionalRuleKey: "P4_SLEEP_DISORDERED_BREATHING_IS_YES" }),
   question("P8_DIFFICULT_VENOUS_ACCESS", "PEDIATRIC_ADDITIONS", "Difficult venous access history", "Анамнеза за труден венозен достъп", [], { applicability: ["PEDIATRIC"], omopDomain: "observation", omopSourceCode: "LOSPOR:PREOP_P8_DIFFICULT_VENOUS_ACCESS" }),
   question("P9_RECENT_VACCINATION", "PEDIATRIC_ADDITIONS", "Vaccinated in the last 2 weeks", "Ваксинирано през последните 2 седмици", [], { applicability: ["PEDIATRIC"], omopDomain: "observation" }),
+  // Asked of a child's family only: in an adult's form "a child in the family" has no clear meaning.
+  question("P10_FAMILY_CHILD_UNEXPLAINED_DEATH", "PEDIATRIC_ADDITIONS", "Death of a child in the family from an unknown cause", "Починало дете в семейството от неизвестна причина", [], { applicability: ["PEDIATRIC"], omopDomain: "observation" }),
 ]
 
 /**
@@ -303,6 +321,13 @@ const OMOP: Record<string, readonly [number, string]> = {
   S2_ALCOHOL_USE: [4074035, "LOSPOR:PREOP_S2_ALCOHOL_USE"], // Current drinker
   S2_ALCOHOL_HEAVY: [4336673, "LOSPOR:PREOP_S2_ALCOHOL_HEAVY"], // Heavy drinker
   S2_ALCOHOL_WITHDRAWAL: [375519, "LOSPOR:PREOP_S2_ALCOHOL_WITHDRAWAL"], // Alcohol withdrawal
+  S3_DARK_URINE: [4193796, "LOSPOR:PREOP_S3_DARK_URINE"], // Urine looks dark (the symptom; the circumstances are the question's, not the concept's)
+  S4_HEAT_STROKE: [4181404, "LOSPOR:PREOP_S4_HEAT_STROKE"], // Heat stroke (764970 "History of" is not a standard concept)
+  S5_FAMILY_MALIGNANT_HYPERTHERMIA: [4294884, "LOSPOR:PREOP_S5_FAMILY_MALIGNANT_HYPERTHERMIA"], // Family history of malignant hyperthermia
+  S5_FAMILY_SUXAMETHONIUM_APNOEA: [46273447, "LOSPOR:PREOP_S5_FAMILY_SUXAMETHONIUM_APNOEA"], // Family history of butyrylcholinesterase deficiency
+  S5_FAMILY_MUSCULAR_DYSTROPHY: [4051573, "LOSPOR:PREOP_S5_FAMILY_MUSCULAR_DYSTROPHY"], // FH: Muscular dystrophy
+  S5_FAMILY_MYASTHENIA: [765130, "LOSPOR:PREOP_S5_FAMILY_MYASTHENIA"], // Family history of myasthenia gravis
+  P10_FAMILY_CHILD_UNEXPLAINED_DEATH: [0, "LOSPOR:PREOP_P10_FAMILY_CHILD_UNEXPLAINED_DEATH"], // an unknown cause is not SIDS (a specific diagnosis) and no concept says "unexplained"
 }
 
 /** Where a question renders. Unlisted questions (and follow-ups of listed ones) are anamnesis. */
@@ -367,9 +392,18 @@ export const BUNDLED_PREOP_QUESTIONS: readonly PreopCatalogQuestion[] = Object.f
   ...pediatric,
 ]))
 
-export const DEFAULT_ENABLED_QUESTION_KEYS = new Set(
-  baseline.map(item => item.stableKey),
-)
+/** The follow-ups of the baseline family-history question, on with it (10.0.0). */
+export const FAMILY_HISTORY_FOLLOW_UP_KEYS = [
+  "S5_FAMILY_MALIGNANT_HYPERTHERMIA",
+  "S5_FAMILY_SUXAMETHONIUM_APNOEA",
+  "S5_FAMILY_MUSCULAR_DYSTROPHY",
+  "S5_FAMILY_MYASTHENIA",
+] as const
+
+export const DEFAULT_ENABLED_QUESTION_KEYS = new Set<string>([
+  ...baseline.map(item => item.stableKey),
+  ...FAMILY_HISTORY_FOLLOW_UP_KEYS,
+])
 
 export function bundledQuestion(stableKey: string): PreopCatalogQuestion | undefined {
   return BUNDLED_PREOP_QUESTIONS.find(item => item.stableKey === stableKey)

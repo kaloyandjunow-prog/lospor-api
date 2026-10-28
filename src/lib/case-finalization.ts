@@ -93,7 +93,12 @@ export async function evaluateCaseReadiness(tx: Db, caseId: string, clinicalMode
       aldreteCirculation: true,
       aldreteConsciousness: true,
       aldreteSpO2: true,
+      stewardConsciousness: true,
+      stewardAirway: true,
+      stewardMovement: true,
       disposition: true,
+      // Needed to finalise when the planned procedure was not yet known (10.0.0).
+      performedProceduresJson: true,
     },
   })
   return evaluateCaseFinalization({ clinicalMode, preop, intraop, postop })

@@ -121,6 +121,7 @@ import type { CaseMapperCtx } from "./omop-mapper/case-context"
 import { mapPersonAndVisitToOmop } from "./omop-mapper/domains/person-visit"
 import { mapPreopClinicalToOmop } from "./omop-mapper/domains/preop-clinical"
 import { mapPlannedProcedureAndMedicationsToOmop } from "./omop-mapper/domains/planned-procedure"
+import { mapPreopOrdersToOmop } from "./omop-mapper/domains/preop-orders"
 import { mapIntraopToOmop } from "./omop-mapper/domains/intraop"
 import { mapSelectionsToOmop } from "./omop-mapper/domains/selections"
 import { mapComplicationsToOmop } from "./omop-mapper/domains/complications"
@@ -245,6 +246,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         value_as_number: numericValue
           ?? (typeof value === "number" && Number.isFinite(value) ? value : null),
         value_as_string: String(value),
+        qualifier_concept_id: 0,
+        qualifier_source_value: null,
+        unit_concept_id: 0,
+        unit_source_value: null,
         observation_source_value: source,
         visit_occurrence_id: visitId,
       })
@@ -424,6 +429,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
 
     if (c.preop) mapPreopClinicalToOmop(ctx, c, c.preop)
     mapPlannedProcedureAndMedicationsToOmop(ctx, c, c.preop)
+    if (c.preop) mapPreopOrdersToOmop(ctx, c.preop)
     if (c.intraop) mapIntraopToOmop(ctx, c, c.intraop)
     mapSelectionsToOmop(ctx, c)
     mapComplicationsToOmop(ctx, c)

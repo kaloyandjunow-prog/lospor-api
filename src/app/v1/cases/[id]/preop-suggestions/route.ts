@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         select: { userId: true, createdById: true, institutionId: true, status: true, preop: { select: { id: true } } },
       })
       if (!record) return null
-      if (record.status === "COMPLETE") return "FROZEN" as const
+      if (record.status === "COMPLETE" || record.status === "CANCELLED") return "FROZEN" as const
       if (!await canWriteCaseWithOwnerFallback(tx, user, record)) return "FORBIDDEN" as const
       if (!record.preop) return "NO_PREOP" as const
       return generatePreopSuggestions(tx, { caseId: id, preopId: record.preop.id, actorId: user.id })

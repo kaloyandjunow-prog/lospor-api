@@ -46,6 +46,11 @@ export function pediatricCaseFixture(): AnyCase {
       pediatricPainScore: 3,
       paedScore: 7,
       painScoreNRS: null,
+      // A child's recovery score (10.0.0).
+      stewardConsciousness: 2,
+      stewardAirway: 1,
+      stewardMovement: 2,
+      stewardTotal: 5,
     },
   } as unknown as AnyCase
 }

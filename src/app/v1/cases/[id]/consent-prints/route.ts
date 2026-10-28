@@ -20,6 +20,7 @@ export async function POST(
   const record = await prisma.case.findFirst({ where: caseReadWhereForUser(user, id), select: { id: true, status: true } })
   if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (record.status === "COMPLETE") return NextResponse.json({ error: "CASE_FINALIZED" }, { status: 409 })
+  if (record.status === "CANCELLED") return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
 
   try {
     const print = consentPrintSchema.parse(await req.json())

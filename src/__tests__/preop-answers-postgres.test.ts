@@ -181,8 +181,9 @@ describe.skipIf(!runPostgres)("preop answer rows in PostgreSQL", () => {
     expect(questionCount).toBe(BUNDLED_PREOP_QUESTIONS.length)
     // Two profiles since 9.14.5, adult and paediatric, each set up in the same
     // fixed handful of flat statements: the count does not grow with the
-    // catalogue (row by row it was 172).
-    expect(fromEmpty).toBeLessThanOrEqual(50)
+    // catalogue (row by row it was 172). Since 9.16.0 each profile also takes
+    // three flat statements for its sections, order rows and specialties.
+    expect(fromEmpty).toBeLessThanOrEqual(56)
     expect(whenSetUp).toBeLessThanOrEqual(6)
   })
 

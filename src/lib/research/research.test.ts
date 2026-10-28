@@ -202,6 +202,13 @@ describe("research access and query contracts", () => {
     expect(String(queryRaw.mock.calls.at(-1)?.[0])).toContain("EHR_IMPORT_REVIEWED")
   })
 
+  it("takes every case status, cancelled procedures included, at once (10.0.0)", () => {
+    const every = ["DRAFT", "IN_PROGRESS", "AWAITING_REVIEW", "COMPLETE", "CANCELLED"]
+    expect(researchCohortSchema.parse({ version: 1, filters: { statuses: every } }).filters.statuses).toEqual(every)
+    expect(() => researchCohortSchema.parse({ version: 1, filters: { statuses: [...every, "COMPLETE"] } })).toThrow()
+    expect(() => researchCohortSchema.parse({ version: 1, filters: { statuses: ["DELETED"] } })).toThrow()
+  })
+
   it("refuses a preop answer filter with an invented state", () => {
     expect(() => researchCohortSchema.parse({ version: 1, filters: { preopAnswers: [{ stableKey: "A1", states: ["MAYBE"] }] } })).toThrow()
   })

@@ -179,6 +179,14 @@ describe("mapPostopUpdate (partial)", () => {
     expect(result.aldreteTotal).toBeNull()
   })
 
+  it("totals a child's Steward score once all three components are in, and not before", () => {
+    expect(mapPostopUpdate({ stewardConsciousness: 2, stewardAirway: 1, stewardMovement: 2 }).stewardTotal).toBe(5)
+    const partial = mapPostopUpdate({ stewardConsciousness: 2 })
+    expect(partial.stewardConsciousness).toBe(2)
+    expect(partial.stewardTotal).toBeNull()
+    expect("aldreteTotal" in partial).toBe(false)
+  })
+
   it("returns an empty object for an empty payload", () => {
     expect(mapPostopUpdate({})).toEqual({})
   })

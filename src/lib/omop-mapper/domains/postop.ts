@@ -37,6 +37,14 @@ export function mapPostopToOmop(
   ctx.sourceObservation("LOSPOR:ALDRETE_CIRCULATION", postop.aldreteCirculation, postDate)
   ctx.sourceObservation("LOSPOR:ALDRETE_CONSCIOUSNESS", postop.aldreteConsciousness, postDate)
   ctx.sourceObservation("LOSPOR:ALDRETE_SPO2", postop.aldreteSpO2, postDate)
+  // A child's Steward score (10.0.0). Neither it nor its components has a
+  // concept in these vocabularies -- the nearest, "Post Anesthetic Recovery
+  // score", is the Aldrete/PAR scale, and filing Steward under it would mix two
+  // scales with different ranges -- so all four stay observations at concept 0.
+  ctx.sourceObservation("LOSPOR:STEWARD_CONSCIOUSNESS", postop.stewardConsciousness, postDate)
+  ctx.sourceObservation("LOSPOR:STEWARD_AIRWAY", postop.stewardAirway, postDate)
+  ctx.sourceObservation("LOSPOR:STEWARD_MOVEMENT", postop.stewardMovement, postDate)
+  ctx.sourceObservation("LOSPOR:STEWARD_TOTAL", postop.stewardTotal, postDate)
   // The total, unlike its subscores, is a scored entity in SNOMED, so it
   // moves to measurement.value_as_number the same way RCRI and STOP-BANG
   // did -- an OMOP measurement, not a LOSPOR-only observation.
@@ -69,7 +77,10 @@ export function mapPostopToOmop(
       ctx.measurements.push({
         measurement_id:              nextId(),
         person_id:                   ctx.personId,
-        measurement_concept_id:      3037051,
+        // 3036118, Pain severity total [Score] FLACC (LOINC 38215-0): the score
+        // itself. This was 3037051, the FLACC panel, which is the assessment
+        // form rather than a value (corrected in 10.0.0).
+        measurement_concept_id:      3036118,
         measurement_date:            postDate,
         measurement_datetime:        postDate,
         measurement_type_concept_id: 32817,
@@ -106,6 +117,38 @@ export function mapPostopToOmop(
     ctx.sourceMeasurement("LOINC:72514-3", postop.painScoreNRS, 43055141, 0, null, postDate)
   }
   ctx.sourceObservation("LOSPOR:PAED_SCORE", postop.paedScore, postDate)
+  // Item-scored pain and delirium (10.0.0). FLACC's total and its five items
+  // are LOINC concepts (38215-0 total, a Measurement; 38216-8 to 38220-0 the
+  // items, Observations), NIPS's total is LOINC 98012-8 (its items have none),
+  // FPS-R keeps the concept the single-scale entry used. PAED has no concept,
+  // total or items, so its items join LOSPOR:PAED_SCORE at concept 0.
+  ctx.sourceMeasurement("LOINC:38215-0", postop.flaccTotal, 3036118, 0, null, postDate)
+  for (const [field, source, conceptId] of [
+    ["flaccFace", "LOINC:38216-8", 3034302],
+    ["flaccLegs", "LOINC:38217-6", 3037050],
+    ["flaccActivity", "LOINC:38218-4", 3037008],
+    ["flaccCry", "LOINC:38219-2", 3034255],
+    ["flaccConsolability", "LOINC:38220-0", 3036142],
+  ] as const) {
+    ctx.sourceObservation(source, postop[field], postDate, postop[field], conceptId)
+  }
+  ctx.sourceObservation("LOSPOR:FPS_R", postop.fpsrScore, postDate, postop.fpsrScore, 40760807)
+  ctx.sourceMeasurement("LOINC:98012-8", postop.nipsTotal, 1617629, 0, null, postDate)
+  for (const [field, source] of [
+    ["nipsFacialExpression", "LOSPOR:NIPS_FACIAL_EXPRESSION"],
+    ["nipsCry", "LOSPOR:NIPS_CRY"],
+    ["nipsBreathing", "LOSPOR:NIPS_BREATHING"],
+    ["nipsArms", "LOSPOR:NIPS_ARMS"],
+    ["nipsLegs", "LOSPOR:NIPS_LEGS"],
+    ["nipsArousal", "LOSPOR:NIPS_AROUSAL"],
+    ["paedEyeContact", "LOSPOR:PAED_EYE_CONTACT"],
+    ["paedPurposeful", "LOSPOR:PAED_PURPOSEFUL"],
+    ["paedAware", "LOSPOR:PAED_AWARE"],
+    ["paedRestless", "LOSPOR:PAED_RESTLESS"],
+    ["paedInconsolable", "LOSPOR:PAED_INCONSOLABLE"],
+  ] as const) {
+    ctx.sourceObservation(source, postop[field], postDate)
+  }
   // A condition that occurred, not an observation about one -- the same
   // domain routing already used for comorbidities and diagnoses.
   // Recorded only when present, and as a fact rather than a count.

@@ -57,6 +57,10 @@ export function mapSelectionsToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
         value_as_number: null,
         value_as_string: sel.value,
         value_as_concept_id: 0,
+        qualifier_concept_id: 0,
+        qualifier_source_value: null,
+        unit_concept_id: 0,
+        unit_source_value: null,
         observation_source_value: sourceValue,
         visit_occurrence_id: ctx.visitId,
       })

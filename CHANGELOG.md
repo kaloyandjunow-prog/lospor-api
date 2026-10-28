@@ -1,5 +1,25 @@
 # Changelog - LOSPOR API
 
+## [10.0.0] - 2026-10-28
+
+### Added
+
+- **Preoperative sections and orders:** persisted section configuration,
+  ward orders, medication instructions and consultation specialties, with
+  append-only case copies and audit-safe cancellation.
+- **Postoperative and unit workflow:** pain items, paediatric Steward data,
+  drug colours, operating theatres and ward indicator policies/summaries.
+- **Case lifecycle:** cancellation routes and immutable cancellation data,
+  preoperative suggestions, review/lock/transfer actions, consent printing
+  and the corresponding generated OpenAPI contracts.
+
+### Changed
+
+- Research and OMOP mappings now carry the new preoperative, postoperative,
+  cancellation, theatre and indicator data without treating presentation-only
+  colours as clinical record data; the data dictionary and quality warnings
+  were updated with the same contract.
+
 ## [9.15.1] - 2026-10-20
 
 On Core 9.15.0. Released with web, phone and docs 9.15.1; the phone's Start at

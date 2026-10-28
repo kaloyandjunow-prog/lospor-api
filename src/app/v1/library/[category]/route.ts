@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 import { LibraryCategory } from "@/generated/prisma/client"
+import { customColorFor, DRUG_COLOR_CATEGORIES, readDrugColors } from "@/lib/drug-colors"
 
 // Master library endpoint — both web and mobile read every selectable
 // pill-button option (position, technique, vascular access, airway
@@ -23,6 +24,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ cate
     orderBy: [{ sortOrder: "asc" }],
     include: { drug: { select: { atcCode: true, inn: true } } },
   })
+  // The hospital's own drug colours (10.0.0), resolved here so web and phone
+  // draw one colour per drug without each working it out.
+  const drugColors = (DRUG_COLOR_CATEGORIES as readonly string[]).includes(upper) ? await readDrugColors(prisma) : null
 
   return NextResponse.json(rows.map(r => ({
     id: r.id,
@@ -32,6 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ cate
     group: r.group,
     parentId: r.parentId,
     color: r.color,
+    ...(drugColors ? customColorFor(drugColors, r) : {}),
     description: r.description,
     drugId: r.drugId,
     atcCode: r.drug?.atcCode ?? null,

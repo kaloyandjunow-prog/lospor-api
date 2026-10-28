@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 import { PreopAnswerState, PreopProfileStatus } from "@/generated/prisma/client"
 import { BUNDLED_PREOP_QUESTIONS, DEFAULT_ENABLED_QUESTION_KEYS, PREOP_CATALOG_VERSION } from "./catalog"
+import { DEFAULT_CONSULT_SPECIALTY_KEYS, NHIS_SPECIALTIES } from "@lospor/core/nhis-specialties"
+import { BUNDLED_PREOP_ORDER_OPTIONS, preopSectionsFor } from "@lospor/core/preop-orders"
 import {
   ensurePreopProfile,
   ensurePreopProfiles,
@@ -27,6 +29,25 @@ type Row = {
   provenance: unknown
 }
 
+/** The section, order and specialty rows a provisioned profile holds (9.16.0). */
+function provisionedSections(population: "ADULT" | "PEDIATRIC") {
+  const defaults = new Set(DEFAULT_CONSULT_SPECIALTY_KEYS)
+  return {
+    sections: preopSectionsFor(population).map(section => ({ sectionKey: section.key as string, enabled: true })),
+    orderOptions: BUNDLED_PREOP_ORDER_OPTIONS.map(option => ({ ...option })),
+    consultSpecialties: NHIS_SPECIALTIES.map(item => ({ specialtyKey: item.key, enabled: defaults.has(item.key) })),
+  }
+}
+
+/** The section tables, for a test that provisions a profile. */
+function sectionTables() {
+  return {
+    preopProfileSection: { createMany: vi.fn(async () => ({ count: 0 })) },
+    preopProfileOrderOption: { createMany: vi.fn(async () => ({ count: 0 })), findMany: vi.fn(async () => []) },
+    preopProfileConsultSpecialty: { createMany: vi.fn(async () => ({ count: 0 })) },
+  }
+}
+
 /** The bundled catalogue as a provisioned profile, optionally reconfigured. */
 function profileRow(configure: Record<string, { enabled?: boolean; required?: boolean }> = {}, population: "ADULT" | "PEDIATRIC" = "ADULT") {
   return {
@@ -36,6 +57,7 @@ function profileRow(configure: Record<string, { enabled?: boolean; required?: bo
     catalogVersion: PREOP_CATALOG_VERSION,
     status: PreopProfileStatus.PUBLISHED,
     publishedAt: new Date("2026-09-24T00:00:00Z"),
+    ...provisionedSections(population),
     questions: BUNDLED_PREOP_QUESTIONS.map((item, sortOrder) => ({
       questionId: `q-${item.stableKey}`,
       enabled: configure[item.stableKey]?.enabled ?? DEFAULT_ENABLED_QUESTION_KEYS.has(item.stableKey),
@@ -65,7 +87,7 @@ function profileRow(configure: Record<string, { enabled?: boolean; required?: bo
 
 /** A stand-in for the answer table that behaves like the real one. */
 // The paediatric profile defaults to a copy of the adult one, as an upgrade makes it.
-function fakeDb(profile = profileRow(), pediatric: ReturnType<typeof profileRow> = { ...structuredClone(profile), id: "profile-2", version: 2, population: "PEDIATRIC" }) {
+function fakeDb(profile = profileRow(), pediatric: ReturnType<typeof profileRow> = { ...structuredClone(profile), id: "profile-2", version: 2, population: "PEDIATRIC", ...provisionedSections("PEDIATRIC") }) {
   const answers = new Map<string, Row>()
   const writes: string[] = []
   const byPopulation = (population?: string) => population === "PEDIATRIC" ? pediatric : profile
@@ -122,6 +144,7 @@ function fakeDb(profile = profileRow(), pediatric: ReturnType<typeof profileRow>
         return { count }
       }),
     },
+    ...sectionTables(),
   } as unknown as PreopDb
   const stateOf = (key: string) => answers.get(`q-${key}`)?.state
   const save = (preop: Record<string, unknown>, extra: { answers?: Parameters<typeof savePreopAnswers>[1]["answers"]; clinicalMode?: string } = {}) =>
@@ -335,7 +358,8 @@ describe("required questions gate continue-to-intraop, never a save", () => {
       BASE_LATEX_ALLERGY: { required: false },
     })
 
-    expect(DEFAULT_ENABLED_QUESTION_KEYS).toHaveLength(30)
+    // The baseline, and the four follow-ups of its family-history question (10.0.0).
+    expect(DEFAULT_ENABLED_QUESTION_KEYS).toHaveLength(34)
     expect(profile.questions.find(row => row.question.stableKey === "BASE_SMOKING"))
       .toMatchObject({ enabled: true, required: true })
     expect(profile.questions.find(row => row.question.stableKey === "BASE_LATEX_ALLERGY"))
@@ -450,6 +474,7 @@ describe("the profiles, one per population", () => {
       },
       preopProfileQuestion: { createMany },
       preopAssessmentAuditEvent: { create: vi.fn() },
+      ...sectionTables(),
     } as unknown as PreopDb
 
     const both = await ensurePreopProfiles(db, "clinician-1")
@@ -503,6 +528,7 @@ describe("the profiles, one per population", () => {
       },
       preopProfileQuestion: { createMany },
       preopAssessmentAuditEvent: { create: vi.fn() },
+      ...sectionTables(),
     } as unknown as PreopDb
 
     await ensurePreopProfile(db, "clinician-1")
@@ -514,8 +540,9 @@ describe("the profiles, one per population", () => {
     expect(rows).toHaveLength(BUNDLED_PREOP_QUESTIONS.length)
     expect(rows.every(row => row.profileId === "profile-new")).toBe(true)
     const enabled = rows.filter(row => row.enabled).map(row => row.questionId.replace("definition-", ""))
-    expect(enabled.length).toBe(30)
-    expect(enabled.every(key => key.startsWith("BASE_"))).toBe(true)
+    expect(enabled.length).toBe(34)
+    // The baseline, and what its family-history question names (10.0.0).
+    expect(enabled.every(key => key.startsWith("BASE_") || key.startsWith("S5_FAMILY_"))).toBe(true)
   })
 
   it("adds a release's new questions switched off, after the operator's order", async () => {
@@ -535,6 +562,7 @@ describe("the profiles, one per population", () => {
       },
       preopProfileQuestion: { createMany },
       preopAssessmentAuditEvent: { create: vi.fn() },
+      ...sectionTables(),
     } as unknown as PreopDb
 
     await ensurePreopProfile(db, "clinician-1")
@@ -547,6 +575,40 @@ describe("the profiles, one per population", () => {
       sortOrder: profile.questions.length,
     })] })
   })
+
+  // 10.0.0: the family-history question gained four follow-ups. A hospital that
+  // has it on gets them on with it, or its YES would lead nowhere; one that
+  // switched it off gets them off. Nothing else a release adds is switched on.
+  for (const parentOn of [true, false]) {
+    it(`adds the family-history follow-ups ${parentOn ? "on, under a question that is on" : "off, under a question switched off"}`, async () => {
+      const profile = profileRow({ BASE_FAMILY_ANAESTHESIA_PROBLEMS: { enabled: parentOn } })
+      const followUps = ["S5_FAMILY_MALIGNANT_HYPERTHERMIA", "S5_FAMILY_SUXAMETHONIUM_APNOEA", "S5_FAMILY_MUSCULAR_DYSTROPHY", "S5_FAMILY_MYASTHENIA"]
+      profile.questions = profile.questions.filter(row => !followUps.includes(row.question.stableKey) && row.question.stableKey !== "S4_HEAT_STROKE")
+      profile.catalogVersion = "1.6.1"
+      const createMany = vi.fn(async () => ({ count: 5 }))
+      const db = {
+        $executeRaw: vi.fn(async () => 0),
+        preopQuestionDefinition: {
+          findMany: vi.fn(async ({ where }: { where?: { stableKey?: { in: string[] } } } = {}) =>
+            where ? where.stableKey!.in.map(stableKey => ({ id: "definition-" + stableKey, stableKey })) : []),
+        },
+        preopAssessmentProfile: {
+          findFirst: vi.fn(async ({ where }: { where?: { population?: string } } = {}) => where?.population === "PEDIATRIC" ? profileRow({}, "PEDIATRIC") : profile),
+          update: vi.fn(async () => profile),
+        },
+        preopProfileQuestion: { createMany },
+        preopAssessmentAuditEvent: { create: vi.fn() },
+        ...sectionTables(),
+      } as unknown as PreopDb
+
+      await ensurePreopProfile(db, "clinician-1")
+
+      const rows = (createMany.mock.calls[0] as unknown as [{ data: Array<{ questionId: string; enabled: boolean }> }])[0].data
+      const enabledOf = new Map(rows.map(row => [row.questionId.replace("definition-", ""), row.enabled]))
+      for (const key of followUps) expect(enabledOf.get(key), key).toBe(parentOn)
+      expect(enabledOf.get("S4_HEAT_STROKE")).toBe(false)
+    })
+  }
 })
 
 describe("questions from the children's paper form", () => {

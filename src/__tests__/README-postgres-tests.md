@@ -1,6 +1,6 @@
 # The `*-postgres.test.ts` files
 
-Ten test files are gated behind `LOSPOR_POSTGRES_INTEGRATION=true`. Two of them
+Twenty-three test files are gated behind `LOSPOR_POSTGRES_INTEGRATION=true`. Two of them
 need a second flag as well, so `npm run test:pg` alone does **not** run
 everything — see the table.
 
@@ -16,6 +16,19 @@ everything — see the table.
 | `seed-icd10-bundle-postgres` | — | the ICD-10 bundle seed |
 | `bundled-baseline-provisioner-postgres` | `LOSPOR_BUNDLED_BASELINE_POSTGRES=true` | the bundled clinical baseline provisioning transaction |
 | `deployment-username-identity-postgres` | `LOSPOR_USERNAME_IDENTITY_POSTGRES=true` | Hospital username uniqueness/case-insensitivity constraints |
+| `case-bounds-postgres` | — | moving a case start or end refused while charted entries would fall outside it |
+| `case-cancel-postgres` | — | a cancelled procedure: reason and note, write access, too late after anaesthesia starts, closed to edits, undo, audit |
+| `case-event-made-at-postgres` | — | of two changes to one event, the last one made wins |
+| `case-event-routes-postgres` | — | the event edit and delete routes |
+| `dashboard-case-counts-postgres` | — | the dashboard counts and scopes |
+| `intraop-timeline-postgres` | — | the intraop timeline projection |
+| `operating-theatres-postgres` | — | operating theatres through their routes: off and on, assign, the changed-meanwhile refusal, retired theatres, a cancelled case, locked at intraop start |
+| `preop-answers-postgres` | — | preop answer rows |
+| `preop-documents-postgres` | — | the preop summary and consent settings |
+| `preop-orders-postgres` | — | preop ward orders and medication instructions |
+| `preop-profiles-postgres` | — | the adult and paediatric preop profiles |
+| `preop-suggestion-routes-postgres` | — | the preop suggestion routes |
+| `unit-indicators-postgres` | — | the unit indicators: filters and their choices, grouping by procedure done, cancellations, colleague names, the per-case cache |
 
 **Keep this table in step with the directory.** It drifted to four entries while
 six more files were added, which is how a whole tier of coverage becomes easy to

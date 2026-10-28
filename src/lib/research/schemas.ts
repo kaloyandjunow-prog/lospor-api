@@ -22,7 +22,7 @@ const stringList = z.array(z.string().trim().min(1).max(200)).max(100)
 export const researchCohortSchema = z.object({
   version: z.literal(1).default(1),
   filters: z.object({
-    statuses: z.array(z.enum(RESEARCH_CASE_STATUSES)).max(4).optional(),
+    statuses: z.array(z.enum(RESEARCH_CASE_STATUSES)).max(RESEARCH_CASE_STATUSES.length).optional(),
     finalized: dateRangeSchema.optional(),
     clinicalModes: z.array(z.enum(["ADULT", "PEDIATRIC"])).optional(),
     ageDays: numberRangeSchema.optional(),

@@ -25,7 +25,8 @@ import type { Prisma } from "@/generated/prisma/client"
  * tier query adds its own `status` to `where` and would otherwise silently
  * override a caller-supplied one.
  */
-const STATUS_PRIORITY = ["AWAITING_REVIEW", "IN_PROGRESS", "DRAFT", "COMPLETE"] as const
+// Cancelled procedures last: closed, and kept for the record (10.0.0).
+const STATUS_PRIORITY = ["AWAITING_REVIEW", "IN_PROGRESS", "DRAFT", "COMPLETE", "CANCELLED"] as const
 
 export async function findCasesByPriority<Include extends Prisma.CaseInclude>(
   where: Prisma.CaseWhereInput,

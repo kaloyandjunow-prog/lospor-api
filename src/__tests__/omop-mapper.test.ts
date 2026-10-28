@@ -115,7 +115,10 @@ describe("mapCasesToOmop", () => {
       // of a procedure this team performed. One row moved between the two
       // tables rather than being added or lost.
       procedure_occurrence: 6,
-      observation: 47, // 48 less the never-filled GUTA_SCORE
+      // 48 less the never-filled GUTA_SCORE, plus the two planned operations,
+      // which are plans and so observations (the operations performed are
+      // the procedure rows above, because the timeline says one started).
+      observation: 49,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -259,7 +262,7 @@ describe("mapCasesToOmop", () => {
     expect(bundle.metadata.quality_warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "UNMAPPED_CONCEPT_ROWS", severity: "warning", count: 1 }),
       expect.objectContaining({ code: "SOURCE_ONLY_CONCEPT_ROWS", severity: "info", count: 3 }),
-      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 9 }),
+      expect.objectContaining({ code: "EXACT_EVENT_TIMESTAMPS", severity: "info", count: 10 }), // includes the fixture's "Procedure started"
       expect.objectContaining({ code: "INSTITUTION_LINKAGE", severity: "info", count: 1 }),
       expect.objectContaining({ code: "REDACTED_FREE_TEXT_PRESENT", severity: "warning", count: 1 }),
     ]))
@@ -859,6 +862,56 @@ describe("curated mappings reach the export", () => {
     const sel = bundle.observation.find(row => row.observation_source_value === "LOSPOR:INTRAOP_MONITORING")
     expect(sel!.observation_concept_id).toBe(0)
     expect(sel!.value_as_string).toBe("ecg")
+  })
+})
+
+describe("a planned operation is a plan, and becomes a procedure only once it starts", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  } as never
+  type Events = { events: { type: string; timestamp: Date; label: string | null }[] }
+  const withoutStart = () => {
+    const c = completeCase() as never as Events
+    c.events = c.events.filter(event => event.label !== "Procedure started" && event.label !== "Incision")
+    return c
+  }
+  const planned = (bundle: ReturnType<typeof mapCasesToOmop>) =>
+    bundle.procedure_occurrence.filter(row => /LOSPOR_PROCEDURE:/.test(String(row.procedure_source_value)))
+  const plans = (bundle: ReturnType<typeof mapCasesToOmop>) =>
+    bundle.observation.filter(row => row.observation_concept_id === 4226140)
+
+  it("exports every plan as a Planned procedure observation, typed as the record it came from", () => {
+    const bundle = mapCasesToOmop([completeCase() as never], options)
+    expect(plans(bundle)).toHaveLength(2)
+    for (const row of plans(bundle)) {
+      expect(row.observation_type_concept_id).toBe(32817)
+      expect(String(row.observation_source_value)).toMatch(/LOSPOR_PROCEDURE:/)
+      // Urgency qualifies the booking, whether or not the operation happened.
+      expect(row.qualifier_concept_id).not.toBe(0)
+    }
+    expect(plans(bundle).map(row => row.value_as_concept_id).sort()).toEqual([23456, 34567])
+  })
+
+  it("exports no operation performed when the timeline never shows one starting", () => {
+    const bundle = mapCasesToOmop([withoutStart() as never], options)
+    expect(planned(bundle)).toHaveLength(0)
+    // The plan is not lost with it.
+    expect(plans(bundle)).toHaveLength(2)
+    expect(bundle.metadata.quality_warnings.map(warning => warning.code)).toContain("PLANNED_OPERATION_NOT_STARTED")
+  })
+
+  it("dates the operation performed by the earlier of Incision and Procedure started", () => {
+    const c = withoutStart()
+    c.events.push(
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:20:00Z"), label: "Procedure started" },
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:12:00Z"), label: "Incision" },
+    )
+    const rows = planned(mapCasesToOmop([c as never], options))
+    expect(rows).toHaveLength(2)
+    for (const row of rows) expect(row.procedure_datetime).toBe("2026-06-01T08:12:00.000Z")
+    expect(mapCasesToOmop([c as never], options).metadata.quality_warnings.map(warning => warning.code))
+      .not.toContain("PLANNED_OPERATION_NOT_STARTED")
   })
 })
 
@@ -1735,7 +1788,7 @@ describe("the rows that were saying the same thing twice", () => {
     expect(obs("LOSPOR:AGE_YEARS")).toHaveLength(0)
   })
 
-  it("states surgical urgency once, on the procedure", () => {
+  it("states surgical urgency on the operation, not as a row of its own", () => {
     // It used to be here as well, at concept 0, so a query that counted both
     // counted every emergency case twice.
     expect(obs("LOSPOR:EMERGENCY_SURGERY")).toHaveLength(0)
@@ -2143,7 +2196,7 @@ describe("postop recovery: Aldrete total, PONV, disposition, paediatric pain", (
     const fpsRRow = fpsR.observation.find(r => r.observation_source_value === "LOSPOR:PEDIATRIC_PAIN_FPS_R_0_10")
     const nrsRow = nrs.measurement.find(r => r.measurement_source_value === "LOSPOR:PEDIATRIC_PAIN_NRS_0_10")
 
-    expect(flaccRow).toMatchObject({ measurement_concept_id: 3037051, value_as_number: 3 })
+    expect(flaccRow).toMatchObject({ measurement_concept_id: 3036118, value_as_number: 3 })
     expect(fpsRRow).toMatchObject({ observation_concept_id: 40760807, value_as_number: 4 })
     // NRS now carries 43055141, the same concept as the adult NRS -- it is the
     // same 0-10 scale, and the concept was simply absent from the vocabulary
@@ -2838,5 +2891,112 @@ describe("research dates and times are the theatre clock (2026-10-19)", () => {
       visit_start_date: "2026-06-01",
       visit_start_datetime: "2026-06-01T22:30:00.000Z",
     }))
+  })
+})
+
+describe("preoperative ward orders and medication instructions are exported as orders", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  } as never
+  const placed = new Date("2026-05-31T15:00:00Z")
+  const order = (fields: Record<string, unknown>) => ({
+    specialtyKey: null, specialtyLabelEn: null, specialtyLabelBg: null, labTest: null, labLoinc: null, labConceptId: null, createdAt: placed, ...fields,
+  })
+  const withOrders = () => {
+    const c = completeCase() as never as { preop: Record<string, unknown> }
+    c.preop.wardOrders = [
+      order({ optionKey: "CORRECT_ELECTROLYTES", kind: "SIMPLE", labelEn: "Correct electrolyte disturbances", labelBg: "x", conceptId: 4171615 }),
+      order({ optionKey: "CONSULTATION", kind: "CONSULT", labelEn: "Consultation with", labelBg: "x", conceptId: 4304361, specialtyKey: "1004", specialtyLabelEn: "Internal diseases", specialtyLabelBg: "x" }),
+      order({ optionKey: "INVESTIGATE", kind: "LAB", labelEn: "Investigate", labelBg: "x", conceptId: 4013385, labTest: "Potassium (K⁺)", labLoinc: "2823-3", labConceptId: 3023103 }),
+      order({ optionKey: "NO_ADDITIONAL_ORDERS", kind: "NONE", labelEn: "No additional orders", labelBg: "x", conceptId: 0 }),
+    ]
+    c.preop.medicationInstructions = [
+      { optionKey: "STOP_BEFORE_SURGERY", conceptId: 764611, medicationLabel: "Diazepam", medicationInn: "diazepam", medicationAtc: "N05BA01", hoursBefore: 24, createdAt: placed },
+      { optionKey: "DO_NOT_STOP", conceptId: 0, medicationLabel: "Bisoprolol", medicationInn: null, medicationAtc: null, hoursBefore: null, createdAt: placed },
+    ]
+    return c
+  }
+  const rows = (prefix: string) => mapCasesToOmop([withOrders() as never], options).observation
+    .filter(row => String(row.observation_source_value).startsWith(prefix))
+
+  it("types every order as an EHR order, dated the day it was placed", () => {
+    const all = [...rows("PREOP_WARD_ORDER:"), ...rows("PREOP_MEDICATION_INSTRUCTION:")]
+    expect(all).toHaveLength(6)
+    for (const row of all) {
+      expect(row.observation_type_concept_id).toBe(32833)
+      expect(row.observation_date).toBe("2026-05-31")
+    }
+  })
+
+  it("frames each kind of ward order as the plan it is", () => {
+    const bySource = new Map(rows("PREOP_WARD_ORDER:").map(row => [row.observation_source_value, row]))
+    expect(bySource.get("PREOP_WARD_ORDER:CORRECT_ELECTROLYTES")).toMatchObject({ observation_concept_id: 4226140, value_as_concept_id: 4171615, value_as_string: "Correct electrolyte disturbances" })
+    expect(bySource.get("PREOP_WARD_ORDER:CONSULTATION:NHIS_CL006:1004")).toMatchObject({ observation_concept_id: 4304361, value_as_concept_id: 0, value_as_string: "Internal diseases" })
+    expect(bySource.get("PREOP_WARD_ORDER:INVESTIGATE:LOINC:2823-3")).toMatchObject({ observation_concept_id: 4013385, value_as_concept_id: 3023103, value_as_string: "Investigate Potassium (K⁺)" })
+    expect(bySource.get("PREOP_WARD_ORDER:NO_ADDITIONAL_ORDERS")).toMatchObject({ observation_concept_id: 0, value_as_concept_id: 0 })
+  })
+
+  it("gives a stop its hours in hours, and names the drug as the drug's own row does", () => {
+    const bundle = mapCasesToOmop([withOrders() as never], options)
+    const drug = bundle.drug_exposure.find(row => row.drug_concept_id === 19019905)!
+    const [stop, keep] = rows("PREOP_MEDICATION_INSTRUCTION:")
+    expect(stop).toMatchObject({ observation_concept_id: 4226140, value_as_concept_id: 764611, value_as_number: 24, unit_concept_id: 8505, unit_source_value: "h" })
+    expect(stop!.value_as_string).toBe(drug.drug_source_value)
+    expect(keep).toMatchObject({ observation_concept_id: 0, value_as_concept_id: 0, value_as_number: null, unit_concept_id: 0, unit_source_value: null, value_as_string: "MEDICATION:Bisoprolol" })
+  })
+
+  it("exports premedication ordered as a drug ordered, apart from the premedication given", () => {
+    const c = withOrders()
+    c.preop.premedicationOrders = [
+      { phase: "DAY_BEFORE", entry: "Midazolam 7.5 mg PO", atcCode: "N05CD08", dose: 7.5, unit: "mg", route: "PO", conceptId: 708298, createdAt: placed },
+      { phase: "MORNING", entry: "Herbal tea 1 cup PO", atcCode: null, dose: 1, unit: "cup", route: "PO", conceptId: null, createdAt: placed },
+    ]
+    const bundle = mapCasesToOmop([c as never], options)
+    const ordered = bundle.drug_exposure.filter(row => String(row.drug_source_value).startsWith("PREMED_ORDER:"))
+    const visitDay = bundle.visit_occurrence[0].visit_start_date
+    const dayBefore = new Date(`${visitDay}T00:00:00Z`); dayBefore.setUTCDate(dayBefore.getUTCDate() - 1)
+    expect(ordered).toMatchObject([
+      { drug_type_concept_id: 32833, drug_concept_id: 708298, drug_source_value: "PREMED_ORDER:ATC:N05CD08 - Midazolam 7.5 mg PO", dose_value: 7.5, dose_unit_source_value: "mg", route_source_value: "PO", drug_exposure_start_date: dayBefore.toISOString().slice(0, 10) },
+      { drug_type_concept_id: 32833, drug_concept_id: 0, drug_source_value: "PREMED_ORDER:Herbal tea 1 cup PO", drug_exposure_start_date: visitDay },
+    ])
+  })
+})
+
+describe("a cancelled procedure, a plan not yet known, and the procedure done (10.0.0)", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE", "CANCELLED"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  } as never
+  type Mutable = Record<string, unknown> & { preop: Record<string, unknown>; postop: Record<string, unknown>; events: { label: string | null }[] }
+  const plans = (bundle: ReturnType<typeof mapCasesToOmop>) => bundle.observation.filter(row => row.observation_concept_id === 4226140)
+
+  it("records a cancellation before anaesthesia, with its reason, and no operation", () => {
+    const c = completeCase() as never as Mutable
+    Object.assign(c, { status: "CANCELLED", cancelledAt: new Date("2026-10-28T07:30:00Z"), cancellationReason: "PATIENT_CONDITION", intraop: null, postop: null })
+    c.events = []
+    const bundle = mapCasesToOmop([c as never], options)
+    const cancelled = bundle.observation.find(row => row.observation_concept_id === 35622708)
+    expect(cancelled).toMatchObject({ observation_source_value: "LOSPOR:PROCEDURE_CANCELLED", observation_date: "2026-10-28" })
+    expect(bundle.observation.find(row => row.observation_concept_id === 4306654)).toMatchObject({
+      value_as_string: "The patient's condition", observation_source_value: "LOSPOR:CANCELLATION_REASON:PATIENT_CONDITION",
+    })
+    // The plan is kept; nothing says the operation happened.
+    expect(plans(bundle).length).toBeGreaterThan(0)
+    expect(bundle.procedure_occurrence.filter(row => /LOSPOR_PROCEDURE:/.test(String(row.procedure_source_value)))).toHaveLength(0)
+  })
+
+  it("exports a plan not yet known as SNOMED Surgical procedure, and the procedure done as performed", () => {
+    const c = completeCase() as never as Mutable
+    c.preop = { ...c.preop, procedureRows: [], plannedProcedure: "", procedureUndetermined: true }
+    c.postop = { ...c.postop, performedProcedureRows: [
+      { code: "Exploratory laparotomy", group: "Exploratory laparotomy", domain: null, description: "Exploratory laparotomy", sourceVocabulary: "LOSPOR_PROCEDURE", sourceCode: "Exploratory laparotomy", standardConceptId: 4253523, mappingStatus: "MAPPED", ordinal: 0 },
+    ] }
+    const bundle = mapCasesToOmop([c as never], options)
+    expect(plans(bundle)).toEqual([expect.objectContaining({ value_as_concept_id: 4301351, observation_source_value: "LOSPOR:PROCEDURE_UNDETERMINED" })])
+    const performed = bundle.procedure_occurrence.filter(row => row.procedure_concept_id === 4253523)
+    expect(performed).toHaveLength(1)
+    // The plan is not also exported as performed.
+    expect(bundle.procedure_occurrence.filter(row => row.procedure_concept_id === 4301351)).toHaveLength(0)
   })
 })

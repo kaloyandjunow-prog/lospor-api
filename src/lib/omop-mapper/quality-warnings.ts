@@ -1,4 +1,5 @@
 import type { CaseRow, ExportQualityWarning } from "./types"
+import { operationStartOf } from "./domains/planned-procedure"
 
 /**
  * The export's own data-quality checks, split out of omop-mapper.ts.
@@ -66,6 +67,22 @@ export function buildQualityWarnings(
   }
 
   // ── Warning-level checks ───────────────────────────────────────────────────
+
+  // A finished case with a planned operation and no surgical milestone exports
+  // the plan only, with no operation performed. Either the operation did not
+  // happen or nobody marked when it began; the export cannot tell which.
+  const planOnlyCount = cases.filter(c =>
+    c.status === "COMPLETE"
+    && ((c.preop?.procedureRows ?? []).length > 0 || Boolean(c.preop?.plannedProcedure))
+    && !operationStartOf(c)).length
+  if (planOnlyCount > 0) {
+    warnings.push({
+      code: "PLANNED_OPERATION_NOT_STARTED",
+      severity: "warning",
+      message: "Some finalised cases have a planned operation but no \"Incision\" or \"Procedure started\" on the timeline. They export the plan only, with no operation performed.",
+      count: planOnlyCount,
+    })
+  }
 
   const casesWithoutFieldStatus = cases.filter(c => (c.fieldStatuses ?? []).length === 0).length
   const exactTimestampRows = cases.reduce((sum, c) => sum + (c.events ?? []).length, 0)

@@ -161,6 +161,12 @@ export function checkClinicalPayloadPII(payload: {
     { field: "intraopComplications", value: text(intraop.complications), blockedKeys: ["complications"] },
     { field: "postopComplications", value: text(postop.complications), blockedKeys: ["complications"] },
     { field: "dispositionNotes", value: text(postop.dispositionNotes), blockedKeys: ["dispositionNotes"] },
+    {
+      field: "performedProcedures",
+      value: labelList(postop.performedProcedures),
+      blockedKeys: ["performedProcedures"],
+      skipNameCheck: isCatalogSelectionList(postop.performedProcedures),
+    },
   ]
   for (const field of fields) {
     const issue = clinicalIssue(field)

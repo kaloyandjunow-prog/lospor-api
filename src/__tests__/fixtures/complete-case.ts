@@ -31,6 +31,8 @@ function completeCaseRow(overrides: Record<string, unknown>) {
     selections: [{ section: "intraop", category: "monitoring", value: "ecg", ordinal: 0, sourceVocabulary: "LOSPOR_OPTION", sourceCode: "MON_ECG", standardConceptId: 4187078, mappingStatus: "MAPPED" }],
     complications: [{ section: "postop", label: "PONV", note: "treated", timestamp: endTime, source: "relational-sync", ordinal: 0, sourceVocabulary: "LOSPOR_COMPLICATION", sourceCode: "PONV", standardConceptId: 4166237, mappingStatus: "MAPPED" }],
     events: [
+      // The operation began: without a surgical milestone the planned operation exports as a plan only.
+      { type: "clinical_event", timestamp: new Date("2026-06-01T08:05:00Z"), label: "Procedure started", value: null, unit: null, metadataJson: {} },
       {
         type: "vital",
         timestamp: new Date("2026-06-01T08:15:00Z"),

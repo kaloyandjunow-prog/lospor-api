@@ -95,6 +95,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         // A finalized case is an attested record. Reassigning it means
         // unfinalising it first, so the change is captured in a new
         // finalization rather than applied underneath the existing one.
+        // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
+        if (caseRecord.status === "CANCELLED") {
+          return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
+        }
         if (caseRecord.status === "COMPLETE") {
           return NextResponse.json({
             error: "Unfinalise the case before transferring it",

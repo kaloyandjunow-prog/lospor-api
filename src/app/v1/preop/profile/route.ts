@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
-import { ensurePreopProfiles, preparePreopProfile, serializePreopProfiles } from "@/lib/preop/service"
+import { ensurePreopProfiles, preparePreopProfile, readPreopProfiles, serializePreopProfiles } from "@/lib/preop/service"
 
 /**
  * The appliance's preoperative profiles, adult and paediatric, in one shape:
@@ -14,7 +14,10 @@ export async function GET(req: NextRequest) {
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
     await preparePreopProfile(prisma, user.id)
-    const profiles = await prisma.$transaction(tx => ensurePreopProfiles(tx, user.id))
+    await prisma.$transaction(tx => ensurePreopProfiles(tx, user.id))
+    // Read again with the sections and order rows, which the save path skips.
+    const profiles = await readPreopProfiles(prisma)
+    if (!profiles) throw new Error("PREOP_PROFILE_NOT_PROVISIONED")
     return NextResponse.json(serializePreopProfiles(profiles))
   } catch {
     return NextResponse.json({ error: "Preoperative profile unavailable" }, { status: 500 })

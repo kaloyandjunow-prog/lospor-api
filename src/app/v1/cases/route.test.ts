@@ -9,7 +9,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/mobile-auth", () => ({ getAuthUser: mocks.auth }))
 vi.mock("@/lib/prisma", () => ({
-  prisma: { case: { findMany: mocks.findMany, count: mocks.count } },
+  prisma: {
+    case: { findMany: mocks.findMany, count: mocks.count },
+    operatingTheatrePolicy: { findUnique: vi.fn().mockResolvedValue(null) },
+  },
 }))
 vi.mock("@/lib/access-control", () => ({
   caseReadWhereForUser: () => ({}),
@@ -55,7 +58,7 @@ describe("GET /v1/cases pagination", () => {
   // (DRAFT, IN_PROGRESS, AWAITING_REVIEW, COMPLETE), which would put every
   // draft ahead of the case closest to auto-closing. This is the regression
   // that ordering shipped with; the fix queries one status tier at a time.
-  it("orders cases by clinical urgency: AWAITING_REVIEW, then IN_PROGRESS, then DRAFT, then COMPLETE", async () => {
+  it("orders cases by clinical urgency: AWAITING_REVIEW, then IN_PROGRESS, then DRAFT, then COMPLETE, then CANCELLED", async () => {
     mocks.count.mockImplementation(({ where }: { where?: { status?: string } }) =>
       Promise.resolve(where?.status ? 1 : 4)) // per-tier counts of 1; the plain `total` count of 4
     mocks.findMany.mockImplementation(({ where }: { where: { status: string } }) =>
@@ -65,7 +68,7 @@ describe("GET /v1/cases pagination", () => {
     const res = await GET(new NextRequest("http://localhost/v1/cases?take=10"))
     const body = await res.json()
     expect(body.cases.map((c: { id: string }) => c.id)).toEqual([
-      "AWAITING_REVIEW-case", "IN_PROGRESS-case", "DRAFT-case", "COMPLETE-case",
+      "AWAITING_REVIEW-case", "IN_PROGRESS-case", "DRAFT-case", "COMPLETE-case", "CANCELLED-case",
     ])
   })
 

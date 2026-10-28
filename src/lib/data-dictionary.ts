@@ -1,3 +1,12 @@
+// 4.9.0 exports a plan as a plan. The planned operation is an observation
+// (Planned procedure, 4226140) with its urgency as qualifier_concept_id, and
+// a procedure_occurrence only once the timeline shows the operation started.
+// It adds the preoperative ward orders and medication instructions, each an
+// observation typed 32833 (EHR order), the premedication ordered at the preop
+// visit as drug_exposure typed 32833 (PREMED_ORDER:), and the observation table's standard
+// qualifier and unit columns (0 and empty on every other row). Nothing has
+// been exported for research yet, so no dataset needs migrating.
+//
 // 4.8.0 records target-controlled infusions: the model and site, each target
 // (TCI_TARGET), and the amount -- the pump's own total when entered on the
 // stop, else the model's calculation -- as the drug_exposure dose. Both totals
@@ -64,7 +73,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.8.0"
+export const DICTIONARY_VERSION = "4.9.0"
 
 export interface DictionaryEntry {
   name: string
@@ -455,13 +464,13 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "emergencySurgery",
-    exportName: "procedure_occurrence.modifier_concept_id",
-    meaning: "Whether the procedure was performed as an emergency. Carried "
-      + "only on the operation itself, as "
-      + "procedure_occurrence.modifier_concept_id, using SNOMED Qualifier "
-      + "Values: 4093606 (Emergency) against 4013731 (Elective). A qualifier on "
-      + "the operation rather than a second procedure, so one operation still "
-      + "counts as one. The two are one toggle in the form and cannot both be "
+    exportName: "observation.qualifier_concept_id (planned operation) + procedure_occurrence.modifier_concept_id (operation performed)",
+    meaning: "Whether the operation was booked as an emergency. A qualifier, "
+      + "never a row of its own: on the planned-operation observation as "
+      + "qualifier_concept_id, and on the operation performed (when the "
+      + "timeline shows it started) as procedure_occurrence.modifier_concept_id, "
+      + "using SNOMED Qualifier Values: 4093606 (Emergency) against 4013731 "
+      + "(Elective). One operation still counts as one in either table. The two are one toggle in the form and cannot both be "
       + "true; a case recorded before the field existed carries modifier 0. "
       + "There used to be a LOSPOR:EMERGENCY_SURGERY observation carrying the "
       + "same fact at concept 0; it was removed, because a query counting both "
@@ -489,9 +498,9 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "elective",
-    exportName: "procedure_occurrence.modifier_concept_id (LOSPOR:ELECTIVE_SURGERY)",
+    exportName: "observation.qualifier_concept_id + procedure_occurrence.modifier_concept_id (LOSPOR:ELECTIVE_SURGERY)",
     meaning: "An elective case, as SNOMED Qualifier Value 4013731 on the "
-      + "operation. Derived from emergencySurgery being false rather than "
+      + "planned operation and on the operation performed. Derived from emergencySurgery being false rather than "
       + "stored separately: the form records one urgency toggle. Until 4.3.0 "
       + "this left the building nowhere at all — only emergency did, so an "
       + "elective case was indistinguishable from one where urgency was never "
@@ -670,6 +679,67 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = no current medications recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "medications",
     versionIntroduced: "3.0.0",
+  },
+  {
+    name: "preopWardOrders",
+    exportName: "observation.value_as_concept_id (PREOP_WARD_ORDER)",
+    meaning: "An order the anaesthetist left for the preoperative ward, one "
+      + "observation each, typed 32833 (EHR order) and dated the day it was "
+      + "placed. A plan, so never a procedure or measurement row: the ward's "
+      + "own record of doing it would be that. A correction is Planned "
+      + "procedure (4226140) with what is to be done as value_as_concept_id -- "
+      + "Electrolyte regulation 4171615, Fluid balance regulation 4175359, "
+      + "Acid-base balance regulation 4303565, or 0 for anaemia, "
+      + "hypoproteinaemia and a hospital's own rows, which no standard concept "
+      + "states -- and its English name as value_as_string. A consultation is "
+      + "Patient referral to specialist (4304361) with the specialty's English "
+      + "name and its NHIS CL006 code in the source value "
+      + "(PREOP_WARD_ORDER:CONSULTATION:NHIS_CL006:<key>). A laboratory test is "
+      + "Laboratory test requested (4013385) with the test's own concept as "
+      + "the value and its LOINC code in the source value; the morning glucose "
+      + "is serum glucose, LOINC 14749-6 (3013826). \"No additional orders\" is "
+      + "concept 0 with source PREOP_WARD_ORDER:NO_ADDITIONAL_ORDERS: the ward "
+      + "was told nothing more, which is not the same as no orders recorded. An "
+      + "order unticked before the case was finalised was cancelled and is not "
+      + "exported; its row stays in the database.",
+    type: "concept_id",
+    missingnessRule: "No row = no ward orders recorded (the section may be switched off at the site)",
+    sourceTable: "PreopWardOrder", sourceColumn: "conceptId",
+    versionIntroduced: "4.9.0",
+  },
+  {
+    name: "preopMedicationInstructions",
+    exportName: "observation.value_as_number (PREOP_MEDICATION_INSTRUCTION)",
+    meaning: "An instruction about one of the patient's current medications, "
+      + "one observation each, typed 32833 (EHR order). \"Stop taking\" is "
+      + "Planned procedure (4226140) with Recommendation to discontinue "
+      + "medication (764611) as the value and the hours before surgery as "
+      + "value_as_number, unit_concept_id 8505 (hour). \"Don't stop taking\" "
+      + "and a hospital's own rows are concept 0, since no standard concept "
+      + "says them. value_as_string is the drug in the form drug_source_value "
+      + "takes (ATC:<code> - <name>, INN:<inn> - <name>, or MEDICATION:<name>), "
+      + "so the instruction can be matched to the drug it is about.",
+    type: "integer",
+    unit: "h",
+    missingnessRule: "No row = no medication instructions recorded (the section may be switched off at the site)",
+    sourceTable: "PreopMedicationInstruction", sourceColumn: "hoursBefore",
+    versionIntroduced: "4.9.0",
+  },
+  {
+    name: "preopPremedicationOrders",
+    exportName: "drug_exposure.drug_concept_id (PREMED_ORDER)",
+    meaning: "A premedication drug ordered at the preop visit, one drug_exposure "
+      + "each, typed 32833 (EHR order): ordered, not given. What was given is the "
+      + "intraoperative premedication row (32818, PREMED:), which starts from the "
+      + "order. Coded through the drug's ATC code as an intraoperative dose is; "
+      + "drug_source_value is PREMED_ORDER:ATC:<code> - <entry>, or PREMED_ORDER:<entry> "
+      + "for a drug outside the catalogue (concept 0). Dated the day it is to be "
+      + "taken (the day before surgery, or its morning), else the day ordered; "
+      + "the phase is a LOSPOR:PREMEDICATION_ORDER_PHASE source observation.",
+    type: "integer",
+    missingnessRule: "No row = no premedication ordered (the section may be switched off at the site)",
+    sourceTable: "PreopPremedicationOrder", sourceColumn: "conceptId",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "smoking",
@@ -1709,6 +1779,242 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.0.0",
   },
   {
+    name: "stewardTotal",
+    exportName: "observation.value_as_number (LOSPOR:STEWARD_TOTAL)",
+    meaning: "Steward recovery score, recorded for children in place of Aldrete. "
+      + "Neither the total nor its three components has a concept in these "
+      + "vocabularies (the nearest, Post Anesthetic Recovery score, is the "
+      + "Aldrete/PAR scale), so all four are LOSPOR-only observations at concept 0.",
+    type: "integer",
+    allowedValues: "0–6",
+    missingnessRule: "NULL = not all three components recorded, or an adult case (scored on Aldrete)",
+    derivationRule: "Sum of 3 Steward components (consciousness, airway, movement)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "stewardTotal",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "stewardConsciousness",
+    exportName: "observation.value_as_number (LOSPOR:STEWARD_CONSCIOUSNESS)",
+    meaning: "Steward consciousness: 0 not responding, 1 responding to stimuli, 2 awake",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not recorded, or an adult case",
+    sourceTable: "PostoperativeRecord", sourceColumn: "stewardConsciousness",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "stewardAirway",
+    exportName: "observation.value_as_number (LOSPOR:STEWARD_AIRWAY)",
+    meaning: "Steward airway: 0 airway requires maintenance, 1 maintains a good airway, 2 coughs on command or cries",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not recorded, or an adult case",
+    sourceTable: "PostoperativeRecord", sourceColumn: "stewardAirway",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "stewardMovement",
+    exportName: "observation.value_as_number (LOSPOR:STEWARD_MOVEMENT)",
+    meaning: "Steward movement: 0 not moving, 1 non-purposeful movements, 2 moving limbs purposefully",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not recorded, or an adult case",
+    sourceTable: "PostoperativeRecord", sourceColumn: "stewardMovement",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "flaccTotal",
+    exportName: "measurement.value_as_number (LOINC 38215-0)",
+    meaning: "FLACC pain score, behavioural, 0-10",
+    type: "integer",
+    allowedValues: "0–10",
+    missingnessRule: "NULL = not all five items scored, or not offered (offered to children from 28 days to under 8 years)",
+    derivationRule: "Sum of 5 FLACC items (face, legs, activity, cry, consolability)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "flaccTotal",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "flaccFace",
+    exportName: "observation.value_as_number (LOINC 38216-8)",
+    meaning: "FLACC face item",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "flaccFace",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "flaccLegs",
+    exportName: "observation.value_as_number (LOINC 38217-6)",
+    meaning: "FLACC legs item",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "flaccLegs",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "flaccActivity",
+    exportName: "observation.value_as_number (LOINC 38218-4)",
+    meaning: "FLACC activity item",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "flaccActivity",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "flaccCry",
+    exportName: "observation.value_as_number (LOINC 38219-2)",
+    meaning: "FLACC cry item",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "flaccCry",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "flaccConsolability",
+    exportName: "observation.value_as_number (LOINC 38220-0)",
+    meaning: "FLACC consolability item",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "flaccConsolability",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "fpsrScore",
+    exportName: "observation.value_as_number (LOSPOR:FPS_R)",
+    meaning: "Faces Pain Scale - Revised: one of six faces, scored 0, 2, 4, 6, 8 or 10",
+    type: "integer",
+    allowedValues: "0–10",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "fpsrScore",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "nipsTotal",
+    exportName: "measurement.value_as_number (LOINC 98012-8)",
+    meaning: "Neonatal Infant Pain Scale total",
+    type: "integer",
+    allowedValues: "0–7",
+    missingnessRule: "NULL = not all six items scored, or not a newborn",
+    derivationRule: "Sum of 6 NIPS items",
+    sourceTable: "PostoperativeRecord", sourceColumn: "nipsTotal",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "nipsFacialExpression",
+    exportName: "observation.value_as_number (LOSPOR:NIPS_FACIAL_EXPRESSION)",
+    meaning: "NIPS facial expression item",
+    type: "integer",
+    allowedValues: "0–1",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "nipsFacialExpression",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "nipsCry",
+    exportName: "observation.value_as_number (LOSPOR:NIPS_CRY)",
+    meaning: "NIPS cry item",
+    type: "integer",
+    allowedValues: "0–2",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "nipsCry",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "nipsBreathing",
+    exportName: "observation.value_as_number (LOSPOR:NIPS_BREATHING)",
+    meaning: "NIPS breathing pattern item",
+    type: "integer",
+    allowedValues: "0–1",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "nipsBreathing",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "nipsArms",
+    exportName: "observation.value_as_number (LOSPOR:NIPS_ARMS)",
+    meaning: "NIPS arms item",
+    type: "integer",
+    allowedValues: "0–1",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "nipsArms",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "nipsLegs",
+    exportName: "observation.value_as_number (LOSPOR:NIPS_LEGS)",
+    meaning: "NIPS legs item",
+    type: "integer",
+    allowedValues: "0–1",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "nipsLegs",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "nipsArousal",
+    exportName: "observation.value_as_number (LOSPOR:NIPS_AROUSAL)",
+    meaning: "NIPS state of arousal item",
+    type: "integer",
+    allowedValues: "0–1",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "nipsArousal",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "paedEyeContact",
+    exportName: "observation.value_as_number (LOSPOR:PAED_EYE_CONTACT)",
+    meaning: "PAED item: makes eye contact with the caregiver (reverse scored: not at all = 4)",
+    type: "integer",
+    allowedValues: "0–4",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "paedEyeContact",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "paedPurposeful",
+    exportName: "observation.value_as_number (LOSPOR:PAED_PURPOSEFUL)",
+    meaning: "PAED item: actions are purposeful (reverse scored)",
+    type: "integer",
+    allowedValues: "0–4",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "paedPurposeful",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "paedAware",
+    exportName: "observation.value_as_number (LOSPOR:PAED_AWARE)",
+    meaning: "PAED item: aware of the surroundings (reverse scored)",
+    type: "integer",
+    allowedValues: "0–4",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "paedAware",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "paedRestless",
+    exportName: "observation.value_as_number (LOSPOR:PAED_RESTLESS)",
+    meaning: "PAED item: restless",
+    type: "integer",
+    allowedValues: "0–4",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "paedRestless",
+    versionIntroduced: "10.0.0",
+  },
+  {
+    name: "paedInconsolable",
+    exportName: "observation.value_as_number (LOSPOR:PAED_INCONSOLABLE)",
+    meaning: "PAED item: inconsolable",
+    type: "integer",
+    allowedValues: "0–4",
+    missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
+    sourceTable: "PostoperativeRecord", sourceColumn: "paedInconsolable",
+    versionIntroduced: "10.0.0",
+  },
+  {
     name: "aldreteActivity",
     exportName: "observation.value_as_number (LOSPOR:ALDRETE_ACTIVITY)",
     meaning: "Modified Aldrete activity subscore at PACU discharge",
@@ -2125,8 +2431,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "preop.plannedProcedure",
-    exportName: "procedure_occurrence.procedure_source_value",
-    meaning: "The planned operation as free text, the fallback for a case with no coded procedure -- the same arrangement as the diagnosis above, and for the same reason.",
+    exportName: "observation.observation_source_value (Planned procedure 4226140) + procedure_occurrence.procedure_source_value once started",
+    meaning: "The planned operation as free text, the fallback for a case with no coded procedure -- the same arrangement as the diagnosis above, and for the same reason. Exported like a coded plan (see preop.proceduresJson), with concept 0.",
     type: "string",
     missingnessRule: "No row = neither a coded procedure nor procedure text was recorded",
     derivationRule: "Only reached when the coded PreopProcedure rows are absent",
@@ -2135,8 +2441,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "preop.proceduresJson",
-    exportName: "procedure_occurrence.procedure_concept_id (via PreopProcedure)",
-    meaning: "The coded planned procedures as stored on the assessment, one entry per procedure. An entry is either a procedure group alone (system LOSPOR_PROCEDURE_GROUP; procedure_source_value PROCEDURE:LOSPOR_PROCEDURE_GROUP:<group>, procedure_concept_id 0, because a group names no single operation) or the exact operation the clinician chose inside it (system ICD-10-PCS; procedure_source_value PROCEDURE:ICD10PCS:<code>, procedure_concept_id the standard ICD10PCS concept, or its RxNorm target for a drug administration).",
+    exportName: "observation.value_as_concept_id (Planned procedure 4226140, via PreopProcedure) + procedure_occurrence.procedure_concept_id once started",
+    meaning: "The coded planned procedures as stored on the assessment, one entry per procedure. A plan is not an action, so each is an OBSERVATION: observation_concept_id 4226140 (SNOMED Planned procedure), value_as_concept_id the operation's concept, observation_type_concept_id 32817 (EHR), dated the day the case was created. The operation is also a PROCEDURE_OCCURRENCE (type 32817), dated and timed by the earlier of the timeline's \"Incision\" and \"Procedure started\" milestones, only when one of them exists; a finalised case with a plan and neither milestone exports the plan alone and raises the PLANNED_OPERATION_NOT_STARTED quality warning. An entry is either a procedure group alone (system LOSPOR_PROCEDURE_GROUP; procedure_source_value PROCEDURE:LOSPOR_PROCEDURE_GROUP:<group>, procedure_concept_id 0, because a group names no single operation) or the exact operation the clinician chose inside it (system ICD-10-PCS; procedure_source_value PROCEDURE:ICD10PCS:<code>, procedure_concept_id the standard ICD10PCS concept, or its RxNorm target for a drug administration).",
     type: "json",
     missingnessRule: "Empty = no coded procedure was recorded, and the free-text procedure above is exported instead if there is one. procedure_concept_id 0 = a group without an exact operation, or an operation with no bundled standard concept",
     derivationRule: "Each entry becomes one PreopProcedure mirror row and then one PROCEDURE_OCCURRENCE. An imported hospital code (e.g. КСМП) is mirrored under the vocabulary it declares (sourceVocabulary KSMP, procedure_concept_id 0) until the clinician chooses its exact ICD-10-PCS operation. ICD-10-PCS concept ids ship with the release (src/data/icd10pcs-omop.json, from OHDSI Athena); entries saved before exact operations existed keep the reading they were stored with",
@@ -2622,8 +2928,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "pediatricPainScore.FLACC",
     exportName: "measurement.value_as_number (LOSPOR:PEDIATRIC_PAIN_FLACC_0_10)",
-    meaning: "Paediatric pain score on the FLACC scale, as SNOMED 3037051 "
-      + "(FLACC pain assessment panel). Face, Legs, Activity, Cry, "
+    meaning: "Paediatric pain score on the FLACC scale, as LOINC 38215-0, concept 3036118 "
+      + "(Pain severity total [Score] FLACC; until 10.0.0 the panel, 3037051). Face, Legs, Activity, Cry, "
       + "Consolability — observed by staff, for a child too young or unwell to "
       + "self-report. In measurement rather than observation, because SNOMED "
       + "puts this concept in the Measurement domain -- FPS-R below stays in "
@@ -2823,8 +3129,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "procedure.standardConceptId",
-    exportName: "procedure_occurrence.procedure_concept_id",
-    meaning: "OMOP standard concept ID for the planned procedure",
+    exportName: "observation.value_as_concept_id (Planned procedure) + procedure_occurrence.procedure_concept_id once started",
+    meaning: "OMOP standard concept ID for the planned procedure: the value of the plan observation, and the concept of the operation performed once the timeline shows it started",
     unit: "OMOP concept_id",
     type: "concept_id",
     missingnessRule: "0 = no confident OMOP mapping; source vocabulary row preserved",

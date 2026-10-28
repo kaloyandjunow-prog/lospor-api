@@ -87,6 +87,10 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     // A coded answer where the vocabulary can state one -- a clinical yes or no
     // that no tool can read out of the string "true".
     "value_as_concept_id",
+    // A modifier of the fact: a planned operation's urgency.
+    "qualifier_concept_id", "qualifier_source_value",
+    // The unit of value_as_number: a medication hold's hours.
+    "unit_concept_id", "unit_source_value",
     "observation_source_value", "visit_occurrence_id",
   ],
 }
