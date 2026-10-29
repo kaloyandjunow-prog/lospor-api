@@ -1,5 +1,12 @@
 # Changelog - LOSPOR API
 
+## [10.0.1] - 2026-10-29
+
+### Changed
+
+- **Maintenance release:** the API development lint toolchain now uses ESLint
+  10.13.0; runtime and clinical contracts are unchanged.
+
 ## [10.0.0] - 2026-10-28
 
 ### Added
