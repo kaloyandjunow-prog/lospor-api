@@ -20,6 +20,13 @@ describe("item-scored postop pain and delirium (10.0.0)", () => {
     expect(mapPostopUpdate({ fpsrScore: 6 })).toEqual({ fpsrScore: 6 })
   })
 
+  it("recomputes an item total with the existing items during a partial edit", () => {
+    expect(mapPostopUpdate({ flaccFace: 2 }, { ...FLACC, flaccTotal: 5 })).toMatchObject({
+      flaccFace: 2,
+      flaccTotal: 6,
+    })
+  })
+
   it("refuses an item out of range and an FPS-R between faces", () => {
     expect(postopSchema.safeParse({ nipsBreathing: 2 }).success).toBe(false)
     expect(postopSchema.safeParse({ paedRestless: 5 }).success).toBe(false)

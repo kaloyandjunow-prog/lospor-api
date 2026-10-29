@@ -505,7 +505,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               ? { syncRevision: postopRevision }
               : {}),
           },
-          data: { ...mapPostopUpdate(postop), syncRevision: { increment: 1 } },
+          data: {
+            ...mapPostopUpdate(postop, existingPostop as unknown as Record<string, unknown>),
+            syncRevision: { increment: 1 },
+          },
         })
         if (updated.count === 0) {
           const current = await tx.postoperativeRecord.findUnique({ where: { caseId: id } })

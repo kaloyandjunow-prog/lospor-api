@@ -179,6 +179,28 @@ describe("mapPostopUpdate (partial)", () => {
     expect(result.aldreteTotal).toBeNull()
   })
 
+  it("recomputes a partial Aldrete edit with the existing subscores", () => {
+    const existing = {
+      aldreteActivity: 2, aldreteRespiration: 2, aldreteCirculation: 2,
+      aldreteConsciousness: 2, aldreteSpO2: 2,
+    }
+    expect(mapPostopUpdate({ aldreteActivity: 1 }, existing)).toMatchObject({
+      aldreteActivity: 1,
+      aldreteTotal: 9,
+    })
+  })
+
+  it("keeps an incomplete existing Aldrete score incomplete", () => {
+    const existing = {
+      aldreteActivity: null, aldreteRespiration: null, aldreteCirculation: null,
+      aldreteConsciousness: null, aldreteSpO2: null, aldreteTotal: null,
+    }
+    expect(mapPostopUpdate({ aldreteActivity: 2 }, existing)).toMatchObject({
+      aldreteActivity: 2,
+      aldreteTotal: null,
+    })
+  })
+
   it("totals a child's Steward score once all three components are in, and not before", () => {
     expect(mapPostopUpdate({ stewardConsciousness: 2, stewardAirway: 1, stewardMovement: 2 }).stewardTotal).toBe(5)
     const partial = mapPostopUpdate({ stewardConsciousness: 2 })
