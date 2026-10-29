@@ -1,11 +1,50 @@
 import { Prisma } from "@/generated/prisma/client"
 import { canonicalizePostopPatch } from "@lospor/core/case-payloads"
 import { aldreteTotal as coreAldreteTotal, stewardTotal as coreStewardTotal } from "@lospor/core/postop"
-import { FLACC_FIELDS, NIPS_FIELDS, PAED_FIELDS } from "@lospor/core/postop-pain"
+import {
+  FLACC_FIELDS,
+  NIPS_FIELDS,
+  PAED_FIELDS,
+  flaccTotal as coreFlaccTotal,
+  nipsTotal as coreNipsTotal,
+  paedTotal as corePaedTotal,
+} from "@lospor/core/postop-pain"
 import { copyKey, safeEnum, toFloatOrNull, toIntOrNull } from "./shared"
 
-export function mapPostopUpdate(postop: Record<string, unknown>) {
-  const full = mapPostop(postop)
+/**
+ * The shared payload canonicalizer treats JSON null as Number(null) while it
+ * normalizes its derived totals. Null is an explicit clinical "not assessed"
+ * value, so repair those totals at the persistence boundary using the shared
+ * score functions, which distinguish null from a scored zero.
+ */
+function correctDerivedTotals(full: Record<string, unknown>): void {
+  full.aldreteTotal = coreAldreteTotal({
+    aldreteActivity: toIntOrNull(full.aldreteActivity),
+    aldreteRespiration: toIntOrNull(full.aldreteRespiration),
+    aldreteCirculation: toIntOrNull(full.aldreteCirculation),
+    aldreteConsciousness: toIntOrNull(full.aldreteConsciousness),
+    aldreteSpO2: toIntOrNull(full.aldreteSpO2),
+  })
+  full.stewardTotal = coreStewardTotal({
+    stewardConsciousness: toIntOrNull(full.stewardConsciousness),
+    stewardAirway: toIntOrNull(full.stewardAirway),
+    stewardMovement: toIntOrNull(full.stewardMovement),
+  })
+  full.flaccTotal = coreFlaccTotal(Object.fromEntries(FLACC_FIELDS.map(key => [key, toIntOrNull(full[key])])) as Record<typeof FLACC_FIELDS[number], number | null>)
+  full.nipsTotal = coreNipsTotal(Object.fromEntries(NIPS_FIELDS.map(key => [key, toIntOrNull(full[key])])) as Record<typeof NIPS_FIELDS[number], number | null>)
+  full.paedScore = corePaedTotal(Object.fromEntries(PAED_FIELDS.map(key => [key, toIntOrNull(full[key])])) as Record<typeof PAED_FIELDS[number], number | null>)
+}
+
+export function mapPostopUpdate(
+  postop: Record<string, unknown>,
+  existingPostop: Record<string, unknown> = {},
+) {
+  // Derived totals are calculated from the complete post-op state, not only
+  // the fields in this PATCH. The clients save section fields incrementally;
+  // calculating from the patch alone would clear a previously complete FLACC,
+  // NIPS, Aldrete, or Steward total whenever the next edit touched one item.
+  const full = mapPostop({ ...existingPostop, ...postop })
+  correctDerivedTotals(full as unknown as Record<string, unknown>)
   const r: Partial<typeof full> = {}
   const has = (k: string) => k in postop && postop[k] !== undefined
 
@@ -99,7 +138,7 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
   }
   const stewardTotal = postop.stewardTotal != null ? toIntOrNull(postop.stewardTotal) : coreStewardTotal(steward)
 
-  return {
+  const mapped = {
     aldreteActivity:      toIntOrNull(aldreteActivity),
     aldreteRespiration:   toIntOrNull(aldreteRespiration),
     aldreteCirculation:   toIntOrNull(aldreteCirculation),
@@ -148,4 +187,6 @@ export function mapPostop(rawPostop: Record<string, unknown>): Prisma.Postoperat
     // The procedure done (10.0.0), as the planned procedures are kept.
     performedProceduresJson: performedProcedures.length > 0 ? performedProcedures as Prisma.InputJsonValue : Prisma.JsonNull,
   }
+  correctDerivedTotals(mapped as unknown as Record<string, unknown>)
+  return mapped
 }
