@@ -1,5 +1,12 @@
 # Changelog - LOSPOR API
 
+## [10.0.2] - 2026-10-29
+
+### Changed
+
+- **Release-train follow-up:** version synchronized with the web score-race
+  hardening release; API contracts are unchanged.
+
 ## [10.0.1] - 2026-10-29
 
 ### Changed
