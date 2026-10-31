@@ -359,6 +359,14 @@ model IndicatorPolicy {
   updatedAt DateTime @updatedAt
 }
 
+/// Intraoperative automation (10.1.0): what the hospital has switched on in
+/// Status. One row; absent means everything off.
+model IntraopAutomationPolicy {
+  id        String   @id @default("local")
+  config    Json
+  updatedAt DateTime @updatedAt
+}
+
 /// One case's figures for the unit indicators (10.0.0), worked out from its
 /// record and kept until the case or the thresholds change. A derived cache,
 /// not part of the record: it can be dropped and rebuilt at any time, and no
@@ -2426,6 +2434,8 @@ model CaseComplication {
   label             String
   note              String?
   timestamp         DateTime?
+  /// The end of an episode (10.1.0); null for a moment, an open episode or an old row.
+  endTimestamp      DateTime?
   source            String?
   eventId           String?
   sourceVocabulary  String?

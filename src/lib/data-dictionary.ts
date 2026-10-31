@@ -44,6 +44,12 @@
 // whatever unit was typed: the entry unit is a per-user display preference and
 // a column following it could not be pooled.
 //
+// 4.10.0 adds the intraoperative shock (a procedure with its energy beside
+// it) and gives a complication charted on the timeline its exact date: the
+// timed complications of 10.1.0 reach the same rows the old text items did,
+// mapped the same way. An episode's end is kept in the database and not yet
+// exported, because the condition table this export writes has no end column.
+//
 // 4.3.0 documents what the traceability pass found: the risk-score and COLDS
 // factors, which exported their totals and not one component; the allergy flag,
 // whose absence made a documented "no known allergies" identical to an unasked
@@ -73,7 +79,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.9.0"
+export const DICTIONARY_VERSION = "4.10.0"
 
 export interface DictionaryEntry {
   name: string
@@ -724,6 +730,32 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = no medication instructions recorded (the section may be switched off at the site)",
     sourceTable: "PreopMedicationInstruction", sourceColumn: "hoursBefore",
     versionIntroduced: "4.9.0",
+  },
+  {
+    name: "intraopDefibrillation",
+    exportName: "procedure_occurrence.procedure_concept_id (INTRAOP_EVENT:Defibrillation / Cardioversion)",
+    meaning: "A shock charted during the case, one procedure_occurrence each, "
+      + "timed to the minute it was given: Direct current defibrillation "
+      + "(4204802) when not synchronised, Direct current cardioversion "
+      + "(4078793) when synchronised. Repeated shocks are repeated rows.",
+    type: "concept_id",
+    missingnessRule: "No row = no shock charted",
+    sourceTable: "CaseEvent", sourceColumn: "label",
+    versionIntroduced: "4.10.0",
+  },
+  {
+    name: "intraopDefibrillationEnergy",
+    exportName: "measurement.value_as_number (INTRAOP_EVENT:<Defibrillation|Cardioversion>:energy)",
+    meaning: "The energy of one shock, in joules (unit_concept_id 9522, J), as a "
+      + "measurement at the same instant as its procedure and with its source "
+      + "value plus \":energy\". measurement_concept_id is 0: no standard concept "
+      + "means energy delivered (LOINC 88667-1 is a device's maximum, a different fact).",
+    type: "integer",
+    unit: "J",
+    allowedValues: "1-360",
+    missingnessRule: "No row = no shock charted",
+    sourceTable: "CaseEvent", sourceColumn: "value",
+    versionIntroduced: "4.10.0",
   },
   {
     name: "preopPremedicationOrders",
@@ -1790,7 +1822,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not all three components recorded, or an adult case (scored on Aldrete)",
     derivationRule: "Sum of 3 Steward components (consciousness, airway, movement)",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardTotal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "stewardConsciousness",
@@ -1800,7 +1832,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not recorded, or an adult case",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardConsciousness",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "stewardAirway",
@@ -1810,7 +1842,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not recorded, or an adult case",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardAirway",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "stewardMovement",
@@ -1820,7 +1852,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not recorded, or an adult case",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardMovement",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccTotal",
@@ -1831,7 +1863,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not all five items scored, or not offered (offered to children from 28 days to under 8 years)",
     derivationRule: "Sum of 5 FLACC items (face, legs, activity, cry, consolability)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccTotal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccFace",
@@ -1841,7 +1873,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccFace",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccLegs",
@@ -1851,7 +1883,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccLegs",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccActivity",
@@ -1861,7 +1893,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccActivity",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccCry",
@@ -1871,7 +1903,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccCry",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccConsolability",
@@ -1881,7 +1913,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccConsolability",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "fpsrScore",
@@ -1891,7 +1923,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–10",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "fpsrScore",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsTotal",
@@ -1902,7 +1934,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not all six items scored, or not a newborn",
     derivationRule: "Sum of 6 NIPS items",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsTotal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsFacialExpression",
@@ -1912,7 +1944,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsFacialExpression",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsCry",
@@ -1922,7 +1954,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsCry",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsBreathing",
@@ -1932,7 +1964,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsBreathing",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsArms",
@@ -1942,7 +1974,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsArms",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsLegs",
@@ -1952,7 +1984,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsLegs",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsArousal",
@@ -1962,7 +1994,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsArousal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedEyeContact",
@@ -1972,7 +2004,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedEyeContact",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedPurposeful",
@@ -1982,7 +2014,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedPurposeful",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedAware",
@@ -1992,7 +2024,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedAware",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedRestless",
@@ -2002,7 +2034,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedRestless",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedInconsolable",
@@ -2012,7 +2044,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedInconsolable",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "aldreteActivity",

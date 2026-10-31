@@ -4516,6 +4516,49 @@
         }
       }
     },
+    "/v1/intraop/automation": {
+      "get": {
+        "operationId": "get_v1_intraop_automation",
+        "summary": "Read the intraoperative automation settings and, when the vitals questions are on, the reading counts per age band they are measured against",
+        "tags": [
+          "intraop"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntraopAutomationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/cases/{id}/transfer": {
       "post": {
         "operationId": "post_v1_cases_id_transfer",
@@ -15735,6 +15778,63 @@
         },
         "required": [
           "theatreId"
+        ],
+        "additionalProperties": false
+      },
+      "IntraopAutomationResponse": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "vitalQuestions": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "minCases": {
+                    "type": "integer",
+                    "minimum": 20,
+                    "maximum": 10000
+                  },
+                  "tails": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "minCases",
+                  "tails"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "enabled",
+              "vitalQuestions"
+            ],
+            "additionalProperties": false
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "settings",
+          "stats"
         ],
         "additionalProperties": false
       },

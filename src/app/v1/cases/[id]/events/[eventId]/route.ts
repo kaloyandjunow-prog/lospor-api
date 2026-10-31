@@ -17,6 +17,7 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
+import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 const CORS = (req: NextRequest) => corsHeaders(req, "PUT, DELETE, OPTIONS")
 
 // The path id remains authoritative (`{ ...parsed, id: eventId }` below).
@@ -141,6 +142,7 @@ export async function PUT(
 
     if (result instanceof Response) return result
     after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { eventId, source }))
+    if ((event as LogEvent).type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({
       ok: true,
       intraopUpdatedAt: result.fresh?.updatedAt,
@@ -200,7 +202,10 @@ export async function DELETE(
       // a client's separate deletes for those arrive as harmless no-ops --
       // no-ops for the revision too, which moves only when something went.
       let removed = false
-      for (const logicalId of cascadeDeleteIds(await activeCaseLog(tx, id), eventId)) {
+      const log = await activeCaseLog(tx, id)
+      const ids = cascadeDeleteIds(log, eventId)
+      const complication = log.some(entry => !!entry.id && ids.includes(entry.id) && entry.type === "complication")
+      for (const logicalId of ids) {
         if (await deleteEvent(tx, id, logicalId, madeAt)) removed = true
       }
       // The revision was checked above under the case lock, which every
@@ -210,11 +215,12 @@ export async function DELETE(
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
       })
-      return { fresh, removed }
+      return { fresh, removed, complication }
     })
 
     if (result instanceof Response) return result
     after(() => logAudit(user.id, "CASE_EVENT_DELETE", id, { eventId, removed: result.removed, source }))
+    if (result.removed && result.complication) after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({
       ok: true,
       intraopUpdatedAt: result.fresh?.updatedAt,

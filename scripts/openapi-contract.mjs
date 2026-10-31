@@ -471,6 +471,17 @@ export const schemas = {
     expectedTheatreId: { ...nullable({ type: "string", minLength: 1, maxLength: 64 }), description: "The theatre the client showed; a case changed meanwhile is refused with 409 THEATRE_CHANGED." },
   }, ["theatreId"]),
   CaseTheatreResult: object({ theatreId: nullable({ type: "string" }) }, ["theatreId"]),
+  IntraopAutomationResponse: object({
+    settings: object({
+      enabled: { type: "boolean" },
+      vitalQuestions: object({
+        enabled: { type: "boolean" },
+        minCases: { type: "integer", minimum: 20, maximum: 10000 },
+        tails: { type: "object", additionalProperties: true },
+      }, ["enabled", "minCases", "tails"]),
+    }, ["enabled", "vitalQuestions"]),
+    stats: nullable({ type: "object", additionalProperties: true }),
+  }, ["settings", "stats"]),
   OperatingTheatreConfig: object({
     enabled: { type: "boolean" },
     theatres: { type: "array", items: object({ id: { type: "string" }, name: { type: "string" } }, ["id", "name"]) },
@@ -1189,6 +1200,7 @@ add("GET", "/v1/indicators", "Read the unit indicators: aggregate figures over t
   result: ref("JsonObject"),
 })
 add("GET", "/v1/operating-theatres", "Read whether operating theatres are used, and the active ones", { result: ref("OperatingTheatreConfig") })
+add("GET", "/v1/intraop/automation", "Read the intraoperative automation settings and, when the vitals questions are on, the reading counts per age band they are measured against", { result: ref("IntraopAutomationResponse"), errors: [401, 500] })
 add("POST", "/v1/cases/{id}/transfer", "Offer a case transfer", { parameters: [id], requestBody: body(ref("TransferRequest")), status: 201, result: ref("Transfer") })
 add("PATCH", "/v1/cases/{id}/transfer", "Accept or decline a case transfer", { parameters: [id], requestBody: body(ref("TransferDecisionRequest")), result: ref("Transfer") })
 add("GET", "/v1/cases/{id}/transfers", "Read a case handover history", { parameters: [id], result: arrayOf("Transfer") })

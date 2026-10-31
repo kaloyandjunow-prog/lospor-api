@@ -3,6 +3,8 @@ import { canonicalConcentrationUnit } from "@lospor/core/clinical-rule-vocabular
 import { isBloodProductFluid } from "@lospor/core/intraop-fluids"
 import { INTRAOP_VITAL_RULES } from "@lospor/core/intraop-vitals"
 import { TCI_DRUG_SPECS, TCI_MODEL_DRUG, TCI_MODELS, TCI_SITES } from "@lospor/core/tci"
+import { DEFIBRILLATION_MAX_J, DEFIBRILLATION_MIN_J } from "@lospor/core/defibrillation"
+import { VITAL_COMPLICATION_KINDS } from "@lospor/core/vital-questions"
 
 const numericValue = z.number().finite()
 const doseValue = z.union([z.string().max(80), numericValue])
@@ -105,6 +107,16 @@ export const caseEventSchema = z.object({
   // only check living in a control the server does not run. Out of range is
   // refused rather than clamped: a clamped reading is an invented one.
   ...vitalFields(),
+  // 10.1.0: a complication (timed; an episode has its end), a shock, and a
+  // "Not now" to a question from the vitals.
+  endTs: z.string().datetime({ offset: true }).optional(),
+  complicationSource: z.enum(["timeline", "vitals"]).optional(),
+  triggerReadingId: z.string().min(1).max(200).optional(),
+  energyJ: z.number().int().min(DEFIBRILLATION_MIN_J).max(DEFIBRILLATION_MAX_J).optional(),
+  synchronized: z.boolean().optional(),
+  answerFor: z.string().min(1).max(200).optional(),
+  answerKind: z.enum(VITAL_COMPLICATION_KINDS).optional(),
+  answer: z.literal("not_now").optional(),
 }).passthrough().superRefine((event, context) => {
   // TCI: the model belongs to the start; its target is in the model's unit and
   // within twice the screens' range (a typo, not a dose, beyond that).
@@ -123,6 +135,27 @@ export const caseEventSchema = z.object({
         context.addIssue({ code: "custom", path: ["rate"], message: `TCI target must be above 0 and at most ${spec.target.max * 2} ${spec.units.target}` })
       }
     }
+  }
+  if (event.type === "complication") {
+    if (!event.label?.trim()) context.addIssue({ code: "custom", path: ["label"], message: "A complication needs its name" })
+    if (event.endTs && event.ts && Date.parse(event.endTs) < Date.parse(event.ts)) {
+      context.addIssue({ code: "custom", path: ["endTs"], message: "A complication cannot end before it starts" })
+    }
+  } else if (event.endTs || event.complicationSource || event.triggerReadingId) {
+    context.addIssue({ code: "custom", path: ["endTs"], message: "Only a complication has an end or a source" })
+  }
+  if (event.type === "defibrillation") {
+    if (event.energyJ == null) context.addIssue({ code: "custom", path: ["energyJ"], message: "A shock needs its energy" })
+    if (event.synchronized == null) context.addIssue({ code: "custom", path: ["synchronized"], message: "A shock is synchronised or not" })
+  } else if (event.energyJ != null || event.synchronized != null) {
+    context.addIssue({ code: "custom", path: ["energyJ"], message: "Only a shock has an energy" })
+  }
+  if (event.type === "prompt_answer") {
+    if (!event.answerFor || !event.answerKind || event.answer !== "not_now") {
+      context.addIssue({ code: "custom", path: ["answer"], message: "A Not now names its reading and its question" })
+    }
+  } else if (event.answerFor || event.answerKind || event.answer) {
+    context.addIssue({ code: "custom", path: ["answer"], message: "Only a Not now answers a question" })
   }
   if ((event.pumpTotal != null || event.pumpTotalUnit) && event.type !== "infusion_stop") {
     context.addIssue({ code: "custom", path: ["pumpTotal"], message: "A pump total is entered on the stop" })

@@ -77,7 +77,7 @@ describe.skipIf(!runPostgres)("case start and end bounds, PostgreSQL", () => {
   })
 
   it("refuses an end moved before a charted entry, names it, and keeps the end", async () => {
-    const refused = await patch({ endedAt: at(40) })
+    const refused = await patch({ endedAt: at(40), endCorrectionReason: "WRONG_TIME_ENTERED" })
     expect(refused.status).toBe(400)
     expect(await refused.json()).toMatchObject({ error: "case_bounds", eventIds: ["late"] })
     expect((await bounds()).endedAt?.toISOString()).toBe(at(60))
@@ -90,8 +90,20 @@ describe.skipIf(!runPostgres)("case start and end bounds, PostgreSQL", () => {
     expect((await bounds()).startedAt?.toISOString()).toBe(at(0))
   }, 30_000)
 
+  it("refuses a changed end without a coded reason, and keeps the end (10.1.0)", async () => {
+    const refused = await patch({ endedAt: at(58) })
+    expect(refused.status).toBe(400)
+    expect(await refused.json()).toMatchObject({ error: "end_correction_reason" })
+    const freeText = await patch({ endedAt: at(58), endCorrectionReason: "the nurse said so" })
+    expect(freeText.status).toBe(400)
+    expect((await bounds()).endedAt?.toISOString()).toBe(at(60))
+  }, 30_000)
+
   it("allows either move while every entry stays inside the case", async () => {
-    expect((await patch({ endedAt: at(55) })).status).toBe(200)
+    expect((await patch({ endedAt: at(55), endCorrectionReason: "WRONG_TIME_ENTERED" })).status).toBe(200)
+    // The correction is audited with its reason and both ends, and passes the real audit guard.
+    const audit = await prisma.auditLog.findFirst({ where: { entityId: caseId, action: "CASE_INTRAOP_END_CORRECTED" } })
+    expect(audit?.detail).toMatchObject({ reasonCode: "WRONG_TIME_ENTERED", previousEndedAt: at(60), correctedEndedAt: at(55) })
     expect((await patch({ startedAt: at(5) })).status).toBe(200)
     const saved = await bounds()
     expect([saved.startedAt?.toISOString(), saved.endedAt?.toISOString()]).toEqual([at(5), at(55)])

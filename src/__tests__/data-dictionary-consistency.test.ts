@@ -155,8 +155,17 @@ describe("the dictionary describes the export it ships with", () => {
   })
 
   it("declares a version no later than the dictionary's own", () => {
+    // Compared as numbers: as text, 4.10.0 sorts before 4.9.0.
+    const parts = (version: string) => version.split(".").map(Number)
+    const later = (a: string, b: string) => {
+      const [x, y] = [parts(a), parts(b)]
+      for (let i = 0; i < Math.max(x.length, y.length); i += 1) {
+        if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0)
+      }
+      return false
+    }
     const ahead = DATA_DICTIONARY
-      .filter(entry => entry.versionIntroduced > DICTIONARY_VERSION)
+      .filter(entry => later(entry.versionIntroduced, DICTIONARY_VERSION))
       .map(entry => `${entry.name} (${entry.versionIntroduced})`)
 
     expect(ahead, "introduced in a version that does not exist yet").toEqual([])

@@ -7,7 +7,7 @@ import { logAudit } from "@/lib/audit"
 import { activeCaseLog, addEvent, laterChangeMade, madeAtFrom, rebuildProjection, reserveIntraopRevision, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
 import { supersededRefusal, timelineRefusal } from "@/lib/timeline-refusal"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
-import { resolveDrugExposureConcepts } from "@/lib/relational-sync"
+import { resolveDrugExposureConcepts, syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { corsHeaders } from "@/lib/cors"
 import {
   CaseWriteError,
@@ -182,6 +182,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (result instanceof Response) return result
     if (result.added) {
       after(() => logAudit(user.id, "CASE_EVENT_ADD", id, { type: event.type, source }))
+      // A timed complication is a row the export reads (10.1.0): keep it current.
+      if (event.type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))
     }
     return NextResponse.json({
       ok: true,

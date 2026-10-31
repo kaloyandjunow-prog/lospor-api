@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { INTRAOP_END_CORRECTION_REASONS } from "@lospor/core/intraop-end-correction"
 import {
   CLINICAL_NUMBER_RULES,
   validateIntraopPatch,
@@ -251,6 +252,9 @@ export const preopSchema = z.object({
 
 export const intraopSchema = z.object({
   monthYear:       z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+  // 10.1.0: why the end of a case that had ended is being changed. Required
+  // for that change, never stored on the record; it goes to the audit log.
+  endCorrectionReason: z.enum(INTRAOP_END_CORRECTION_REASONS).optional(),
   durationMinutes: cInt("intraop", "durationMinutes"),
   startTime: z.string().optional(),
   endTime:   z.string().nullable().optional(),

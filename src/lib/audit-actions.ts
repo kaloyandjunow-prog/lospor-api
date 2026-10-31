@@ -88,6 +88,8 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   { code: "CASE_UNFINALIZED", category: "CASE", labels: { bg: "Отменено финализиране на случай", en: "Case finalisation reversed" } },
   { code: "CASE_CONFLICT_OVERRIDE", category: "CASE", labels: { bg: "Преодолян конфликт при запис", en: "Save conflict overridden" } },
   { code: "CASE_INTRAOP_AUTO_ENDED", category: "CASE", labels: { bg: "Случаят е приключен автоматично 48 часа след началото", en: "Case ended automatically 48 hours after it started" } },
+  // 10.1.0: the end of a case that had ended was changed, with a coded reason.
+  { code: "CASE_INTRAOP_END_CORRECTED", category: "CASE", labels: { bg: "Коригиран край на анестезията", en: "Anaesthesia end corrected" } },
   { code: "CASE_EVENT_ADD", category: "CASE", labels: { bg: "Добавено събитие към случай", en: "Case event added" } },
   { code: "CASE_EVENT_EDIT", category: "CASE", labels: { bg: "Редактирано събитие в случай", en: "Case event edited" } },
   { code: "CASE_EVENT_DELETE", category: "CASE", labels: { bg: "Изтрито събитие от случай", en: "Case event deleted" } },

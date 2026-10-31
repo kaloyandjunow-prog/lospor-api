@@ -13,6 +13,7 @@ import { activeCaseLog, rebuildProjection } from "@/lib/case-events"
 import { autoEndCaseIfStale } from "@/lib/intraop-auto-end"
 import { intraopEntriesOutsideCase } from "@lospor/core/intraop-commands"
 import { parseLogEvents } from "@lospor/core/intraop-types"
+import { isIntraopEndCorrection, isIntraopEndCorrectionReason } from "@lospor/core/intraop-end-correction"
 import {
   canWriteCaseWithOwnerFallback,
   caseCapabilitiesForUser,
@@ -473,6 +474,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           select: { startedAt: true, endedAt: true },
         })
         const before = existing.intraop
+        // 10.1.0: changing the end of a case that had ended needs a coded
+        // reason, and is audited with the old and new end. Ending a case and
+        // Resume are not corrections. A finalised case never gets here.
+        if (isIntraopEndCorrection(before?.endedAt, saved?.endedAt)) {
+          const reason = (intraop as { endCorrectionReason?: unknown }).endCorrectionReason
+          if (!isIntraopEndCorrectionReason(reason)) {
+            throw new CaseRouteResponse(NextResponse.json({
+              error: "end_correction_reason",
+              message: "Changing the end of a case that has ended needs a reason.",
+            }, { status: 400 }))
+          }
+          await logAuditInTransaction(tx, userId, "CASE_INTRAOP_END_CORRECTED", id, {
+            reasonCode: reason,
+            previousEndedAt: before!.endedAt!.toISOString(),
+            correctedEndedAt: saved!.endedAt!.toISOString(),
+          })
+        }
         const endMovedEarlier = !!(before?.endedAt && saved?.endedAt && saved.endedAt < before.endedAt)
         const startMovedLater = !!(before?.startedAt && saved?.startedAt && saved.startedAt > before.startedAt)
         if (endMovedEarlier || startMovedLater) {

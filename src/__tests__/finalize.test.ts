@@ -32,6 +32,8 @@ vi.mock("@/lib/clinical-transaction", () => ({
 }))
 vi.mock("@/lib/case-audit", () => ({ writeSnapshotAsync: writeSnapshotAsyncMock }))
 vi.mock("@/lib/relational-sync", () => ({ syncCaseRelational: syncCaseRelationalMock }))
+// Closing open vitals episodes at finalisation has its own tests (10.1.0).
+vi.mock("@/lib/intraop-automation", () => ({ closeOpenVitalEpisodes: vi.fn().mockResolvedValue(0) }))
 vi.mock("@/lib/access-control", () => ({ canWriteCaseWithOwnerFallback: canAccessCaseMock }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
 

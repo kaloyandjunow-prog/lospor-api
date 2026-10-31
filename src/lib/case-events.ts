@@ -199,7 +199,10 @@ export function buildRow(
     mappingStatus?: string | null
   }
   const fluidVolume = audited.administeredVolumeMl ?? audited.bagVolumeMl ?? ev.volume
-  const primary = ev.dose ?? ev.value ?? ev.rate ?? fluidVolume
+  // A shock (10.1.0) keeps its energy in value/unit and says in its label
+  // whether it was synchronised, so the export reads them from the row.
+  const isShock = ev.type === "defibrillation"
+  const primary = ev.dose ?? ev.value ?? ev.rate ?? fluidVolume ?? (isShock ? ev.energyJ : undefined)
   // Typed vital columns (only for vital events) so vitals are queryable as columns.
   const isVital = ev.type === "vital"
   const isGas = ev.type === "gas_start" || ev.type === "gas_change"
@@ -216,9 +219,9 @@ export function buildRow(
     status,
     type:           ev.type ?? "unknown",
     timestamp:      ev.ts && !Number.isNaN(new Date(ev.ts).getTime()) ? new Date(ev.ts) : new Date(),
-    label:          (ev.label ?? ev.name ?? null) as string | null,
+    label:          isShock ? (ev.synchronized ? "Cardioversion" : "Defibrillation") : (ev.label ?? ev.name ?? null) as string | null,
     value:          primary != null ? String(primary) : null,
-    unit:           ev.unit ?? null,
+    unit:           ev.unit ?? (isShock ? "J" : null),
     systolic:       isVital ? numI(ev.systolic)  : null,
     diastolic:      isVital ? numI(ev.diastolic) : null,
     heartRate:      isVital ? numI(ev.heartRate) : null,

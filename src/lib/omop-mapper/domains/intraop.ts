@@ -906,4 +906,47 @@ export function mapIntraopToOmop(
   // timeline where they happened; the case start is only the fallback for
   // a draw whose time was never recorded.
   ctx.emitLabRows(ia.labRows ?? [], ctx.startDate)
+
+  // Shocks (10.1.0): each is a PROCEDURE_OCCURRENCE -- 4204802 (Direct current
+  // defibrillation) unsynchronised, 4078793 (Direct current cardioversion)
+  // synchronised -- with its energy as a MEASUREMENT beside it. No standard
+  // concept means "energy delivered" (LOINC 88667-1 is the device's maximum,
+  // a different fact), so the measurement is concept 0 with its value in
+  // joules (UCUM 9522), tied to its procedure by the same instant and source.
+  for (const shock of (c.events ?? []).filter(event => event.type === "defibrillation")) {
+    const synchronised = shock.label === "Cardioversion"
+    const source = `INTRAOP_EVENT:${synchronised ? "Cardioversion" : "Defibrillation"}`
+    ctx.procedures.push({
+      procedure_occurrence_id:   nextId(),
+      person_id:                 ctx.personId,
+      procedure_concept_id:      synchronised ? 4078793 : 4204802,
+      procedure_date:            isoDate(shock.timestamp),
+      procedure_datetime:        isoInstant(shock.timestamp),
+      procedure_type_concept_id: 32817,
+      modifier_concept_id:       0,
+      modifier_source_value:     null,
+      procedure_source_value:    source,
+      visit_occurrence_id:       ctx.visitId,
+    })
+    const joules = Number(shock.value)
+    if (Number.isFinite(joules) && joules > 0) {
+      ctx.measurements.push({
+        measurement_id:              nextId(),
+        person_id:                   ctx.personId,
+        measurement_concept_id:      0,
+        measurement_date:            isoDate(shock.timestamp),
+        measurement_datetime:        isoInstant(shock.timestamp),
+        measurement_type_concept_id: 32817,
+        value_as_number:             joules,
+        value_as_concept_id:         null,
+        unit_concept_id:             9522,
+        unit_source_value:           "J",
+        measurement_source_value:    `${source}:energy`,
+        value_source_value:          `${joules} J`,
+        range_low:                   null,
+        range_high:                  null,
+        visit_occurrence_id:         ctx.visitId,
+      })
+    }
+  }
 }
