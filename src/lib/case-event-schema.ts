@@ -5,6 +5,19 @@ import { INTRAOP_VITAL_RULES } from "@lospor/core/intraop-vitals"
 import { TCI_DRUG_SPECS, TCI_MODEL_DRUG, TCI_MODELS, TCI_SITES } from "@lospor/core/tci"
 import { DEFIBRILLATION_MAX_J, DEFIBRILLATION_MIN_J } from "@lospor/core/defibrillation"
 import { VITAL_COMPLICATION_KINDS } from "@lospor/core/vital-questions"
+import { JET_VENTILATION } from "@lospor/core/gas-ranges"
+
+/**
+ * What a prompt_answer answers: a vitals question (10.1.0), or a suggestion
+ * (10.2.0) -- a card, a hidden card row revealed, a reverse, readings or lab
+ * question, a reminder or a follow-up.
+ */
+const answerKind = z.string().min(1).max(120).refine(
+  value => (VITAL_COMPLICATION_KINDS as readonly string[]).includes(value)
+    || value === "card"
+    || /^(card-reveal|reverse|reading|lab|reminder|timer):[A-Za-z0-9-]+$/.test(value),
+  "Unknown question",
+)
 
 const numericValue = z.number().finite()
 const doseValue = z.union([z.string().max(80), numericValue])
@@ -110,13 +123,19 @@ export const caseEventSchema = z.object({
   // 10.1.0: a complication (timed; an episode has its end), a shock, and a
   // "Not now" to a question from the vitals.
   endTs: z.string().datetime({ offset: true }).optional(),
-  complicationSource: z.enum(["timeline", "vitals"]).optional(),
+  complicationSource: z.enum(["timeline", "vitals", "readings", "suggestion"]).optional(),
   triggerReadingId: z.string().min(1).max(200).optional(),
   energyJ: z.number().int().min(DEFIBRILLATION_MIN_J).max(DEFIBRILLATION_MAX_J).optional(),
   synchronized: z.boolean().optional(),
   answerFor: z.string().min(1).max(200).optional(),
-  answerKind: z.enum(VITAL_COMPLICATION_KINDS).optional(),
-  answer: z.literal("not_now").optional(),
+  answerKind: answerKind.optional(),
+  answer: z.enum(["not_now", "done"]).optional(),
+  // 10.2.0: the suggestion an entry was made from (exported as a flag), a
+  // tourniquet's site, and jet ventilation settings.
+  suggestion: z.string().min(1).max(240).optional(),
+  site: z.string().min(1).max(40).optional(),
+  jetPressureBar: numericValue.min(JET_VENTILATION.pressure.min).max(JET_VENTILATION.pressure.typedMax).optional(),
+  jetRate: z.number().int().min(JET_VENTILATION.rate.min).max(JET_VENTILATION.rate.typedMax).optional(),
 }).passthrough().superRefine((event, context) => {
   // TCI: the model belongs to the start; its target is in the model's unit and
   // within twice the screens' range (a typo, not a dose, beyond that).
@@ -151,11 +170,22 @@ export const caseEventSchema = z.object({
     context.addIssue({ code: "custom", path: ["energyJ"], message: "Only a shock has an energy" })
   }
   if (event.type === "prompt_answer") {
-    if (!event.answerFor || !event.answerKind || event.answer !== "not_now") {
+    // A revealed card row records only what it revealed; every other answer is a Not now or a Done.
+    const reveal = event.answerKind?.startsWith("card-reveal:")
+    if (!event.answerFor || !event.answerKind || (!reveal && !event.answer)) {
       context.addIssue({ code: "custom", path: ["answer"], message: "A Not now names its reading and its question" })
     }
   } else if (event.answerFor || event.answerKind || event.answer) {
     context.addIssue({ code: "custom", path: ["answer"], message: "Only a Not now answers a question" })
+  }
+  if (event.type === "jet_start" && (event.jetPressureBar == null || event.jetRate == null)) {
+    context.addIssue({ code: "custom", path: ["jetPressureBar"], message: "Jet ventilation starts with its pressure and rate" })
+  }
+  if ((event.jetPressureBar != null || event.jetRate != null) && event.type !== "jet_start" && event.type !== "jet_change") {
+    context.addIssue({ code: "custom", path: ["jetPressureBar"], message: "Only jet ventilation has a driving pressure and rate" })
+  }
+  if (event.site && !(event.type === "clinical_event" && (event.label === "Tourniquet on" || event.label === "Tourniquet off"))) {
+    context.addIssue({ code: "custom", path: ["site"], message: "Only a tourniquet has a site" })
   }
   if ((event.pumpTotal != null || event.pumpTotalUnit) && event.type !== "infusion_stop") {
     context.addIssue({ code: "custom", path: ["pumpTotal"], message: "A pump total is entered on the stop" })
