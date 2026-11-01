@@ -50,6 +50,8 @@ const INVENTORIED_TRANSACTION_HELPERS: Readonly<Record<string, string>> = {
     "Actor resolution and audit-row writer shared by the inventoried clinical-rules maintenance and publication scripts",
   "src/lib/clinical-rules/bundled-baseline-v3-provisioner.ts":
     "The 9.15.0 v3 baseline step, run inside the inventoried bundled-baseline provisioner transaction",
+  "src/lib/clinical-rules/bundled-baseline-v4-provisioner.ts":
+    "The 10.2.0 v4 baseline step, run inside the same transaction after the v3 step",
 }
 
 // These mutate only short-lived authentication/session bookkeeping or

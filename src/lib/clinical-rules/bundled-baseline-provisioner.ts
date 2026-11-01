@@ -21,6 +21,16 @@ import {
   provisionBundledBaselineV3InTransaction,
   type BundledBaselineV3ProvisionResult,
 } from "./bundled-baseline-v3-provisioner"
+import {
+  assertExactBundledBaselineV4Artifacts,
+  computeBundledBaselineV4Artifacts,
+  type BundledBaselineV4Artifact,
+} from "./bundled-baseline-v4"
+import {
+  isBundledV4Selection,
+  provisionBundledBaselineV4InTransaction,
+  type BundledBaselineV4ProvisionResult,
+} from "./bundled-baseline-v4-provisioner"
 
 const AUDIT_ACTION = "CLINICAL_BUNDLED_BASELINE_PROVISION" satisfies AuditActionCode
 const PUBLICATION_REASON = "Exact immutable canonical baseline bundled with LOSPOR 1.2.0"
@@ -72,15 +82,19 @@ export type BundledBaselineProvisionResult = {
   }>
   /** The v3 baselines of LOSPOR 9.15.0, installed beside these or verified. */
   v3: BundledBaselineV3ProvisionResult
+  /** The v4 baselines of LOSPOR 10.2.0, installed beside those or verified. */
+  v4: BundledBaselineV4ProvisionResult
 }
 
 function result(
   outcome: BundledBaselineProvisionResult["outcome"],
   artifacts: readonly BundledBaselineArtifact[],
   v3: BundledBaselineV3ProvisionResult,
+  v4: BundledBaselineV4ProvisionResult,
 ): BundledBaselineProvisionResult {
   return {
     v3,
+    v4,
     outcome,
     releaseVersion: LOSPOR_BUNDLED_BASELINE_RELEASE.releaseVersion,
     technicalPrincipalId: LOSPOR_BUNDLED_BASELINE_RELEASE.technicalPrincipal.id,
@@ -172,7 +186,12 @@ function verifyCompleteState(
   inspection: Inspection,
   artifacts: readonly BundledBaselineArtifact[],
   v3Artifacts: readonly BundledBaselineV3Artifact[],
+  v4Artifacts: readonly BundledBaselineV4Artifact[],
 ): void {
+  // A later release moves this release's own selection on (9.15.0 to v3,
+  // 10.2.0 from there to v4); each verifies the selection it made.
+  const movedOn = (selection: { presetId: string; selectedByTechnicalPrincipalId: string | null }) =>
+    isBundledV3Selection(selection, v3Artifacts) || isBundledV4Selection(selection, v4Artifacts)
   const principal = LOSPOR_BUNDLED_BASELINE_RELEASE.technicalPrincipal
   if (inspection.accountCount !== 0 || inspection.sessionCount !== 0) {
     throw new BundledBaselineProvisionError(
@@ -185,8 +204,7 @@ function verifyCompleteState(
     const selection = inspection.selections.find(item => (
       item.clinicalMode === artifact.identity.clinicalMode
     ))
-    // LOSPOR 9.15.0 moves this release's own selection on to its v3 baseline.
-    if (selection && selection.presetId !== artifact.identity.presetId && !isBundledV3Selection(selection, v3Artifacts)) {
+    if (selection && selection.presetId !== artifact.identity.presetId && !movedOn(selection)) {
       throw new BundledBaselineProvisionError(
         "BUNDLED_BASELINE_SELECTION_CONFLICT",
         `Refusing to replace the governed ${artifact.identity.clinicalMode} platform selection`,
@@ -297,8 +315,8 @@ function verifyCompleteState(
     const selection = inspection.selections.find(item => (
       item.clinicalMode === artifact.identity.clinicalMode
     ))
-    // Superseded by v3: that release verifies the selection it made.
-    const superseded = !!selection && isBundledV3Selection(selection, v3Artifacts)
+    // Superseded by v3 or v4: that release verifies the selection it made.
+    const superseded = !!selection && movedOn(selection)
     if (!superseded && (!selection
       || selection.presetId !== artifact.identity.presetId
       || selection.selectedById !== null
@@ -437,20 +455,23 @@ async function provisionInTransaction(
   tx: Prisma.TransactionClient,
   artifacts: readonly BundledBaselineArtifact[],
   v3Artifacts: readonly BundledBaselineV3Artifact[],
+  v4Artifacts: readonly BundledBaselineV4Artifact[],
   installedAt: Date,
 ): Promise<BundledBaselineProvisionResult> {
   const inspection = await inspectState(tx, artifacts)
   let outcome: BundledBaselineProvisionResult["outcome"] = "verified"
   if (isPristine(inspection)) {
     await installPristineState(tx, artifacts, installedAt)
-    verifyCompleteState(await inspectState(tx, artifacts), artifacts, v3Artifacts)
+    verifyCompleteState(await inspectState(tx, artifacts), artifacts, v3Artifacts, v4Artifacts)
     outcome = "installed"
   } else {
-    verifyCompleteState(inspection, artifacts, v3Artifacts)
+    verifyCompleteState(inspection, artifacts, v3Artifacts, v4Artifacts)
   }
   // Then the later release, on top of the verified 1.2.0 state.
   const v3 = await provisionBundledBaselineV3InTransaction(tx, v3Artifacts, installedAt)
-  return result(outcome, artifacts, v3)
+  // And the next, on top of the verified 9.15.0 state.
+  const v4 = await provisionBundledBaselineV4InTransaction(tx, v4Artifacts, installedAt)
+  return result(outcome, artifacts, v3, v4)
 }
 
 function releaseArtifacts() {
@@ -458,7 +479,9 @@ function releaseArtifacts() {
   assertExactBundledBaselineArtifacts(artifacts)
   const v3Artifacts = computeBundledBaselineV3Artifacts(artifacts)
   assertExactBundledBaselineV3Artifacts(v3Artifacts)
-  return { artifacts, v3Artifacts }
+  const v4Artifacts = computeBundledBaselineV4Artifacts(v3Artifacts)
+  assertExactBundledBaselineV4Artifacts(v4Artifacts)
+  return { artifacts, v3Artifacts, v4Artifacts }
 }
 
 /**
@@ -470,24 +493,24 @@ export async function provisionBundledClinicalBaselinesInSerializableTransaction
   tx: Prisma.TransactionClient,
   options: { installedAt?: Date } = {},
 ): Promise<BundledBaselineProvisionResult> {
-  const { artifacts, v3Artifacts } = releaseArtifacts()
+  const { artifacts, v3Artifacts, v4Artifacts } = releaseArtifacts()
   const installedAt = options.installedAt ?? new Date()
   if (!Number.isFinite(installedAt.getTime())) throw new Error("installedAt must be a valid instant")
-  return provisionInTransaction(tx, artifacts, v3Artifacts, installedAt)
+  return provisionInTransaction(tx, artifacts, v3Artifacts, v4Artifacts, installedAt)
 }
 
 export async function provisionBundledClinicalBaselines(
   db: PrismaClient | TransactionRunner,
   options: { installedAt?: Date } = {},
 ): Promise<BundledBaselineProvisionResult> {
-  const { artifacts, v3Artifacts } = releaseArtifacts()
+  const { artifacts, v3Artifacts, v4Artifacts } = releaseArtifacts()
   const installedAt = options.installedAt ?? new Date()
   if (!Number.isFinite(installedAt.getTime())) throw new Error("installedAt must be a valid instant")
 
   for (let attempt = 1; attempt <= MAX_SERIALIZABLE_ATTEMPTS; attempt += 1) {
     try {
       return await (db as TransactionRunner).$transaction(async tx => {
-        return provisionInTransaction(tx, artifacts, v3Artifacts, installedAt)
+        return provisionInTransaction(tx, artifacts, v3Artifacts, v4Artifacts, installedAt)
       }, {
         isolationLevel: PrismaNamespace.TransactionIsolationLevel.Serializable,
         maxWait: 10_000,
