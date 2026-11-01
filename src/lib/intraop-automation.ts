@@ -193,7 +193,9 @@ export async function intraopAutomationForClient(
  * the caller's transaction, before the case is finalised -- never after.
  */
 export async function closeOpenVitalEpisodes(tx: Parameters<typeof addEvent>[0], caseId: string, endedAt: Date, userId: string, source: string): Promise<number> {
-  const open = parseLogEvents(await activeCaseLog(tx, caseId)).filter(isOpenVitalEpisode)
+  // 10.2.0: the episodes from SpO2, EtCO2 and temperature close the same way.
+  const open = parseLogEvents(await activeCaseLog(tx, caseId))
+    .filter(event => isOpenVitalEpisode(event) || (event.type === "complication" && event.complicationSource === "readings" && !event.endTs))
   let closed = 0
   for (const episode of open) {
     if (Date.parse(episode.ts) > endedAt.getTime()) continue

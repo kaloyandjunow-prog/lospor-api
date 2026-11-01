@@ -79,6 +79,8 @@ describe("closing episodes at the case end", () => {
       { logicalId: "open", version: 1, metadataJson: { id: "open", type: "complication", ts: "2026-11-01T09:00:00.000Z", label: "Hypotension", complicationSource: "vitals" } },
       { logicalId: "closed", version: 1, metadataJson: { id: "closed", type: "complication", ts: "2026-11-01T09:00:00.000Z", endTs: "2026-11-01T09:10:00.000Z", label: "Tachycardia", complicationSource: "vitals" } },
       { logicalId: "manual", version: 1, metadataJson: { id: "manual", type: "complication", ts: "2026-11-01T09:00:00.000Z", label: "Laryngospasm", complicationSource: "timeline" } },
+      // 10.2.0: an open episode from the SpO2 question closes the same way.
+      { logicalId: "spo2", version: 1, metadataJson: { id: "spo2", type: "complication", ts: "2026-11-01T09:20:00.000Z", label: "Hypoxia / desaturation", complicationSource: "readings" } },
     ]
     const tx = {
       caseEvent: {
@@ -93,9 +95,10 @@ describe("closing episodes at the case end", () => {
       intraoperativeRecord: { findUnique: vi.fn().mockResolvedValue({ keyEvents: {} }) },
     }
     const closed = await closeOpenVitalEpisodes(tx as never, "case-1", new Date("2026-11-01T10:00:00.000Z"), "user-1", "system")
-    expect(closed).toBe(1)
-    expect(created).toHaveLength(1)
+    expect(closed).toBe(2)
+    expect(created).toHaveLength(2)
     expect(created[0]).toMatchObject({ logicalId: "open", version: 2, metadataJson: expect.objectContaining({ endTs: "2026-11-01T10:00:00.000Z" }) })
+    expect(created[1]).toMatchObject({ logicalId: "spo2", version: 2, metadataJson: expect.objectContaining({ endTs: "2026-11-01T10:00:00.000Z" }) })
   })
 })
 
