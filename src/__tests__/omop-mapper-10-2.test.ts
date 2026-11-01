@@ -3,7 +3,7 @@ import { mapCasesToOmop } from "@/lib/omop-mapper"
 import { OMOP_COLUMNS } from "@/lib/omop-columns"
 import { completeCaseFixture as completeCase } from "./fixtures/complete-case"
 
-type Case = ReturnType<typeof completeCase> & { events: Record<string, unknown>[]; intraop: Record<string, unknown>; complications: Record<string, unknown>[] }
+type Case = { events: Record<string, unknown>[]; intraop: Record<string, unknown>; complications: Record<string, unknown>[] }
 
 const at = (minutes: number) => new Date(Date.parse("2026-06-01T08:00:00Z") + minutes * 60_000)
 const event = (type: string, minutes: number, extra: Record<string, unknown> = {}, meta: Record<string, unknown> = {}) =>
