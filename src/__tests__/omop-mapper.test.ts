@@ -119,6 +119,8 @@ describe("mapCasesToOmop", () => {
       // which are plans and so observations (the operations performed are
       // the procedure rows above, because the timeline says one started).
       observation: 49,
+      // 10.2.0: DEATH, empty unless Death is charted in theatre.
+      death: 0,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 

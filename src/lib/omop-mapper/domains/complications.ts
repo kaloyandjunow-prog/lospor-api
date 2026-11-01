@@ -30,6 +30,7 @@ export function mapComplicationsToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
         unit_source_value: null,
         observation_source_value: ctx.sourceValue("LOSPOR_COMPLICATION", comp.sourceVocabulary, comp.sourceCode, comp.label),
         visit_occurrence_id: ctx.visitId,
+        suggestion_source_value: comp.suggestion ?? null,
       })
     } else if (comp.standardConceptId != null && COMPLICATION_PROCEDURE_DOMAIN_CONCEPTS.has(comp.standardConceptId)) {
       // "Endobronchial intubation" is a Procedure-domain SNOMED concept --
@@ -46,6 +47,7 @@ export function mapComplicationsToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
         modifier_source_value:     null,
         procedure_source_value:    ctx.sourceValue("LOSPOR_COMPLICATION", comp.sourceVocabulary, comp.sourceCode, comp.label),
         visit_occurrence_id:       ctx.visitId,
+        suggestion_source_value: comp.suggestion ?? null,
       })
       if (comp.note) {
         ctx.sourceObservation(`LOSPOR:${comp.section.toUpperCase()}_COMPLICATION_NOTE`, `${comp.label}; ${comp.note}`, compDate)
@@ -72,6 +74,7 @@ export function mapComplicationsToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
         condition_type_concept_id:  32817,
         condition_source_value:     ctx.sourceValue("LOSPOR_COMPLICATION", comp.sourceVocabulary, comp.sourceCode, comp.label),
         visit_occurrence_id:        ctx.visitId,
+        suggestion_source_value: comp.suggestion ?? null,
       })
       // The free-text note is not a fact CONDITION_OCCURRENCE has anywhere
       // to put -- it stays a companion observation, keyed to the same
@@ -95,6 +98,7 @@ export function mapComplicationsToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
         unit_source_value: null,
         observation_source_value: `LOSPOR:${comp.section.toUpperCase()}_COMPLICATION`,
         visit_occurrence_id: ctx.visitId,
+        suggestion_source_value: comp.suggestion ?? null,
       })
     }
   }

@@ -1684,6 +1684,10 @@ model IntraoperativeRecord {
   airwayNotes       String?
   cormackLehane     CormackLehane?
   airwayDevices     Json           @default("[]")
+  /// Each airway device its own entry (10.2.0): kind, details, time in, in use /
+  /// failed / replaced. Empty on cases saved before; airwayDevices and the size
+  /// columns stay filled from it so older readers keep working.
+  airwayDeviceEntries Json         @default("[]")
   ventilationModes  Json           @default("[]")
   lmaSize           Float?
   oralTubeSize      Float?
@@ -2139,6 +2143,8 @@ enum Disposition {
   WARD
   PACU
   ICU
+  /// 10.2.0: set when Death is logged in theatre.
+  DECEASED
 }
 
 enum MedicationKind {
@@ -2382,6 +2388,10 @@ model VascularAccess {
   depthCm           String?
   lumens            String?
   preexisting       Boolean              @default(false)
+  /// 10.2.0: a line that failed stays, marked with the time; insertedAt when it went in.
+  failed            Boolean              @default(false)
+  failedAt          DateTime?
+  insertedAt        DateTime?
   sourceVocabulary  String?
   sourceCode        String?
   standardConceptId Int?
@@ -2438,6 +2448,8 @@ model CaseComplication {
   endTimestamp      DateTime?
   source            String?
   eventId           String?
+  /// 10.2.0: the suggestion the complication was logged from (exported as a flag).
+  suggestion        String?
   sourceVocabulary  String?
   sourceCode        String?
   standardConceptId Int?

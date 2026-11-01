@@ -206,6 +206,9 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   { value: "Drug overdose", conceptId: 438028, label: "Poisoning by drug AND/OR medicinal substance" },
   // Observation-domain, despite the Disorder concept class.
   { value: "Serotonin syndrome", conceptId: 4154707, label: "Serotonin syndrome" },
+  // 10.2.0. Vasoplegia has no standard concept (MeSH D056987 only, unmapped)
+  // and stays source-only, which is the honest answer.
+  { value: "Masseter spasm", conceptId: 4079444, label: "Masseter spasm" },
 
   // Haematological.
   // Observation-domain. Shares its concept with Unexpected major
@@ -213,6 +216,7 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   { value: "Massive haemorrhage", conceptId: 4010901, label: "Massive hemorrhage" },
   { value: "DIC (disseminated intravascular coagulation)", conceptId: 436093, label: "Disseminated intravascular coagulation" },
   { value: "Haemolytic transfusion reaction", conceptId: 4218193, label: "Hemolytic transfusion reaction" },
+  { value: "Methaemoglobinaemia", conceptId: 432882, label: "Methemoglobinemia" },
   { value: "Febrile non-haemolytic transfusion reaction", conceptId: 763017, label: "Febrile transfusion reaction without hemolysis" },
   { value: "TRALI (transfusion-related acute lung injury)", conceptId: 37116369, label: "Acute lung injury during and following administration of blood product" },
   { value: "TACO (transfusion-associated circulatory overload)", conceptId: 4261830, label: "Transfusion reaction due to excess volume" },

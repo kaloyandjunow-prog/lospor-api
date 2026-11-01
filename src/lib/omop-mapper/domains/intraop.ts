@@ -12,6 +12,13 @@ import { isoDate, isoInstant, numOrNull } from "../date-helpers"
 import { nextId } from "../ids"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import { TCI_MODELS, tciPatientFrom, tciTotal, type TciModel, type TciSite } from "@lospor/core/tci"
+import { airwayDeviceEntriesOf } from "@lospor/core/airway-device-entries"
+
+/** The suggestion an event was made from (10.2.0), read from its stored entry. */
+const suggestionOf = (event: { metadataJson?: unknown }): string | null => {
+  const value = (event.metadataJson as Record<string, unknown> | null | undefined)?.suggestion
+  return typeof value === "string" && value ? value : null
+}
 
 /**
  * Everything witnessed during the case: airway management, ventilation,
@@ -48,19 +55,24 @@ export function mapIntraopToOmop(
   // list. Both may be populated, so they are merged and de-duplicated
   // rather than one being preferred and the other silently dropped.
   const devices = [...new Set([...(ia.airwayDevice ? [ia.airwayDevice] : []), ...strList(ia.airwayDevices)])]
+  // 10.2.0: each airway device its own entry, so a tube that failed and the
+  // one that replaced it are two rows (reimbursement counts both), each with
+  // its own time in and out and its state in the source value. A case saved
+  // before has no entries and keeps the one row per kind it always had.
+  const airwayEntries = airwayDeviceEntriesOf({ airwayDevices: devices, airwayDeviceEntries: ia.airwayDeviceEntries })
+  for (const device of devices) ctx.sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
   // The device itself, alongside the act of placing it. Both are true and
   // they answer different questions -- see OmopDevice.
-  for (const device of devices) {
-    ctx.sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
+  for (const entry of airwayEntries) {
     ctx.devices.push({
       device_exposure_id:         nextId(),
       person_id:                  ctx.personId,
-      device_concept_id:          AIRWAY_DEVICE_CONCEPTS[device] ?? 0,
-      device_exposure_start_date: ctx.startDate,
-      device_exposure_end_date:   ctx.endDate,
+      device_concept_id:          AIRWAY_DEVICE_CONCEPTS[entry.device] ?? 0,
+      device_exposure_start_date: entry.insertedAt ? isoDate(new Date(entry.insertedAt)) : ctx.startDate,
+      device_exposure_end_date:   entry.endedAt ? isoDate(new Date(entry.endedAt)) : ctx.endDate,
       device_type_concept_id:     32817,
       quantity:                   null,
-      device_source_value:        "AIRWAY_DEVICE:" + device,
+      device_source_value:        "AIRWAY_DEVICE:" + entry.device + (entry.status === "in_use" ? "" : ":" + entry.status),
       visit_occurrence_id:        ctx.visitId,
       unit_concept_id:            null,
       unit_source_value:          null,
@@ -550,6 +562,7 @@ export function mapIntraopToOmop(
             visit_occurrence_id:        ctx.visitId,
             unit_concept_id:            volume == null ? null : 8587,
             unit_source_value:          volume == null ? null : "mL",
+            suggestion_source_value:    suggestionOf(ev),
           })
         }
         ctx.procedures.push({
@@ -563,6 +576,7 @@ export function mapIntraopToOmop(
           modifier_source_value:     null,
           procedure_source_value:    source,
           visit_occurrence_id:       ctx.visitId,
+          suggestion_source_value:   suggestionOf(ev),
         })
         if (fluid.table === "procedure" && volume != null) {
           ctx.sourceObservation("LOSPOR:BLOOD_PRODUCT_UNIT_ML", fluidName, givenOn, volume)
@@ -582,6 +596,7 @@ export function mapIntraopToOmop(
     // carries the amount given, and the targets go beside it as observations.
     const tci = tciFor(ev)
     ctx.drugs.push({
+      suggestion_source_value:    suggestionOf(ev),
       drug_exposure_id:           nextId(),
       person_id:                  ctx.personId,
       // The concept resolved when the event was written. It used to be
@@ -798,6 +813,12 @@ export function mapIntraopToOmop(
         visit_occurrence_id: ctx.visitId,
       })
     }
+    // 10.2.0: a line that failed stays on the record, pre-existing or placed
+    // here. Its insertion (or history) stands; the failure is its own
+    // observation, at the time it failed.
+    if (line.failed) {
+      ctx.sourceObservation(`${lineSource}:failed`, true, line.failedAt ? isoDate(line.failedAt) : ctx.startDate)
+    }
     // Depth and lumen count were selected and discarded. The pre-existing
     // flag is kept alongside the coded history above: it is the per-line
     // answer including its negative, which the history row cannot state
@@ -927,6 +948,7 @@ export function mapIntraopToOmop(
       modifier_source_value:     null,
       procedure_source_value:    source,
       visit_occurrence_id:       ctx.visitId,
+      suggestion_source_value:   suggestionOf(shock),
     })
     const joules = Number(shock.value)
     if (Number.isFinite(joules) && joules > 0) {
@@ -946,7 +968,123 @@ export function mapIntraopToOmop(
         range_low:                   null,
         range_high:                  null,
         visit_occurrence_id:         ctx.visitId,
+        suggestion_source_value:     suggestionOf(shock),
       })
     }
+  }
+
+  mapResuscitationAndJetToOmop(ctx, c)
+}
+
+/**
+ * The 10.2.0 events: the resuscitation outcome, front-of-neck access,
+ * reintubation, the malignant hyperthermia actions, a death in theatre and
+ * jet ventilation. Each occurrence is its own row, at its own time, carrying
+ * the suggestion it came from.
+ *
+ * Concepts checked against Athena (2026-11-02). Charcoal filters and ROSB have
+ * no concept: their rows are concept 0 with the name kept in the source value.
+ */
+function mapResuscitationAndJetToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
+  const events = c.events ?? []
+  const PROCEDURES: Record<string, number> = {
+    "CPR started": 4232320,            // Cardiopulmonary resuscitation
+    "Reintubation": 4013354,           // Insertion of endotracheal tube
+    "Cricothyrotomy": 37206251,        // Scalpel bougie cricothyroidotomy
+    "Needle cricothyrotomy": 37205949, // Cannula cricothyroidotomy
+    "Active cooling started": 4086433, // Active cooling of patient
+    "Charcoal filters fitted": 0,
+  }
+  const procedure = (ev: typeof events[number], conceptId: number, source: string) => ctx.procedures.push({
+    procedure_occurrence_id:   nextId(),
+    person_id:                 ctx.personId,
+    procedure_concept_id:      conceptId,
+    procedure_date:            isoDate(ev.timestamp),
+    procedure_datetime:        isoInstant(ev.timestamp),
+    procedure_type_concept_id: 32817,
+    modifier_concept_id:       0,
+    modifier_source_value:     null,
+    procedure_source_value:    source,
+    visit_occurrence_id:       ctx.visitId,
+    suggestion_source_value:   suggestionOf(ev),
+  })
+  const observation = (ev: typeof events[number], source: string, conceptId: number) => {
+    ctx.sourceObservation(source, true, isoDate(ev.timestamp), null, conceptId)
+    const row = ctx.observations[ctx.observations.length - 1]
+    if (row) row.suggestion_source_value = suggestionOf(ev)
+  }
+
+  for (const ev of events) {
+    if (ev.type !== "clinical_event" || !ev.label) continue
+    const source = `INTRAOP_EVENT:${ev.label}`
+    if (ev.label in PROCEDURES) procedure(ev, PROCEDURES[ev.label]!, source)
+    else if (ev.label === "ROSC") {
+      // 44791216 Return of spontaneous circulation: a Condition-domain finding.
+      ctx.conditions.push({
+        condition_occurrence_id:  nextId(),
+        person_id:                ctx.personId,
+        condition_concept_id:     44791216,
+        condition_start_date:     isoDate(ev.timestamp) ?? ctx.startDate,
+        condition_start_datetime: isoInstant(ev.timestamp),
+        condition_end_date:       null,
+        condition_end_datetime:   null,
+        condition_type_concept_id: 32817,
+        condition_source_value:   source,
+        visit_occurrence_id:      ctx.visitId,
+        suggestion_source_value:  suggestionOf(ev),
+      })
+    } else if (ev.label === "ROSB") observation(ev, source, 0)
+  }
+
+  // A death in theatre: the CDM DEATH record (once per person, at the first
+  // Death charted) and the event itself as 4306655 Death.
+  const deaths = events.filter(ev => ev.type === "clinical_event" && ev.label === "Death (exitus letalis)")
+  for (const ev of deaths) observation(ev, "INTRAOP_EVENT:Death (exitus letalis)", 4306655)
+  const death = deaths[0]
+  const deathDate = death ? isoDate(death.timestamp) ?? ctx.startDate : null
+  if (death && deathDate && !ctx.deaths.some(row => row.person_id === ctx.personId)) {
+    ctx.deaths.push({
+      person_id:               ctx.personId,
+      death_date:              deathDate,
+      death_datetime:          isoInstant(death.timestamp),
+      death_type_concept_id:   32817,
+      cause_concept_id:        0,
+      cause_source_value:      null,
+      cause_source_concept_id: 0,
+    })
+  }
+
+  // Jet ventilation: 4168475 Jet ventilation procedure at each start, with
+  // its driving pressure (UCUM 9464 bar) and rate (8541 per minute) as
+  // measurements at the start and at every change. No standard concept
+  // names either setting, so they are concept 0 with the name in the source.
+  for (const ev of events) {
+    if (ev.type !== "jet_start" && ev.type !== "jet_change") continue
+    const meta = (ev.metadataJson ?? {}) as Record<string, unknown>
+    if (ev.type === "jet_start") procedure(ev, 4168475, "INTRAOP_JET")
+    const setting = (name: string, value: unknown, unitConceptId: number, unit: string) => {
+      const number = typeof value === "number" && Number.isFinite(value) ? value : null
+      if (number == null) return
+      ctx.measurements.push({
+        measurement_id:              nextId(),
+        person_id:                   ctx.personId,
+        measurement_concept_id:      0,
+        measurement_date:            isoDate(ev.timestamp),
+        measurement_datetime:        isoInstant(ev.timestamp),
+        measurement_type_concept_id: 32817,
+        value_as_number:             number,
+        value_as_concept_id:         null,
+        unit_concept_id:             unitConceptId,
+        unit_source_value:           unit,
+        measurement_source_value:    `INTRAOP_JET:${name}`,
+        value_source_value:          `${number} ${unit}`,
+        range_low:                   null,
+        range_high:                  null,
+        visit_occurrence_id:         ctx.visitId,
+        suggestion_source_value:     suggestionOf(ev),
+      })
+    }
+    setting("driving_pressure", meta.jetPressureBar, 9464, "bar")
+    setting("rate", meta.jetRate, 8541, "/min")
   }
 }

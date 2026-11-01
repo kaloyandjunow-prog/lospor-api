@@ -6,6 +6,7 @@ import {
   isValidTimeZone,
 } from "@/lib/intraop-time"
 import { canonicalizeIntraopPatch } from "@lospor/core/case-payloads"
+import { legacyFieldsFromEntries, parseAirwayDeviceEntries } from "@lospor/core/airway-device-entries"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
 import { copyKey, safeEnum } from "./shared"
 
@@ -66,6 +67,16 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
   if (has("airwayDevices") || has("airwayDevice")) {
     r.airwayDevices = full.airwayDevices
     r.airwayDevice  = full.airwayDevice
+  }
+  // 10.2.0: the airway device list. Sent, it is the record, and the old
+  // per-kind fields are rewritten from it for every reader that knows only those.
+  if (has("airwayDeviceEntries")) {
+    r.airwayDeviceEntries = full.airwayDeviceEntries
+    if (parseAirwayDeviceEntries(intraop.airwayDeviceEntries).length > 0) {
+      for (const key of ["airwayDevices", "airwayDevice", "lmaSize", "oralTubeSize", "oralCuffed", "nasalTubeSize", "nasalCuffed", "dltType", "dltSide", "dltSize", "endobronchialSize"] as const) {
+        copyKey(r, full, key)
+      }
+    }
   }
   if (has("ventilationModes")) {
     r.ventilationModes = full.ventilationModes
@@ -138,7 +149,10 @@ function resolveIntraopInstants(intraop: Record<string, unknown>): {
 }
 
 export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.IntraoperativeRecordUncheckedCreateWithoutCaseInput {
-  const intraop = canonicalizeIntraopPatch(rawIntraop) as IntraopRawInput
+  const canonical = canonicalizeIntraopPatch(rawIntraop) as IntraopRawInput
+  // 10.2.0: with an airway device list, the old per-kind fields come from it.
+  const airwayEntries = parseAirwayDeviceEntries((canonical as Record<string, unknown>).airwayDeviceEntries)
+  const intraop = (airwayEntries.length > 0 ? { ...canonical, ...legacyFieldsFromEntries(airwayEntries) } : canonical) as IntraopRawInput
   // Use a stable reference date (2000-01-01) for startTime/endTime — only the HH:MM matters for the timetable.
   const REF_DATE = "2000-01-01"
   const isHHMM  = (s: unknown): s is string => typeof s === "string" && HHMMRE.test(s)
@@ -199,6 +213,7 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     presentsIntubated:   intraop.presentsIntubated   ?? false,
     airwayNotApplicable: intraop.airwayNotApplicable ?? false,
     airwayDevices:   Array.isArray(intraop.airwayDevices)    ? intraop.airwayDevices    : [],
+    airwayDeviceEntries: airwayEntries as unknown as Prisma.InputJsonValue,
     ventilationModes:Array.isArray(intraop.ventilationModes) ? intraop.ventilationModes : [],
     dltType:         intraop.dltType         ?? null,
     dltSide:         intraop.dltSide         ?? null,

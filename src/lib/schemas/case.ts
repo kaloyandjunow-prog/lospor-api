@@ -279,6 +279,7 @@ export const intraopSchema = z.object({
   airwayNotes:      z.string().max(2000).nullable().optional(),
   cormackLehane:    z.enum(["I", "IIa", "IIb", "III", "IV"]).nullable().optional(),
   airwayDevices:    z.array(z.unknown()).optional(),
+  airwayDeviceEntries: z.array(z.unknown()).max(40).optional(),
   ventilationModes: z.array(z.unknown()).optional(),
   lmaSize:          cNum("intraop", "lmaSize"),
   oralTubeSize:     cNum("intraop", "oralTubeSize"),
@@ -372,7 +373,7 @@ export const postopSchema = z.object({
   recoveryTemperatureUnobtainable: z.boolean().optional(),
 
   complications:    z.string().max(2000).nullable().optional(),
-  disposition:      z.enum(["WARD", "PACU", "ICU"]).nullable().optional(),
+  disposition:      z.enum(["WARD", "PACU", "ICU", "DECEASED"]).nullable().optional(),
   dispositionNotes: z.string().max(1000).nullable().optional(),
   handoverItems:    z.array(z.unknown()).optional(),
   // The procedure done (10.0.0), kept as the planned procedures are.

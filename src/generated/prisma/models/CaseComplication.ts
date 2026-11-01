@@ -46,6 +46,7 @@ export type CaseComplicationMinAggregateOutputType = {
   endTimestamp: Date | null
   source: string | null
   eventId: string | null
+  suggestion: string | null
   sourceVocabulary: string | null
   sourceCode: string | null
   standardConceptId: number | null
@@ -65,6 +66,7 @@ export type CaseComplicationMaxAggregateOutputType = {
   endTimestamp: Date | null
   source: string | null
   eventId: string | null
+  suggestion: string | null
   sourceVocabulary: string | null
   sourceCode: string | null
   standardConceptId: number | null
@@ -84,6 +86,7 @@ export type CaseComplicationCountAggregateOutputType = {
   endTimestamp: number
   source: number
   eventId: number
+  suggestion: number
   sourceVocabulary: number
   sourceCode: number
   standardConceptId: number
@@ -115,6 +118,7 @@ export type CaseComplicationMinAggregateInputType = {
   endTimestamp?: true
   source?: true
   eventId?: true
+  suggestion?: true
   sourceVocabulary?: true
   sourceCode?: true
   standardConceptId?: true
@@ -134,6 +138,7 @@ export type CaseComplicationMaxAggregateInputType = {
   endTimestamp?: true
   source?: true
   eventId?: true
+  suggestion?: true
   sourceVocabulary?: true
   sourceCode?: true
   standardConceptId?: true
@@ -153,6 +158,7 @@ export type CaseComplicationCountAggregateInputType = {
   endTimestamp?: true
   source?: true
   eventId?: true
+  suggestion?: true
   sourceVocabulary?: true
   sourceCode?: true
   standardConceptId?: true
@@ -259,6 +265,7 @@ export type CaseComplicationGroupByOutputType = {
   endTimestamp: Date | null
   source: string | null
   eventId: string | null
+  suggestion: string | null
   sourceVocabulary: string | null
   sourceCode: string | null
   standardConceptId: number | null
@@ -301,6 +308,7 @@ export type CaseComplicationWhereInput = {
   endTimestamp?: Prisma.DateTimeNullableFilter<"CaseComplication"> | Date | string | null
   source?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   eventId?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
+  suggestion?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   sourceVocabulary?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"CaseComplication"> | number | null
@@ -321,6 +329,7 @@ export type CaseComplicationOrderByWithRelationInput = {
   endTimestamp?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrderInput | Prisma.SortOrder
   eventId?: Prisma.SortOrderInput | Prisma.SortOrder
+  suggestion?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceCode?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -344,6 +353,7 @@ export type CaseComplicationWhereUniqueInput = Prisma.AtLeast<{
   endTimestamp?: Prisma.DateTimeNullableFilter<"CaseComplication"> | Date | string | null
   source?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   eventId?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
+  suggestion?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   sourceVocabulary?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"CaseComplication"> | number | null
@@ -364,6 +374,7 @@ export type CaseComplicationOrderByWithAggregationInput = {
   endTimestamp?: Prisma.SortOrderInput | Prisma.SortOrder
   source?: Prisma.SortOrderInput | Prisma.SortOrder
   eventId?: Prisma.SortOrderInput | Prisma.SortOrder
+  suggestion?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceVocabulary?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceCode?: Prisma.SortOrderInput | Prisma.SortOrder
   standardConceptId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -391,6 +402,7 @@ export type CaseComplicationScalarWhereWithAggregatesInput = {
   endTimestamp?: Prisma.DateTimeNullableWithAggregatesFilter<"CaseComplication"> | Date | string | null
   source?: Prisma.StringNullableWithAggregatesFilter<"CaseComplication"> | string | null
   eventId?: Prisma.StringNullableWithAggregatesFilter<"CaseComplication"> | string | null
+  suggestion?: Prisma.StringNullableWithAggregatesFilter<"CaseComplication"> | string | null
   sourceVocabulary?: Prisma.StringNullableWithAggregatesFilter<"CaseComplication"> | string | null
   sourceCode?: Prisma.StringNullableWithAggregatesFilter<"CaseComplication"> | string | null
   standardConceptId?: Prisma.IntNullableWithAggregatesFilter<"CaseComplication"> | number | null
@@ -409,6 +421,7 @@ export type CaseComplicationCreateInput = {
   endTimestamp?: Date | string | null
   source?: string | null
   eventId?: string | null
+  suggestion?: string | null
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
@@ -429,6 +442,7 @@ export type CaseComplicationUncheckedCreateInput = {
   endTimestamp?: Date | string | null
   source?: string | null
   eventId?: string | null
+  suggestion?: string | null
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
@@ -447,6 +461,7 @@ export type CaseComplicationUpdateInput = {
   endTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   eventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  suggestion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -467,6 +482,7 @@ export type CaseComplicationUncheckedUpdateInput = {
   endTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   eventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  suggestion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -486,6 +502,7 @@ export type CaseComplicationCreateManyInput = {
   endTimestamp?: Date | string | null
   source?: string | null
   eventId?: string | null
+  suggestion?: string | null
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
@@ -504,6 +521,7 @@ export type CaseComplicationUpdateManyMutationInput = {
   endTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   eventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  suggestion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -523,6 +541,7 @@ export type CaseComplicationUncheckedUpdateManyInput = {
   endTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   eventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  suggestion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -552,6 +571,7 @@ export type CaseComplicationCountOrderByAggregateInput = {
   endTimestamp?: Prisma.SortOrder
   source?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  suggestion?: Prisma.SortOrder
   sourceVocabulary?: Prisma.SortOrder
   sourceCode?: Prisma.SortOrder
   standardConceptId?: Prisma.SortOrder
@@ -576,6 +596,7 @@ export type CaseComplicationMaxOrderByAggregateInput = {
   endTimestamp?: Prisma.SortOrder
   source?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  suggestion?: Prisma.SortOrder
   sourceVocabulary?: Prisma.SortOrder
   sourceCode?: Prisma.SortOrder
   standardConceptId?: Prisma.SortOrder
@@ -595,6 +616,7 @@ export type CaseComplicationMinOrderByAggregateInput = {
   endTimestamp?: Prisma.SortOrder
   source?: Prisma.SortOrder
   eventId?: Prisma.SortOrder
+  suggestion?: Prisma.SortOrder
   sourceVocabulary?: Prisma.SortOrder
   sourceCode?: Prisma.SortOrder
   standardConceptId?: Prisma.SortOrder
@@ -660,6 +682,7 @@ export type CaseComplicationCreateWithoutCaseInput = {
   endTimestamp?: Date | string | null
   source?: string | null
   eventId?: string | null
+  suggestion?: string | null
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
@@ -678,6 +701,7 @@ export type CaseComplicationUncheckedCreateWithoutCaseInput = {
   endTimestamp?: Date | string | null
   source?: string | null
   eventId?: string | null
+  suggestion?: string | null
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
@@ -726,6 +750,7 @@ export type CaseComplicationScalarWhereInput = {
   endTimestamp?: Prisma.DateTimeNullableFilter<"CaseComplication"> | Date | string | null
   source?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   eventId?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
+  suggestion?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   sourceVocabulary?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   sourceCode?: Prisma.StringNullableFilter<"CaseComplication"> | string | null
   standardConceptId?: Prisma.IntNullableFilter<"CaseComplication"> | number | null
@@ -744,6 +769,7 @@ export type CaseComplicationCreateManyCaseInput = {
   endTimestamp?: Date | string | null
   source?: string | null
   eventId?: string | null
+  suggestion?: string | null
   sourceVocabulary?: string | null
   sourceCode?: string | null
   standardConceptId?: number | null
@@ -762,6 +788,7 @@ export type CaseComplicationUpdateWithoutCaseInput = {
   endTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   eventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  suggestion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -780,6 +807,7 @@ export type CaseComplicationUncheckedUpdateWithoutCaseInput = {
   endTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   eventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  suggestion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -798,6 +826,7 @@ export type CaseComplicationUncheckedUpdateManyWithoutCaseInput = {
   endTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   eventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  suggestion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceVocabulary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   standardConceptId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -819,6 +848,7 @@ export type CaseComplicationSelect<ExtArgs extends runtime.Types.Extensions.Inte
   endTimestamp?: boolean
   source?: boolean
   eventId?: boolean
+  suggestion?: boolean
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
@@ -839,6 +869,7 @@ export type CaseComplicationSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   endTimestamp?: boolean
   source?: boolean
   eventId?: boolean
+  suggestion?: boolean
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
@@ -859,6 +890,7 @@ export type CaseComplicationSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   endTimestamp?: boolean
   source?: boolean
   eventId?: boolean
+  suggestion?: boolean
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
@@ -879,6 +911,7 @@ export type CaseComplicationSelectScalar = {
   endTimestamp?: boolean
   source?: boolean
   eventId?: boolean
+  suggestion?: boolean
   sourceVocabulary?: boolean
   sourceCode?: boolean
   standardConceptId?: boolean
@@ -888,7 +921,7 @@ export type CaseComplicationSelectScalar = {
   createdAt?: boolean
 }
 
-export type CaseComplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "section" | "label" | "note" | "timestamp" | "endTimestamp" | "source" | "eventId" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "mappingStatus" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["caseComplication"]>
+export type CaseComplicationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "section" | "label" | "note" | "timestamp" | "endTimestamp" | "source" | "eventId" | "suggestion" | "sourceVocabulary" | "sourceCode" | "standardConceptId" | "mappingStatus" | "sourceVersion" | "ordinal" | "createdAt", ExtArgs["result"]["caseComplication"]>
 export type CaseComplicationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
 }
@@ -917,6 +950,10 @@ export type $CaseComplicationPayload<ExtArgs extends runtime.Types.Extensions.In
     endTimestamp: Date | null
     source: string | null
     eventId: string | null
+    /**
+     * 10.2.0: the suggestion the complication was logged from (exported as a flag).
+     */
+    suggestion: string | null
     sourceVocabulary: string | null
     sourceCode: string | null
     standardConceptId: number | null
@@ -1357,6 +1394,7 @@ export interface CaseComplicationFieldRefs {
   readonly endTimestamp: Prisma.FieldRef<"CaseComplication", 'DateTime'>
   readonly source: Prisma.FieldRef<"CaseComplication", 'String'>
   readonly eventId: Prisma.FieldRef<"CaseComplication", 'String'>
+  readonly suggestion: Prisma.FieldRef<"CaseComplication", 'String'>
   readonly sourceVocabulary: Prisma.FieldRef<"CaseComplication", 'String'>
   readonly sourceCode: Prisma.FieldRef<"CaseComplication", 'String'>
   readonly standardConceptId: Prisma.FieldRef<"CaseComplication", 'Int'>

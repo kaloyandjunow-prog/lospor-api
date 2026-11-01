@@ -66,6 +66,19 @@ export interface OmopBundle {
   procedure_occurrence: OmopProcedure[]
   device_exposure: OmopDevice[]
   observation: OmopObservation[]
+  /** A death in theatre (10.2.0), from the Death event. */
+  death: OmopDeath[]
+}
+
+/** OMOP CDM v5.4 DEATH: one row per person who died, here only in theatre. */
+export interface OmopDeath {
+  person_id: number
+  death_date: string
+  death_datetime: string | null
+  death_type_concept_id: number
+  cause_concept_id: number
+  cause_source_value: string | null
+  cause_source_concept_id: number
 }
 
 /**
@@ -97,6 +110,7 @@ export interface OmopDevice {
   visit_occurrence_id: number
   unit_concept_id: number | null
   unit_source_value: string | null
+  suggestion_source_value?: string | null
 }
 
 export interface OmopCareSite {
@@ -164,6 +178,12 @@ export interface OmopCondition {
   condition_type_concept_id: number
   condition_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export interface OmopDrug {
@@ -184,6 +204,12 @@ export interface OmopDrug {
   dose_unit_source_value: string | null
   route_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export interface OmopMeasurement {
@@ -209,6 +235,12 @@ export interface OmopMeasurement {
   range_low: number | null
   range_high: number | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export interface OmopProcedure {
@@ -236,6 +268,12 @@ export interface OmopProcedure {
   modifier_source_value: string | null
   procedure_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 /**
@@ -306,6 +344,12 @@ export interface OmopObservation {
   unit_source_value: string | null
   observation_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export type CaseRow = {
@@ -389,6 +433,8 @@ export type CaseRow = {
     /** The end of an episode from the vitals questions (10.1.0); null for a moment or an old text item. */
     endTimestamp?: Date | null
     source: string | null
+    /** The suggestion it was logged from (10.2.0). */
+    suggestion?: string | null
     ordinal: number
     sourceVocabulary?: string | null
     sourceCode?: string | null
@@ -629,6 +675,8 @@ export type CaseRow = {
     // Airway management detail. `airwayDevices` is the current multi-device
     // list; `airwayDevice` is the older single value and both may be set.
     airwayDevices?: unknown
+    /** Each airway device its own entry (10.2.0); empty on older cases. */
+    airwayDeviceEntries?: unknown
     cormackLehane?: string | null
     airwayTools?: unknown
     fob?: boolean | null
@@ -660,6 +708,10 @@ export type CaseRow = {
       depthCm: string | null
       lumens: string | null
       preexisting: boolean
+      /** 10.2.0: a line that failed, and when; when it went in. */
+      failed?: boolean
+      failedAt?: Date | null
+      insertedAt?: Date | null
       ordinal: number
       sourceVocabulary?: string | null
       sourceCode?: string | null

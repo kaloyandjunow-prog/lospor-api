@@ -1,4 +1,12 @@
 /**
+ * Every row of a table that may come from a suggestion carries the column
+ * (10.2.0): the rule it came from, or null for an entry charted by hand.
+ */
+function withSuggestion<T extends { suggestion_source_value?: string | null }>(rows: T[]): T[] {
+  return rows.map(row => ({ ...row, suggestion_source_value: row.suggestion_source_value ?? null }))
+}
+
+/**
  * OMOP CDM v5.4 mapper — export contract `source_version` 3.8.0.
  *
  * `source_version` tracks the shape of the export, not the app version: bump it
@@ -109,6 +117,7 @@ import type {
   OmopProcedure,
   OmopLabRow,
   OmopObservation,
+  OmopDeath,
   CaseRow,
   ExportContext,
 } from "./omop-mapper/types"
@@ -145,6 +154,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
   // airway device codes read off a case further down.
   const devices_: OmopDevice[] = []
   const observations: OmopObservation[] = []
+  const deaths: OmopDeath[] = []
   const mappingSummary = { mapped_rows: 0, manually_curated_rows: 0, rejected_rows: 0, source_only_rows: 0, unmapped_rows: 0 }
 
   const trackMapping = (status: string | null | undefined) => {
@@ -415,7 +425,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       personId, visitId, startDate, endDate, startDateTime, endDateTime,
       careSite, careSiteId,
       persons, observationPeriods, visits,
-      conditions, drugs, measurements, procedures, devices: devices_, observations,
+      conditions, drugs, measurements, procedures, devices: devices_, observations, deaths,
       trackMapping, sourceValue,
       sourceObservation, sourceMeasurement, emitLabRows, cuffedObservation, emitAirwayGrade,
     }
@@ -446,6 +456,7 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     procedure_occurrence: procedures.length,
     device_exposure: devices_.length,
     observation: observations.length,
+    death: deaths.length,
   }
   const qualityWarnings = buildQualityWarnings(cases, mappingSummary)
 
@@ -497,11 +508,12 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     person:                persons,
     observation_period:    observationPeriods,
     visit_occurrence:      visits,
-    condition_occurrence:  conditions,
-    drug_exposure:         drugs,
-    measurement:           measurements,
-    procedure_occurrence:  procedures,
-    device_exposure:       devices_,
-    observation:           observations,
+    condition_occurrence:  withSuggestion(conditions),
+    drug_exposure:         withSuggestion(drugs),
+    measurement:           withSuggestion(measurements),
+    procedure_occurrence:  withSuggestion(procedures),
+    device_exposure:       withSuggestion(devices_),
+    observation:           withSuggestion(observations),
+    death:                 deaths,
   }
 }
