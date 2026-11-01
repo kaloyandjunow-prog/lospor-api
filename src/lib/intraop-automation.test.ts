@@ -127,4 +127,27 @@ describe("a shock", () => {
     const energy = ctx.measurements.filter(row => String(row.measurement_source_value).endsWith(":energy"))
     expect(energy.map(row => [row.measurement_concept_id, row.value_as_number, row.unit_concept_id])).toEqual([[0, 200, 9522], [0, 100, 9522]])
   })
+
+  it("exports the procedure alone when no energy can be read, never a zero", () => {
+    const ctx = new Proxy({
+      personId: 1, visitId: 2, startDate: "2026-11-01", endDate: "2026-11-01",
+      procedures: [] as Record<string, unknown>[], measurements: [] as Record<string, unknown>[], observations: [],
+      conditions: [], drugs: [], devices: [],
+    } as Record<string | symbol, unknown>, { get: (target, key) => (key in target ? target[key] : (target[key] = vi.fn())) }) as {
+      procedures: Record<string, unknown>[]
+      measurements: Record<string, unknown>[]
+    }
+    const timestamp = new Date("2026-11-01T09:05:00.000Z")
+    mapIntraopToOmop(ctx as never, { events: [
+      { type: "defibrillation", timestamp, label: "Defibrillation", value: null, unit: "J" },
+      { type: "defibrillation", timestamp, label: "Defibrillation", value: "0", unit: "J" },
+    ] } as never, {} as never)
+    expect(ctx.procedures.filter(row => row.procedure_source_value === "INTRAOP_EVENT:Defibrillation")).toHaveLength(2)
+    expect(ctx.measurements.filter(row => String(row.measurement_source_value).endsWith(":energy"))).toEqual([])
+  })
+
+  it("keeps an unsynchronised shock's row as Defibrillation, whatever label the client sent", () => {
+    const row = buildRow("case-1", "user-1", { id: "s", type: "defibrillation", ts: "2026-11-01T09:00:00.000Z", energyJ: 200, synchronized: false, label: "Cardioversion" } as never, 1, "active", "k", "test")
+    expect(row).toMatchObject({ label: "Defibrillation", value: "200", unit: "J" })
+  })
 })
