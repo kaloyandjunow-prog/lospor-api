@@ -158,6 +158,7 @@ export function mapPostopToOmop(
       person_id:                  ctx.personId,
       condition_concept_id:       4032472,
       condition_start_date:       postDate ?? ctx.startDate,
+      condition_start_datetime: null, condition_end_date: null, condition_end_datetime: null,
       condition_type_concept_id:  32817,
       condition_source_value:     "LOSPOR:PONV",
       visit_occurrence_id:        ctx.visitId,

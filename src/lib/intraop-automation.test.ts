@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest"
 import { buildRow } from "@/lib/case-events"
 import { closeOpenVitalEpisodes, intraopAutomationForClient, readIntraopAutomation, saveIntraopAutomation, vitalStats } from "@/lib/intraop-automation"
 import { mapIntraopToOmop } from "@/lib/omop-mapper/domains/intraop"
+import { mapComplicationsToOmop } from "@/lib/omop-mapper/domains/complications"
+import { OMOP_COLUMNS } from "@/lib/omop-columns"
 
 const ON = { enabled: true, vitalQuestions: { enabled: true } }
 
@@ -144,6 +146,28 @@ describe("a shock", () => {
     ] } as never, {} as never)
     expect(ctx.procedures.filter(row => row.procedure_source_value === "INTRAOP_EVENT:Defibrillation")).toHaveLength(2)
     expect(ctx.measurements.filter(row => String(row.measurement_source_value).endsWith(":energy"))).toEqual([])
+  })
+
+  it("exports an episode's start and end beside its date, and a moment or an old item with no end", () => {
+    const conditions: Record<string, unknown>[] = []
+    const ctx = new Proxy({
+      personId: 1, visitId: 2, startDate: "2026-11-01", endDate: "2026-11-01", conditions,
+    } as Record<string | symbol, unknown>, { get: (target, key) => (key in target ? target[key] : (target[key] = vi.fn())) })
+    const coded = { section: "intraop", note: null, source: "sync", sourceVocabulary: "LOSPOR_COMPLICATION", standardConceptId: 317002, mappingStatus: "mapped" }
+    mapComplicationsToOmop(ctx as never, { complications: [
+      { ...coded, label: "Hypotension", sourceCode: "Hypotension", ordinal: 0, timestamp: new Date("2026-11-01T09:10:00.000Z"), endTimestamp: new Date("2026-11-01T09:35:00.000Z") },
+      { ...coded, label: "Hypotension", sourceCode: "Hypotension", ordinal: 1, timestamp: new Date("2026-11-01T10:00:00.000Z"), endTimestamp: null },
+      { ...coded, label: "Hypotension", sourceCode: "Hypotension", ordinal: 2, timestamp: null },
+    ] } as never)
+    expect(conditions.map(row => [row.condition_start_date, row.condition_start_datetime, row.condition_end_date, row.condition_end_datetime])).toEqual([
+      ["2026-11-01", "2026-11-01T09:10:00.000Z", "2026-11-01", "2026-11-01T09:35:00.000Z"],
+      ["2026-11-01", "2026-11-01T10:00:00.000Z", null, null],
+      ["2026-11-01", null, null, null],
+    ])
+    // The research CSV carries the three columns after the start date, in CDM order.
+    expect(OMOP_COLUMNS.condition_occurrence.slice(3, 7)).toEqual([
+      "condition_start_date", "condition_start_datetime", "condition_end_date", "condition_end_datetime",
+    ])
   })
 
   it("keeps an unsynchronised shock's row as Defibrillation, whatever label the client sent", () => {

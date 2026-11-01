@@ -47,8 +47,9 @@
 // 4.10.0 adds the intraoperative shock (a procedure with its energy beside
 // it) and gives a complication charted on the timeline its exact date: the
 // timed complications of 10.1.0 reach the same rows the old text items did,
-// mapped the same way. An episode's end is kept in the database and not yet
-// exported, because the condition table this export writes has no end column.
+// mapped the same way. CONDITION_OCCURRENCE gains the CDM's start and end
+// date-times, so a complication carries its instant and an episode logged
+// from the vitals questions its end.
 //
 // 4.3.0 documents what the traceability pass found: the risk-score and COLDS
 // factors, which exported their totals and not one component; the allergy flag,
@@ -755,6 +756,29 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "1-360",
     missingnessRule: "No row = no shock charted",
     sourceTable: "CaseEvent", sourceColumn: "value",
+    versionIntroduced: "4.10.0",
+  },
+  {
+    name: "intraopComplicationStart",
+    exportName: "condition_occurrence.condition_start_datetime (LOSPOR_COMPLICATION)",
+    meaning: "The instant a complication with a reviewed concept began, in the "
+      + "theatre's local time with its offset: when it was charted on the timeline, "
+      + "or the reading a question from the vitals was answered for.",
+    type: "datetime",
+    missingnessRule: "Blank = a complication from the old line of text, which has no time (its date is the case start)",
+    sourceTable: "CaseComplication", sourceColumn: "timestamp",
+    versionIntroduced: "4.10.0",
+  },
+  {
+    name: "intraopComplicationEnd",
+    exportName: "condition_occurrence.condition_end_date / condition_end_datetime (LOSPOR_COMPLICATION)",
+    meaning: "The end of an episode logged from the vitals questions: the first "
+      + "reading back inside both the fixed and the statistical limits, or the "
+      + "case end when the readings never came back. A moment logged with "
+      + "continued logging switched off ends at its own start.",
+    type: "datetime",
+    missingnessRule: "Blank = a complication charted as a moment on the timeline, or one from the old line of text; never an episode still open, since an open episode is closed at the case end before finalisation",
+    sourceTable: "CaseComplication", sourceColumn: "endTimestamp",
     versionIntroduced: "4.10.0",
   },
   {

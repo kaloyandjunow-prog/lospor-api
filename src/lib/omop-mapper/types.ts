@@ -153,6 +153,14 @@ export interface OmopCondition {
   person_id: number
   condition_concept_id: number
   condition_start_date: string | null
+  /**
+   * 10.1.0: a complication with its time, and the end of an episode logged
+   * from the vitals questions. Null (blank) on a diagnosis or a postop
+   * finding, which carry a date only.
+   */
+  condition_start_datetime: string | null
+  condition_end_date: string | null
+  condition_end_datetime: string | null
   condition_type_concept_id: number
   condition_source_value: string | null
   visit_occurrence_id: number
@@ -378,6 +386,8 @@ export type CaseRow = {
     label: string
     note: string | null
     timestamp: Date | null
+    /** The end of an episode from the vitals questions (10.1.0); null for a moment or an old text item. */
+    endTimestamp?: Date | null
     source: string | null
     ordinal: number
     sourceVocabulary?: string | null

@@ -43,6 +43,7 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   ],
   condition_occurrence: [
     "condition_occurrence_id", "person_id", "condition_concept_id", "condition_start_date",
+    "condition_start_datetime", "condition_end_date", "condition_end_datetime",
     "condition_type_concept_id", "condition_source_value", "visit_occurrence_id",
   ],
   drug_exposure: [

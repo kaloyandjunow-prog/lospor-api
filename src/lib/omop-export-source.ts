@@ -91,7 +91,7 @@ export const CASE_SELECT = {
     orderBy: [{ section: "asc" }, { category: "asc" }, { ordinal: "asc" }],
   },
   complications: {
-    select: { section: true, label: true, note: true, timestamp: true, source: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
+    select: { section: true, label: true, note: true, timestamp: true, endTimestamp: true, source: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
     orderBy: [{ section: "asc" }, { ordinal: "asc" }],
   },
   events: {
