@@ -7,7 +7,8 @@ import {
   type VitalSignKey,
 } from "@lospor/core/intraop-automation"
 import { activeCaseLog, addEvent } from "@/lib/case-events"
-import { parseLogEvents } from "@lospor/core/intraop-types"
+import { addOutcomes, suggestionOutcomes, type SuggestionCounts } from "@lospor/core/intraop-suggestions"
+import { parseLogEvents, type LogEvent } from "@lospor/core/intraop-types"
 import {
   isOpenVitalEpisode,
   meanArterialPressure,
@@ -183,6 +184,51 @@ export async function intraopAutomationForClient(
 ): Promise<{ settings: IntraopAutomationSettings; stats: VitalStatsTable | null }> {
   const settings = await readIntraopAutomation(db)
   return { settings, stats: vitalQuestionsEnabled(settings) ? await vitalStats(db, scope) : null }
+}
+
+/**
+ * How the suggestions were received (10.2.0): per automation, how often one was
+ * acted on and how often it was put away, over the cases started in the last
+ * `days` days. Worked out from the saved charts alone (see suggestionOutcomes),
+ * kept ten minutes like the vitals counts. No case or clinician is named: the
+ * counts carry no patient-level record.
+ */
+const ACCEPTANCE_CASES_MAX = 20_000
+const ACCEPTANCE_BATCH = 200
+const acceptanceCache = new Map<number, { at: number; value: SuggestionAcceptance }>()
+
+export type SuggestionAcceptance = { days: number; cases: number; byId: SuggestionCounts }
+
+export async function suggestionAcceptance(db: Db, days = 90, now = Date.now()): Promise<SuggestionAcceptance> {
+  const cached = acceptanceCache.get(days)
+  if (cached && now - cached.at < STATS_TTL_MS) return cached.value
+  const since = new Date(now - days * 86_400_000)
+  const cases = await db.case.findMany({
+    where: { intraop: { startedAt: { gte: since } } },
+    select: { id: true },
+    take: ACCEPTANCE_CASES_MAX,
+  })
+  const byId: SuggestionCounts = {}
+  for (let from = 0; from < cases.length; from += ACCEPTANCE_BATCH) {
+    const ids = cases.slice(from, from + ACCEPTANCE_BATCH).map(item => item.id)
+    const rows = await db.caseEvent.findMany({
+      where: { caseId: { in: ids }, status: "active" },
+      select: { caseId: true, logicalId: true, version: true, metadataJson: true },
+    })
+    const latest = new Map<string, Map<string, { version: number; event: LogEvent }>>()
+    for (const row of rows) {
+      const events = latest.get(row.caseId) ?? new Map()
+      latest.set(row.caseId, events)
+      const current = events.get(row.logicalId)
+      if (!current || row.version > current.version) events.set(row.logicalId, { version: row.version, event: row.metadataJson as LogEvent })
+    }
+    for (const events of latest.values()) {
+      addOutcomes(byId, suggestionOutcomes([...events.entries()].map(([logicalId, entry]) => ({ ...entry.event, id: entry.event.id ?? logicalId }))))
+    }
+  }
+  const value = { days, cases: cases.length, byId }
+  acceptanceCache.set(days, { at: now, value })
+  return value
 }
 
 /**

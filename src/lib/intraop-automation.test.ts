@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { buildRow } from "@/lib/case-events"
-import { closeOpenVitalEpisodes, intraopAutomationForClient, readIntraopAutomation, saveIntraopAutomation, vitalStats } from "@/lib/intraop-automation"
+import { closeOpenVitalEpisodes, intraopAutomationForClient, readIntraopAutomation, saveIntraopAutomation, suggestionAcceptance, vitalStats } from "@/lib/intraop-automation"
 import { mapIntraopToOmop } from "@/lib/omop-mapper/domains/intraop"
 import { mapComplicationsToOmop } from "@/lib/omop-mapper/domains/complications"
 import { OMOP_COLUMNS } from "@/lib/omop-columns"
@@ -21,6 +21,38 @@ function db(config: unknown, rows: { bp?: unknown[]; hr?: unknown[] } = {}, case
     $queryRaw: queryRaw,
   }
 }
+
+describe("how the suggestions were received (10.2.0)", () => {
+  const row = (caseId: string, logicalId: string, version: number, metadataJson: Record<string, unknown>) => ({ caseId, logicalId, version, metadataJson })
+  const store = (rows: unknown[]) => ({
+    case: { findMany: vi.fn().mockResolvedValue([{ id: "c1" }, { id: "c2" }]) },
+    caseEvent: { findMany: vi.fn().mockResolvedValue(rows) },
+  })
+
+  it("adds the cases up under each automation, from the newest version of each entry", async () => {
+    const rows = [
+      row("c1", "q1", 1, { id: "q1", type: "complication", label: "Local anaesthetic systemic toxicity (LAST)", suggestion: "reverse:lipid" }),
+      row("c1", "a1", 1, { id: "a1", type: "prompt_answer", answerKind: "reverse:adenosine", answerFor: "d1", answer: "not_now" }),
+      // Two versions of the same entry count once: the newer one.
+      row("c2", "a2", 1, { id: "a2", type: "prompt_answer", answerKind: "reverse:adenosine", answerFor: "d2", answer: "not_now" }),
+      row("c2", "a2", 2, { id: "a2", type: "prompt_answer", answerKind: "reverse:adenosine", answerFor: "d2", answer: "not_now" }),
+    ]
+    const result = await suggestionAcceptance(store(rows) as never, 30, Date.now() + 1_000_000)
+    expect(result.cases).toBe(2)
+    expect(result.days).toBe(30)
+    expect(result.byId).toEqual({ "reverse:lipid": { accepted: 1, dismissed: 0 }, "reverse:adenosine": { accepted: 0, dismissed: 2 } })
+  })
+
+  it("keeps the answer ten minutes rather than reading every chart again", async () => {
+    const db = store([])
+    const at = Date.now() + 5_000_000
+    await suggestionAcceptance(db as never, 45, at)
+    await suggestionAcceptance(db as never, 45, at + 60_000)
+    expect(db.case.findMany).toHaveBeenCalledTimes(1)
+    await suggestionAcceptance(db as never, 45, at + 11 * 60_000)
+    expect(db.case.findMany).toHaveBeenCalledTimes(2)
+  })
+})
 
 describe("settings", () => {
   it("read as off when nothing was ever saved, as on the public demo", async () => {
