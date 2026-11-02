@@ -92,6 +92,7 @@ const preferencesPatchSchema = z.object({
   // 10.2.0: Smart selection or the legacy Airway tab.
   airwayScreen: z.enum(["smart", "legacy"]).optional(),
   vascularScreen: z.enum(["smart", "legacy"]).optional(),
+  monitoringScreen: z.enum(["smart", "legacy"]).optional(),
 }).passthrough()
 
 /**
