@@ -55,9 +55,11 @@ describe("how the suggestions were received (10.2.0)", () => {
 })
 
 describe("settings", () => {
-  it("read as off when nothing was ever saved, as on the public demo", async () => {
+  it("read as the defaults when nothing was ever saved: the reminders on, the vitals questions and every other group off", async () => {
     const settings = await readIntraopAutomation(db(undefined) as never)
-    expect(settings.enabled).toBe(false)
+    expect(settings.enabled).toBe(true)
+    expect(settings.groups.reminders).toBe(true)
+    expect(settings.groups.treatmentSuggestions).toBe(false)
     expect(settings.vitalQuestions.enabled).toBe(false)
   })
 

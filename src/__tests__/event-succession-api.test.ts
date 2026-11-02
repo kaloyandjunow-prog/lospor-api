@@ -55,8 +55,11 @@ describe("what usually comes next, learned from finished cases (10.2.0)", () => 
   })
 
   it("is sent to the apps only while the reminders are on, and carries no case or clinician", async () => {
-    const off = fakeDb([{ id: "a", events: [["Positioned", 0], ["Incision", 4]] }])
+    const off = fakeDb([{ id: "a", events: [["Positioned", 0], ["Incision", 4]] }], { ...DEFAULT_INTRAOP_AUTOMATION, groups: { ...DEFAULT_INTRAOP_AUTOMATION.groups, reminders: false } })
     expect((await intraopAutomationForClient(off.db, unique())).succession).toBeNull()
+    // Nothing saved is the defaults, with the reminders on.
+    const fresh = fakeDb([{ id: "a", events: [["Positioned", 0], ["Incision", 4]] }])
+    expect((await intraopAutomationForClient(fresh.db, unique())).succession).not.toBeNull()
 
     const on = fakeDb([{ id: "secret-case-id", events: [["Positioned", 0], ["Incision", 4]] }], { ...DEFAULT_INTRAOP_AUTOMATION, enabled: true, groups: { ...DEFAULT_INTRAOP_AUTOMATION.groups, reminders: true } })
     const body = await intraopAutomationForClient(on.db, unique())
