@@ -46,6 +46,7 @@ type LooseDoseCalc = {
   roundTo?: number
   basis?: string
   capAtActualWeight?: boolean
+  flatFromKg?: number
 } | null | undefined
 
 type LooseProfile = {
@@ -238,6 +239,30 @@ function doseCalcIssues(input: {
           + `(requested ${next.cap}). It may be lowered.`,
       })
     }
+  }
+
+  // 10.2.0: from this weight the fixed dose replaces the per-kilogram one
+  // (paracetamol 15 mg/kg, 1 g from 50 kg). Lowering the weight, removing it
+  // or bringing one in gives lighter patients the full fixed dose; raising it
+  // only keeps more of them on their weight-based dose.
+  if (typeof baseline.flatFromKg === "number") {
+    if (typeof next.flatFromKg !== "number") {
+      issues.push({
+        field: field("flatFromKg"),
+        message: `The weight from which the ${route} fixed dose applies (${baseline.flatFromKg} kg) is set by the platform ruleset and cannot be removed here. It may be raised.`,
+      })
+    } else if (next.flatFromKg < baseline.flatFromKg) {
+      issues.push({
+        field: field("flatFromKg"),
+        message: `The weight from which the ${route} fixed dose applies cannot be lowered below the platform value of ${baseline.flatFromKg} kg `
+          + `(requested ${next.flatFromKg}). It may be raised.`,
+      })
+    }
+  } else if (typeof next.flatFromKg === "number") {
+    issues.push({
+      field: field("flatFromKg"),
+      message: `A weight from which the ${route} fixed dose applies cannot be introduced here; it is set by the platform ruleset.`,
+    })
   }
 
   // Capping an ideal-body-weight dose at the child's actual weight stops an
