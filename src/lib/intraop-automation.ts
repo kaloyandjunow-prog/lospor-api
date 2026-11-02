@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client"
 import {
+  automationGroupEnabled,
   parseIntraopAutomation,
   vitalQuestionsEnabled,
   type IntraopAutomationSettings,
@@ -8,6 +9,7 @@ import {
 } from "@lospor/core/intraop-automation"
 import { activeCaseLog, addEvent } from "@/lib/case-events"
 import { addOutcomes, suggestionOutcomes, type SuggestionCounts } from "@lospor/core/intraop-suggestions"
+import { SEED_SUCCESSION, SEQUENCE_EVENTS, buildSuccessionStats, mergeSuccession, successionContext, type SuccessionCase, type SuccessionLink } from "@lospor/core/event-succession"
 import { parseLogEvents, type LogEvent } from "@lospor/core/intraop-types"
 import {
   isOpenVitalEpisode,
@@ -46,6 +48,7 @@ export async function saveIntraopAutomation(db: Db, value: unknown): Promise<Int
     update: { config: settings as unknown as Prisma.InputJsonValue },
   })
   statsCache.clear()
+  successionCache.clear()
   return settings
 }
 
@@ -175,15 +178,65 @@ export async function vitalStatsHistory(
 }
 
 /**
+ * How events were logged (10.2.0): per technique family, which sequence event followed which in the finished cases in
+ * scope, with the usual gap. Only event names, their order and the gaps are read; no case, patient or clinician is
+ * named in what comes out. Kept ten minutes like the vitals counts.
+ */
+const SUCCESSION_CASES_MAX = 20_000
+const SUCCESSION_BATCH = 1_000
+const successionCache = new Map<string, { at: number; links: SuccessionLink[] }>()
+
+export async function learnedSuccession(db: Db, scope: Prisma.CaseWhereInput, now = Date.now()): Promise<SuccessionLink[]> {
+  const key = JSON.stringify(scope)
+  const cached = successionCache.get(key)
+  if (cached && now - cached.at < STATS_TTL_MS) return cached.links
+  const cases = await db.case.findMany({
+    where: { AND: [scope, { status: "COMPLETE" }, { intraop: { startedAt: { not: null } } }] },
+    select: { id: true, clinicalMode: true, intraop: { select: { techniques: true } } },
+    orderBy: { createdAt: "desc" },
+    take: SUCCESSION_CASES_MAX,
+  })
+  const byCase = new Map<string, SuccessionCase>()
+  for (const item of cases) {
+    const techniques = Array.isArray(item.intraop?.techniques) ? (item.intraop!.techniques as unknown[]).filter((value): value is string => typeof value === "string") : []
+    byCase.set(item.id, { context: successionContext(techniques, item.clinicalMode === "PEDIATRIC"), events: [] })
+  }
+  const ids = [...byCase.keys()]
+  const events = [...SEQUENCE_EVENTS]
+  for (let offset = 0; offset < ids.length; offset += SUCCESSION_BATCH) {
+    const rows = await db.caseEvent.findMany({
+      where: { caseId: { in: ids.slice(offset, offset + SUCCESSION_BATCH) }, status: "active", type: "clinical_event", label: { in: events } },
+      select: { caseId: true, label: true, timestamp: true },
+    })
+    for (const row of rows) {
+      if (row.label) (byCase.get(row.caseId)!.events as Array<{ label: string; ts: string }>).push({ label: row.label, ts: row.timestamp.toISOString() })
+    }
+  }
+  const links = buildSuccessionStats([...byCase.values()])
+  successionCache.set(key, { at: now, links })
+  return links
+}
+
+/** The links the apps use: the starting values, with each starting event replaced once its cases have been seen often enough. */
+export async function successionForClient(db: Db, scope: Prisma.CaseWhereInput): Promise<SuccessionLink[]> {
+  return mergeSuccession(SEED_SUCCESSION, await learnedSuccession(db, scope))
+}
+
+/**
  * What the apps read: the settings, and the counts the questions need when
  * the questions are on. Off, no counts are worked out or sent.
  */
 export async function intraopAutomationForClient(
   db: Db,
   scope: Prisma.CaseWhereInput,
-): Promise<{ settings: IntraopAutomationSettings; stats: VitalStatsTable | null }> {
+): Promise<{ settings: IntraopAutomationSettings; stats: VitalStatsTable | null; succession: SuccessionLink[] | null }> {
   const settings = await readIntraopAutomation(db)
-  return { settings, stats: vitalQuestionsEnabled(settings) ? await vitalStats(db, scope) : null }
+  return {
+    settings,
+    stats: vitalQuestionsEnabled(settings) ? await vitalStats(db, scope) : null,
+    // What usually comes next (10.2.0), sent only while the reminders are on.
+    succession: automationGroupEnabled(settings, "reminders") ? await successionForClient(db, scope) : null,
+  }
 }
 
 /**
