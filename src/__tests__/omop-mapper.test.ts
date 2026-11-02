@@ -3002,3 +3002,33 @@ describe("a cancelled procedure, a plan not yet known, and the procedure done (1
     expect(bundle.procedure_occurrence.filter(row => row.procedure_concept_id === 4301351)).toHaveLength(0)
   })
 })
+
+describe("the side of a block or unilateral spinal is the procedure's modifier (10.2.0)", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+  const rowFor = (techniques: string[], techniqueSides: unknown, code: string) => {
+    const c = completeCase() as never as { intraop: { techniques: string[]; techniqueSides?: unknown } }
+    c.intraop.techniques = techniques
+    c.intraop.techniqueSides = techniqueSides
+    const bundle = mapCasesToOmop([c as never], options as never)
+    return bundle.procedure_occurrence.find(row => new RegExp(`ANAESTHESIA_TECHNIQUE:${code}$`).test(String(row.procedure_source_value)))
+  }
+
+  it("codes Left, Right and Both with SNOMED qualifiers and keeps the code in the source value", () => {
+    expect(rowFor(["BLOCK_FEMORAL"], { BLOCK_FEMORAL: "LEFT" }, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 4300877, modifier_source_value: "SIDE:LEFT" })
+    expect(rowFor(["BLOCK_FEMORAL"], { BLOCK_FEMORAL: "RIGHT" }, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 4080761, modifier_source_value: "SIDE:RIGHT" })
+    expect(rowFor(["BLOCK_TAP"], { BLOCK_TAP: "BOTH" }, "BLOCK_TAP")).toMatchObject({ modifier_concept_id: 4197258, modifier_source_value: "SIDE:BOTH" })
+  })
+
+  it("exports the unilateral spinal as a spinal anaesthetic with its side", () => {
+    expect(rowFor(["SPINAL_UNILATERAL"], { SPINAL_UNILATERAL: "RIGHT" }, "SPINAL_UNILATERAL")).toMatchObject({ procedure_concept_id: 4332593, modifier_concept_id: 4080761 })
+  })
+
+  it("leaves the modifier at 0 for a technique with no side, an older case, or a side that does not belong", () => {
+    expect(rowFor(["GENERAL_TIVA"], { GENERAL_TIVA: "LEFT" }, "GENERAL_TIVA")).toMatchObject({ modifier_concept_id: 0, modifier_source_value: null })
+    expect(rowFor(["BLOCK_FEMORAL"], undefined, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 0, modifier_source_value: null })
+    expect(rowFor(["BLOCK_FEMORAL"], { BLOCK_FEMORAL: "UP" }, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 0 })
+  })
+})

@@ -280,6 +280,7 @@ export const intraopSchema = z.object({
   cormackLehane:    z.enum(["I", "IIa", "IIb", "III", "IV"]).nullable().optional(),
   airwayDevices:    z.array(z.unknown()).optional(),
   airwayDeviceEntries: z.array(z.unknown()).max(40).optional(),
+  techniqueSides: z.record(z.string().max(200), z.string().max(10)).optional().refine(value => value == null || Object.keys(value).length <= 20, "At most 20 sides"),
   ventilationModes: z.array(z.unknown()).optional(),
   lmaSize:          cNum("intraop", "lmaSize"),
   oralTubeSize:     cNum("intraop", "oralTubeSize"),

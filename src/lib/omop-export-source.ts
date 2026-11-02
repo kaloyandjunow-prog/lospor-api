@@ -270,7 +270,7 @@ export const CASE_SELECT = {
       // an export could say a tube was placed but never which one, what size,
       // whether it was cuffed, or how hard the laryngoscopy was -- the part a
       // difficult-airway study is actually about.
-      airwayDevices: true, airwayDeviceEntries: true, cormackLehane: true, airwayTools: true, fob: true,
+      airwayDevices: true, airwayDeviceEntries: true, techniqueSides: true, cormackLehane: true, airwayTools: true, fob: true,
       lmaSize: true,
       oralTubeSize: true, oralCuffed: true, nasalTubeSize: true, nasalCuffed: true,
       dltType: true, dltSide: true, dltSize: true, endobronchialSize: true,

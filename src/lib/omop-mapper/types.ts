@@ -681,6 +681,8 @@ export type CaseRow = {
     airwayDevices?: unknown
     /** Each airway device its own entry (10.2.0); empty on older cases. */
     airwayDeviceEntries?: unknown
+    /** The side of a block or unilateral spinal, by technique code (10.2.0); empty on older cases. */
+    techniqueSides?: unknown
     cormackLehane?: string | null
     airwayTools?: unknown
     fob?: boolean | null

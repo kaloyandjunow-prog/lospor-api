@@ -8,6 +8,7 @@ import {
 import { canonicalizeIntraopPatch } from "@lospor/core/case-payloads"
 import { legacyFieldsFromEntries, parseAirwayDeviceEntries } from "@lospor/core/airway-device-entries"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
+import { parseTechniqueSides, techniqueSidesFor } from "@lospor/core/technique-smart"
 import { copyKey, safeEnum } from "./shared"
 
 /** A bare wall clock, the only shape the legacy startTime/endTime columns accept. */
@@ -78,6 +79,8 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
       }
     }
   }
+  // 10.2.0: the side of a block or unilateral spinal, by technique code.
+  if (has("techniqueSides")) r.techniqueSides = full.techniqueSides
   if (has("ventilationModes")) {
     r.ventilationModes = full.ventilationModes
     r.ippv             = full.ippv
@@ -214,6 +217,11 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     airwayNotApplicable: intraop.airwayNotApplicable ?? false,
     airwayDevices:   Array.isArray(intraop.airwayDevices)    ? intraop.airwayDevices    : [],
     airwayDeviceEntries: airwayEntries as unknown as Prisma.InputJsonValue,
+    // Only for techniques that are on the list: a side outlives nothing it belongs to.
+    techniqueSides: techniqueSidesFor(
+      Array.isArray(intraop.techniques) ? intraop.techniques.filter((value): value is string => typeof value === "string") : [],
+      parseTechniqueSides((intraop as Record<string, unknown>).techniqueSides),
+    ) as unknown as Prisma.InputJsonValue,
     ventilationModes:Array.isArray(intraop.ventilationModes) ? intraop.ventilationModes : [],
     dltType:         intraop.dltType         ?? null,
     dltSide:         intraop.dltSide         ?? null,

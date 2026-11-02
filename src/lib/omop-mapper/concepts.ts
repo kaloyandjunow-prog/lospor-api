@@ -253,6 +253,16 @@ export const TECHNIQUE_CONCEPTS: Record<string, number> = {
 
 /** Every technique node's parent, derived from the catalogue rather than kept
  *  in step with it by hand. */
+/**
+ * The side of a block or unilateral spinal (10.2.0), as the procedure's modifier. SNOMED qualifier values,
+ * checked against the OMOP vocabulary: Left 7771000, Right 24028007, Right and left 51440002.
+ */
+export const TECHNIQUE_SIDE_MODIFIER: Record<string, { concept_id: number; label: string }> = {
+  LEFT:  { concept_id: 4300877, label: "Left" },
+  RIGHT: { concept_id: 4080761, label: "Right" },
+  BOTH:  { concept_id: 4197258, label: "Right and left" },
+}
+
 export const TECHNIQUE_PARENT: Record<string, string> = (() => {
   const parents: Record<string, string> = {}
   const walk = (nodes: readonly TreeNode[], parent: string | null) => {

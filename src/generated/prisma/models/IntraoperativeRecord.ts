@@ -217,6 +217,7 @@ export type IntraoperativeRecordCountAggregateOutputType = {
   cormackLehane: number
   airwayDevices: number
   airwayDeviceEntries: number
+  techniqueSides: number
   ventilationModes: number
   lmaSize: number
   oralTubeSize: number
@@ -458,6 +459,7 @@ export type IntraoperativeRecordCountAggregateInputType = {
   cormackLehane?: true
   airwayDevices?: true
   airwayDeviceEntries?: true
+  techniqueSides?: true
   ventilationModes?: true
   lmaSize?: true
   oralTubeSize?: true
@@ -620,6 +622,7 @@ export type IntraoperativeRecordGroupByOutputType = {
   cormackLehane: $Enums.CormackLehane | null
   airwayDevices: runtime.JsonValue
   airwayDeviceEntries: runtime.JsonValue
+  techniqueSides: runtime.JsonValue
   ventilationModes: runtime.JsonValue
   lmaSize: number | null
   oralTubeSize: number | null
@@ -718,6 +721,7 @@ export type IntraoperativeRecordWhereInput = {
   cormackLehane?: Prisma.EnumCormackLehaneNullableFilter<"IntraoperativeRecord"> | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonFilter<"IntraoperativeRecord">
   airwayDeviceEntries?: Prisma.JsonFilter<"IntraoperativeRecord">
+  techniqueSides?: Prisma.JsonFilter<"IntraoperativeRecord">
   ventilationModes?: Prisma.JsonFilter<"IntraoperativeRecord">
   lmaSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   oralTubeSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
@@ -797,6 +801,7 @@ export type IntraoperativeRecordOrderByWithRelationInput = {
   cormackLehane?: Prisma.SortOrderInput | Prisma.SortOrder
   airwayDevices?: Prisma.SortOrder
   airwayDeviceEntries?: Prisma.SortOrder
+  techniqueSides?: Prisma.SortOrder
   ventilationModes?: Prisma.SortOrder
   lmaSize?: Prisma.SortOrderInput | Prisma.SortOrder
   oralTubeSize?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -879,6 +884,7 @@ export type IntraoperativeRecordWhereUniqueInput = Prisma.AtLeast<{
   cormackLehane?: Prisma.EnumCormackLehaneNullableFilter<"IntraoperativeRecord"> | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonFilter<"IntraoperativeRecord">
   airwayDeviceEntries?: Prisma.JsonFilter<"IntraoperativeRecord">
+  techniqueSides?: Prisma.JsonFilter<"IntraoperativeRecord">
   ventilationModes?: Prisma.JsonFilter<"IntraoperativeRecord">
   lmaSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
   oralTubeSize?: Prisma.FloatNullableFilter<"IntraoperativeRecord"> | number | null
@@ -958,6 +964,7 @@ export type IntraoperativeRecordOrderByWithAggregationInput = {
   cormackLehane?: Prisma.SortOrderInput | Prisma.SortOrder
   airwayDevices?: Prisma.SortOrder
   airwayDeviceEntries?: Prisma.SortOrder
+  techniqueSides?: Prisma.SortOrder
   ventilationModes?: Prisma.SortOrder
   lmaSize?: Prisma.SortOrderInput | Prisma.SortOrder
   oralTubeSize?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1041,6 +1048,7 @@ export type IntraoperativeRecordScalarWhereWithAggregatesInput = {
   cormackLehane?: Prisma.EnumCormackLehaneNullableWithAggregatesFilter<"IntraoperativeRecord"> | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonWithAggregatesFilter<"IntraoperativeRecord">
   airwayDeviceEntries?: Prisma.JsonWithAggregatesFilter<"IntraoperativeRecord">
+  techniqueSides?: Prisma.JsonWithAggregatesFilter<"IntraoperativeRecord">
   ventilationModes?: Prisma.JsonWithAggregatesFilter<"IntraoperativeRecord">
   lmaSize?: Prisma.FloatNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
   oralTubeSize?: Prisma.FloatNullableWithAggregatesFilter<"IntraoperativeRecord"> | number | null
@@ -1115,6 +1123,7 @@ export type IntraoperativeRecordCreateInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -1194,6 +1203,7 @@ export type IntraoperativeRecordUncheckedCreateInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -1271,6 +1281,7 @@ export type IntraoperativeRecordUpdateInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1350,6 +1361,7 @@ export type IntraoperativeRecordUncheckedUpdateInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1428,6 +1440,7 @@ export type IntraoperativeRecordCreateManyInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -1502,6 +1515,7 @@ export type IntraoperativeRecordUpdateManyMutationInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1577,6 +1591,7 @@ export type IntraoperativeRecordUncheckedUpdateManyInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1657,6 +1672,7 @@ export type IntraoperativeRecordCountOrderByAggregateInput = {
   cormackLehane?: Prisma.SortOrder
   airwayDevices?: Prisma.SortOrder
   airwayDeviceEntries?: Prisma.SortOrder
+  techniqueSides?: Prisma.SortOrder
   ventilationModes?: Prisma.SortOrder
   lmaSize?: Prisma.SortOrder
   oralTubeSize?: Prisma.SortOrder
@@ -1984,6 +2000,7 @@ export type IntraoperativeRecordCreateWithoutCaseInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -2061,6 +2078,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutCaseInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -2154,6 +2172,7 @@ export type IntraoperativeRecordUpdateWithoutCaseInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2231,6 +2250,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutCaseInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2308,6 +2328,7 @@ export type IntraoperativeRecordCreateWithoutLabRowsInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -2386,6 +2407,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutLabRowsInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -2478,6 +2500,7 @@ export type IntraoperativeRecordUpdateWithoutLabRowsInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2556,6 +2579,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutLabRowsInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2632,6 +2656,7 @@ export type IntraoperativeRecordCreateWithoutVascularAccessRowsInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -2710,6 +2735,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutVascularAccessRowsInput = 
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -2802,6 +2828,7 @@ export type IntraoperativeRecordUpdateWithoutVascularAccessRowsInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2880,6 +2907,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutVascularAccessRowsInput = 
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -2956,6 +2984,7 @@ export type IntraoperativeRecordCreateWithoutPremedicationRowsInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -3034,6 +3063,7 @@ export type IntraoperativeRecordUncheckedCreateWithoutPremedicationRowsInput = {
   cormackLehane?: $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: number | null
   oralTubeSize?: number | null
@@ -3126,6 +3156,7 @@ export type IntraoperativeRecordUpdateWithoutPremedicationRowsInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -3204,6 +3235,7 @@ export type IntraoperativeRecordUncheckedUpdateWithoutPremedicationRowsInput = {
   cormackLehane?: Prisma.NullableEnumCormackLehaneFieldUpdateOperationsInput | $Enums.CormackLehane | null
   airwayDevices?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   airwayDeviceEntries?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  techniqueSides?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   ventilationModes?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   lmaSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   oralTubeSize?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -3330,6 +3362,7 @@ export type IntraoperativeRecordSelect<ExtArgs extends runtime.Types.Extensions.
   cormackLehane?: boolean
   airwayDevices?: boolean
   airwayDeviceEntries?: boolean
+  techniqueSides?: boolean
   ventilationModes?: boolean
   lmaSize?: boolean
   oralTubeSize?: boolean
@@ -3410,6 +3443,7 @@ export type IntraoperativeRecordSelectCreateManyAndReturn<ExtArgs extends runtim
   cormackLehane?: boolean
   airwayDevices?: boolean
   airwayDeviceEntries?: boolean
+  techniqueSides?: boolean
   ventilationModes?: boolean
   lmaSize?: boolean
   oralTubeSize?: boolean
@@ -3486,6 +3520,7 @@ export type IntraoperativeRecordSelectUpdateManyAndReturn<ExtArgs extends runtim
   cormackLehane?: boolean
   airwayDevices?: boolean
   airwayDeviceEntries?: boolean
+  techniqueSides?: boolean
   ventilationModes?: boolean
   lmaSize?: boolean
   oralTubeSize?: boolean
@@ -3562,6 +3597,7 @@ export type IntraoperativeRecordSelectScalar = {
   cormackLehane?: boolean
   airwayDevices?: boolean
   airwayDeviceEntries?: boolean
+  techniqueSides?: boolean
   ventilationModes?: boolean
   lmaSize?: boolean
   oralTubeSize?: boolean
@@ -3610,7 +3646,7 @@ export type IntraoperativeRecordSelectScalar = {
   syncRevision?: boolean
 }
 
-export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "autoEndedAt" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "airwayDeviceEntries" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "infusionsMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
+export type IntraoperativeRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "caseId" | "monthYear" | "durationMinutes" | "startTime" | "endTime" | "startedAt" | "endedAt" | "timezone" | "autoEndedAt" | "positions" | "techniques" | "airwayDevice" | "tubeSize" | "cuffed" | "peepCmH2O" | "ippv" | "jetVentilation" | "fob" | "presentsIntubated" | "airwayNotApplicable" | "airwayTools" | "airwayNotes" | "cormackLehane" | "airwayDevices" | "airwayDeviceEntries" | "techniqueSides" | "ventilationModes" | "lmaSize" | "oralTubeSize" | "oralCuffed" | "nasalTubeSize" | "nasalCuffed" | "dltType" | "dltSide" | "dltSize" | "endobronchialSize" | "volatileAgent" | "ecg" | "urinaryCatheter" | "stomachTube" | "spO2Monitor" | "invasiveBP" | "cvpMonitor" | "neuroMonitor" | "nbpMonitor" | "etco2Monitor" | "tempMonitor" | "paCatheter" | "tee" | "bis" | "entropyMonitor" | "nirsMonitor" | "evokedPotentials" | "tofMonitor" | "vascularAccesses" | "premedicationEvening" | "premedicationMorning" | "drugsAdministered" | "crystalloidsMl" | "colloidsMl" | "bloodMl" | "infusionsMl" | "bloodProductsNote" | "urineMl" | "bloodLossMl" | "timeSeriesData" | "keyEvents" | "labResults" | "complications" | "createdAt" | "updatedAt" | "syncRevision", ExtArgs["result"]["intraoperativeRecord"]>
 export type IntraoperativeRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   case?: boolean | Prisma.CaseDefaultArgs<ExtArgs>
   vascularAccessRows?: boolean | Prisma.IntraoperativeRecord$vascularAccessRowsArgs<ExtArgs>
@@ -3669,6 +3705,11 @@ export type $IntraoperativeRecordPayload<ExtArgs extends runtime.Types.Extension
      * columns stay filled from it so older readers keep working.
      */
     airwayDeviceEntries: runtime.JsonValue
+    /**
+     * The side of a block or unilateral spinal (10.2.0), by technique code: LEFT, RIGHT or BOTH.
+     * Empty on cases saved before; their techniques carry no side.
+     */
+    techniqueSides: runtime.JsonValue
     ventilationModes: runtime.JsonValue
     lmaSize: number | null
     oralTubeSize: number | null
@@ -4185,6 +4226,7 @@ export interface IntraoperativeRecordFieldRefs {
   readonly cormackLehane: Prisma.FieldRef<"IntraoperativeRecord", 'CormackLehane'>
   readonly airwayDevices: Prisma.FieldRef<"IntraoperativeRecord", 'Json'>
   readonly airwayDeviceEntries: Prisma.FieldRef<"IntraoperativeRecord", 'Json'>
+  readonly techniqueSides: Prisma.FieldRef<"IntraoperativeRecord", 'Json'>
   readonly ventilationModes: Prisma.FieldRef<"IntraoperativeRecord", 'Json'>
   readonly lmaSize: Prisma.FieldRef<"IntraoperativeRecord", 'Float'>
   readonly oralTubeSize: Prisma.FieldRef<"IntraoperativeRecord", 'Float'>

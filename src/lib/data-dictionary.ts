@@ -834,6 +834,16 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "4.11.0",
   },
   {
+    name: "techniqueSides",
+    exportName: "procedure_occurrence.modifier_concept_id (SNOMED 7771000 Left, 24028007 Right, 51440002 Right and left) and modifier_source_value (SIDE:LEFT|RIGHT|BOTH)",
+    meaning: "The side of a peripheral block or of a unilateral spinal, on that technique's procedure row; techniques without a side keep modifier 0.",
+    type: "string",
+    allowedValues: "LEFT, RIGHT, BOTH",
+    missingnessRule: "Cases before 10.2.0 have no side; the technique row carries modifier 0",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "techniqueSides",
+    versionIntroduced: "4.11.0",
+  },
+  {
     name: "vascularLineFailed",
     exportName: "observation.observation_source_value (the line source value with :failed)",
     meaning: "A vascular line that failed during the case, at the time it failed. The insertion row of the line stands.",

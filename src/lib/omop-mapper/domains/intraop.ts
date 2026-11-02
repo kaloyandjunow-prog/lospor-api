@@ -4,7 +4,7 @@ import { intraopFluidConcept } from "@lospor/core/catalog"
 import { premedicationDate, premedicationPhaseOf } from "@lospor/core/premedication"
 import {
   AIRWAY_ACTS, AIRWAY_ACT_CONCEPTS, AIRWAY_DEVICE_CONCEPTS, AIRWAY_TOOL_CONCEPTS,
-  TECHNIQUE_CONCEPTS, TECHNIQUE_PARENT, VENTILATION_MODE_CONCEPTS, VITAL_CONCEPTS,
+  TECHNIQUE_CONCEPTS, TECHNIQUE_PARENT, TECHNIQUE_SIDE_MODIFIER, VENTILATION_MODE_CONCEPTS, VITAL_CONCEPTS,
   YES_CONCEPT_ID, NO_CONCEPT_ID, techniqueConceptFor, vascularAccessConceptFor,
   doseUnitOf,
 } from "../concepts"
@@ -13,6 +13,7 @@ import { nextId } from "../ids"
 import { formatCanonicalConcentration } from "@/lib/case-event-schema"
 import { TCI_MODELS, tciPatientFrom, tciTotal, type TciModel, type TciSite } from "@lospor/core/tci"
 import { airwayDeviceEntriesOf } from "@lospor/core/airway-device-entries"
+import { parseTechniqueSides } from "@lospor/core/technique-smart"
 
 /** The suggestion an event was made from (10.2.0), read from its stored entry. */
 const suggestionOf = (event: { metadataJson?: unknown }): string | null => {
@@ -301,6 +302,7 @@ export function mapIntraopToOmop(
   }
 
   const techs: string[] = Array.isArray(ia.techniques) ? ia.techniques as string[] : []
+  const techniqueSides = parseTechniqueSides(ia.techniqueSides)
   // "Block done" names no specific block, so it can only refine a
   // technique row unambiguously when exactly one peripheral block is on
   // the list -- two simultaneous blocks (e.g. bilateral) leave it unclear
@@ -322,8 +324,9 @@ export function mapIntraopToOmop(
       procedure_date:            preciseTs ? isoDate(preciseTs) : ctx.startDate,
       procedure_datetime:        isoInstant(preciseTs),
       procedure_type_concept_id: 32817,
-      modifier_concept_id:       0,
-      modifier_source_value:     null,
+      // The side, where the technique has one (10.2.0); 0 for every other technique and for older cases.
+      modifier_concept_id:       techniqueSides[tech] ? TECHNIQUE_SIDE_MODIFIER[techniqueSides[tech]!]!.concept_id : 0,
+      modifier_source_value:     techniqueSides[tech] ? `SIDE:${techniqueSides[tech]}` : null,
       procedure_source_value:    `ANAESTHESIA_TECHNIQUE:${tech}`,
       visit_occurrence_id:       ctx.visitId,
     })

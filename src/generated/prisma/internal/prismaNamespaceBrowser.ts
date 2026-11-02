@@ -1200,6 +1200,7 @@ export const IntraoperativeRecordScalarFieldEnum = {
   cormackLehane: 'cormackLehane',
   airwayDevices: 'airwayDevices',
   airwayDeviceEntries: 'airwayDeviceEntries',
+  techniqueSides: 'techniqueSides',
   ventilationModes: 'ventilationModes',
   lmaSize: 'lmaSize',
   oralTubeSize: 'oralTubeSize',
