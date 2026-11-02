@@ -225,6 +225,9 @@ describe("/api/user preferences", () => {
     expect((await patch({ monitoringScreen: "legacy" })).status).toBe(200)
     expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ monitoringScreen: "legacy" }) } }))
     expect((await patch({ monitoringScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ equipmentScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ equipmentScreen: "legacy" }) } }))
+    expect((await patch({ equipmentScreen: "fancy" })).status).toBe(400)
     expect((await patch({ automationGroups: { timers: "off" } })).status).toBe(400)
   })
 
