@@ -202,6 +202,23 @@ describe("/api/user preferences", () => {
     expect((await patch({ labs: true })).status).toBe(400)
   })
 
+  it("stores the suggestion groups a clinician turned off and the energy knob look (10.2.0)", async () => {
+    findUniqueMock.mockResolvedValue({ firstName: "Ana", lastName: "User", title: "Dr", preferences: {} })
+    updateMock.mockResolvedValue({ name: "Dr Ana User", firstName: "Ana", lastName: "User", title: "Dr", institution: null, preferences: {} })
+    const { PATCH } = await import("@/app/v1/user/route")
+    const patch = (preferences: unknown) => PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect((await patch({ automationGroups: { timers: false, reminders: true }, energyKnobSkin: "B" })).status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: { preferences: expect.objectContaining({ automationGroups: { timers: false }, energyKnobSkin: "B" }) },
+    }))
+    expect((await patch({ energyKnobSkin: "Z" })).status).toBe(400)
+    expect((await patch({ automationGroups: { timers: "off" } })).status).toBe(400)
+  })
+
   it("rejects invalid preference payloads", async () => {
     const { PATCH } = await import("@/app/v1/user/route")
     const response = await PATCH(new Request("http://localhost/api/user", {

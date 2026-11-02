@@ -85,6 +85,10 @@ const preferencesPatchSchema = z.object({
   autoFillBP: z.boolean().optional(),
   autoFillBackground: z.boolean().optional(),
   autoFillBg: z.boolean().optional(),
+  // 10.2.0: the suggestion groups a clinician has turned off for themselves
+  // (only a group the hospital has on can be), and the energy knob's look.
+  automationGroups: z.record(z.string(), z.boolean()).optional(),
+  energyKnobSkin: z.enum(["A", "B", "C"]).optional(),
 }).passthrough()
 
 /**
