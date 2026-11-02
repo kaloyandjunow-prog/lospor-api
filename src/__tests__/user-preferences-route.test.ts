@@ -216,6 +216,9 @@ describe("/api/user preferences", () => {
       data: { preferences: expect.objectContaining({ automationGroups: { timers: false }, energyKnobSkin: "B" }) },
     }))
     expect((await patch({ energyKnobSkin: "Z" })).status).toBe(400)
+    expect((await patch({ airwayScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ airwayScreen: "legacy" }) } }))
+    expect((await patch({ airwayScreen: "fancy" })).status).toBe(400)
     expect((await patch({ automationGroups: { timers: "off" } })).status).toBe(400)
   })
 

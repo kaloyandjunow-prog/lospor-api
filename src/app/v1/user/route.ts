@@ -89,6 +89,8 @@ const preferencesPatchSchema = z.object({
   // (only a group the hospital has on can be), and the energy knob's look.
   automationGroups: z.record(z.string(), z.boolean()).optional(),
   energyKnobSkin: z.enum(["A", "B", "C"]).optional(),
+  // 10.2.0: Smart selection or the legacy Airway tab.
+  airwayScreen: z.enum(["smart", "legacy"]).optional(),
 }).passthrough()
 
 /**
