@@ -85,10 +85,11 @@ const CURATED_MONITORING: { value: string; conceptId: number; label: string }[] 
   // SNOMED has no single concept naming that exact combination.
   { value: "evokedPotentials", conceptId: 4154582, label: "Evoked potentials monitoring" },
   { value: "tofMonitor", conceptId: 4152647, label: "Neuromuscular blockade monitoring" },
-  // Matches the field's own catalogue label ("Urine output") better than a
-  // generic urinary-catheterization concept would: this flag is about
-  // monitoring output, not the act of placing the catheter.
-  { value: "urinaryCatheter", conceptId: 44813911, label: "Intraoperative fluid balance monitoring" },
+  // The act of placing the catheter (10.2.0). The flag means a urinary catheter is in place, which is what
+  // the Equipment tab ticks and what makes the urine output field appear in Fluid status. The volume itself
+  // is exported on its own as a measurement (LOSPOR:URINE_OUTPUT_ML), so this row no longer stands for
+  // "urine output was monitored". SNOMED 446583004, Procedure domain.
+  { value: "urinaryCatheter", conceptId: 40488365, label: "Insertion of indwelling catheter into urinary bladder" },
   { value: "stomachTube", conceptId: 4227418, label: "Insertion of nasogastric tube" },
 ]
 

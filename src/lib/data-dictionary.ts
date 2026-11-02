@@ -2935,7 +2935,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "monitoring.urinaryCatheter",
     exportName: "observation.value_as_concept_id (LOSPOR:INTRAOP_MONITORING)",
-    meaning: "Urine output was used for this case. Coded as 44813911. The row lands in OBSERVATION because that is the concept's own OMOP domain -- monitoring modalities are not all one domain, and a procedure of monitoring, an observation about the patient and a measurement are different claims.",
+    meaning: "A urinary catheter was in place for this case (10.2.0). Coded as 40488365, the insertion of an indwelling catheter into the urinary bladder, so the row lands in PROCEDURE_OCCURRENCE, the concept's own OMOP domain. Cases exported before 10.2.0 carried 44813911 (intraoperative fluid balance monitoring) for the same flag. The urine volume is a separate measurement (LOSPOR:URINE_OUTPUT_ML).",
     type: "boolean",
     missingnessRule: "No row = the modality was not selected. Absence is not evidence it was unused: only a positive selection is recorded, so this cannot distinguish a case that did not use it from one where nobody ticked it",
     sourceTable: "IntraoperativeRecord", sourceColumn: "urinaryCatheter",
