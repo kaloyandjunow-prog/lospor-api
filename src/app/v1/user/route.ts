@@ -94,6 +94,7 @@ const preferencesPatchSchema = z.object({
   vascularScreen: z.enum(["smart", "legacy"]).optional(),
   monitoringScreen: z.enum(["smart", "legacy"]).optional(),
   equipmentScreen: z.enum(["smart", "legacy"]).optional(),
+  techniqueScreen: z.enum(["smart", "legacy"]).optional(),
 }).passthrough()
 
 /**
