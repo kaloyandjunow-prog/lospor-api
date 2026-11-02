@@ -139,4 +139,11 @@ describe("case vitals scan route", () => {
   it("discards a BIS outside 0 to 100", async () => {
     expect((await scan({ bis: 146 })).bis).toBeNull()
   })
+
+  it("keeps the arterial line apart from the cuff and checks each pressure", async () => {
+    const result = await scan({ systolic: 118, diastolic: 72, nibpMap: 87, ibpSystolic: 124, ibpDiastolic: 68, ibpMap: 86 })
+    expect(result).toMatchObject({ systolic: 118, diastolic: 72, nibpMap: 87, ibpSystolic: 124, ibpDiastolic: 68, ibpMap: 86 })
+    const odd = await scan({ ibpSystolic: 900, ibpDiastolic: "not visible", ibpMap: 5, nibpMap: null })
+    expect(odd).toMatchObject({ ibpSystolic: null, ibpDiastolic: null, ibpMap: null, nibpMap: null })
+  })
 })

@@ -402,6 +402,10 @@ export type CaseRow = {
     bis?: number | null
     tofRatio?: number | null
     cvp?: number | null
+    ibpSystolic?: number | null
+    ibpDiastolic?: number | null
+    ibpMap?: number | null
+    nibpMap?: number | null
     atcCode: string | null
     drugId: string | null
     standardConceptId?: number | null

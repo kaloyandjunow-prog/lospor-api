@@ -496,6 +496,14 @@ export const VITAL_CONCEPTS: Record<string, { concept_id: number; code: string; 
   // Always mmHg. The clinician may enter cmH2O; the conversion happens at entry
   // so the exported figure never depends on a display preference.
   cvp:         { concept_id: 21490675, code: "60985-9", unit: "mmHg", unitConceptId: 8876 },
+  // The arterial line and the cuff's mean (10.2.0). systolic and diastolic above stay the cuff and keep
+  // their generic concepts, so cases exported before this release read the same. Standard LOINC concepts,
+  // checked against the OMOP vocabulary: invasive systolic 76215-3, invasive diastolic 76213-8, invasive
+  // mean 76214-6, and mean pressure by noninvasive 76536-2.
+  ibpSystolic:  { concept_id: 21490853, code: "76215-3", unit: "mmHg", unitConceptId: 8876 },
+  ibpDiastolic: { concept_id: 21490851, code: "76213-8", unit: "mmHg", unitConceptId: 8876 },
+  ibpMap:       { concept_id: 21490852, code: "76214-6", unit: "mmHg", unitConceptId: 8876 },
+  nibpMap:      { concept_id: 21492241, code: "76536-2", unit: "mmHg", unitConceptId: 8876 },
   // Height and weight are required before a case can reach the intraoperative
   // form, so every case has them — and until they were added here the export
   // silently dropped both, while the data dictionary documented them. Weight in

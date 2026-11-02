@@ -438,6 +438,10 @@ export function mapIntraopToOmop(
         ["bis", ev.bis, null],
         ["tofRatio", ev.tofRatio, null],
         ["cvp", ev.cvp, null],
+        ["ibpSystolic", ev.ibpSystolic, null],
+        ["ibpDiastolic", ev.ibpDiastolic, null],
+        ["ibpMap", ev.ibpMap, null],
+        ["nibpMap", ev.nibpMap, null],
       ]
       for (const [key, val, loincOverride] of eventVitals) {
         if (val == null) continue

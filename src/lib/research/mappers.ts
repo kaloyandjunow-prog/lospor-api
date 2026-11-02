@@ -233,6 +233,8 @@ export const RESEARCH_DETAIL_SELECT = {
       timestamp: true,
       unit: true,
       systolic: true,
+      ibpSystolic: true,
+      ibpDiastolic: true,
       diastolic: true,
       heartRate: true,
       spO2: true,
@@ -338,6 +340,9 @@ function eventLabel(event: ResearchDetailRow["events"][number]): {
     const values = [
       event.systolic != null && event.diastolic != null
         ? `BP ${event.systolic}/${event.diastolic}`
+        : null,
+      event.ibpSystolic != null && event.ibpDiastolic != null
+        ? `IBP ${event.ibpSystolic}/${event.ibpDiastolic}`
         : null,
       event.heartRate != null ? `HR ${event.heartRate}` : null,
       event.spO2 != null ? `SpO2 ${event.spO2}%` : null,
