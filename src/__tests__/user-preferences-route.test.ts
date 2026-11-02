@@ -219,6 +219,9 @@ describe("/api/user preferences", () => {
     expect((await patch({ airwayScreen: "legacy" })).status).toBe(200)
     expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ airwayScreen: "legacy" }) } }))
     expect((await patch({ airwayScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ vascularScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ vascularScreen: "legacy" }) } }))
+    expect((await patch({ vascularScreen: "fancy" })).status).toBe(400)
     expect((await patch({ automationGroups: { timers: "off" } })).status).toBe(400)
   })
 

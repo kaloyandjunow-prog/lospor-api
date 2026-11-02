@@ -91,6 +91,7 @@ const preferencesPatchSchema = z.object({
   energyKnobSkin: z.enum(["A", "B", "C"]).optional(),
   // 10.2.0: Smart selection or the legacy Airway tab.
   airwayScreen: z.enum(["smart", "legacy"]).optional(),
+  vascularScreen: z.enum(["smart", "legacy"]).optional(),
 }).passthrough()
 
 /**
