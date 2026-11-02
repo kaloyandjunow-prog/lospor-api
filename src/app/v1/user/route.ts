@@ -95,6 +95,7 @@ const preferencesPatchSchema = z.object({
   monitoringScreen: z.enum(["smart", "legacy"]).optional(),
   equipmentScreen: z.enum(["smart", "legacy"]).optional(),
   techniqueScreen: z.enum(["smart", "legacy"]).optional(),
+  eventsScreen: z.enum(["smart", "legacy"]).optional(),
 }).passthrough()
 
 /**
