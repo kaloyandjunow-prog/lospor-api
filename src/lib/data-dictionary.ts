@@ -44,6 +44,12 @@
 // whatever unit was typed: the entry unit is a per-user display preference and
 // a column following it could not be pooled.
 //
+// 4.11.0 (10.2.0) adds suggestion_source_value to the six clinical tables (the
+// rule an entry was made from, null for one charted by hand), the DEATH table
+// for a death in theatre, the resuscitation and front-of-neck events, jet
+// ventilation with its pressure and rate, each airway device as its own row
+// with its state, and a failed vascular line as its own observation.
+//
 // 4.10.0 adds the intraoperative shock (a procedure with its energy beside
 // it) and gives a complication charted on the timeline its exact date: the
 // timed complications of 10.1.0 reach the same rows the old text items did,
@@ -80,7 +86,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.10.0"
+export const DICTIONARY_VERSION = "4.11.0"
 
 export interface DictionaryEntry {
   name: string
@@ -780,6 +786,61 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "Blank = a complication charted as a moment on the timeline, or one from the old line of text; never an episode still open, since an open episode is closed at the case end before finalisation",
     sourceTable: "CaseComplication", sourceColumn: "endTimestamp",
     versionIntroduced: "4.10.0",
+  },
+  {
+    name: "fromSuggestion",
+    exportName: "drug_exposure.suggestion_source_value (the same column on condition_occurrence, measurement, procedure_occurrence, device_exposure and observation)",
+    meaning: "The intraoperative suggestion an entry was made from: a treatment card row (card:Hypotension:ephedrine), a reverse question (reverse:lipid), a reading, lab or reminder question. Non-empty means the entry came from a suggestion the clinician accepted.",
+    type: "string",
+    missingnessRule: "Blank = charted by hand, or a row that does not come from an intraoperative entry",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "deathInTheatre",
+    exportName: "observation.observation_concept_id (4306655 Death, at the Death event; and one row in DEATH: death_date, death_datetime)",
+    meaning: "A death charted in theatre, at the first Death event. The cause is not recorded (cause_concept_id 0).",
+    type: "datetime",
+    missingnessRule: "No row = no death charted in theatre; deaths after the case are outside this register",
+    sourceTable: "CaseEvent", sourceColumn: "timestamp",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "resuscitationEvents",
+    exportName: "procedure_occurrence.procedure_concept_id (CPR started 4232320, Reintubation 4013354, Cricothyrotomy 37206251, Needle cricothyrotomy 37205949, Active cooling started 4086433, Charcoal filters fitted 0); condition_occurrence 44791216 (ROSC); observation 0 (ROSB)",
+    meaning: "Each resuscitation, airway rescue and malignant hyperthermia action charted, one row per occurrence at its own time.",
+    type: "datetime",
+    missingnessRule: "No row = not charted",
+    sourceTable: "CaseEvent", sourceColumn: "timestamp",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "jetVentilationSettings",
+    exportName: "measurement.value_as_number (driving pressure in bar 9464 and rate per minute 8541, concept 0; the procedure 4168475 Jet ventilation at each start)",
+    meaning: "Jet ventilation: the procedure at each start, and the driving pressure and rate at the start and every change. No standard concept names either setting.",
+    type: "float",
+    allowedValues: "pressure 0-6 bar; rate 1-600 /min",
+    missingnessRule: "No row = no jet ventilation charted",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "airwayDeviceEntries",
+    exportName: "device_exposure.device_source_value (AIRWAY_DEVICE:<code>[:failed|:replaced])",
+    meaning: "Each airway device its own row from 10.2.0, with the time it went in and came out; a device that failed or was replaced is marked in the source value, so a reintubation counts two tubes.",
+    type: "string",
+    missingnessRule: "Cases before 10.2.0 have one row per kind of device, with no state",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "airwayDeviceEntries",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "vascularLineFailed",
+    exportName: "observation.observation_source_value (the line source value with :failed)",
+    meaning: "A vascular line that failed during the case, at the time it failed. The insertion row of the line stands.",
+    type: "boolean",
+    missingnessRule: "No row = the line did not fail, or the case predates 10.2.0",
+    sourceTable: "VascularAccess", sourceColumn: "failed / failedAt",
+    versionIntroduced: "4.11.0",
   },
   {
     name: "preopPremedicationOrders",
