@@ -25,6 +25,7 @@
     "test:watch": "vitest",
     "test:pg": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/intraop-automation-postgres.test.ts",
     "test:pg:intraop-automation": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/intraop-automation-postgres.test.ts",
+    "test:pg:case-events": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/case-event-routes-postgres.test.ts",
     "test:pg:governance": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/research-governance-postgres.test.ts",
     "test:pg:bundled-baselines": "cross-env LOSPOR_POSTGRES_INTEGRATION=true LOSPOR_BUNDLED_BASELINE_POSTGRES=true vitest run src/__tests__/bundled-baseline-provisioner-postgres.test.ts",
     "test:pg:username-identity": "cross-env LOSPOR_POSTGRES_INTEGRATION=true LOSPOR_USERNAME_IDENTITY_POSTGRES=true vitest run src/__tests__/deployment-username-identity-postgres.test.ts",

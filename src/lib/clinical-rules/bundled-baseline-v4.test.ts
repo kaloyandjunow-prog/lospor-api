@@ -25,7 +25,7 @@ describe("LOSPOR 10.2.0 v4 baselines", () => {
     expect(LOSPOR_BUNDLED_BASELINE_V4_RELEASE).toMatchObject({ releaseVersion: "10.2.0", technicalPrincipal: { id: "lospor-release:10.2.0", kind: "RELEASE" } })
   })
 
-  it("records the exact change from v3: the doses the intraoperative suggestions rely on", () => {
+  it("records the exact change from v3: the doses SPS relies on", () => {
     const [adult, pediatric] = v4
     expect(adult.exactDiff).toMatchObject({ baselinePresetId: "lospor-adults-v3", baselinePresetVersion: 3, removed: [] })
     expect(adult.exactDiff.added.map(item => item.ruleKey)).toEqual(["ADULT_FLUID_PROFILE:GLUCOSE"])

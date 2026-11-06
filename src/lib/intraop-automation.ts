@@ -34,6 +34,19 @@ import {
 
 type Db = PrismaClient | Prisma.TransactionClient
 
+/** Analytics reads span several queries (case bands plus events, or cases plus
+ * their clinical events). A repeatable-read snapshot keeps a completion or
+ * event write that lands between those queries from producing a mixed answer.
+ * The small in-memory stores used by unit tests do not expose `$transaction`,
+ * so they retain their direct-query behaviour. */
+async function repeatableRead<T>(db: Db, work: (snapshot: Db) => Promise<T>): Promise<T> {
+  const client = db as PrismaClient
+  if (typeof client.$transaction !== "function") return work(db)
+  return client.$transaction(snapshot => work(snapshot), {
+    isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+  })
+}
+
 const POLICY_ID = "local"
 
 /** Case, policy and event writes call this so automation responses never hold stale derived data. */
@@ -191,10 +204,12 @@ export async function vitalStats(db: Db, scope: Prisma.CaseWhereInput, now = Dat
   const key = JSON.stringify(scope)
   const cached = statsCache.get(key)
   if (cached && now - cached.at < STATS_TTL_MS) return cached.stats
-  const bands = await caseBands(db, scope)
-  const counts: BandCounts = new Map()
-  countRows(counts, bands, await readingRows(db, [...bands.keys()], false))
-  const stats = toTable(counts)
+  const stats = await repeatableRead(db, async snapshot => {
+    const bands = await caseBands(snapshot, scope)
+    const counts: BandCounts = new Map()
+    countRows(counts, bands, await readingRows(snapshot, [...bands.keys()], false))
+    return toTable(counts)
+  })
   statsCache.set(key, { at: now, stats })
   return stats
 }
@@ -210,22 +225,24 @@ export async function vitalStatsHistory(
   months = 24,
   now = new Date(),
 ): Promise<{ month: string; stats: VitalStatsTable }[]> {
-  const bands = await caseBands(db, scope)
-  const rows = await readingRows(db, [...bands.keys()], true)
-  const monthKey = (date: Date) => date.toISOString().slice(0, 7)
-  const firstMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1))
-  const counts: BandCounts = new Map()
-  const before = (row: { month: Date | null }) => row.month != null && row.month < firstMonth
-  countRows(counts, bands, { bp: rows.bp.filter(before), hr: rows.hr.filter(before) })
-  const history: { month: string; stats: VitalStatsTable }[] = []
-  for (let index = 0; index < months; index += 1) {
-    const month = new Date(Date.UTC(firstMonth.getUTCFullYear(), firstMonth.getUTCMonth() + index, 1))
-    const key = monthKey(month)
-    const inMonth = (row: { month: Date | null }) => row.month != null && monthKey(row.month) === key
-    countRows(counts, bands, { bp: rows.bp.filter(inMonth), hr: rows.hr.filter(inMonth) })
-    history.push({ month: key, stats: toTable(counts) })
-  }
-  return history
+  return repeatableRead(db, async snapshot => {
+    const bands = await caseBands(snapshot, scope)
+    const rows = await readingRows(snapshot, [...bands.keys()], true)
+    const monthKey = (date: Date) => date.toISOString().slice(0, 7)
+    const firstMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1))
+    const counts: BandCounts = new Map()
+    const before = (row: { month: Date | null }) => row.month != null && row.month < firstMonth
+    countRows(counts, bands, { bp: rows.bp.filter(before), hr: rows.hr.filter(before) })
+    const history: { month: string; stats: VitalStatsTable }[] = []
+    for (let index = 0; index < months; index += 1) {
+      const month = new Date(Date.UTC(firstMonth.getUTCFullYear(), firstMonth.getUTCMonth() + index, 1))
+      const key = monthKey(month)
+      const inMonth = (row: { month: Date | null }) => row.month != null && monthKey(row.month) === key
+      countRows(counts, bands, { bp: rows.bp.filter(inMonth), hr: rows.hr.filter(inMonth) })
+      history.push({ month: key, stats: toTable(counts) })
+    }
+    return history
+  })
 }
 
 /**
@@ -241,36 +258,44 @@ export async function learnedSuccession(db: Db, scope: Prisma.CaseWhereInput, no
   const key = JSON.stringify(scope)
   const cached = successionCache.get(key)
   if (cached && now - cached.at < STATS_TTL_MS) return cached.links
-  const cases = await db.case.findMany({
+  const links = await repeatableRead(db, async snapshot => {
+    const cases = await snapshot.case.findMany({
     where: { AND: [scope, { status: "COMPLETE" }, { intraop: { startedAt: { not: null } } }] },
     select: { id: true, clinicalMode: true, intraop: { select: { techniques: true, airwayDeviceEntries: true, vascularAccesses: true } } },
     orderBy: { createdAt: "desc" },
     take: SUCCESSION_CASES_MAX,
-  })
-  const byCase = new Map<string, SuccessionCase>()
-  for (const item of cases) {
-    const techniques = Array.isArray(item.intraop?.techniques) ? (item.intraop!.techniques as unknown[]).filter((value): value is string => typeof value === "string") : []
-    byCase.set(item.id, {
-      context: successionContext(techniques, item.clinicalMode === "PEDIATRIC"),
-      events: [],
-      structured: {
-        airway: Array.isArray(item.intraop?.airwayDeviceEntries) ? item.intraop!.airwayDeviceEntries as SuccessionStructuredRecords["airway"] : [],
-        vascular: Array.isArray(item.intraop?.vascularAccesses) ? item.intraop!.vascularAccesses as SuccessionStructuredRecords["vascular"] : [],
-      },
     })
-  }
-  const ids = [...byCase.keys()]
-  const events = [...SEQUENCE_EVENTS]
-  for (let offset = 0; offset < ids.length; offset += SUCCESSION_BATCH) {
-    const rows = await db.caseEvent.findMany({
-      where: { caseId: { in: ids.slice(offset, offset + SUCCESSION_BATCH) }, status: "active", type: "clinical_event", label: { in: events } },
-      select: { caseId: true, label: true, timestamp: true },
-    })
-    for (const row of rows) {
-      if (row.label) (byCase.get(row.caseId)!.events as Array<{ label: string; ts: string }>).push({ label: row.label, ts: row.timestamp.toISOString() })
+    const byCase = new Map<string, SuccessionCase>()
+    for (const item of cases) {
+      const techniques = Array.isArray(item.intraop?.techniques) ? (item.intraop!.techniques as unknown[]).filter((value): value is string => typeof value === "string") : []
+      byCase.set(item.id, {
+        context: successionContext(techniques, item.clinicalMode === "PEDIATRIC"),
+        events: [],
+        structured: {
+          airway: Array.isArray(item.intraop?.airwayDeviceEntries) ? item.intraop!.airwayDeviceEntries as SuccessionStructuredRecords["airway"] : [],
+          vascular: Array.isArray(item.intraop?.vascularAccesses) ? item.intraop!.vascularAccesses as SuccessionStructuredRecords["vascular"] : [],
+        },
+      })
     }
-  }
-  const links = buildSuccessionStats([...byCase.values()])
+    const ids = [...byCase.keys()]
+    const events = [...SEQUENCE_EVENTS]
+    for (let offset = 0; offset < ids.length; offset += SUCCESSION_BATCH) {
+      const rows = await snapshot.caseEvent.findMany({
+        where: { caseId: { in: ids.slice(offset, offset + SUCCESSION_BATCH) }, status: "active", type: "clinical_event", label: { in: events } },
+        select: { caseId: true, logicalId: true, label: true, timestamp: true, metadataJson: true },
+      })
+      for (const row of rows) {
+        if (row.label) {
+          const metadata = row.metadataJson && typeof row.metadataJson === "object" && !Array.isArray(row.metadataJson)
+            ? row.metadataJson as Record<string, unknown>
+            : null
+          const id = typeof metadata?.id === "string" && metadata.id ? metadata.id : row.logicalId
+          ;(byCase.get(row.caseId)!.events as Array<{ label: string; ts: string; id?: string }>).push({ label: row.label, ts: row.timestamp.toISOString(), id })
+        }
+      }
+    }
+    return buildSuccessionStats([...byCase.values()])
+  })
   successionCache.set(key, { at: now, links })
   return links
 }
@@ -320,31 +345,33 @@ export async function suggestionAcceptance(
   const cached = acceptanceCache.get(cacheKey)
   if (cached && now - cached.at < STATS_TTL_MS) return cached.value
   const since = new Date(now - days * 86_400_000)
-  const cases = await db.case.findMany({
-    where: { AND: [scope, { status: "COMPLETE" }, { intraop: { startedAt: { gte: since } } }] },
-    select: { id: true },
-    orderBy: { createdAt: "desc" },
-    take: ACCEPTANCE_CASES_MAX,
-  })
-  const byId: SuggestionCounts = {}
-  for (let from = 0; from < cases.length; from += ACCEPTANCE_BATCH) {
-    const ids = cases.slice(from, from + ACCEPTANCE_BATCH).map(item => item.id)
-    const rows = await db.caseEvent.findMany({
-      where: { caseId: { in: ids }, status: "active" },
-      select: { caseId: true, logicalId: true, version: true, metadataJson: true },
+  const value = await repeatableRead(db, async snapshot => {
+    const cases = await snapshot.case.findMany({
+      where: { AND: [scope, { status: "COMPLETE" }, { intraop: { startedAt: { gte: since } } }] },
+      select: { id: true },
+      orderBy: { createdAt: "desc" },
+      take: ACCEPTANCE_CASES_MAX,
     })
-    const latest = new Map<string, Map<string, { version: number; event: LogEvent }>>()
-    for (const row of rows) {
-      const events = latest.get(row.caseId) ?? new Map()
-      latest.set(row.caseId, events)
-      const current = events.get(row.logicalId)
-      if (!current || row.version > current.version) events.set(row.logicalId, { version: row.version, event: row.metadataJson as LogEvent })
+    const byId: SuggestionCounts = {}
+    for (let from = 0; from < cases.length; from += ACCEPTANCE_BATCH) {
+      const ids = cases.slice(from, from + ACCEPTANCE_BATCH).map(item => item.id)
+      const rows = await snapshot.caseEvent.findMany({
+        where: { caseId: { in: ids }, status: "active" },
+        select: { caseId: true, logicalId: true, version: true, metadataJson: true },
+      })
+      const latest = new Map<string, Map<string, { version: number; event: LogEvent }>>()
+      for (const row of rows) {
+        const events = latest.get(row.caseId) ?? new Map()
+        latest.set(row.caseId, events)
+        const current = events.get(row.logicalId)
+        if (!current || row.version > current.version) events.set(row.logicalId, { version: row.version, event: row.metadataJson as LogEvent })
+      }
+      for (const events of latest.values()) {
+        addOutcomes(byId, suggestionOutcomes([...events.entries()].map(([logicalId, entry]) => ({ ...entry.event, id: entry.event.id ?? logicalId }))))
+      }
     }
-    for (const events of latest.values()) {
-      addOutcomes(byId, suggestionOutcomes([...events.entries()].map(([logicalId, entry]) => ({ ...entry.event, id: entry.event.id ?? logicalId }))))
-    }
-  }
-  const value = { days, cases: cases.length, byId }
+    return { days, cases: cases.length, byId }
+  })
   acceptanceCache.set(cacheKey, { at: now, value })
   return value
 }

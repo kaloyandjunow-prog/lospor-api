@@ -1122,14 +1122,6 @@ export type EnumClinicalModeFieldUpdateOperationsInput = {
   set?: $Enums.ClinicalMode
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type CaseCreateNestedManyWithoutOperatingTheatreInput = {
   create?: Prisma.XOR<Prisma.CaseCreateWithoutOperatingTheatreInput, Prisma.CaseUncheckedCreateWithoutOperatingTheatreInput> | Prisma.CaseCreateWithoutOperatingTheatreInput[] | Prisma.CaseUncheckedCreateWithoutOperatingTheatreInput[]
   connectOrCreate?: Prisma.CaseCreateOrConnectWithoutOperatingTheatreInput | Prisma.CaseCreateOrConnectWithoutOperatingTheatreInput[]

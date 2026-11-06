@@ -313,6 +313,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         intraop: existingIntraop,
         postop: existingPostop,
       }
+      // Derived fluid totals are calculated from the event log. A timer can
+      // still send an old form snapshot containing only those fields; it is a
+      // true no-op and must not participate in revision conflicts.
+      const effectiveIntraopForConflict = intraop
+        ? { caseDay: existingIntraop?.createdAt ?? caseRecord.createdAt, ...intraop } as Record<string, unknown>
+        : null
+      const intraopHasMappedFields = effectiveIntraopForConflict != null
+        && Object.keys(mapIntraopUpdate(effectiveIntraopForConflict)).length > 0
+      const intraopTouched = intraop != null && (!existingIntraop || intraopHasMappedFields)
       const differentUser = existing.userId !== userId
       const requestedMode = clinicalMode ?? caseRecord.clinicalMode
       const enforceAgeDecision = clinicalMode !== undefined || (
@@ -357,7 +366,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             serverVersionForResponse: () => existing.postop,
           },
           intraop: {
-            client: { touched: !!intraop, base: intraopBase, revision: intraopRevision },
+            client: { touched: intraopTouched, base: intraopBase, revision: intraopRevision },
             server: existing.intraop,
             // Only the stale-revision reply carries the revision; the other two
             // guards deliberately send the timestamp alone.
@@ -435,7 +444,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         })
       }
     }
-    if (intraop) {
+    if (intraop && intraopTouched) {
       // The day this case belongs to, so a bare "HH:MM" plus the client's zone
       // can be resolved to a real instant. Taken from the record rather than
       // "now" — editing a case the morning after must not redate it.
@@ -443,6 +452,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         caseDay: existing.intraop?.createdAt ?? existing.createdAt,
         ...intraop,
       }
+      const mappedIntraop = mapIntraopUpdate(effectiveIntraop)
       if (existing.intraop) {
         const updated = await tx.intraoperativeRecord.updateMany({
           where: {
@@ -451,7 +461,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               ? { syncRevision: intraopRevision }
               : {}),
           },
-          data: { ...mapIntraopUpdate(effectiveIntraop), syncRevision: { increment: 1 } },
+          data: { ...mappedIntraop, syncRevision: { increment: 1 } },
         })
         if (updated.count === 0) {
           const current = await tx.intraoperativeRecord.findUnique({ where: { caseId: id } })

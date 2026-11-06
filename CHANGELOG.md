@@ -4,6 +4,10 @@
 
 ### Added
 
+- **Account-wide interface preferences:** the existing `User.preferences` JSON
+  contract now stores case layout, timetable layout, and vitals-chart expansion;
+  legacy browser/device keys are imported without replacing sibling settings.
+
 - **Intraoperative contract:** invasive-pressure vitals, technique sides,
   unilateral spinal, urinary-catheter records, airway-device entries, and the
   expanded event and suggestion data are persisted and exported.
@@ -39,6 +43,14 @@
 - **Airway list clearing:** an explicit empty Smart airway list now clears the
   legacy airway-device and size fields as part of the same partial save, so a
   removed device is not reconstructed on the next load.
+
+- **Automation write races:** linked context events are coalesced under the
+  case lock, contradictory inferred techniques or block sides return a typed
+  conflict, and stale additive airway/vascular patches are rebased safely.
+
+- **Replay-safe batches:** an identical automation batch retry is a no-op and
+  does not consume another intraoperative revision; automation statistics read
+  from a repeatable-read snapshot when supported by PostgreSQL.
 
 ## [10.0.2] - 2026-10-29
 

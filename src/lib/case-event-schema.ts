@@ -20,7 +20,7 @@ const answerKind = z.string().min(1).max(120).refine(
     || value === "card"
     || value === "succession"
     || CONTEXT_LINK_AUTOMATION_IDS.has(value)
-    || /^(card-reveal|reverse|reading|lab|reminder|timer):[A-Za-z0-9-]+$/.test(value),
+    || /^(card-reveal|reverse|reading|lab|reminder|timer|monitor):[A-Za-z0-9_-]+$/.test(value),
   "Unknown question",
 )
 
@@ -139,6 +139,10 @@ export const caseEventSchema = z.object({
   // 10.2.0: the suggestion an entry was made from (exported as a flag), a
   // tourniquet's site, and jet ventilation settings.
   suggestion: z.string().min(1).max(240).optional(),
+  // Automation relation and structured-record linkage are optional metadata;
+  // old events remain valid and readable without them.
+  clinicalRelation: z.string().min(1).max(80).optional(),
+  sourceEventId: z.string().min(1).max(200).optional(),
   // Structured airway/vascular writes can travel with their clinical event so
   // the API can apply both under the same case lock. The event id remains the
   // idempotency key for the whole operation.

@@ -15,6 +15,7 @@ import {
   madeAtFrom,
   rebuildProjection,
   reserveIntraopRevision,
+  sameContent,
   timelineIssuesFor,
   type LogEvent,
 } from "@/lib/case-events"
@@ -33,6 +34,7 @@ import { intraopSchema } from "@/lib/schemas/case"
 import { mapIntraop, mapIntraopUpdate } from "../../../_mappers"
 import { invalidateIntraopAutomationCaches } from "@/lib/intraop-automation"
 import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
+import { automationDuplicateClinicalEvent, automationTechniqueConflict, coalesceAutomationClinicalEvent } from "@/lib/automation-conflicts"
 
 const CORS = (req: NextRequest) => corsHeaders(req, "POST, OPTIONS")
 
@@ -74,8 +76,6 @@ class BatchRouteResponse extends Error {
 }
 
 function batchError(error: unknown, caseId: string) {
-  if (error instanceof CaseWriteError) return NextResponse.json({ error: error.message }, { status: error.status })
-  if (isCaseFinalizedDatabaseError(error)) return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
   if (error instanceof CaseWriteError) return NextResponse.json({ error: error.message }, { status: error.status })
   if (isCaseFinalizedDatabaseError(error)) return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
   console.error("[events batch POST]", caseId, error)
@@ -167,16 +167,37 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         },
       })
       const revisionConflictDetected = revision != null && !!existingIntraop && existingIntraop.syncRevision !== revision
-      // A batch is intentionally all-or-nothing. The client retries the same
-      // batch with the returned revision rather than applying only part of it.
-      if (revisionConflictDetected) return conflict(existingIntraop)
 
       const current = await activeCaseLog(tx, id)
+      const eventsToWrite: LogEvent[] = []
+      for (const raw of [...updates, ...adds]) {
+        let candidate = raw as unknown as LogEvent
+        const duplicate = automationDuplicateClinicalEvent([...current, ...eventsToWrite], candidate)
+        if (duplicate) candidate = coalesceAutomationClinicalEvent(duplicate, candidate)
+        if (candidate.intraopPatch && candidate.suggestion?.startsWith("context:")) {
+          const techniqueConflict = automationTechniqueConflict(
+            existingIntraop as unknown as Record<string, unknown> | null,
+            candidate.intraopPatch as Record<string, unknown>,
+          )
+          if (techniqueConflict) {
+            return NextResponse.json({
+              error: "automation_conflict",
+              kind: techniqueConflict.kind,
+              current: techniqueConflict.current,
+              incoming: techniqueConflict.incoming,
+            }, { status: 409 })
+          }
+        }
+        eventsToWrite.push(candidate)
+      }
       const removeIds = new Set<string>()
       for (const eventId of removes) {
         for (const logicalId of cascadeDeleteIds(current, eventId)) removeIds.add(logicalId)
       }
-      const changedIds = new Set([...updates, ...adds].map(event => String(event.id)))
+      const changedIds = new Set([
+        ...[...updates, ...adds].map(event => String(event.id)),
+        ...eventsToWrite.map(event => String(event.id)),
+      ])
       for (const logicalId of [...removeIds, ...changedIds]) {
         if (await laterChangeMade(tx, id, logicalId, madeAt)) return supersededRefusal()
       }
@@ -186,13 +207,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           const eventId = event.id ?? ""
           return !removeIds.has(eventId) && !changedIds.has(eventId)
         }),
-        ...updates as LogEvent[],
-        ...adds as LogEvent[],
+        ...eventsToWrite,
       ]
       const refused = timelineRefusal(timelineIssuesFor(current, next))
       if (refused) return refused
 
-      const revisionReserved = revision != null && !!existingIntraop
+      const activeById = new Map<string, LogEvent>(current
+        .filter(event => typeof event.id === "string")
+        .map(event => [event.id as string, event] as const))
+      const wouldChange = [...removeIds].some(logicalId => activeById.has(logicalId))
+        || eventsToWrite.some(event => {
+          const currentEvent = activeById.get(String(event.id))
+          return currentEvent == null || !sameContent(currentEvent as unknown as Record<string, unknown>, event as unknown as Record<string, unknown>)
+        })
+      // A retry of a batch that was already committed is a no-op even if the
+      // caller still holds the older revision. A stale revision must still
+      // block a genuinely new batch, preserving the all-or-nothing contract.
+      if (revisionConflictDetected && wouldChange) return conflict(existingIntraop)
+      const revisionReserved = wouldChange && revision != null && !!existingIntraop
       if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
         const fresh = await tx.intraoperativeRecord.findUnique({
           where: { caseId: id },
@@ -202,15 +234,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
 
       let changed = false
-      for (const logicalId of removeIds) {
+      if (wouldChange) for (const logicalId of removeIds) {
         if (await deleteEvent(tx, id, logicalId, madeAt)) changed = true
       }
-      for (const event of [...updates, ...adds]) {
-        const clinicalEvent = event as unknown as LogEvent
+      if (wouldChange) for (const clinicalEvent of eventsToWrite) {
         const eventChanged = await addEvent(tx, id, user.id, clinicalEvent, source, madeAt)
         if (!eventChanged) continue
         changed = true
-        const patch = event.intraopPatch
+        const patch = clinicalEvent.intraopPatch
         if (patch && typeof patch === "object" && Object.keys(patch).length > 0) {
           const record = await tx.intraoperativeRecord.findUnique({
             where: { caseId: id },

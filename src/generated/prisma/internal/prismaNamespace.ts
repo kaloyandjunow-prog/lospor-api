@@ -6849,6 +6849,7 @@ export const UserScalarFieldEnum = {
   acceptedPrivacyAt: 'acceptedPrivacyAt',
   termsVersion: 'termsVersion',
   preferences: 'preferences',
+  preferencesRevision: 'preferencesRevision',
   lastLoginAt: 'lastLoginAt',
   passwordChangedAt: 'passwordChangedAt',
   mfaTotpSecretCiphertext: 'mfaTotpSecretCiphertext',

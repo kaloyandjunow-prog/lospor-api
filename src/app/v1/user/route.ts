@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
       id: true, email: true, username: true, name: true, firstName: true, lastName: true, title: true,
       role: true, accountKind: true,
       preferences: true,
+      preferencesRevision: true,
       institutionId: true, institution: { select: { id: true, name: true, city: true } },
     },
   })
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
     ...record,
     preferredLocale: preferredLocaleFromPreferences(record.preferences),
     clinicalPreferences: normalizeClinicalPreferences(record.preferences),
+    preferencesRevision: record.preferencesRevision,
   }, { headers: CORS(req) })
 }
 
@@ -58,6 +60,13 @@ const autoFillPatchSchema = z.object({
   enabled: z.boolean().optional(),
   includeBloodPressure: z.boolean().optional(),
   backfillOnReopen: z.boolean().optional(),
+}).strict()
+
+const caseLayoutPatchSchema = z.object({
+  sidebar: z.boolean().optional(),
+  preop: z.enum(["tabs", "scroll"]).optional(),
+  intraop: z.enum(["tabs", "scroll"]).optional(),
+  postop: z.enum(["tabs", "scroll"]).optional(),
 }).strict()
 
 // Which catalogues show Bulgarian names (Settings → UI); display only.
@@ -100,6 +109,10 @@ const preferencesPatchSchema = z.object({
   eventsScreen: z.enum(["smart", "legacy"]).optional(),
   fluidsScreen: z.enum(["smart", "legacy"]).optional(),
   eventLogScreen: z.enum(["smart", "legacy"]).optional(),
+  // Account-wide case shell choices shared by web and mobile.
+  caseLayout: caseLayoutPatchSchema.optional(),
+  timetableLayout: z.enum(["expand", "scroll"]).optional(),
+  vitalsChartExpanded: z.boolean().optional(),
 }).passthrough()
 
 /**
@@ -113,6 +126,9 @@ const preferencesPatchSchema = z.object({
  */
 const patchSchema = z.object({
   preferences: preferencesPatchSchema.optional(),
+  /** Revision returned by GET /api/user. Required by clients that want a
+   * stale full-preferences write rejected instead of merged over newer data. */
+  preferencesRevision: z.number().int().nonnegative().optional(),
   firstName: z.string().trim().min(1).max(100).optional(),
   lastName: z.string().trim().min(1).max(100).optional(),
   title: z.string().trim().max(100).optional(),
@@ -127,22 +143,37 @@ function asPreferenceObject(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 
+const isPrismaRecordNotFound = (value: unknown): boolean =>
+  value != null && typeof value === "object" && "code" in value && value.code === "P2025"
+
 export async function PATCH(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const userId = user.id
+  let body: z.infer<typeof patchSchema> | null = null
 
   try {
-    const body = patchSchema.parse(await req.json())
+    body = patchSchema.parse(await req.json())
     const identityChanged = body.firstName !== undefined
       || body.lastName !== undefined
       || body.title !== undefined
     const existing = (body.preferences || identityChanged) ? await prisma.user.findUnique({
       where: { id: userId },
-      select: { preferences: true, firstName: true, lastName: true, title: true },
+      select: { preferences: true, preferencesRevision: true, firstName: true, lastName: true, title: true },
     }) : null
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404, headers: CORS(req) })
     const currentPreferences = asPreferenceObject(existing?.preferences)
+    const currentPreferencesRevision = Number.isInteger(existing.preferencesRevision) ? existing.preferencesRevision : 0
+    if (body.preferences !== undefined
+      && body.preferencesRevision !== undefined
+      && body.preferencesRevision !== currentPreferencesRevision) {
+      return NextResponse.json({
+        error: "Preferences changed on another device",
+        code: "PREFERENCES_CONFLICT",
+        preferences: existing.preferences,
+        preferencesRevision: currentPreferencesRevision,
+      }, { status: 409, headers: CORS(req) })
+    }
     let nextPreferences: Record<string, unknown> | undefined = body.preferences
       ? {
           ...currentPreferences,
@@ -167,12 +198,15 @@ export async function PATCH(req: NextRequest) {
     const updated = identityChanged
       ? await prisma.$transaction(async transaction => {
           const record = await transaction.user.update({
-            where: { id: userId },
+            where: { id: userId, ...(nextPreferences ? { preferencesRevision: currentPreferencesRevision } : {}) },
             data: {
               // institutionId, email, and username remain governed separately.
               ...identity,
               name: buildDisplayName(identity),
-              ...(nextPreferences ? { preferences: nextPreferences as Prisma.InputJsonValue } : {}),
+              ...(nextPreferences ? {
+                preferences: nextPreferences as Prisma.InputJsonValue,
+                preferencesRevision: currentPreferencesRevision + 1,
+              } : {}),
             },
             select: {
               firstName: true,
@@ -180,6 +214,7 @@ export async function PATCH(req: NextRequest) {
               title: true,
               name: true,
               preferences: true,
+              preferencesRevision: true,
               institution: { select: { id: true, name: true, city: true } },
             },
           })
@@ -195,9 +230,12 @@ export async function PATCH(req: NextRequest) {
           return record
         })
       : await prisma.user.update({
-          where: { id: userId },
+          where: { id: userId, ...(nextPreferences ? { preferencesRevision: currentPreferencesRevision } : {}) },
           data: {
-            ...(nextPreferences ? { preferences: nextPreferences as Prisma.InputJsonValue } : {}),
+            ...(nextPreferences ? {
+              preferences: nextPreferences as Prisma.InputJsonValue,
+              preferencesRevision: currentPreferencesRevision + 1,
+            } : {}),
           },
           select: {
             firstName: true,
@@ -205,6 +243,7 @@ export async function PATCH(req: NextRequest) {
             title: true,
             name: true,
             preferences: true,
+            preferencesRevision: true,
             institution: { select: { id: true, name: true, city: true } },
           },
         })
@@ -217,10 +256,23 @@ export async function PATCH(req: NextRequest) {
       title: updated.title,
       institution: updated.institution,
       preferences: updated.preferences,
+      preferencesRevision: updated.preferencesRevision,
       preferredLocale: preferredLocaleFromPreferences(updated.preferences),
     }, { headers: CORS(req) })
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: "Invalid request" }, { status: 400, headers: CORS(req) })
+    if (body?.preferences !== undefined && isPrismaRecordNotFound(err)) {
+      const latest = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { preferences: true, preferencesRevision: true },
+      })
+      if (latest) return NextResponse.json({
+        error: "Preferences changed on another device",
+        code: "PREFERENCES_CONFLICT",
+        preferences: latest.preferences,
+        preferencesRevision: latest.preferencesRevision,
+      }, { status: 409, headers: CORS(req) })
+    }
     console.error("[PATCH /api/user]", err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500, headers: CORS(req) })
   }

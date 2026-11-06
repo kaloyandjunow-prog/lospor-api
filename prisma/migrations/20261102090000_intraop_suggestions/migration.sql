@@ -1,4 +1,4 @@
--- 10.2.0 intraoperative suggestions.
+-- 10.2.0 SPS.
 
 -- Death logged in theatre sets the postop destination to Deceased.
 ALTER TYPE "Disposition" ADD VALUE 'DECEASED';

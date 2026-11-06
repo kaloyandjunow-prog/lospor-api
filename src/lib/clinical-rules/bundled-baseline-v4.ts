@@ -13,7 +13,7 @@ import type { BundledBaselineV3Artifact } from "./bundled-baseline-v3"
 
 /**
  * The v4 clinical baselines bundled with LOSPOR 10.2.0: v3 over the current
- * catalogues, with the doses the intraoperative suggestions rely on (see
+ * catalogues, with the doses SPS relies on (see
  * createLosporAdultV4Draft and createLosporPediatricV4Draft in core).
  *
  * A later release than 9.15.0, with its own immutable release principal. It
@@ -71,7 +71,7 @@ export const BUNDLED_BASELINE_V4_EXPECTATIONS: Readonly<Record<"ADULT" | "PEDIAT
     diffSha256: "e3ba913280afebc818ebef567f641fdc71f4d49e610b8d4faf00f097fd11f0e8",
     ruleKeysSha256: "f2c9c09a57c2847d0c37878947b2d06704a4e7265469c184d1f1f60ab0b5e600",
     sourceRefsSha256: "83de574d82ab7652bdc9ca6bd531eb7ee36f62ba4fb2fd7fd333e26e56a466da",
-    descriptorSha256: "f7a35dca1ee9b1ab887a4bca5c0df75ec6c4cbe4234bd26cde553e2fc2a82da6",
+    descriptorSha256: "d8052e90379ba0eb59f4f1d6eed2c0034a452087a13e009778e71aac295ca38b",
   },
 }
 

@@ -63,6 +63,10 @@ model User {
   acceptedPrivacyAt             DateTime?
   termsVersion                  String?
   preferences                   Json                                 @default("{\"ui\":{\"locale\":\"bg\"}}")
+  /// Optimistic concurrency token for account-wide preferences. Every
+  /// successful preference write increments it, so Web and Mobile cannot
+  /// silently overwrite one another's settings.
+  preferencesRevision           Int                                  @default(0)
   lastLoginAt                   DateTime?
   // Token-revocation epoch: any JWT (web session or mobile bearer) whose iat
   // predates this is rejected — set on password reset so old sessions die.

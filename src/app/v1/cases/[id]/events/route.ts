@@ -22,6 +22,7 @@ import { intraopSchema } from "@/lib/schemas/case"
 import { mapIntraop, mapIntraopUpdate } from "../../_mappers"
 import { invalidateIntraopAutomationCaches } from "@/lib/intraop-automation"
 import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
+import { automationDuplicateClinicalEvent, automationTechniqueConflict, coalesceAutomationClinicalEvent } from "@/lib/automation-conflicts"
 const CORS = (req: NextRequest) => corsHeaders(req, "POST, PUT, OPTIONS")
 // PUT stays in CORS only to answer the retired full-log write with 410.
 
@@ -183,6 +184,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return { added: false, intraop: existingIntraop }
       }
 
+      const duplicateContextEvent = automationDuplicateClinicalEvent(current, event as unknown as LogEvent)
+      const eventToWrite = duplicateContextEvent
+        ? coalesceAutomationClinicalEvent(duplicateContextEvent, event as unknown as LogEvent)
+        : event as unknown as LogEvent
+      if (atomicIntraopPatch && event.suggestion?.startsWith("context:")) {
+        const techniqueConflict = automationTechniqueConflict(
+          existingIntraop as unknown as Record<string, unknown> | null,
+          atomicIntraopPatch,
+        )
+        if (techniqueConflict) {
+          return NextResponse.json({
+            error: "automation_conflict",
+            kind: techniqueConflict.kind,
+            current: techniqueConflict.current,
+            incoming: techniqueConflict.incoming,
+          }, { status: 409 })
+        }
+      }
+
       const revisionConflictDetected = revision != null && existing.intraop && existing.intraop.syncRevision !== revision
       if (revisionConflictDetected && !atomicIntraopPatch) {
         return revisionConflict(existing.intraop)
@@ -200,7 +220,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // Checked before the revision is reserved, so a refusal changes nothing.
       // The same timeline rules the apps apply (Core), on the log this write
       // would produce. A refusal is a 400, which the outbox records and drops.
-      const next = [...current.filter(item => item.id !== event.id), event as unknown as LogEvent]
+      const next = [...current.filter(item => item.id !== eventToWrite.id), eventToWrite]
       const refused = timelineRefusal(timelineIssuesFor(current, next))
       if (refused) return refused
 
@@ -213,7 +233,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         throw new EventRouteResponse(revisionConflict(fresh))
       }
 
-      const added = await addEvent(tx, id, user.id, event as unknown as LogEvent, source, madeAt)
+      const added = await addEvent(tx, id, user.id, eventToWrite, source, madeAt)
       if (added && patchToApply && Object.keys(patchToApply).length > 0) {
         const mappedPatch = mapIntraopUpdate(patchToApply)
         if (Object.keys(mappedPatch).length > 0) {
