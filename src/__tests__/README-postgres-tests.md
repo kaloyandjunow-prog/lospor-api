@@ -52,9 +52,11 @@ npm run test:pg:username-identity  # sets LOSPOR_USERNAME_IDENTITY_POSTGRES too
 ```
 
 They read `DATABASE_URL` from `.env` and create their own fixtures, every id
-suffixed with a `randomUUID()`, torn down in `afterAll`. So they are safe to point
-at the shared **dev** database — they cannot collide with another run or with
-seeded data.
+suffixed with a `randomUUID()`, torn down in `afterAll`. The intraoperative
+automation test also snapshots and restores the singleton Status policy rather
+than deleting it. This makes a sequential run safe against seeded data, but a
+shared remote database is still not suitable for concurrent test runs because
+policy writes are intentionally hospital-wide.
 
 ## Two things that will bite you
 

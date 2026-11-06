@@ -77,7 +77,7 @@ export const AIRWAY_TOOL_CONCEPTS: Record<string, number> = {
 
 // ─── What anaesthetic was given ──────────────────────────────────────────────
 //
-// The technique tree is about a hundred nodes deep — GENERAL to GENERAL_TIVA,
+// The technique tree is about a hundred nodes deep — GENERAL to GENERAL_TCI,
 // SPINAL to SPINAL_SINGLE to SPINAL_SINGLE_LUMBAR — and the vocabulary is not
 // that granular in the same shape. So a concept is attached at the level where
 // one honestly exists, and any node below it inherits from its nearest mapped
@@ -102,10 +102,14 @@ export const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // anaesthesia: sedation sits elsewhere, under 4249997, so this does not widen
   // into sedation cases.
   GENERAL:  4174669,
-  // The three children split on what maintained the anaesthetic, which is the
-  // axis research asks about: volatile only, intravenous only, or both.
+  // The four children split on what maintained the anaesthetic, which is the
+  // axis research asks about: volatile only, intravenous only, target-controlled
+  // intravenous, or both.
   GENERAL_INHALATION: 4118897,
   GENERAL_TIVA:       4086418,
+  // Exact SNOMED procedure concept for target-controlled total intravenous
+  // anaesthesia (SNOMED code 448585004).
+  GENERAL_TCI:        40490493,
   // Balanced is stated here rather than left to inherit, so it reads as a
   // decision and not as a node nobody reached.
   //

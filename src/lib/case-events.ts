@@ -161,7 +161,7 @@ function stable(v: unknown): unknown {
   }
   return v
 }
-function sameContent(a: Record<string, unknown> | null | undefined, b: Record<string, unknown> | null | undefined): boolean {
+export function sameContent(a: Record<string, unknown> | null | undefined, b: Record<string, unknown> | null | undefined): boolean {
   const sa: Record<string, unknown> = { ...(a ?? {}) }; const sb: Record<string, unknown> = { ...(b ?? {}) }
   delete sa.syncStatus; delete sb.syncStatus
   return JSON.stringify(stable(sa)) === JSON.stringify(stable(sb))

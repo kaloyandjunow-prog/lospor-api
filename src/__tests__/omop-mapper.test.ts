@@ -658,6 +658,21 @@ describe("a technique's timeline marker refines its procedure row instead of dup
     expect(line!.procedure_date).toBe("2026-06-01")
   })
 
+  it("uses Sedation started to timestamp the selected sedation technique", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["SEDATION_DEEP"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:06:00Z"),
+      label: "Sedation started", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:SEDATION_DEEP/.test(String(row.procedure_source_value)))
+    expect(line, "fixture must contain the sedation technique row").toBeDefined()
+    expect(line!.procedure_concept_id).toBe(4219502)
+    expect(line!.procedure_datetime).toBe("2026-06-01T08:06:00.000Z")
+    expect(bundle.procedure_occurrence.filter(row => /ANAESTHESIA_TECHNIQUE:SEDATION_DEEP/.test(String(row.procedure_source_value)))).toHaveLength(1)
+  })
+
   it("uses Block done's timestamp when exactly one peripheral block is on the technique list", () => {
     const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
     c.intraop.techniques = ["BLOCK_TAP"]
@@ -1983,6 +1998,12 @@ describe("how a general anaesthetic was maintained", () => {
     // outcome.
     expect(techRow("GENERAL_INHALATION")?.procedure_concept_id).toBe(4118897)
     expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4086418)
+  })
+
+  it("codes TCI with its exact standard procedure concept", () => {
+    // TCI is more specific than ordinary TIVA and has its own valid SNOMED
+    // procedure concept: 448585004 -> OMOP 40490493.
+    expect(techRow("GENERAL_TCI")?.procedure_concept_id).toBe(40490493)
   })
 
   it("keeps a balanced anaesthetic at the parent, deliberately", () => {

@@ -40,7 +40,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
   const DIRECT = [
     "positions","techniques",
     "tubeSize","cuffed","peepCmH2O","airwayNotes","cormackLehane",
-    "presentsIntubated","airwayNotApplicable",
+    "presentsIntubated","airwayNotApplicable","equipmentPrepared",
     "lmaSize","oralTubeSize","oralCuffed","nasalTubeSize","nasalCuffed",
     "dltType","dltSide","dltSize","endobronchialSize",
     "volatileAgent",
@@ -73,11 +73,33 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
   // per-kind fields are rewritten from it for every reader that knows only those.
   if (has("airwayDeviceEntries")) {
     r.airwayDeviceEntries = full.airwayDeviceEntries
-    if (parseAirwayDeviceEntries(intraop.airwayDeviceEntries).length > 0) {
-      for (const key of ["airwayDevices", "airwayDevice", "lmaSize", "oralTubeSize", "oralCuffed", "nasalTubeSize", "nasalCuffed", "dltType", "dltSide", "dltSize", "endobronchialSize"] as const) {
-        copyKey(r, full, key)
-      }
+    // The list is authoritative whenever it is present, including an empty
+    // list. An empty list is an explicit clinical action ("no airway devices")
+    // and must clear the legacy per-kind columns as well; otherwise the next
+    // load reconstructs the just-deleted devices from stale legacy fields.
+    for (const key of ["airwayDevices", "airwayDevice", "lmaSize", "oralTubeSize", "oralCuffed", "nasalTubeSize", "nasalCuffed", "dltType", "dltSide", "dltSize", "endobronchialSize"] as const) {
+      copyKey(r, full, key)
     }
+  }
+  // "No airway intervention" is a statement about this team's work, not a
+  // second way of retaining selected devices. Enforce the UI rule at the API
+  // boundary too, because offline clients and older clients can send a stale
+  // combination. A device/tool selection is the inverse signal and clears the
+  // flag even when the client omitted it from a partial patch.
+  const airwayEntries = Array.isArray(full.airwayDeviceEntries) ? full.airwayDeviceEntries : []
+  const airwayDevices = Array.isArray(full.airwayDevices) ? full.airwayDevices : []
+  const airwayTools = Array.isArray(full.airwayTools) ? full.airwayTools : []
+  if (has("airwayNotApplicable") && full.airwayNotApplicable === true) {
+    r.airwayNotApplicable = true
+    r.airwayTools = []
+    r.airwayDevices = []
+    r.airwayDevice = null
+    r.airwayDeviceEntries = [] as unknown as typeof full.airwayDeviceEntries
+    for (const key of ["lmaSize", "oralTubeSize", "oralCuffed", "nasalTubeSize", "nasalCuffed", "dltType", "dltSide", "dltSize", "endobronchialSize"] as const) {
+      copyKey(r, { [key]: null } as typeof full, key)
+    }
+  } else if (airwayEntries.length > 0 || airwayDevices.length > 0 || airwayTools.length > 0) {
+    r.airwayNotApplicable = false
   }
   // 10.2.0: the side of a block or unilateral spinal, by technique code.
   if (has("techniqueSides")) r.techniqueSides = full.techniqueSides
@@ -217,6 +239,9 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     airwayNotApplicable: intraop.airwayNotApplicable ?? false,
     airwayDevices:   Array.isArray(intraop.airwayDevices)    ? intraop.airwayDevices    : [],
     airwayDeviceEntries: airwayEntries as unknown as Prisma.InputJsonValue,
+    equipmentPrepared: (intraop.equipmentPrepared && typeof intraop.equipmentPrepared === "object" && !Array.isArray(intraop.equipmentPrepared)
+      ? intraop.equipmentPrepared
+      : {}) as Prisma.InputJsonValue,
     // Only for techniques that are on the list: a side outlives nothing it belongs to.
     techniqueSides: techniqueSidesFor(
       Array.isArray(intraop.techniques) ? intraop.techniques.filter((value): value is string => typeof value === "string") : [],

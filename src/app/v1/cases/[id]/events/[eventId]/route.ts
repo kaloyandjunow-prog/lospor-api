@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { logAudit } from "@/lib/audit"
-import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent, activeCaseLog, cascadeDeleteIds, laterChangeMade, madeAtFrom, timelineIssuesFor } from "@/lib/case-events"
+import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent, activeCaseLog, cascadeDeleteIds, laterChangeMade, madeAtFrom, timelineIssuesFor, sameContent } from "@/lib/case-events"
 import { supersededRefusal as superseded, timelineRefusal } from "@/lib/timeline-refusal"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
 import { corsHeaders } from "@/lib/cors"
@@ -18,6 +18,10 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
+import { invalidateIntraopAutomationCaches } from "@/lib/intraop-automation"
+import { intraopSchema } from "@/lib/schemas/case"
+import { mapIntraop, mapIntraopUpdate } from "../../../_mappers"
+import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
 const CORS = (req: NextRequest) => corsHeaders(req, "PUT, DELETE, OPTIONS")
 
 // The path id remains authoritative (`{ ...parsed, id: eventId }` below).
@@ -81,7 +85,18 @@ export async function PUT(
         : [],
     }, { status: 400 })
   }
-  const event = { ...parsed, id: eventId }
+  let atomicIntraopPatch: Record<string, unknown> | undefined
+  if (parsed.intraopPatch !== undefined) {
+    const parsedPatch = intraopSchema.safeParse(parsed.intraopPatch)
+    if (!parsedPatch.success) {
+      return NextResponse.json({
+        error: "Invalid structured intraop change",
+        issues: parsedPatch.error.issues.map(issue => ({ field: issue.path.join("."), message: issue.message })),
+      }, { status: 400 })
+    }
+    atomicIntraopPatch = parsedPatch.data as Record<string, unknown>
+  }
+  const event = { ...parsed, ...(atomicIntraopPatch ? { intraopPatch: atomicIntraopPatch } : {}), id: eventId }
   const piiError = checkEventPII(event)
   if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
 
@@ -106,10 +121,26 @@ export async function PUT(
       if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
-        select: { updatedAt: true, syncRevision: true },
+        select: {
+          updatedAt: true,
+          syncRevision: true,
+          airwayDeviceEntries: true,
+          airwayDevices: true,
+          airwayTools: true,
+          airwayNotApplicable: true,
+          vascularAccesses: true,
+          techniques: true,
+          techniqueSides: true,
+        },
       })
       const existing = { ...caseRecord, intraop: existingIntraop }
-      if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
+      const current = await activeCaseLog(tx, id)
+      const existingEvent = current.find(item => item.id === event.id)
+      if (existingEvent && sameContent(existingEvent as unknown as Record<string, unknown>, event as unknown as Record<string, unknown>)) {
+        return { changed: false, fresh: existingIntraop }
+      }
+      const revisionConflictDetected = revision != null && existing.intraop && existing.intraop.syncRevision !== revision
+      if (revisionConflictDetected && !atomicIntraopPatch) {
         return conflict(existing.intraop)
       }
 
@@ -118,12 +149,14 @@ export async function PUT(
 
       // The Core timeline rules on the log this edit would produce, checked
       // before the revision is reserved so a refusal changes nothing (1.4.9).
-      const current = await activeCaseLog(tx, id)
       const next = [...current.filter(item => item.id !== eventId), event as LogEvent]
       const refused = timelineRefusal(timelineIssuesFor(current, next))
       if (refused) return refused
 
-      const revisionReserved = revision != null && !!existing.intraop
+      const patchToApply = atomicIntraopPatch && revisionConflictDetected
+        ? rebaseAtomicIntraopPatch(existing.intraop as unknown as Record<string, unknown>, atomicIntraopPatch)
+        : atomicIntraopPatch
+      const revisionReserved = revision != null && !!existing.intraop && !revisionConflictDetected
       if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
         const fresh = await tx.intraoperativeRecord.findUnique({
           where: { caseId: id },
@@ -131,18 +164,26 @@ export async function PUT(
         })
         return conflict(fresh)
       }
-      await addEvent(tx, id, user.id, event as LogEvent, source, madeAt)
-      await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+      const changed = await addEvent(tx, id, user.id, event as LogEvent, source, madeAt)
+      if (changed && patchToApply && Object.keys(patchToApply).length > 0) {
+        const mappedPatch = mapIntraopUpdate(patchToApply)
+        if (Object.keys(mappedPatch).length > 0) {
+          if (existingIntraop) await tx.intraoperativeRecord.update({ where: { caseId: id }, data: mappedPatch })
+          else await tx.intraoperativeRecord.create({ data: { caseId: id, ...mapIntraop(patchToApply) } })
+        }
+      }
+      if (changed) await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
       const fresh = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
       })
-      return { fresh }
+      return { fresh, changed }
     })
 
     if (result instanceof Response) return result
+    if (result.changed) invalidateIntraopAutomationCaches()
     after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { eventId, source }))
-    if ((event as LogEvent).type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))
+    if (result.changed && (event as LogEvent).type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({
       ok: true,
       intraopUpdatedAt: result.fresh?.updatedAt,
@@ -219,6 +260,7 @@ export async function DELETE(
     })
 
     if (result instanceof Response) return result
+    if (result.removed) invalidateIntraopAutomationCaches()
     after(() => logAudit(user.id, "CASE_EVENT_DELETE", id, { eventId, removed: result.removed, source }))
     if (result.removed && result.complication) after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({

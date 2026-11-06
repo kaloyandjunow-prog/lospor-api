@@ -572,7 +572,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     exportName: "procedure_occurrence.procedure_concept_id",
     meaning: "Anaesthesia techniques used (multi-select), one procedure row per "
       + "technique, each source value prefixed ANAESTHESIA_TECHNIQUE:. Coded as "
-      + "SNOMED: 4174669 (Administration of general anesthetic), 4332593 "
+      + "SNOMED: 4174669 (Administration of general anesthetic), 40490493 "
+      + "(Target controlled total intravenous anesthesia), 4332593 "
       + "(Spinal anesthesia), 4078199 (Epidural anesthesia), 4219502 "
       + "(Sedation). GENERAL is 4174669 rather than 4171773 (Operative general "
       + "anesthesia), which looked like the obvious parent and is not one: "

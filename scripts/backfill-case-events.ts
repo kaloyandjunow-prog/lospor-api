@@ -51,7 +51,7 @@ async function main() {
           label:          (ev.label ?? ev.name ?? null) as string | null,
           value:          primary != null ? String(primary) : null,
           unit:           typeof ev.unit === "string" ? ev.unit : null,
-          metadataJson:   ev,
+          metadataJson:   ev as unknown as Prisma.InputJsonValue,
           source:         inferSource(ev.id),
           idempotencyKey,
         },

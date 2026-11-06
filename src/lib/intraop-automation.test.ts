@@ -55,12 +55,40 @@ describe("how the suggestions were received (10.2.0)", () => {
 })
 
 describe("settings", () => {
-  it("read as the defaults when nothing was ever saved: the reminders on, the vitals questions and every other group off", async () => {
-    const settings = await readIntraopAutomation(db(undefined) as never)
-    expect(settings.enabled).toBe(true)
-    expect(settings.groups.reminders).toBe(true)
-    expect(settings.groups.treatmentSuggestions).toBe(false)
-    expect(settings.vitalQuestions.enabled).toBe(false)
+  it("uses the public demo profile when nothing was ever saved", async () => {
+    const previous = process.env.LOSPOR_DEPLOYMENT_MODE
+    process.env.LOSPOR_DEPLOYMENT_MODE = "public"
+    try {
+      const settings = await readIntraopAutomation(db(undefined) as never)
+      expect(settings.enabled).toBe(true)
+      expect(settings.groups.reminders).toBe(true)
+      expect(settings.groups.treatmentSuggestions).toBe(true)
+      expect(settings.groups.reverseQuestions).toBe(true)
+      expect(settings.groups.labQuestions).toBe(true)
+      expect(settings.groups.readingQuestions).toBe(false)
+      expect(settings.groups.timers).toBe(false)
+      expect(settings.vitalQuestions.enabled).toBe(false)
+    } finally {
+      if (previous === undefined) delete process.env.LOSPOR_DEPLOYMENT_MODE
+      else process.env.LOSPOR_DEPLOYMENT_MODE = previous
+    }
+  })
+
+  it("keeps the conservative default for an appliance with no saved policy", async () => {
+    const previous = process.env.LOSPOR_DEPLOYMENT_MODE
+    process.env.LOSPOR_DEPLOYMENT_MODE = "hospital"
+    try {
+      const settings = await readIntraopAutomation(db(undefined) as never)
+      expect(settings.enabled).toBe(true)
+      expect(settings.groups.reminders).toBe(true)
+      expect(settings.groups.treatmentSuggestions).toBe(false)
+      expect(settings.groups.reverseQuestions).toBe(false)
+      expect(settings.groups.labQuestions).toBe(false)
+      expect(settings.vitalQuestions.enabled).toBe(false)
+    } finally {
+      if (previous === undefined) delete process.env.LOSPOR_DEPLOYMENT_MODE
+      else process.env.LOSPOR_DEPLOYMENT_MODE = previous
+    }
   })
 
   it("save what parses and nothing else", async () => {
@@ -73,6 +101,18 @@ describe("settings", () => {
     expect(saved.vitalQuestions.minCases).toBe(100)
     expect(saved.vitalQuestions.tails.ADULT.hr).toEqual({ low: 0.5, high: 1 })
     expect(store.intraopAutomationPolicy.upsert.mock.calls[0][0].create.config).not.toHaveProperty("extra")
+  })
+
+  it("round-trips the stocked dantrolene sizes, including mixed stock and 20 mg only", async () => {
+    const mixed = await readIntraopAutomation(db({ enabled: true, dantroleneVialsMg: [250, 20, 250] }) as never)
+    expect(mixed.dantroleneVialsMg).toEqual([20, 250])
+
+    const twentyOnly = await readIntraopAutomation(db({ enabled: true, dantroleneVialsMg: [20] }) as never)
+    expect(twentyOnly.dantroleneVialsMg).toEqual([20])
+
+    const store = db(undefined)
+    await saveIntraopAutomation(store as never, { ...ON, dantroleneVialsMg: [250, 20, 250] })
+    expect(store.intraopAutomationPolicy.upsert.mock.calls[0][0].create.config.dantroleneVialsMg).toEqual([20, 250])
   })
 
   it("send no reading counts while the questions are off", async () => {
@@ -103,6 +143,29 @@ describe("reading counts", () => {
     expect(stats.PRESCHOOL?.hr).toEqual({ min: 130, counts: [1], cases: 1 })
     // Only cases with an age reach the readings query.
     expect(store.$queryRaw.mock.calls[0].slice(1)).toContainEqual(["a", "b", "k"])
+  })
+
+  it("includes arterial-line and stored MAP readings using the shared lowest-pressure rule", async () => {
+    const store = db(ON, {
+      bp: [
+        { caseId: "ibp", systolic: null, diastolic: null, ibpSystolic: 90, ibpDiastolic: 40, ibpMap: null, nibpMap: null, month: null, n: 1 },
+        { caseId: "map", systolic: null, diastolic: null, ibpSystolic: null, ibpDiastolic: null, ibpMap: 55, nibpMap: null, month: null, n: 2 },
+        { caseId: "nibp-map", systolic: null, diastolic: null, ibpSystolic: null, ibpDiastolic: null, ibpMap: null, nibpMap: 77, month: null, n: 1 },
+      ],
+      hr: [],
+    }, [
+      { id: "ibp", status: "COMPLETE", preop: { ageYears: 40 } },
+      { id: "map", status: "COMPLETE", preop: { ageYears: 50 } },
+      { id: "nibp-map", status: "COMPLETE", preop: { ageYears: 60 } },
+    ])
+    const stats = await vitalStats(store as never, { institutionId: "ibp-test" }, 1)
+    expect(stats.ADULT?.sbp).toEqual({ min: 90, counts: [1], cases: 1 })
+    expect(stats.ADULT?.dbp).toEqual({ min: 40, counts: [1], cases: 1 })
+    expect(stats.ADULT?.map?.min).toBe(55)
+    expect(stats.ADULT?.map?.counts[0]).toBe(2)
+    expect(stats.ADULT?.map?.counts[2]).toBe(1)
+    expect(stats.ADULT?.map?.counts[22]).toBe(1)
+    expect(stats.ADULT?.map?.cases).toBe(3)
   })
 })
 

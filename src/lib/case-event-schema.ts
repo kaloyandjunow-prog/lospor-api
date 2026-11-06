@@ -6,6 +6,9 @@ import { TCI_DRUG_SPECS, TCI_MODEL_DRUG, TCI_MODELS, TCI_SITES } from "@lospor/c
 import { DEFIBRILLATION_MAX_J, DEFIBRILLATION_MIN_J } from "@lospor/core/defibrillation"
 import { VITAL_COMPLICATION_KINDS } from "@lospor/core/vital-questions"
 import { JET_VENTILATION } from "@lospor/core/gas-ranges"
+import { CONTEXT_LINK_IDS } from "@lospor/core/intraop-suggestions"
+
+const CONTEXT_LINK_AUTOMATION_IDS = new Set<string>(Object.values(CONTEXT_LINK_IDS))
 
 /**
  * What a prompt_answer answers: a vitals question (10.1.0), or a suggestion
@@ -15,6 +18,8 @@ import { JET_VENTILATION } from "@lospor/core/gas-ranges"
 const answerKind = z.string().min(1).max(120).refine(
   value => (VITAL_COMPLICATION_KINDS as readonly string[]).includes(value)
     || value === "card"
+    || value === "succession"
+    || CONTEXT_LINK_AUTOMATION_IDS.has(value)
     || /^(card-reveal|reverse|reading|lab|reminder|timer):[A-Za-z0-9-]+$/.test(value),
   "Unknown question",
 )
@@ -121,7 +126,8 @@ export const caseEventSchema = z.object({
   // refused rather than clamped: a clamped reading is an invented one.
   ...vitalFields(),
   // 10.1.0: a complication (timed; an episode has its end), a shock, and a
-  // "Not now" to a question from the vitals.
+  // prompt answer. Ordinary prompts use "not_now"; succession and contextual
+  // suggestions use the definitive "dismissed" answer.
   endTs: z.string().datetime({ offset: true }).optional(),
   complicationSource: z.enum(["timeline", "vitals", "readings", "suggestion"]).optional(),
   triggerReadingId: z.string().min(1).max(200).optional(),
@@ -129,10 +135,14 @@ export const caseEventSchema = z.object({
   synchronized: z.boolean().optional(),
   answerFor: z.string().min(1).max(200).optional(),
   answerKind: answerKind.optional(),
-  answer: z.enum(["not_now", "done"]).optional(),
+  answer: z.enum(["not_now", "dismissed", "done"]).optional(),
   // 10.2.0: the suggestion an entry was made from (exported as a flag), a
   // tourniquet's site, and jet ventilation settings.
   suggestion: z.string().min(1).max(240).optional(),
+  // Structured airway/vascular writes can travel with their clinical event so
+  // the API can apply both under the same case lock. The event id remains the
+  // idempotency key for the whole operation.
+  intraopPatch: z.record(z.string(), z.unknown()).optional(),
   site: z.string().min(1).max(40).optional(),
   jetPressureBar: numericValue.min(JET_VENTILATION.pressure.min).max(JET_VENTILATION.pressure.typedMax).optional(),
   jetRate: z.number().int().min(JET_VENTILATION.rate.min).max(JET_VENTILATION.rate.typedMax).optional(),
@@ -170,13 +180,23 @@ export const caseEventSchema = z.object({
     context.addIssue({ code: "custom", path: ["energyJ"], message: "Only a shock has an energy" })
   }
   if (event.type === "prompt_answer") {
-    // A revealed card row records only what it revealed; every other answer is a Not now or a Done.
+    // A revealed card row records only what it revealed; every other answer is
+    // an ordinary Not now/Done or a definitive succession/context dismissal.
     const reveal = event.answerKind?.startsWith("card-reveal:")
     if (!event.answerFor || !event.answerKind || (!reveal && !event.answer)) {
-      context.addIssue({ code: "custom", path: ["answer"], message: "A Not now names its reading and its question" })
+      context.addIssue({ code: "custom", path: ["answer"], message: "A prompt answer names its reading and its question" })
+    }
+    if (event.answer === "dismissed"
+      && event.answerKind !== "succession"
+      && !CONTEXT_LINK_AUTOMATION_IDS.has(event.answerKind ?? "")) {
+      context.addIssue({
+        code: "custom",
+        path: ["answer"],
+        message: "Only a succession or context prompt may be dismissed definitively",
+      })
     }
   } else if (event.answerFor || event.answerKind || event.answer) {
-    context.addIssue({ code: "custom", path: ["answer"], message: "Only a Not now answers a question" })
+    context.addIssue({ code: "custom", path: ["answer"], message: "Only a prompt answer answers a question" })
   }
   if (event.type === "jet_start" && (event.jetPressureBar == null || event.jetRate == null)) {
     context.addIssue({ code: "custom", path: ["jetPressureBar"], message: "Jet ventilation starts with its pressure and rate" })

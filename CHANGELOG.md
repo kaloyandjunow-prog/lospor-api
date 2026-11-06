@@ -1,5 +1,45 @@
 # Changelog - LOSPOR API
 
+## [10.2.0] - 2026-11-02
+
+### Added
+
+- **Intraoperative contract:** invasive-pressure vitals, technique sides,
+  unilateral spinal, urinary-catheter records, airway-device entries, and the
+  expanded event and suggestion data are persisted and exported.
+- **Equipment preparation state:** the intraoperative contract stores optional
+  Smart Equipment preparation markers separately from the clinical record.
+- **Automation service:** the API serves reminders, learned event succession,
+  per-clinician screen preferences, and per-automation settings.
+- **Context-link persistence:** account-wide per-suggestion switches,
+  case-scoped definitive dismissals, exact technique/side answers, and
+  structured airway/technique patches now use the canonical event contract.
+- **Vital-question settings:** the existing account preference contract now
+  carries independent vital-question line switches, and Core provenance for
+  accepted/dismissed vital questions is available to the automation statistics
+  path.
+- **Sedation OMOP timing:** a `Sedation started` event can provide the clinical
+  timestamp for the selected sedation technique without creating a duplicate
+  procedure row.
+- **Fluid status preference:** the user preference contract now accepts the
+  Smart Hybrid or Legacy Fluid status presentation.
+- **Event log preference:** the user preference contract now accepts the Smart
+  Timeline stream or Legacy event-log presentation.
+- **Clinical baselines:** the release includes the new fingerprinted rule
+  baselines and the updated data dictionary.
+
+### Changed
+
+- **Research export:** invasive blood-pressure concepts, technique-side
+  modifiers, catheter concepts, and complication start/end times are mapped to
+  the release contract.
+
+### Fixed
+
+- **Airway list clearing:** an explicit empty Smart airway list now clears the
+  legacy airway-device and size fields as part of the same partial save, so a
+  removed device is not reconstructed on the next load.
+
 ## [10.0.2] - 2026-10-29
 
 ### Changed

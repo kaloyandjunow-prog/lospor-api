@@ -1694,6 +1694,8 @@ model IntraoperativeRecord {
   /// failed / replaced. Empty on cases saved before; airwayDevices and the size
   /// columns stay filled from it so older readers keep working.
   airwayDeviceEntries Json         @default("[]")
+  /// Preparation-only state for Smart Equipment; not a clinical event.
+  equipmentPrepared  Json          @default("{}")
   /// The side of a block or unilateral spinal (10.2.0), by technique code: LEFT, RIGHT or BOTH.
   /// Empty on cases saved before; their techniques carry no side.
   techniqueSides    Json           @default("{}")

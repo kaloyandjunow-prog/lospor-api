@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client"
 import {
   automationGroupEnabled,
+  DEFAULT_INTRAOP_AUTOMATION,
   parseIntraopAutomation,
   vitalQuestionsEnabled,
   type IntraopAutomationSettings,
@@ -9,11 +10,11 @@ import {
 } from "@lospor/core/intraop-automation"
 import { activeCaseLog, addEvent } from "@/lib/case-events"
 import { addOutcomes, suggestionOutcomes, type SuggestionCounts } from "@lospor/core/intraop-suggestions"
-import { SEED_SUCCESSION, SEQUENCE_EVENTS, buildSuccessionStats, mergeSuccession, successionContext, type SuccessionCase, type SuccessionLink } from "@lospor/core/event-succession"
+import { SEED_SUCCESSION, SEQUENCE_EVENTS, buildSuccessionStats, mergeSuccession, successionContext, type SuccessionCase, type SuccessionLink, type SuccessionStructuredRecords } from "@lospor/core/event-succession"
 import { parseLogEvents, type LogEvent } from "@lospor/core/intraop-types"
 import {
   isOpenVitalEpisode,
-  meanArterialPressure,
+  lowestPressure,
   preopAgeDays,
   vitalBandFor,
   type VitalHistogram,
@@ -22,7 +23,8 @@ import {
 
 /**
  * Intraoperative automation (10.1.0): the settings a hospital switches on in
- * Status, and the readings its vitals questions are measured against.
+ * Status, or the deployment-specific demo profile when no policy is saved,
+ * and the readings its vitals questions are measured against.
  *
  * The statistics are counts per whole-number value, per age band and sign,
  * over every charted reading in scope (auto-filled copies excluded), all time.
@@ -34,9 +36,38 @@ type Db = PrismaClient | Prisma.TransactionClient
 
 const POLICY_ID = "local"
 
+/** Case, policy and event writes call this so automation responses never hold stale derived data. */
+export function invalidateIntraopAutomationCaches(): void {
+  statsCache.clear()
+  successionCache.clear()
+  acceptanceCache.clear()
+}
+
+/**
+ * The public/serverless demo has no Status control plane. Keep its empty
+ * database useful as a demo by showing the treatment cards, reverse questions
+ * and lab questions alongside the reminders. Hospital deployments retain the
+ * conservative Core default until an operator enables more in Status.
+ */
+export const PUBLIC_DEMO_INTRAOP_AUTOMATION = parseIntraopAutomation({
+  ...DEFAULT_INTRAOP_AUTOMATION,
+  groups: {
+    ...DEFAULT_INTRAOP_AUTOMATION.groups,
+    treatmentSuggestions: true,
+    reverseQuestions: true,
+    labQuestions: true,
+  },
+})
+
+function defaultIntraopAutomationForDeployment(): IntraopAutomationSettings {
+  const mode = process.env.LOSPOR_DEPLOYMENT_MODE?.trim().toLowerCase()
+  if (!mode || mode === "public" || mode === "serverless") return PUBLIC_DEMO_INTRAOP_AUTOMATION
+  return parseIntraopAutomation(undefined)
+}
+
 export async function readIntraopAutomation(db: Db): Promise<IntraopAutomationSettings> {
   const row = await db.intraopAutomationPolicy.findUnique({ where: { id: POLICY_ID } })
-  return parseIntraopAutomation(row?.config)
+  return row ? parseIntraopAutomation(row.config) : defaultIntraopAutomationForDeployment()
 }
 
 /** Saves the settings; anything out of range falls back to its default (off). */
@@ -47,8 +78,7 @@ export async function saveIntraopAutomation(db: Db, value: unknown): Promise<Int
     create: { id: POLICY_ID, config: settings as unknown as Prisma.InputJsonValue },
     update: { config: settings as unknown as Prisma.InputJsonValue },
   })
-  statsCache.clear()
-  successionCache.clear()
+  invalidateIntraopAutomationCaches()
   return settings
 }
 
@@ -82,13 +112,23 @@ function toTable(counts: BandCounts): VitalStatsTable {
   return table
 }
 
-type BpRow = { caseId: string; systolic: number | null; diastolic: number | null; month: Date | null; n: number }
+type BpRow = {
+  caseId: string
+  systolic: number | null
+  diastolic: number | null
+  ibpSystolic: number | null
+  ibpDiastolic: number | null
+  ibpMap: number | null
+  nibpMap: number | null
+  month: Date | null
+  n: number
+}
 type HrRow = { caseId: string; heartRate: number; month: Date | null; n: number }
 
 /** The band of every case in scope that has started, from the patient's age. */
 async function caseBands(db: Db, scope: Prisma.CaseWhereInput): Promise<Map<string, VitalBandKey>> {
   const cases = await db.case.findMany({
-    where: { AND: [scope, { intraop: { startedAt: { not: null } } }] },
+    where: { AND: [scope, { status: "COMPLETE" }, { intraop: { startedAt: { not: null } } }] },
     select: { id: true, preop: { select: { ageValue: true, ageUnit: true, ageYears: true, ageApproxDays: true } } },
   })
   const bands = new Map<string, VitalBandKey>()
@@ -102,13 +142,16 @@ async function caseBands(db: Db, scope: Prisma.CaseWhereInput): Promise<Map<stri
 async function readingRows(db: Db, caseIds: string[], byMonth: boolean): Promise<{ bp: BpRow[]; hr: HrRow[] }> {
   if (caseIds.length === 0) return { bp: [], hr: [] }
   const month = byMonth ? Prisma.sql`date_trunc('month', "timestamp")` : Prisma.sql`NULL::timestamp`
-  const notCopied = Prisma.sql`COALESCE(("metadataJson"->>'autoFilled')::boolean, false) = false`
+  // `metadataJson` is intentionally passthrough-compatible. Compare the JSON
+  // text instead of casting it directly: an old/imported event containing
+  // autoFilled="yes" must not take the whole automation endpoint down.
+  const notCopied = Prisma.sql`("metadataJson"->>'autoFilled') IS DISTINCT FROM 'true'`
   const bp = await db.$queryRaw<BpRow[]>`
-    SELECT "caseId", systolic, diastolic, ${month} AS month, COUNT(*)::int AS n
+    SELECT "caseId", systolic, diastolic, "ibpSystolic", "ibpDiastolic", "ibpMap", "nibpMap", ${month} AS month, COUNT(*)::int AS n
     FROM "CaseEvent"
     WHERE type = 'vital' AND status = 'active' AND "caseId" = ANY(${caseIds})
-      AND (systolic IS NOT NULL OR diastolic IS NOT NULL) AND ${notCopied}
-    GROUP BY 1, 2, 3, 4`
+      AND (systolic IS NOT NULL OR diastolic IS NOT NULL OR "ibpSystolic" IS NOT NULL OR "ibpDiastolic" IS NOT NULL OR "ibpMap" IS NOT NULL OR "nibpMap" IS NOT NULL) AND ${notCopied}
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8`
   const hr = await db.$queryRaw<HrRow[]>`
     SELECT "caseId", "heartRate", ${month} AS month, COUNT(*)::int AS n
     FROM "CaseEvent"
@@ -122,9 +165,17 @@ function countRows(counts: BandCounts, bands: Map<string, VitalBandKey>, rows: {
   for (const row of rows.bp) {
     const band = bands.get(row.caseId)
     if (!band) continue
-    if (row.systolic != null) add(counts, band, "sbp", row.systolic, row.n, row.caseId)
-    if (row.diastolic != null) add(counts, band, "dbp", row.diastolic, row.n, row.caseId)
-    if (row.systolic != null && row.diastolic != null) add(counts, band, "map", meanArterialPressure(row.systolic, row.diastolic), row.n, row.caseId)
+    const pressure = lowestPressure({
+      systolic: row.systolic ?? undefined,
+      diastolic: row.diastolic ?? undefined,
+      ibpSystolic: row.ibpSystolic ?? undefined,
+      ibpDiastolic: row.ibpDiastolic ?? undefined,
+      ibpMap: row.ibpMap ?? undefined,
+      nibpMap: row.nibpMap ?? undefined,
+    })
+    if (pressure.sbp != null) add(counts, band, "sbp", pressure.sbp, row.n, row.caseId)
+    if (pressure.dbp != null) add(counts, band, "dbp", pressure.dbp, row.n, row.caseId)
+    if (pressure.map != null) add(counts, band, "map", pressure.map, row.n, row.caseId)
   }
   for (const row of rows.hr) {
     const band = bands.get(row.caseId)
@@ -192,14 +243,21 @@ export async function learnedSuccession(db: Db, scope: Prisma.CaseWhereInput, no
   if (cached && now - cached.at < STATS_TTL_MS) return cached.links
   const cases = await db.case.findMany({
     where: { AND: [scope, { status: "COMPLETE" }, { intraop: { startedAt: { not: null } } }] },
-    select: { id: true, clinicalMode: true, intraop: { select: { techniques: true } } },
+    select: { id: true, clinicalMode: true, intraop: { select: { techniques: true, airwayDeviceEntries: true, vascularAccesses: true } } },
     orderBy: { createdAt: "desc" },
     take: SUCCESSION_CASES_MAX,
   })
   const byCase = new Map<string, SuccessionCase>()
   for (const item of cases) {
     const techniques = Array.isArray(item.intraop?.techniques) ? (item.intraop!.techniques as unknown[]).filter((value): value is string => typeof value === "string") : []
-    byCase.set(item.id, { context: successionContext(techniques, item.clinicalMode === "PEDIATRIC"), events: [] })
+    byCase.set(item.id, {
+      context: successionContext(techniques, item.clinicalMode === "PEDIATRIC"),
+      events: [],
+      structured: {
+        airway: Array.isArray(item.intraop?.airwayDeviceEntries) ? item.intraop!.airwayDeviceEntries as SuccessionStructuredRecords["airway"] : [],
+        vascular: Array.isArray(item.intraop?.vascularAccesses) ? item.intraop!.vascularAccesses as SuccessionStructuredRecords["vascular"] : [],
+      },
+    })
   }
   const ids = [...byCase.keys()]
   const events = [...SEQUENCE_EVENTS]
@@ -248,17 +306,24 @@ export async function intraopAutomationForClient(
  */
 const ACCEPTANCE_CASES_MAX = 20_000
 const ACCEPTANCE_BATCH = 200
-const acceptanceCache = new Map<number, { at: number; value: SuggestionAcceptance }>()
+const acceptanceCache = new Map<string, { at: number; value: SuggestionAcceptance }>()
 
 export type SuggestionAcceptance = { days: number; cases: number; byId: SuggestionCounts }
 
-export async function suggestionAcceptance(db: Db, days = 90, now = Date.now()): Promise<SuggestionAcceptance> {
-  const cached = acceptanceCache.get(days)
+export async function suggestionAcceptance(
+  db: Db,
+  days = 90,
+  now = Date.now(),
+  scope: Prisma.CaseWhereInput = {},
+): Promise<SuggestionAcceptance> {
+  const cacheKey = JSON.stringify({ days, scope })
+  const cached = acceptanceCache.get(cacheKey)
   if (cached && now - cached.at < STATS_TTL_MS) return cached.value
   const since = new Date(now - days * 86_400_000)
   const cases = await db.case.findMany({
-    where: { intraop: { startedAt: { gte: since } } },
+    where: { AND: [scope, { status: "COMPLETE" }, { intraop: { startedAt: { gte: since } } }] },
     select: { id: true },
+    orderBy: { createdAt: "desc" },
     take: ACCEPTANCE_CASES_MAX,
   })
   const byId: SuggestionCounts = {}
@@ -280,7 +345,7 @@ export async function suggestionAcceptance(db: Db, days = 90, now = Date.now()):
     }
   }
   const value = { days, cases: cases.length, byId }
-  acceptanceCache.set(days, { at: now, value })
+  acceptanceCache.set(cacheKey, { at: now, value })
   return value
 }
 

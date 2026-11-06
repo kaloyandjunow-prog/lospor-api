@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { caseEventSchema } from "./case-event-schema"
+import { CONTEXT_LINK_IDS } from "@lospor/core/intraop-suggestions"
 
 const issue = (value: Record<string, unknown>) => {
   const result = caseEventSchema.safeParse(value)
@@ -25,7 +26,11 @@ describe("10.2.0 events", () => {
     expect(issue({ ...answer, answerKind: "reverse:lipid", answer: "not_now" })).toBeNull()
     expect(issue({ ...answer, answerKind: "reading:hypoxaemia", answer: "not_now" })).toBeNull()
     expect(issue({ ...answer, answerKind: "timer:tourniquetWarning", answer: "not_now" })).toBeNull()
-    // A revealed card row records what it revealed, with no Not now.
+    expect(issue({ ...answer, answerKind: "succession", answerFor: "succession:Positioned>Incision", suggestion: "succession:Positioned>Incision", answer: "dismissed" })).toBeNull()
+    expect(issue({ ...answer, answerKind: CONTEXT_LINK_IDS.epiduralLocalAnaesthetic, answer: "done", value: "no" })).toBeNull()
+    expect(issue({ ...answer, answerKind: CONTEXT_LINK_IDS.epiduralLocalAnaesthetic, answer: "dismissed" })).toBeNull()
+    expect(issue({ ...answer, answerKind: "card", answer: "dismissed" })).toMatch(/succession or context prompt may be dismissed/)
+    // A revealed card row records what it revealed, with no prompt answer.
     expect(issue({ ...answer, answerKind: "card-reveal:hypertonic-saline" })).toBeNull()
     expect(issue({ ...answer, answerKind: "reverse:lipid" })).toMatch(/names its reading/)
     expect(issue({ ...answer, answerKind: "something else", answer: "not_now" })).toMatch(/Unknown question/)

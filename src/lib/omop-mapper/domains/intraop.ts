@@ -236,13 +236,14 @@ export function mapIntraopToOmop(
     })
   }
 
-  // Induction, Mask ventilation, Extubation and an airway-exchange-
-  // catheter exchange have no existing row anywhere else in the export
+  // Induction, Mask ventilation, Extubation and an airway-exchange-catheter
+  // exchange have no existing row anywhere else in the export
   // to refine -- induction and mask ventilation are never coded facts
   // today, and extubation/exchange are not the reverse of any row above
   // (removing a tube is a distinct procedure from placing one, the same
-  // reasoning as Spinal removed). All four are new rows, timestamped
-  // from the marker itself.
+  // reasoning as Spinal removed). All four are new rows, timestamped from the
+  // marker itself. Sedation started refines the selected sedation technique
+  // row below rather than creating a duplicate procedure.
   const emitMilestoneProcedure = (label: string, conceptId: number) => {
     const ts = clinicalEventTimestamp(label)
     if (!ts) return
@@ -311,7 +312,8 @@ export function mapIntraopToOmop(
   const blockDoneTs = peripheralBlockTechs.length === 1 ? clinicalEventTimestamp("Block done") : undefined
   for (const tech of techs) {
     const techConceptId = techniqueConceptFor(tech)
-    const preciseTs = techConceptId === TECHNIQUE_CONCEPTS.SPINAL ? clinicalEventTimestamp("Spinal in")
+    const preciseTs = techConceptId === TECHNIQUE_CONCEPTS.SEDATION ? clinicalEventTimestamp("Sedation started")
+      : techConceptId === TECHNIQUE_CONCEPTS.SPINAL ? clinicalEventTimestamp("Spinal in")
       : techConceptId === TECHNIQUE_CONCEPTS.EPIDURAL ? clinicalEventTimestamp("Epidural in")
       : (peripheralBlockTechs.length === 1 && tech === peripheralBlockTechs[0]) ? blockDoneTs
       : undefined

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { config as loadDotenv } from "dotenv"
+import { DEFAULT_INTRAOP_AUTOMATION } from "@lospor/core/intraop-automation"
 
 const { afterMock, getAuthUserMock } = vi.hoisted(() => ({
   afterMock: vi.fn(),
@@ -37,6 +38,7 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
   const adultCase = `automation-adult-${suffix}`
   const childCase = `automation-child-${suffix}`
   const scope = { institutionId }
+  let previousAutomationPolicy: { config: unknown } | null = null
 
   beforeAll(async () => {
     ;({ prisma } = await import("@/lib/prisma"))
@@ -44,6 +46,16 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
     ;({ addEvent, deleteEvent } = await import("@/lib/case-events"))
     ;({ withLockedCaseTransaction, disconnectClinicalPrismaForTests } = await import("@/lib/clinical-transaction"))
     route = await import("@/app/v1/intraop/automation/route")
+    // The policy is intentionally a singleton in the product. A shared dev
+    // database may already contain a Status choice, so snapshot it and put the
+    // deterministic Core default in place before asserting the no-vital-stats
+    // response. Teardown restores the operator's previous choice instead of
+    // deleting it.
+    previousAutomationPolicy = await prisma.intraopAutomationPolicy.findUnique({
+      where: { id: "local" },
+      select: { config: true },
+    })
+    await lib.saveIntraopAutomation(prisma, DEFAULT_INTRAOP_AUTOMATION)
     getAuthUserMock.mockResolvedValue({
       id: userId, role: "MEMBER", institutionId, institutionName: null,
       firstName: null, lastName: null, title: null, jti: null,
@@ -53,7 +65,16 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
     for (const [id, ageYears, startedAt] of [[adultCase, 40, "2026-09-10T08:00:00.000Z"], [childCase, 4, "2026-10-10T08:00:00.000Z"]] as const) {
       await prisma.case.create({ data: { id, userId, createdById: userId, institutionId, status: "IN_PROGRESS" } })
       await prisma.preoperativeAssessment.create({ data: { caseId: id, ageYears, sex: "MALE", diagnosis: "Test", plannedProcedure: "Test" } })
-      await prisma.intraoperativeRecord.create({ data: { caseId: id, startedAt: new Date(startedAt), timezone: "UTC", techniques: [], keyEvents: {}, syncRevision: 1 } })
+      await prisma.intraoperativeRecord.create({ data: {
+        caseId: id,
+        startedAt: new Date(startedAt),
+        timezone: "UTC",
+        techniques: id === adultCase ? ["GENERAL_TIVA"] : [],
+        airwayDeviceEntries: id === adultCase ? [{ id: "airway-1", device: "ORAL_ETT", details: {}, insertedAt: "2026-09-10T08:01:00.000Z", status: "in_use" }] : [],
+        vascularAccesses: id === adultCase ? [{ id: "line-1", type: "VENOUS", site: "VEN_PERIPHERAL", insertedAt: "2026-09-10T08:02:00.000Z", preexisting: false }] : [],
+        keyEvents: {},
+        syncRevision: 1,
+      } })
     }
     await withLockedCaseTransaction(adultCase, async tx => {
       await addEvent(tx, adultCase, userId, { id: "a1", type: "vital", ts: "2026-09-10T08:05:00.000Z", systolic: 120, diastolic: 60, heartRate: 70 } as never, "test")
@@ -61,16 +82,31 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
       await addEvent(tx, adultCase, userId, { id: "a3", type: "vital", ts: "2026-09-10T08:15:00.000Z", systolic: 200, diastolic: 100, heartRate: 150, autoFilled: true } as never, "test")
       await addEvent(tx, adultCase, userId, { id: "a4", type: "vital", ts: "2026-09-10T08:20:00.000Z", systolic: 90, diastolic: 40, heartRate: 50 } as never, "test")
       await deleteEvent(tx, adultCase, "a4")
+      await addEvent(tx, adultCase, userId, { id: "a5", type: "clinical_event", label: "Intubated", ts: "2026-09-10T08:01:00.000Z" } as never, "test")
+      await addEvent(tx, adultCase, userId, { id: "a6", type: "clinical_event", label: "Positioned", ts: "2026-09-10T08:20:00.000Z" } as never, "test")
+      await addEvent(tx, adultCase, userId, { id: "a7", type: "clinical_event", label: "Incision", ts: "2026-09-10T08:26:00.000Z", suggestion: "succession:Positioned>Incision" } as never, "test")
     }, { timeout: 20_000 })
     await withLockedCaseTransaction(childCase, async tx => {
       await addEvent(tx, childCase, userId, { id: "c1", type: "vital", ts: "2026-10-10T08:05:00.000Z", heartRate: 110 } as never, "test")
+      await addEvent(tx, childCase, userId, { id: "c2", type: "prompt_answer", ts: "2026-10-10T08:06:00.000Z", answerKind: "succession", answerFor: "succession:Positioned>Incision", suggestion: "succession:Positioned>Incision", answer: "dismissed" } as never, "test")
     }, { timeout: 20_000 })
+    // Both fixtures are finished cases: the child contributes the preschool
+    // histogram and the case-scoped succession dismissal below.
+    await prisma.case.updateMany({ where: { id: { in: [adultCase, childCase] } }, data: { status: "COMPLETE" } })
   })
 
   afterAll(async () => {
     if (!prisma) return
     await prisma.case.deleteMany({ where: { institutionId } })
-    await prisma.intraopAutomationPolicy.deleteMany({})
+    if (previousAutomationPolicy) {
+      await prisma.intraopAutomationPolicy.upsert({
+        where: { id: "local" },
+        create: { id: "local", config: previousAutomationPolicy.config as never },
+        update: { config: previousAutomationPolicy.config as never },
+      })
+    } else {
+      await prisma.intraopAutomationPolicy.deleteMany({ where: { id: "local" } })
+    }
     await prisma.auditLog.deleteMany({ where: { userId } })
     await prisma.user.deleteMany({ where: { id: userId } })
     await prisma.institution.deleteMany({ where: { id: institutionId } })
@@ -97,10 +133,49 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
 
   it("serves the settings, and the counts only once the questions are on", async () => {
     const off = await (await route.GET(new Request("http://localhost/v1/intraop/automation") as never)).json()
-    expect(off).toMatchObject({ settings: { enabled: false }, stats: null })
+    expect(off).toMatchObject({ settings: { enabled: true }, stats: null })
+    await lib.saveIntraopAutomation(prisma, { enabled: true, dantroleneVialsMg: [250, 20, 250] })
+    const mixedVials = await (await route.GET(new Request("http://localhost/v1/intraop/automation") as never)).json()
+    expect(mixedVials.settings.dantroleneVialsMg).toEqual([20, 250])
+    await lib.saveIntraopAutomation(prisma, { enabled: true, dantroleneVialsMg: [20] })
+    const twentyOnlyVials = await (await route.GET(new Request("http://localhost/v1/intraop/automation") as never)).json()
+    expect(twentyOnlyVials.settings.dantroleneVialsMg).toEqual([20])
     await lib.saveIntraopAutomation(prisma, { enabled: true, vitalQuestions: { enabled: true } })
     const on = await (await route.GET(new Request("http://localhost/v1/intraop/automation") as never)).json()
     expect(on.settings.vitalQuestions.enabled).toBe(true)
     expect(on.stats.ADULT.sbp).toEqual({ min: 120, counts: [2], cases: 1 })
+    expect(on.succession).toEqual(await lib.successionForClient(prisma, scope))
+
+    // The write must invalidate derived responses immediately, not only after
+    // the ten-minute TTL. This also proves that the policy survives a fresh
+    // Prisma connection rather than living in the process cache.
+    await lib.saveIntraopAutomation(prisma, { enabled: true, groups: { reminders: false }, vitalQuestions: { enabled: true } })
+    const disabled = await lib.intraopAutomationForClient(prisma, scope)
+    expect(disabled.succession).toBeNull()
+    const { PrismaClient } = await import("@/generated/prisma/client")
+    const { PrismaPg } = await import("@prisma/adapter-pg")
+    const fresh = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) })
+    try {
+      expect((await lib.readIntraopAutomation(fresh)).groups.reminders).toBe(false)
+    } finally {
+      await fresh.$disconnect()
+    }
+    await lib.saveIntraopAutomation(prisma, { enabled: true, groups: { reminders: true }, vitalQuestions: { enabled: true } })
+  })
+
+  it("learns from finished cases, includes structured airway/vascular records, and excludes wrong scopes", async () => {
+    lib.invalidateIntraopAutomationCaches()
+    const links = await lib.learnedSuccession(prisma, scope, Date.parse("2026-11-03T00:00:00.000Z"))
+    expect(links).toEqual(expect.arrayContaining([
+      expect.objectContaining({ from: "Intubated", to: "IV line in" }),
+      expect.objectContaining({ from: "Positioned", to: "Incision", gapMinutes: 6 }),
+    ]))
+    expect(await lib.learnedSuccession(prisma, { institutionId: `other-${suffix}` }, Date.parse("2026-11-03T00:00:00.000Z"))).toEqual([])
+  })
+
+  it("counts accepted provenance and definitive case-scoped succession dismissal", async () => {
+    lib.invalidateIntraopAutomationCaches()
+    const result = await lib.suggestionAcceptance(prisma, 90, Date.parse("2026-11-03T00:00:00.000Z"))
+    expect(result.byId["succession:Positioned>Incision"]).toEqual({ accepted: 1, dismissed: 1 })
   })
 })

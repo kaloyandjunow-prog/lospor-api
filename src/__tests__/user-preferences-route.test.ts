@@ -234,7 +234,28 @@ describe("/api/user preferences", () => {
     expect((await patch({ eventsScreen: "legacy" })).status).toBe(200)
     expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ eventsScreen: "legacy" }) } }))
     expect((await patch({ eventsScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ fluidsScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ fluidsScreen: "legacy" }) } }))
+    expect((await patch({ fluidsScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ eventLogScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: { preferences: expect.objectContaining({ eventLogScreen: "legacy" }) } }))
+    expect((await patch({ eventLogScreen: "fancy" })).status).toBe(400)
     expect((await patch({ automationGroups: { timers: "off" } })).status).toBe(400)
+  })
+
+  it("stores per-suggestion account switches, including vital and opt-in context lines", async () => {
+    findUniqueMock.mockResolvedValue({ firstName: "Ana", lastName: "User", title: "Dr", preferences: {} })
+    updateMock.mockResolvedValue({ name: "Dr Ana User", firstName: "Ana", lastName: "User", title: "Dr", institution: null, preferences: {} })
+    const { PATCH } = await import("@/app/v1/user/route")
+    const response = await PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences: { automationLines: { "vital:hypotension": false, "context:induction-agent-context": true, "reminder:ponv": false } } }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect(response.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: { preferences: expect.objectContaining({ automationLines: { "vital:hypotension": false, "context:induction-agent-context": true, "reminder:ponv": false } }) },
+    }))
   })
 
   it("rejects invalid preference payloads", async () => {

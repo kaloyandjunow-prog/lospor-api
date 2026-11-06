@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "LOSPOR API",
-    "version": "10.0.2",
+    "version": "10.2.0",
     "description": "Complete V1 contract for LOSPOR web, native mobile, PWA, administrators, and integrations."
   },
   "servers": [
@@ -3587,6 +3587,117 @@
           },
           "429": {
             "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cases/{id}/events/batch": {
+      "post": {
+        "operationId": "post_v1_cases_id_events_batch",
+        "summary": "Apply an atomic batch of intraoperative event changes",
+        "tags": [
+          "cases"
+        ],
+        "x-lospor-explicit-contract": true,
+        "x-lospor-stability": "stable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-lospor-intraop-revision",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventBatchMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision, ownership, or uniqueness conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -15115,6 +15226,66 @@
         },
         "additionalProperties": false
       },
+      "EventBatchRequest": {
+        "type": "object",
+        "properties": {
+          "add": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            }
+          },
+          "update": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            }
+          },
+          "remove": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "EventBatchMutationResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "intraopUpdatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intraopRevision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "additionalProperties": false
+      },
       "TransferRequest": {
         "type": "object",
         "properties": {
@@ -15190,6 +15361,57 @@
               "enabled": {
                 "type": "boolean"
               },
+              "groups": {
+                "type": "object",
+                "properties": {
+                  "treatmentSuggestions": {
+                    "type": "boolean"
+                  },
+                  "reverseQuestions": {
+                    "type": "boolean"
+                  },
+                  "readingQuestions": {
+                    "type": "boolean"
+                  },
+                  "labQuestions": {
+                    "type": "boolean"
+                  },
+                  "reminders": {
+                    "type": "boolean"
+                  },
+                  "timers": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "treatmentSuggestions",
+                  "reverseQuestions",
+                  "readingQuestions",
+                  "labQuestions",
+                  "reminders",
+                  "timers"
+                ],
+                "additionalProperties": false
+              },
+              "disabled": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                }
+              },
+              "dantroleneVialsMg": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "enum": [
+                    20,
+                    120,
+                    250
+                  ]
+                }
+              },
               "vitalQuestions": {
                 "type": "object",
                 "properties": {
@@ -15216,6 +15438,9 @@
             },
             "required": [
               "enabled",
+              "groups",
+              "disabled",
+              "dantroleneVialsMg",
               "vitalQuestions"
             ],
             "additionalProperties": false
@@ -15230,11 +15455,57 @@
                 "type": "null"
               }
             ]
+          },
+          "succession": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "context": {
+                      "type": "string"
+                    },
+                    "from": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "total": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "gapMinutes": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "context",
+                    "from",
+                    "to",
+                    "count",
+                    "total",
+                    "gapMinutes"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "settings",
-          "stats"
+          "stats",
+          "succession"
         ],
         "additionalProperties": false
       },
