@@ -169,6 +169,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const revisionConflictDetected = revision != null && !!existingIntraop && existingIntraop.syncRevision !== revision
 
       const current = await activeCaseLog(tx, id)
+      // Validate context-link patches against the virtual record produced by
+      // this whole batch, not one stale snapshot. Two contradictory answers
+      // in one atomic request must not both pass and then be unioned by the
+      // rebase helper.
+      let virtualIntraop = (existingIntraop as unknown as Record<string, unknown> | null) ?? {}
       const eventsToWrite: LogEvent[] = []
       for (const raw of [...updates, ...adds]) {
         let candidate = raw as unknown as LogEvent
@@ -176,7 +181,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (duplicate) candidate = coalesceAutomationClinicalEvent(duplicate, candidate)
         if (candidate.intraopPatch && candidate.suggestion?.startsWith("context:")) {
           const techniqueConflict = automationTechniqueConflict(
-            existingIntraop as unknown as Record<string, unknown> | null,
+            virtualIntraop,
             candidate.intraopPatch as Record<string, unknown>,
           )
           if (techniqueConflict) {
@@ -187,6 +192,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               incoming: techniqueConflict.incoming,
             }, { status: 409 })
           }
+          virtualIntraop = rebaseAtomicIntraopPatch(virtualIntraop, candidate.intraopPatch as Record<string, unknown>)
         }
         eventsToWrite.push(candidate)
       }
@@ -194,6 +200,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       for (const eventId of removes) {
         for (const logicalId of cascadeDeleteIds(current, eventId)) removeIds.add(logicalId)
       }
+      const deletedEvents = current.filter(event => typeof event.id === "string" && removeIds.has(event.id))
       const changedIds = new Set([
         ...[...updates, ...adds].map(event => String(event.id)),
         ...eventsToWrite.map(event => String(event.id)),
@@ -260,7 +267,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
       }
       if (changed) {
-        await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+        await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved, deletedEvents })
         if (caseRecord.status === "DRAFT") await tx.case.update({ where: { id }, data: { status: "IN_PROGRESS" } })
       }
       const intraop = await tx.intraoperativeRecord.findUnique({

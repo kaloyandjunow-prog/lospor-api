@@ -8,6 +8,7 @@ import {
   projectTimetable,
   reserveIntraopRevision,
   sortLogDeterministic,
+  structuredPatchAfterEventDeletion,
 } from "./case-events"
 import type { LogEvent } from "@/types/timetable"
 
@@ -176,6 +177,32 @@ describe("reserveIntraopRevision", () => {
   it("reports a lost claim when another writer advanced first", async () => {
     const tx = { intraoperativeRecord: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) } }
     await expect(reserveIntraopRevision(tx as never, "case-1", 7)).resolves.toBe(false)
+  })
+})
+
+describe("structured projection deletion", () => {
+  it("removes only airway and vascular lines sourced by deleted events", () => {
+    const patch = structuredPatchAfterEventDeletion({
+      airwayDeviceEntries: [
+        { id: "airway-1", device: "ORAL_ETT", details: { oralTubeSize: 7.5 }, status: "in_use", sourceEventId: "event-airway" },
+        { id: "airway-arrival", device: "LMA", details: {}, status: "in_use" },
+      ],
+      airwayTools: [],
+      vascularAccesses: [
+        { id: "line-1", type: "CENTRAL", site: "CVK_IJV", sourceEventId: "event-line" },
+        { id: "line-arrival", type: "PERIPHERAL", site: "IV_HAND", origin: "ward" },
+      ],
+    }, [
+      { id: "event-airway", type: "clinical_event", label: "Intubated", ts: at(1), intraopPatch: { airwayDeviceEntries: [] } },
+      { id: "event-line", type: "clinical_event", label: "CVC in", ts: at(2), intraopPatch: { vascularAccesses: [] } },
+    ] as LogEvent[])
+
+    expect(patch).toMatchObject({
+      airwayDeviceEntries: [expect.objectContaining({ id: "airway-arrival" })],
+      airwayDevices: ["LMA"],
+      vascularAccesses: [expect.objectContaining({ id: "line-arrival" })],
+    })
+    expect(patch?.airwayDeviceEntries).not.toEqual(expect.arrayContaining([expect.objectContaining({ id: "airway-1" })]))
   })
 })
 

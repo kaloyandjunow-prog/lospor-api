@@ -245,13 +245,14 @@ export async function DELETE(
       let removed = false
       const log = await activeCaseLog(tx, id)
       const ids = cascadeDeleteIds(log, eventId)
+      const deletedEvents = log.filter(entry => typeof entry.id === "string" && ids.includes(entry.id))
       const complication = log.some(entry => !!entry.id && ids.includes(entry.id) && entry.type === "complication")
       for (const logicalId of ids) {
         if (await deleteEvent(tx, id, logicalId, madeAt)) removed = true
       }
       // The revision was checked above under the case lock, which every
       // writer takes, so the rebuild's own increment is the reservation.
-      if (removed) await rebuildProjection(tx, id)
+      if (removed) await rebuildProjection(tx, id, { deletedEvents })
       const fresh = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },

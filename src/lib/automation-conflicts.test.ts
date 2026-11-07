@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { automationDuplicateClinicalEvent, automationTechniqueConflict, coalesceAutomationClinicalEvent } from "./automation-conflicts"
+import { rebaseAtomicIntraopPatch } from "./atomic-intraop-patch"
 import type { LogEvent } from "@/types/timetable"
 
 const T = "2026-11-05T10:00:00.000Z"
@@ -17,6 +18,14 @@ describe("automation conflict guards", () => {
       { techniques: ["BLOCK_FEMORAL"], techniqueSides: { BLOCK_FEMORAL: "LEFT" } },
       { techniques: ["BLOCK_FEMORAL"], techniqueSides: { BLOCK_FEMORAL: "RIGHT" } },
     )).toEqual({ kind: "side", current: "LEFT", incoming: "RIGHT" })
+  })
+
+  it("detects a contradiction between two context patches in the same batch", () => {
+    const first = { techniques: ["GENERAL_TIVA"] }
+    const virtual = rebaseAtomicIntraopPatch({}, first)
+    expect(automationTechniqueConflict(virtual, { techniques: ["SEDATION_IV"] })).toEqual({
+      kind: "technique", current: "GENERAL_TIVA", incoming: "SEDATION_IV",
+    })
   })
 
   it("coalesces a retried context event by source relation, not timestamp alone", () => {

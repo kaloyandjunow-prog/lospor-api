@@ -76,6 +76,7 @@ const labelledItem = z.object({
  * written once -- two copies of a clinical shape is how the two drift.
  */
 const labResultsSchema = z.array(z.object({
+  id:    z.string().max(200).optional(),
   test:  z.string(),
   value: z.string(),
   unit:  z.string().optional(),
