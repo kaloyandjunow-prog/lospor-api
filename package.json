@@ -22,6 +22,7 @@
     "db:studio": "prisma studio",
     "research-exports:work": "tsx scripts/process-research-exports.ts",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.reporter=text-summary --coverage.reporter=json-summary",
     "test:watch": "vitest",
     "test:pg": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/intraop-automation-postgres.test.ts",
     "test:pg:intraop-automation": "cross-env LOSPOR_POSTGRES_INTEGRATION=true vitest run src/__tests__/intraop-automation-postgres.test.ts",
