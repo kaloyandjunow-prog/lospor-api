@@ -41,7 +41,8 @@ describe("every event an answer writes is accepted by the API", () => {
     }
     expect(written, "the cases wrote nothing, so this proved nothing").toBeGreaterThan(200)
     expect([...new Set(refused)].slice(0, 20)).toEqual([])
-  })
+    // 300 random cases take about 5 s on a busy machine, the default limit.
+  }, 30_000)
 
   it("accepts the doses tapped during an arrest, their approximate times, and the spread when it ends", () => {
     const arrest: LogEvent = { id: "arrest-1", ts: "2026-11-07T10:00:00.000Z", type: "complication", label: "Cardiac arrest" }
