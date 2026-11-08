@@ -11,6 +11,11 @@ PostgreSQL, Prisma миграциите, удостоверяването, ел�
 съответните компоненти в LOSPOR Hospital. Тя не е потребителски интерфейс и не
 трябва да се дублира с отделна реализация на API в клиентските хранилища.
 
+За анестезиологичния протокол API връща и изтритите записи
+(`?deleted=1`), предлага тесен прочит само на времевата линия
+(`?view=timetable`), а PDF маршрутът рисува протокола в портретни страници с
+една страница в пейзаж за времевата линия.
+
 Минимално локално стартиране:
 
 ```bash
@@ -362,6 +367,28 @@ being edited. The API compares it in the atomic update predicate and returns
 HTTP 409 with `COHORT_CHANGED` if another update won first. Clients should then
 reload and ask the owner to reconcile the definitions; they must not retry a
 stale body unconditionally.
+
+## Case reads for the record
+
+New in the next release, for the anaesthesia record:
+
+- `GET /v1/cases/{id}?deleted=1` adds `deletedEvents`: the entries deleted from
+  the case, as they were, each with `deletedAt`, the minute it was deleted
+  (absent on an entry deleted before 9.13.0). Of a logical event only the latest
+  version counts, and an entry that is active again is not listed. Without the
+  parameter the response is unchanged. Saved events keep no reason for a
+  deletion.
+- `GET /v1/cases/{id}?view=timetable` is the narrow read for the timetable
+  viewer: id, case code, status, clinical mode, the planned procedure's name,
+  and the chart (`keyEvents`) with its start instant, end, legacy start and time
+  zone — plus `deletedEvents` when `deleted=1` is also given. It applies the
+  same read rule as the full read and leaves out the questionnaire, which makes
+  it about an order of magnitude smaller (13 KB against 148 KB for a long demo
+  case).
+- `GET /v1/cases/{id}/print-data` always includes `deletedEvents`.
+- `GET /v1/cases/{id}/pdf` renders the record in headless Chrome: A4, portrait
+  pages with one landscape page for the timetable (the page sizes come from the
+  print CSS).
 
 ## Verification
 
