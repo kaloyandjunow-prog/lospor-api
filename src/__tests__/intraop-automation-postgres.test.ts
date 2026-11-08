@@ -160,6 +160,8 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
   })
 
   it("serves the settings, and the counts only once the questions are on", async () => {
+    // The questions are on by default (10.2), so "off" is a choice a Status operator makes.
+    await lib.saveIntraopAutomation(prisma, { enabled: true, vitalQuestions: { enabled: false } })
     const off = await (await route.GET(new Request("http://localhost/v1/intraop/automation") as never)).json()
     expect(off).toMatchObject({ settings: { enabled: true }, stats: null })
     await lib.saveIntraopAutomation(prisma, { enabled: true, dantroleneVialsMg: [250, 20, 250] })
