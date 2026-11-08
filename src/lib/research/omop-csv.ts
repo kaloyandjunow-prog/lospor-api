@@ -13,7 +13,14 @@ import { csvCell } from "@/lib/csv-cell"
 
 export type { OmopTableName }
 
+/**
+ * Every table the mapper emits, in the order a loader wants them (the dimension first, then the person and their
+ * visits). It used to be a hand-kept list of eight: care_site, device_exposure (the airway devices and blood units) and
+ * death were produced by the mapper and quietly left out of every research export. A table is now added here in the
+ * same change that adds it to OMOP_COLUMNS, and a test holds the two together.
+ */
 export const OMOP_TABLES: OmopTableName[] = [
+  "care_site",
   "person",
   "observation_period",
   "visit_occurrence",
@@ -21,7 +28,9 @@ export const OMOP_TABLES: OmopTableName[] = [
   "drug_exposure",
   "measurement",
   "procedure_occurrence",
+  "device_exposure",
   "observation",
+  "death",
 ]
 
 /**
