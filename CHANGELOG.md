@@ -34,6 +34,16 @@
 
 ### Changed
 
+- **Vital-sign statistics:** the hospital's reading distribution behind the
+  vitals questions now counts finalised cases only, and reads invasive and
+  cuff pressures alike. A case in progress no longer feeds the limits it is
+  being measured against.
+- **Running tally for the vitals questions:** the distribution is kept as a
+  small running tally (`VitalStatTally`, migration
+  `20261107100000_vital_stat_tally`). Finalising a case adds its readings and
+  undoing finalisation takes them back, so opening an intraoperative screen
+  costs the same whatever the size of the database. Existing finalised cases
+  are counted once, the first time the statistics are read after the update.
 - **Research export:** invasive blood-pressure concepts, technique-side
   modifiers, catheter concepts, and complication start/end times are mapped to
   the release contract.

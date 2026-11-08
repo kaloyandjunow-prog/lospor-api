@@ -2,6 +2,7 @@ import type { CaseMapperCtx } from "../case-context"
 import type { CaseRow } from "../types"
 import { isoDate } from "../date-helpers"
 import { nextId } from "../ids"
+import { routeConceptFor } from "../concepts"
 import { wardOrderText, type PreopOrderKind } from "@lospor/core/preop-orders"
 import { premedicationDate, premedicationPhaseOf } from "@lospor/core/premedication"
 
@@ -104,13 +105,16 @@ export function mapPreopOrdersToOmop(ctx: CaseMapperCtx, preop: NonNullable<Case
       drug_exposure_id: nextId(), person_id: ctx.personId,
       drug_concept_id: order.conceptId ?? 0,
       drug_exposure_start_date: takenOn,
+      drug_exposure_start_datetime: null,
       drug_exposure_end_date: null,
+      drug_exposure_end_datetime: null,
       drug_type_concept_id: EHR_ORDER,
       // PREMED_ORDER: tells the order from the premedication given (PREMED:).
       drug_source_value: order.atcCode ? `PREMED_ORDER:ATC:${order.atcCode} - ${order.entry}` : `PREMED_ORDER:${order.entry}`,
       drug_source_concept_id: null,
       dose_value: order.dose,
       dose_unit_source_value: order.unit,
+      route_concept_id: routeConceptFor(order.route),
       route_source_value: order.route,
       visit_occurrence_id: ctx.visitId,
     })

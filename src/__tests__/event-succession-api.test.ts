@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { DEFAULT_INTRAOP_AUTOMATION } from "@lospor/core/intraop-automation"
 import { SEED_SUCCESSION, SUCCESSION_MIN_CASES } from "@lospor/core/event-succession"
-import { intraopAutomationForClient, learnedSuccession, successionForClient } from "@/lib/intraop-automation"
+import { intraopAutomationForClient, learnedSuccession, successionForClient, successionOverviewForStatus } from "@/lib/intraop-automation"
 
 type Row = { caseId: string; label: string; timestamp: Date }
 
@@ -23,6 +23,14 @@ function fakeDb(cases: Array<{ id: string; clinicalMode?: string; techniques?: s
 const unique = () => ({ company: `scope-${Math.random()}` }) as never
 
 describe("what usually comes next, learned from finished cases (10.2.0)", () => {
+  it("tells Status which links are learned and how many cases each starting event has so far", async () => {
+    const { db } = fakeDb(Array.from({ length: SUCCESSION_MIN_CASES }, (_, index) => ({ id: `s${index}`, events: [["Positioned", 0], ["Incision", 15]] as Array<[string, number]> })))
+    const rows = await successionOverviewForStatus(db, unique())
+    expect(rows.find(row => row.context === "general" && row.from === "Positioned")).toMatchObject({ source: "learned", learnedCases: SUCCESSION_MIN_CASES, gapMinutes: 15, share: 1 })
+    expect(rows.find(row => row.context === "general" && row.from === "Induction")).toMatchObject({ source: "starting", learnedCases: 0 })
+    expect(JSON.stringify(rows)).not.toMatch(/"s[0-9]+"/)
+  })
+
   it("counts which event followed which, per technique family, from the finished cases", async () => {
     const { db } = fakeDb([
       { id: "a", events: [["Positioned", 0], ["Incision", 4]] },

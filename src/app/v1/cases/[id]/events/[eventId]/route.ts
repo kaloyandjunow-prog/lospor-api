@@ -18,8 +18,7 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
-import { invalidateIntraopAutomationCaches } from "@/lib/intraop-automation"
-import { intraopSchema } from "@/lib/schemas/case"
+import { atomicIntraopPatchFrom } from "@/lib/atomic-intraop-patch-input"
 import { mapIntraop, mapIntraopUpdate } from "../../../_mappers"
 import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
 const CORS = (req: NextRequest) => corsHeaders(req, "PUT, DELETE, OPTIONS")
@@ -87,14 +86,9 @@ export async function PUT(
   }
   let atomicIntraopPatch: Record<string, unknown> | undefined
   if (parsed.intraopPatch !== undefined) {
-    const parsedPatch = intraopSchema.safeParse(parsed.intraopPatch)
-    if (!parsedPatch.success) {
-      return NextResponse.json({
-        error: "Invalid structured intraop change",
-        issues: parsedPatch.error.issues.map(issue => ({ field: issue.path.join("."), message: issue.message })),
-      }, { status: 400 })
-    }
-    atomicIntraopPatch = parsedPatch.data as Record<string, unknown>
+    const parsedPatch = atomicIntraopPatchFrom(parsed.intraopPatch)
+    if (!parsedPatch.ok) return NextResponse.json(parsedPatch.body, { status: parsedPatch.status })
+    atomicIntraopPatch = parsedPatch.patch
   }
   const event = { ...parsed, ...(atomicIntraopPatch ? { intraopPatch: atomicIntraopPatch } : {}), id: eventId }
   const piiError = checkEventPII(event)
@@ -181,7 +175,6 @@ export async function PUT(
     })
 
     if (result instanceof Response) return result
-    if (result.changed) invalidateIntraopAutomationCaches()
     after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { eventId, source }))
     if (result.changed && (event as LogEvent).type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({
@@ -261,7 +254,6 @@ export async function DELETE(
     })
 
     if (result instanceof Response) return result
-    if (result.removed) invalidateIntraopAutomationCaches()
     after(() => logAudit(user.id, "CASE_EVENT_DELETE", id, { eventId, removed: result.removed, source }))
     if (result.removed && result.complication) after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({

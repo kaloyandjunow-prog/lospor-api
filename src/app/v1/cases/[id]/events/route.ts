@@ -18,9 +18,8 @@ import { z } from "zod"
 
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
-import { intraopSchema } from "@/lib/schemas/case"
+import { atomicIntraopPatchFrom } from "@/lib/atomic-intraop-patch-input"
 import { mapIntraop, mapIntraopUpdate } from "../../_mappers"
-import { invalidateIntraopAutomationCaches } from "@/lib/intraop-automation"
 import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
 import { automationDuplicateClinicalEvent, automationTechniqueConflict, coalesceAutomationClinicalEvent } from "@/lib/automation-conflicts"
 const CORS = (req: NextRequest) => corsHeaders(req, "POST, PUT, OPTIONS")
@@ -100,14 +99,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   let atomicIntraopPatch: Record<string, unknown> | undefined
   if (event.intraopPatch !== undefined) {
-    const parsedPatch = intraopSchema.safeParse(event.intraopPatch)
-    if (!parsedPatch.success) {
-      return NextResponse.json({
-        error: "Invalid structured intraop change",
-        issues: parsedPatch.error.issues.map(issue => ({ field: issue.path.join("."), message: issue.message })),
-      }, { status: 400 })
-    }
-    atomicIntraopPatch = parsedPatch.data as Record<string, unknown>
+    const parsedPatch = atomicIntraopPatchFrom(event.intraopPatch)
+    if (!parsedPatch.ok) return NextResponse.json(parsedPatch.body, { status: parsedPatch.status })
+    atomicIntraopPatch = parsedPatch.patch
     event = { ...event, intraopPatch: atomicIntraopPatch }
   }
   if (!event.id) event.id = crypto.randomUUID()
@@ -259,7 +253,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (result instanceof Response) return result
     if (result.added) {
-      invalidateIntraopAutomationCaches()
       after(() => logAudit(user.id, "CASE_EVENT_ADD", id, { type: event.type, source }))
       // A timed complication is a row the export reads (10.1.0): keep it current.
       if (event.type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))

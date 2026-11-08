@@ -133,6 +133,8 @@ export const caseEventSchema = z.object({
   triggerReadingId: z.string().min(1).max(200).optional(),
   energyJ: z.number().int().min(DEFIBRILLATION_MIN_J).max(DEFIBRILLATION_MAX_J).optional(),
   synchronized: z.boolean().optional(),
+  // 10.2.0: a time reconstructed afterwards (a dose given during an arrest, charted later).
+  timeApproximate: z.boolean().optional(),
   answerFor: z.string().min(1).max(200).optional(),
   answerKind: answerKind.optional(),
   answer: z.enum(["not_now", "dismissed", "done"]).optional(),

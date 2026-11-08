@@ -8,7 +8,6 @@ import { preopSchema, intraopSchema, postopSchema } from "@/lib/schemas/case"
 import { parseLenient } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
-import { invalidateIntraopAutomationCaches } from "@/lib/intraop-automation"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
 import { activeCaseLog, rebuildProjection } from "@/lib/case-events"
 import { autoEndCaseIfStale } from "@/lib/intraop-auto-end"
@@ -649,7 +648,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (transactionResult instanceof Response) return transactionResult
     const { existing, finalStatus, updated } = transactionResult
-    invalidateIntraopAutomationCaches()
 
     after(() => logAudit(userId, "CASE_UPDATE", id, finalStatus ? { from: existing.status, to: finalStatus } : undefined))
     if (preop) after(() => writeFieldDiffsSafe(prisma, id, "preop", existing.preop ?? {}, preop, userId))
@@ -740,7 +738,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return null
     })
     if (result instanceof Response) return result
-    invalidateIntraopAutomationCaches()
   } catch (err: unknown) {
     if (err instanceof CaseWriteError) {
       return NextResponse.json({ error: err.message }, { status: err.status })

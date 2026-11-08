@@ -65,26 +65,26 @@ describe("settings", () => {
       expect(settings.groups.treatmentSuggestions).toBe(true)
       expect(settings.groups.reverseQuestions).toBe(true)
       expect(settings.groups.labQuestions).toBe(true)
-      expect(settings.groups.readingQuestions).toBe(false)
-      expect(settings.groups.timers).toBe(false)
-      expect(settings.vitalQuestions.enabled).toBe(false)
+      expect(settings.groups.readingQuestions).toBe(true)
+      expect(settings.groups.timers).toBe(true)
+      expect(settings.vitalQuestions.enabled).toBe(true)
     } finally {
       if (previous === undefined) delete process.env.LOSPOR_DEPLOYMENT_MODE
       else process.env.LOSPOR_DEPLOYMENT_MODE = previous
     }
   })
 
-  it("keeps the conservative default for an appliance with no saved policy", async () => {
+  it("gives an appliance with no saved policy the same everything-on default", async () => {
     const previous = process.env.LOSPOR_DEPLOYMENT_MODE
     process.env.LOSPOR_DEPLOYMENT_MODE = "hospital"
     try {
       const settings = await readIntraopAutomation(db(undefined) as never)
       expect(settings.enabled).toBe(true)
       expect(settings.groups.reminders).toBe(true)
-      expect(settings.groups.treatmentSuggestions).toBe(false)
-      expect(settings.groups.reverseQuestions).toBe(false)
-      expect(settings.groups.labQuestions).toBe(false)
-      expect(settings.vitalQuestions.enabled).toBe(false)
+      expect(settings.groups.treatmentSuggestions).toBe(true)
+      expect(settings.groups.reverseQuestions).toBe(true)
+      expect(settings.groups.labQuestions).toBe(true)
+      expect(settings.vitalQuestions.enabled).toBe(true)
     } finally {
       if (previous === undefined) delete process.env.LOSPOR_DEPLOYMENT_MODE
       else process.env.LOSPOR_DEPLOYMENT_MODE = previous
@@ -273,5 +273,24 @@ describe("a shock", () => {
   it("keeps an unsynchronised shock's row as Defibrillation, whatever label the client sent", () => {
     const row = buildRow("case-1", "user-1", { id: "s", type: "defibrillation", ts: "2026-11-01T09:00:00.000Z", energyJ: 200, synchronized: false, label: "Cardioversion" } as never, 1, "active", "k", "test")
     expect(row).toMatchObject({ label: "Defibrillation", value: "200", unit: "J" })
+  })
+})
+
+describe("the running tally", () => {
+  it("serves the scopes the apps use, and counts any other scope directly", async () => {
+    const { tallyScopeKey } = await import("@/lib/intraop-automation")
+    expect(tallyScopeKey({ institutionId: "i1" })).toBe("institution:i1")
+    expect(tallyScopeKey({ userId: "u1" })).toBe("user:u1")
+    expect(tallyScopeKey({ institutionId: "i1", userId: "u1" })).toBeNull()
+    expect(tallyScopeKey({})).toBeNull()
+  })
+
+  it("builds the same table shape as the direct count, with the case counts it kept", async () => {
+    const { tallyTable } = await import("@/lib/intraop-automation")
+    const table = tallyTable(
+      [{ band: "ADULT", sign: "sbp", value: 120, count: 3 }, { band: "ADULT", sign: "sbp", value: 122, count: 1 }],
+      [{ band: "ADULT", sign: "sbp", cases: 2 }],
+    )
+    expect(table.ADULT?.sbp).toEqual({ min: 120, counts: [3, 0, 1], cases: 2 })
   })
 })

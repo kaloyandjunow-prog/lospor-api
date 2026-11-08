@@ -1,7 +1,6 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client"
 import {
   automationGroupEnabled,
-  DEFAULT_INTRAOP_AUTOMATION,
   parseIntraopAutomation,
   vitalQuestionsEnabled,
   type IntraopAutomationSettings,
@@ -9,7 +8,7 @@ import {
   type VitalSignKey,
 } from "@lospor/core/intraop-automation"
 import { activeCaseLog, addEvent } from "@/lib/case-events"
-import { addOutcomes, suggestionOutcomes, type SuggestionCounts } from "@lospor/core/intraop-suggestions"
+import { addOutcomes, successionOverview, suggestionOutcomes, type SuccessionOverviewRow, type SuggestionCounts } from "@lospor/core/intraop-suggestions"
 import { SEED_SUCCESSION, SEQUENCE_EVENTS, buildSuccessionStats, mergeSuccession, successionContext, type SuccessionCase, type SuccessionLink, type SuccessionStructuredRecords } from "@lospor/core/event-succession"
 import { parseLogEvents, type LogEvent } from "@lospor/core/intraop-types"
 import {
@@ -57,30 +56,13 @@ export function invalidateIntraopAutomationCaches(): void {
 }
 
 /**
- * The public/serverless demo has no Status control plane. Keep its empty
- * database useful as a demo by showing the treatment cards, reverse questions
- * and lab questions alongside the reminders. Hospital deployments retain the
- * conservative Core default until an operator enables more in Status.
+ * The settings in force. Nothing saved (the public demo, which has no Status,
+ * or an appliance before anyone opens Status) is Core's default: every
+ * suggestion on. A hospital narrows it in Status.
  */
-export const PUBLIC_DEMO_INTRAOP_AUTOMATION = parseIntraopAutomation({
-  ...DEFAULT_INTRAOP_AUTOMATION,
-  groups: {
-    ...DEFAULT_INTRAOP_AUTOMATION.groups,
-    treatmentSuggestions: true,
-    reverseQuestions: true,
-    labQuestions: true,
-  },
-})
-
-function defaultIntraopAutomationForDeployment(): IntraopAutomationSettings {
-  const mode = process.env.LOSPOR_DEPLOYMENT_MODE?.trim().toLowerCase()
-  if (!mode || mode === "public" || mode === "serverless") return PUBLIC_DEMO_INTRAOP_AUTOMATION
-  return parseIntraopAutomation(undefined)
-}
-
 export async function readIntraopAutomation(db: Db): Promise<IntraopAutomationSettings> {
   const row = await db.intraopAutomationPolicy.findUnique({ where: { id: POLICY_ID } })
-  return row ? parseIntraopAutomation(row.config) : defaultIntraopAutomationForDeployment()
+  return parseIntraopAutomation(row ? row.config : undefined)
 }
 
 /** Saves the settings; anything out of range falls back to its default (off). */
@@ -199,19 +181,189 @@ function countRows(counts: BandCounts, bands: Map<string, VitalBandKey>, rows: {
 const STATS_TTL_MS = 10 * 60_000
 const statsCache = new Map<string, { at: number; stats: VitalStatsTable }>()
 
-/** Every band's reading counts in scope, all time. Kept ten minutes: limits move slowly. */
+/**
+ * Every band's reading counts in scope, all time. Kept ten minutes: limits move slowly.
+ *
+ * Read from the running tally when the scope is one institution or one
+ * clinician (what the apps ask for), so the cost does not grow with the
+ * database. Any other scope, and a test double without raw writes, counts the
+ * readings directly; both give the same table.
+ */
 export async function vitalStats(db: Db, scope: Prisma.CaseWhereInput, now = Date.now()): Promise<VitalStatsTable> {
   const key = JSON.stringify(scope)
   const cached = statsCache.get(key)
   if (cached && now - cached.at < STATS_TTL_MS) return cached.stats
-  const stats = await repeatableRead(db, async snapshot => {
+  const scopeKey = tallyScopeKey(scope)
+  const stats = scopeKey && typeof (db as PrismaClient).$executeRaw === "function"
+    ? await tallyStats(db, scopeKey)
+    : await countedStats(db, scope)
+  statsCache.set(key, { at: now, stats })
+  return stats
+}
+
+/** The counts worked out from every reading: the reference the tally must agree with. */
+export async function countedStats(db: Db, scope: Prisma.CaseWhereInput): Promise<VitalStatsTable> {
+  return repeatableRead(db, async snapshot => {
     const bands = await caseBands(snapshot, scope)
     const counts: BandCounts = new Map()
     countRows(counts, bands, await readingRows(snapshot, [...bands.keys()], false))
     return toTable(counts)
   })
-  statsCache.set(key, { at: now, stats })
-  return stats
+}
+
+/* ---------- the running tally (10.2.0) ---------- */
+
+type TallyContribution = { band: VitalBandKey; signs: Partial<Record<VitalSignKey, Record<string, number>>> }
+
+/** The tally key for the scopes the apps use (indicatorScope): one institution, or one clinician without one. */
+export function tallyScopeKey(scope: Prisma.CaseWhereInput): string | null {
+  const keys = Object.keys(scope)
+  if (keys.length !== 1) return null
+  if (typeof scope.institutionId === "string") return `institution:${scope.institutionId}`
+  if (typeof scope.userId === "string") return `user:${scope.userId}`
+  return null
+}
+
+const caseTallyScopeKey = (item: { institutionId: string | null; userId: string }) =>
+  item.institutionId ? `institution:${item.institutionId}` : `user:${item.userId}`
+
+/** What one finalised case adds: its band, and per sign how many readings of each value. Null when it has no band. */
+async function caseContribution(db: Db, caseId: string): Promise<{ scopeKey: string; contribution: TallyContribution | null } | null> {
+  const item = await db.case.findUnique({
+    where: { id: caseId },
+    select: {
+      status: true, institutionId: true, userId: true,
+      intraop: { select: { startedAt: true } },
+      preop: { select: { ageValue: true, ageUnit: true, ageYears: true, ageApproxDays: true } },
+    },
+  })
+  if (!item || item.status !== "COMPLETE") return null
+  const scopeKey = caseTallyScopeKey(item)
+  const band = item.intraop?.startedAt ? vitalBandFor(preopAgeDays(item.preop))?.key : undefined
+  if (!band) return { scopeKey, contribution: null }
+  const counts: BandCounts = new Map()
+  countRows(counts, new Map([[caseId, band]]), await readingRows(db, [caseId], false))
+  const signs: TallyContribution["signs"] = {}
+  for (const [sign, entry] of counts.get(band) ?? []) {
+    signs[sign] = Object.fromEntries([...entry.values].map(([value, n]) => [String(value), n]))
+  }
+  return { scopeKey, contribution: { band, signs } }
+}
+
+async function applyContribution(db: Db, scopeKey: string, contribution: TallyContribution, direction: 1 | -1): Promise<void> {
+  const signs: string[] = []
+  const values: number[] = []
+  const counts: number[] = []
+  const caseSigns: string[] = []
+  for (const [sign, byValue] of Object.entries(contribution.signs)) {
+    const entries = Object.entries(byValue ?? {})
+    if (entries.length === 0) continue
+    caseSigns.push(sign)
+    for (const [value, n] of entries) {
+      signs.push(sign)
+      values.push(Number(value))
+      counts.push(n * direction)
+    }
+  }
+  if (caseSigns.length === 0) return
+  await db.$executeRaw`
+    INSERT INTO "VitalStatTally" ("scopeKey", "band", "sign", "value", "count")
+    SELECT ${scopeKey}, ${contribution.band}, t.sign, t.value, t.n
+    FROM unnest(${signs}::text[], ${values}::int[], ${counts}::int[]) AS t(sign, value, n)
+    ON CONFLICT ("scopeKey", "band", "sign", "value") DO UPDATE SET "count" = "VitalStatTally"."count" + EXCLUDED."count"`
+  await db.$executeRaw`
+    INSERT INTO "VitalStatTallyScope" ("scopeKey", "band", "sign", "cases")
+    SELECT ${scopeKey}, ${contribution.band}, t.sign, ${direction}
+    FROM unnest(${caseSigns}::text[]) AS t(sign)
+    ON CONFLICT ("scopeKey", "band", "sign") DO UPDATE SET "cases" = "VitalStatTallyScope"."cases" + EXCLUDED."cases"`
+  if (direction < 0) {
+    await db.$executeRaw`DELETE FROM "VitalStatTally" WHERE "scopeKey" = ${scopeKey} AND "band" = ${contribution.band} AND "count" <= 0`
+    await db.$executeRaw`DELETE FROM "VitalStatTallyScope" WHERE "scopeKey" = ${scopeKey} AND "band" = ${contribution.band} AND "cases" <= 0`
+  }
+}
+
+/**
+ * Add one finalised case to the tally, once. Safe to call again or from two
+ * places at once: the case's own row decides who adds it. Returns whether it
+ * was added now.
+ */
+export async function tallyFinalisedCase(db: Db, caseId: string): Promise<boolean> {
+  const client = db as PrismaClient
+  const work = async (tx: Db) => {
+    const found = await caseContribution(tx, caseId)
+    if (!found) return false
+    const inserted = await tx.$executeRaw`
+      INSERT INTO "VitalStatTallyCase" ("caseId", "scopeKey", "contribution")
+      VALUES (${caseId}, ${found.scopeKey}, ${found.contribution ? JSON.stringify(found.contribution) : null}::jsonb)
+      ON CONFLICT ("caseId") DO NOTHING`
+    if (inserted === 0) return false
+    if (found.contribution) await applyContribution(tx, found.scopeKey, found.contribution, 1)
+    return true
+  }
+  return typeof client.$transaction === "function" ? client.$transaction(tx => work(tx)) : work(db)
+}
+
+/** Take a case back out of the tally (finalisation undone). Call inside the transaction that reopens it. */
+export async function untallyCase(db: Db, caseId: string): Promise<void> {
+  const rows = await db.$queryRaw<Array<{ scopeKey: string; contribution: TallyContribution | null }>>`
+    DELETE FROM "VitalStatTallyCase" WHERE "caseId" = ${caseId} RETURNING "scopeKey", "contribution"`
+  const row = rows[0]
+  if (row?.contribution) await applyContribution(db, row.scopeKey, row.contribution, -1)
+}
+
+/** The finalised cases in scope that the tally has not counted yet (data from before it, or a missed finalisation). */
+async function untalliedCases(db: Db, scopeKey: string, limit: number): Promise<string[]> {
+  const [kind, id] = [scopeKey.slice(0, scopeKey.indexOf(":")), scopeKey.slice(scopeKey.indexOf(":") + 1)]
+  const owner = kind === "institution" ? Prisma.sql`c."institutionId" = ${id}` : Prisma.sql`c."userId" = ${id}`
+  const rows = await db.$queryRaw<Array<{ id: string }>>`
+    SELECT c.id FROM "Case" c
+    WHERE c.status = 'COMPLETE' AND ${owner}
+      AND NOT EXISTS (SELECT 1 FROM "VitalStatTallyCase" t WHERE t."caseId" = c.id)
+    LIMIT ${limit}`
+  return rows.map(row => row.id)
+}
+
+const TALLY_BACKFILL_BATCH = 200
+
+async function tallyStats(db: Db, scopeKey: string): Promise<VitalStatsTable> {
+  // Catch up first: the first read after the update counts the existing cases
+  // once, and a case finalised by the pending-close sweep is picked up here.
+  for (;;) {
+    const pending = await untalliedCases(db, scopeKey, TALLY_BACKFILL_BATCH)
+    if (pending.length === 0) break
+    let added = 0
+    for (const caseId of pending) if (await tallyFinalisedCase(db, caseId)) added += 1
+    if (added === 0) break
+  }
+  return repeatableRead(db, async snapshot => {
+    const rows = await snapshot.$queryRaw<Array<{ band: string; sign: string; value: number; count: number }>>`
+      SELECT "band", "sign", "value", "count" FROM "VitalStatTally" WHERE "scopeKey" = ${scopeKey} AND "count" > 0`
+    const cases = await snapshot.$queryRaw<Array<{ band: string; sign: string; cases: number }>>`
+      SELECT "band", "sign", "cases" FROM "VitalStatTallyScope" WHERE "scopeKey" = ${scopeKey} AND "cases" > 0`
+    return tallyTable(rows, cases)
+  })
+}
+
+/** The table the apps read, from the tally's rows. */
+export function tallyTable(
+  rows: ReadonlyArray<{ band: string; sign: string; value: number; count: number }>,
+  cases: ReadonlyArray<{ band: string; sign: string; cases: number }>,
+): VitalStatsTable {
+  const counts: BandCounts = new Map()
+  for (const row of rows) {
+    const band = row.band as VitalBandKey
+    let signs = counts.get(band)
+    if (!signs) counts.set(band, signs = new Map())
+    let entry = signs.get(row.sign as VitalSignKey)
+    if (!entry) signs.set(row.sign as VitalSignKey, entry = { values: new Map(), cases: new Set() })
+    entry.values.set(Number(row.value), (entry.values.get(Number(row.value)) ?? 0) + Number(row.count))
+  }
+  const table = toTable(counts)
+  for (const row of cases) {
+    const histogram = table[row.band as VitalBandKey]?.[row.sign as VitalSignKey]
+    if (histogram) histogram.cases = Number(row.cases)
+  }
+  return table
 }
 
 /**
@@ -303,6 +455,14 @@ export async function learnedSuccession(db: Db, scope: Prisma.CaseWhereInput, no
 /** The links the apps use: the starting values, with each starting event replaced once its cases have been seen often enough. */
 export async function successionForClient(db: Db, scope: Prisma.CaseWhereInput): Promise<SuccessionLink[]> {
   return mergeSuccession(SEED_SUCCESSION, await learnedSuccession(db, scope))
+}
+
+/**
+ * What "Likely now" works from, for Status (10.2.0): every link, starting or learned, with how many of the site's
+ * finished cases it rests on. Counts only, no case or clinician. Whole site: the hospital API passes its scope.
+ */
+export async function successionOverviewForStatus(db: Db, scope: Prisma.CaseWhereInput = {}): Promise<SuccessionOverviewRow[]> {
+  return successionOverview(await learnedSuccession(db, scope))
 }
 
 /**

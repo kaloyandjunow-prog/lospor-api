@@ -191,9 +191,13 @@ export interface OmopDrug {
   person_id: number
   drug_concept_id: number
   drug_exposure_start_date: string | null
+  /** The moment, in the theatre's clock with its offset (10.2.0). Null for a drug known by its day only: a premedication, an order, a home medicine. */
+  drug_exposure_start_datetime: string | null
   // Null means genuinely open — an administration still running when the case
   // ended — not "unknown". A single-shot drug has no interval and is null too.
   drug_exposure_end_date: string | null
+  /** When a continuous administration stopped, as a moment (10.2.0); null as for the end date. */
+  drug_exposure_end_datetime: string | null
   drug_type_concept_id: number
   drug_source_value: string | null
   // A concept id, per the CDM: an integer or nothing. Source vocabulary text
@@ -202,6 +206,8 @@ export interface OmopDrug {
   drug_source_concept_id: number | null
   dose_value: number | null
   dose_unit_source_value: string | null
+  /** The standard route concept (10.2.0), 0 when the route is not one LOSPOR knows; the route as written is route_source_value. */
+  route_concept_id: number
   route_source_value: string | null
   visit_occurrence_id: number
   /**

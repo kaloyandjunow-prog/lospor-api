@@ -64,6 +64,9 @@ export const ModelName = {
   OperatingTheatre: 'OperatingTheatre',
   IndicatorPolicy: 'IndicatorPolicy',
   IntraopAutomationPolicy: 'IntraopAutomationPolicy',
+  VitalStatTally: 'VitalStatTally',
+  VitalStatTallyScope: 'VitalStatTallyScope',
+  VitalStatTallyCase: 'VitalStatTallyCase',
   CaseIndicatorSummary: 'CaseIndicatorSummary',
   OperatingTheatrePolicy: 'OperatingTheatrePolicy',
   CaseLock: 'CaseLock',
@@ -352,6 +355,37 @@ export const IntraopAutomationPolicyScalarFieldEnum = {
 } as const
 
 export type IntraopAutomationPolicyScalarFieldEnum = (typeof IntraopAutomationPolicyScalarFieldEnum)[keyof typeof IntraopAutomationPolicyScalarFieldEnum]
+
+
+export const VitalStatTallyScalarFieldEnum = {
+  scopeKey: 'scopeKey',
+  band: 'band',
+  sign: 'sign',
+  value: 'value',
+  count: 'count'
+} as const
+
+export type VitalStatTallyScalarFieldEnum = (typeof VitalStatTallyScalarFieldEnum)[keyof typeof VitalStatTallyScalarFieldEnum]
+
+
+export const VitalStatTallyScopeScalarFieldEnum = {
+  scopeKey: 'scopeKey',
+  band: 'band',
+  sign: 'sign',
+  cases: 'cases'
+} as const
+
+export type VitalStatTallyScopeScalarFieldEnum = (typeof VitalStatTallyScopeScalarFieldEnum)[keyof typeof VitalStatTallyScopeScalarFieldEnum]
+
+
+export const VitalStatTallyCaseScalarFieldEnum = {
+  caseId: 'caseId',
+  scopeKey: 'scopeKey',
+  contribution: 'contribution',
+  talliedAt: 'talliedAt'
+} as const
+
+export type VitalStatTallyCaseScalarFieldEnum = (typeof VitalStatTallyCaseScalarFieldEnum)[keyof typeof VitalStatTallyCaseScalarFieldEnum]
 
 
 export const CaseIndicatorSummaryScalarFieldEnum = {

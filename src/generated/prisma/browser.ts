@@ -96,6 +96,27 @@ export type IndicatorPolicy = Prisma.IndicatorPolicyModel
  */
 export type IntraopAutomationPolicy = Prisma.IntraopAutomationPolicyModel
 /**
+ * Model VitalStatTally
+ * The running tally behind the vitals questions (10.2.0): how many charted
+ * readings of each whole value each age band and sign has, per institution
+ * (or per clinician without one), over finalised cases. Added to when a case
+ * is finalised and taken back when finalisation is undone, so reading it costs
+ * the same whatever the size of the database. A derived cache, not part of the
+ * record: it can be emptied at any time and refills from the cases.
+ */
+export type VitalStatTally = Prisma.VitalStatTallyModel
+/**
+ * Model VitalStatTallyScope
+ * How many finalised cases contributed to each band and sign of the tally.
+ */
+export type VitalStatTallyScope = Prisma.VitalStatTallyScopeModel
+/**
+ * Model VitalStatTallyCase
+ * One row per finalised case already in the tally, with what it added, so a
+ * retry never counts it twice and undoing finalisation takes back exactly that.
+ */
+export type VitalStatTallyCase = Prisma.VitalStatTallyCaseModel
+/**
  * Model CaseIndicatorSummary
  * One case's figures for the unit indicators (10.0.0), worked out from its
  * record and kept until the case or the thresholds change. A derived cache,

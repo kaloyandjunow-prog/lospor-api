@@ -49,9 +49,12 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     "suggestion_source_value",
   ],
   drug_exposure: [
-    "drug_exposure_id", "person_id", "drug_concept_id", "drug_exposure_start_date", "drug_exposure_end_date",
+    "drug_exposure_id", "person_id", "drug_concept_id", "drug_exposure_start_date",
+    // 10.2.0: the moment of a dose and of an administration's end (exchange contract 2.8.0).
+    "drug_exposure_start_datetime", "drug_exposure_end_date", "drug_exposure_end_datetime",
     "drug_type_concept_id", "drug_source_value", "drug_source_concept_id", "dose_value",
-    "dose_unit_source_value", "route_source_value", "visit_occurrence_id",
+    // 10.2.0: the standard route concept; route_source_value keeps the route as written.
+    "dose_unit_source_value", "route_concept_id", "route_source_value", "visit_occurrence_id",
     "suggestion_source_value",
   ],
   measurement: [

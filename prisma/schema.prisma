@@ -371,6 +371,43 @@ model IntraopAutomationPolicy {
   updatedAt DateTime @updatedAt
 }
 
+/// The running tally behind the vitals questions (10.2.0): how many charted
+/// readings of each whole value each age band and sign has, per institution
+/// (or per clinician without one), over finalised cases. Added to when a case
+/// is finalised and taken back when finalisation is undone, so reading it costs
+/// the same whatever the size of the database. A derived cache, not part of the
+/// record: it can be emptied at any time and refills from the cases.
+model VitalStatTally {
+  scopeKey String
+  band     String
+  sign     String
+  value    Int
+  count    Int
+
+  @@id([scopeKey, band, sign, value])
+}
+
+/// How many finalised cases contributed to each band and sign of the tally.
+model VitalStatTallyScope {
+  scopeKey String
+  band     String
+  sign     String
+  cases    Int
+
+  @@id([scopeKey, band, sign])
+}
+
+/// One row per finalised case already in the tally, with what it added, so a
+/// retry never counts it twice and undoing finalisation takes back exactly that.
+model VitalStatTallyCase {
+  caseId       String   @id
+  scopeKey     String
+  contribution Json?
+  talliedAt    DateTime @default(now())
+
+  @@index([scopeKey])
+}
+
 /// One case's figures for the unit indicators (10.0.0), worked out from its
 /// record and kept until the case or the thresholds change. A derived cache,
 /// not part of the record: it can be dropped and rebuilt at any time, and no

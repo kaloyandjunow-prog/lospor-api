@@ -6,7 +6,7 @@ import {
   AIRWAY_ACTS, AIRWAY_ACT_CONCEPTS, AIRWAY_DEVICE_CONCEPTS, AIRWAY_TOOL_CONCEPTS,
   TECHNIQUE_CONCEPTS, TECHNIQUE_PARENT, TECHNIQUE_SIDE_MODIFIER, VENTILATION_MODE_CONCEPTS, VITAL_CONCEPTS,
   YES_CONCEPT_ID, NO_CONCEPT_ID, techniqueConceptFor, vascularAccessConceptFor,
-  doseUnitOf,
+  doseUnitOf, routeConceptFor,
 } from "../concepts"
 import { isoDate, isoInstant, numOrNull } from "../date-helpers"
 import { nextId } from "../ids"
@@ -208,20 +208,27 @@ export function mapIntraopToOmop(
   // intubation it performed and not the one it might have. Devices with no
   // corresponding act -- a face mask, a nasal cannula -- produce no
   // procedure, which is correct: nothing was placed.
-  const airwayActs = devices.map(d => AIRWAY_ACTS[d]).filter((a): a is string => Boolean(a))
+  // 10.2.0: one procedure per entry, so a tube that failed and the one that replaced it are two placements,
+  // each at the time it went in. A case saved before has one entry per kind and the old rules for its time.
+  const airwayActs = airwayEntries.map(entry => AIRWAY_ACTS[entry.device]).filter((a): a is string => Boolean(a))
   const intubatedTs = airwayActs.filter(a => a === "TRACHEAL_INTUBATION_ORAL" || a === "TRACHEAL_INTUBATION_NASAL").length === 1
     ? clinicalEventTimestamp("Intubated") : undefined
   const lmaInTs = airwayActs.filter(a => a === "SUPRAGLOTTIC_AIRWAY_PLACEMENT").length === 1
     ? clinicalEventTimestamp("LMA in") : undefined
   const dltPlacedTs = airwayActs.filter(a => a === "DOUBLE_LUMEN_TUBE_PLACEMENT").length === 1
     ? clinicalEventTimestamp("DLT placed") : undefined
-  for (const device of devices) {
-    const act = AIRWAY_ACTS[device]
+  const enteredAt = (value: string | null | undefined): Date | undefined => {
+    const date = value ? new Date(value) : undefined
+    return date && Number.isFinite(date.getTime()) ? date : undefined
+  }
+  for (const entry of airwayEntries) {
+    const act = AIRWAY_ACTS[entry.device]
     if (!act) continue
-    const preciseTs = (act === "TRACHEAL_INTUBATION_ORAL" || act === "TRACHEAL_INTUBATION_NASAL") ? intubatedTs
-      : act === "SUPRAGLOTTIC_AIRWAY_PLACEMENT" ? lmaInTs
-      : act === "DOUBLE_LUMEN_TUBE_PLACEMENT" ? dltPlacedTs
-      : undefined
+    const preciseTs = enteredAt(entry.insertedAt)
+      ?? ((act === "TRACHEAL_INTUBATION_ORAL" || act === "TRACHEAL_INTUBATION_NASAL") ? intubatedTs
+        : act === "SUPRAGLOTTIC_AIRWAY_PLACEMENT" ? lmaInTs
+        : act === "DOUBLE_LUMEN_TUBE_PLACEMENT" ? dltPlacedTs
+        : undefined)
     ctx.procedures.push({
       procedure_occurrence_id:   nextId(),
       person_id:                 ctx.personId,
@@ -231,7 +238,8 @@ export function mapIntraopToOmop(
       procedure_type_concept_id: 32817,
       modifier_concept_id:       0,
       modifier_source_value:     null,
-      procedure_source_value:    `AIRWAY_MANAGEMENT:${act}`,
+      // A device that failed or was replaced was still placed; the state rides in the source value, as on its device row.
+      procedure_source_value:    `AIRWAY_MANAGEMENT:${act}${entry.status === "in_use" ? "" : ":" + entry.status}`,
       visit_occurrence_id:       ctx.visitId,
     })
   }
@@ -274,10 +282,36 @@ export function mapIntraopToOmop(
   // from Incision/Closure -- and stay unmapped.
   const SURGICAL_MILESTONE_CONCEPTS: Record<string, number> = {
     "Incision":       4214428, // Incision of skin
+  }
+  for (const [label, conceptId] of Object.entries(SURGICAL_MILESTONE_CONCEPTS)) emitMilestoneProcedure(label, conceptId)
+
+  // Tourniquets (10.2.0): each inflation and release is its own procedure, so two limbs, or a cuff let down and
+  // inflated again, are every one counted. The site (a thigh, a forearm ...) rides in the modifier's source value
+  // and the side as the modifier concept, the same one a block's side uses; a tourniquet charted before the site
+  // existed has neither.
+  const TOURNIQUET_CONCEPTS: Record<string, number> = {
     "Tourniquet on":  4049036, // Application of tourniquet
     "Tourniquet off": 4084008, // Tourniquet cuff deflation
   }
-  for (const [label, conceptId] of Object.entries(SURGICAL_MILESTONE_CONCEPTS)) emitMilestoneProcedure(label, conceptId)
+  for (const ev of c.events ?? []) {
+    const conceptId = ev.type === "clinical_event" && ev.label ? TOURNIQUET_CONCEPTS[ev.label] : undefined
+    if (conceptId == null || !ev.label) continue
+    const site = (ev.metadataJson as { site?: unknown } | null | undefined)?.site
+    const siteCode = typeof site === "string" && site ? site : null
+    const side = siteCode?.startsWith("l") ? "LEFT" : siteCode?.startsWith("r") ? "RIGHT" : null
+    ctx.procedures.push({
+      procedure_occurrence_id:   nextId(),
+      person_id:                 ctx.personId,
+      procedure_concept_id:      conceptId,
+      procedure_date:            isoDate(ev.timestamp),
+      procedure_datetime:        isoInstant(ev.timestamp),
+      procedure_type_concept_id: 32817,
+      modifier_concept_id:       side ? TECHNIQUE_SIDE_MODIFIER[side]!.concept_id : 0,
+      modifier_source_value:     siteCode ? `SITE:${siteCode}` : null,
+      procedure_source_value:    `INTRAOP_EVENT:${ev.label}`,
+      visit_occurrence_id:       ctx.visitId,
+    })
+  }
 
   // A technique's placement is sometimes also logged as its own
   // intraop timeline marker ("Spinal in", "Epidural in") -- the same
@@ -420,11 +454,15 @@ export function mapIntraopToOmop(
     return { model, site: (meta.tciSite as string | undefined) ?? "EFFECT", opioids: meta.tciOpioids, targets, total }
   }
 
-  const endFor = (ev: typeof drugEvents[number], index: number): string | null => {
-    if (ev.type === "infusion_start") return ev.infId ? isoDate(infusionEnd.get(ev.infId)) : null
-    if (ev.type === "fluid_start") return ev.fluidId ? isoDate(fluidEnd.get(ev.fluidId)) : null
-    if (ev.type === "agent_start") return isoDate(agentEnd.get(index))
+  const endAtFor = (ev: typeof drugEvents[number], index: number): Date | null | undefined => {
+    if (ev.type === "infusion_start") return ev.infId ? infusionEnd.get(ev.infId) : null
+    if (ev.type === "fluid_start") return ev.fluidId ? fluidEnd.get(ev.fluidId) : null
+    if (ev.type === "agent_start") return agentEnd.get(index)
     return null
+  }
+  const endFor = (ev: typeof drugEvents[number], index: number): string | null => {
+    const at = endAtFor(ev, index)
+    return at ? isoDate(at) : null
   }
 
   // Blood given unit by unit. Counted so the case-total transfusion row below
@@ -604,6 +642,7 @@ export function mapIntraopToOmop(
     // A TCI infusion's rate is a target concentration, not a dose: the row
     // carries the amount given, and the targets go beside it as observations.
     const tci = tciFor(ev)
+    const drugRoute = ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV")
     ctx.drugs.push({
       suggestion_source_value:    suggestionOf(ev),
       drug_exposure_id:           nextId(),
@@ -614,7 +653,13 @@ export function mapIntraopToOmop(
       // preoperatively exported mapped.
       drug_concept_id:            ev.standardConceptId ?? 0,
       drug_exposure_start_date:   isoDate(ev.timestamp),
+      // 10.2.0: the moment as well as the day, so a dose can be placed in the case (before induction, at incision,
+      // during the arrest). The end likewise, for an infusion, fluid or agent whose stop was charted.
+      // A dose tapped during an arrest and charted afterwards has a reconstructed time (timeApproximate): only its
+      // day is exported, so the file never claims a time of day nobody charted.
+      drug_exposure_start_datetime: meta.timeApproximate === true ? null : isoInstant(ev.timestamp),
       drug_exposure_end_date:     endFor(ev, index),
+      drug_exposure_end_datetime: isoInstant(endAtFor(ev, index) ?? null),
       // 32818, EHR administration record: this was charted as given, not
       // reported by the patient and not merely prescribed. Same type as
       // premedication below, for the same reason -- both are witnessed
@@ -635,7 +680,8 @@ export function mapIntraopToOmop(
       drug_source_concept_id:     null,
       dose_value:                 tci ? tci.total?.amount ?? null : dose,
       dose_unit_source_value:     tci ? tci.total?.units.amount ?? null : ev.unit ?? (meta.unit as string | undefined) ?? (ev.type === "agent_start" ? "%" : null),
-      route_source_value:         ev.drugRoute ?? (meta.drugRoute as string | undefined) ?? (ev.type === "agent_start" ? "INHALATIONAL" : "IV"),
+      route_concept_id:           routeConceptFor(drugRoute),
+      route_source_value:         drugRoute,
       visit_occurrence_id:        ctx.visitId,
     })
     // An infusion's two rates (2026-10-18): the dose rate is the row above;
@@ -729,8 +775,10 @@ export function mapIntraopToOmop(
       drug_exposure_id: nextId(), person_id: ctx.personId,
       drug_concept_id: prem.standardConceptId ?? 0,
       drug_exposure_start_date: givenOn,
+      drug_exposure_start_datetime: null,
       // A single administration, not an interval: no end to record.
       drug_exposure_end_date: null,
+      drug_exposure_end_datetime: null,
       // 32818, EHR administration record -- see the intraop site for why
       // this is the same type as an intraop dose and not the preop
       // medication list, and why PREMED: below, not this column, is what
@@ -748,6 +796,7 @@ export function mapIntraopToOmop(
       drug_source_concept_id: null,
       dose_value: dose,
       dose_unit_source_value: doseUnitOf(prem.dose),
+      route_concept_id: routeConceptFor(prem.route),
       route_source_value: prem.route,
       visit_occurrence_id: ctx.visitId,
     })
@@ -789,10 +838,12 @@ export function mapIntraopToOmop(
 
   for (const line of vascularAccessLines) {
     const resolvedConcept = vascularAccessConcept(line)
-    const preciseTs = ARTERIAL_LINE_CONCEPTS.has(resolvedConcept) ? artLineInTs
-      : CENTRAL_VENOUS_CONCEPTS.has(resolvedConcept) ? cvcInTs
-      : resolvedConcept === 4322380 ? piccInTs
-      : undefined
+    // 10.2.0: the line's own time in, when it was charted; else the one matching marker, as before.
+    const preciseTs = enteredAt(line.insertedAt?.toISOString?.() ?? null)
+      ?? (ARTERIAL_LINE_CONCEPTS.has(resolvedConcept) ? artLineInTs
+        : CENTRAL_VENOUS_CONCEPTS.has(resolvedConcept) ? cvcInTs
+        : resolvedConcept === 4322380 ? piccInTs
+        : undefined)
     const lineSource = `VASCULAR_ACCESS:${line.siteLabel ?? line.site ?? "unknown"}${line.size ? ` ${line.size}${line.sizeUnit ?? ""}` : ""}`
     if (line.preexisting) {
       // The line was already in the patient. Emitting a
@@ -982,7 +1033,14 @@ export function mapIntraopToOmop(
     }
   }
 
-  mapResuscitationAndJetToOmop(ctx, c)
+  // A reintubation that has its own airway entry is already counted above, as the placement of that tube.
+  const ettEntries = airwayEntries.filter(entry => entry.device === "ORAL_ETT" || entry.device === "NASAL_ETT")
+  const placedByEntry = (ev: { timestamp: Date; metadataJson?: unknown }): boolean => {
+    const id = (ev.metadataJson as { id?: unknown } | null | undefined)?.id
+    return ettEntries.some(entry => (typeof id === "string" && entry.sourceEventId === id)
+      || (entry.insertedAt != null && Date.parse(entry.insertedAt) === ev.timestamp.getTime()))
+  }
+  mapResuscitationAndJetToOmop(ctx, c, placedByEntry)
 }
 
 /**
@@ -994,7 +1052,7 @@ export function mapIntraopToOmop(
  * Concepts checked against Athena (2026-11-02). Charcoal filters and ROSB have
  * no concept: their rows are concept 0 with the name kept in the source value.
  */
-function mapResuscitationAndJetToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
+function mapResuscitationAndJetToOmop(ctx: CaseMapperCtx, c: CaseRow, placedByEntry: (ev: { timestamp: Date; metadataJson?: unknown }) => boolean): void {
   const events = c.events ?? []
   const PROCEDURES: Record<string, number> = {
     "CPR started": 4232320,            // Cardiopulmonary resuscitation
@@ -1026,6 +1084,7 @@ function mapResuscitationAndJetToOmop(ctx: CaseMapperCtx, c: CaseRow): void {
   for (const ev of events) {
     if (ev.type !== "clinical_event" || !ev.label) continue
     const source = `INTRAOP_EVENT:${ev.label}`
+    if (ev.label === "Reintubation" && placedByEntry(ev)) continue
     if (ev.label in PROCEDURES) procedure(ev, PROCEDURES[ev.label]!, source)
     else if (ev.label === "ROSC") {
       // 44791216 Return of spontaneous circulation: a Condition-domain finding.

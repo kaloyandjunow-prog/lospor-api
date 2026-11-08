@@ -48,7 +48,10 @@
 // rule an entry was made from, null for one charted by hand), the DEATH table
 // for a death in theatre, the resuscitation and front-of-neck events, jet
 // ventilation with its pressure and rate, each airway device as its own row
-// with its state, and a failed vascular line as its own observation.
+// with its state (and a placement procedure per entry at its own time), a vascular
+// line dated at the time it went in, every tourniquet with its site and side, and a
+// failed vascular line as its own observation, the moment of every drug dose and
+// the standard route concept beside the route as written.
 //
 // 4.10.0 adds the intraoperative shock (a procedure with its energy beside
 // it) and gives a complication charted on the timeline its exact date: the
@@ -826,6 +829,16 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "4.11.0",
   },
   {
+    name: "tourniquet",
+    exportName: "procedure_occurrence.procedure_concept_id (INTRAOP_EVENT:Tourniquet on = 4049036 Application of tourniquet, INTRAOP_EVENT:Tourniquet off = 4084008 Tourniquet cuff deflation)",
+    meaning: "Every tourniquet inflation and release, each its own procedure at its own time, so two limbs or a cuff let down and inflated again are all counted. From 10.2.0 the site (a thigh, a forearm and so on) is the modifier source value (SITE:<code>, for example SITE:lThigh) and its side the modifier concept (Left 4300877, Right 4080761); a tourniquet charted without a site has neither.",
+    type: "string",
+    allowedValues: "SITE:<l|r><limb> | empty",
+    missingnessRule: "No row = no tourniquet charted",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.11.0",
+  },
+  {
     name: "airwayDeviceEntries",
     exportName: "device_exposure.device_source_value (AIRWAY_DEVICE:<code>[:failed|:replaced])",
     meaning: "Each airway device its own row from 10.2.0, with the time it went in and came out; a device that failed or was replaced is marked in the source value, so a reintubation counts two tubes.",
@@ -1227,7 +1240,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "this vocabulary are deprecated regardless. Not 4134560 (Emergency "
       + "cricothyroidotomy): real-world use of this device is almost always an "
       + "emergency, but the form does not record emergency or elective for it, "
-      + "so this states what is known rather than what is likely.",
+      + "so this states what is known rather than what is likely. From 10.2.0 "
+      + "there is one row per airway entry, at the time that entry went in, so a "
+      + "tube that failed and the one that replaced it are two placements; a "
+      + "device that failed or was replaced carries :failed or :replaced in the "
+      + "source value. A Reintubation event whose tube is an airway entry is not "
+      + "exported a second time.",
     type: "string",
     allowedValues: "SUPRAGLOTTIC_AIRWAY_PLACEMENT | TRACHEAL_INTUBATION_ORAL | TRACHEAL_INTUBATION_NASAL | DOUBLE_LUMEN_TUBE_PLACEMENT | ENDOBRONCHIAL_TUBE_PLACEMENT | SURGICAL_AIRWAY",
     missingnessRule: "No row = no instrumented airway recorded",
@@ -1723,14 +1741,21 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.drugRoute",
-    // Carried as the source value: LOSPOR has no reviewed mapping to the OMOP
-    // route vocabulary, and route_concept_id is not emitted at all.
-    exportName: "drug_exposure.route_source_value",
-    meaning: "Administration route, as recorded",
+    exportName: "drug_exposure.route_source_value (and drug_exposure.route_concept_id from 4.11.0)",
+    meaning: "Administration route, as recorded. From 4.11.0 the standard route concept is exported beside it (route_concept_id, SNOMED Route domain): IV 4171047, IM 4302612, SC 4142048, oral 4132161, enteral 4167540, sublingual 4292110, buccal 4181897, nasal 4262914, rectal 4290759, inhalation 40486069 (Respiratory tract, the vocabulary's only standard inhalation route), topical 4263689, transdermal 4262099, infiltration 37397638, perineural 4157761, epidural 4225555, intrathecal 4217202, intraosseous 4213522, endotracheal 4229543 (Intratracheal). A volatile agent is given by inhalation. A route that is none of these is concept 0 with the written route kept in the source value. Earlier exports carried the source value only.",
     type: "string",
-    missingnessRule: "NULL = not recorded",
+    missingnessRule: "NULL = not recorded (concept 0). A drug charted without a route is exported as intravenous, as before",
     sourceTable: "CaseEvent", sourceColumn: "drugRoute",
     versionIntroduced: "3.0.0",
+  },
+  {
+    name: "drugAdministrationTime",
+    exportName: "drug_exposure.drug_exposure_start_datetime / drug_exposure_end_datetime",
+    meaning: "The moment a dose was given, in the theatre's clock with its offset, and for an infusion, fluid or volatile agent the moment it stopped. Before 4.11.0 a drug carried its day only, so a dose could not be placed in the case (before induction, at incision, during an arrest). A premedication, a ward order and a home medicine are known by their day only and leave both blank. A dose tapped during a cardiac arrest and charted afterwards has a reconstructed time (the chart marks it with ≈); its start moment is left blank and only its day is exported, so the file never claims a time of day nobody charted.",
+    type: "datetime",
+    missingnessRule: "start blank = a drug known by its day only; end blank = a single dose, or an administration with no recorded stop (which reads as still running)",
+    sourceTable: "CaseEvent", sourceColumn: "timestamp",
+    versionIntroduced: "4.11.0",
   },
   {
     name: "event.concentrationValue",
@@ -2370,7 +2395,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "vascularAccessLine",
     exportName: "procedure_occurrence.procedure_concept_id (VASCULAR_ACCESS:<site>)",
-    meaning: "One row per vascular line placed during this case, coded to the site: a radial arterial line and an internal jugular central line carry different concepts rather than sharing concept 0. A line the patient already had produces no procedure row at all -- it appears instead as an observation coded 1340204 (History of event) with the line's own concept as the value, because crediting this team with an insertion somebody else performed would overstate the work done here.",
+    meaning: "One row per vascular line placed during this case, coded to the site: a radial arterial line and an internal jugular central line carry different concepts rather than sharing concept 0. A line the patient already had produces no procedure row at all -- it appears instead as an observation coded 1340204 (History of event) with the line's own concept as the value, because crediting this team with an insertion somebody else performed would overstate the work done here. From 10.2.0 the row is dated and timed at the moment the line went in when that was charted; otherwise at the matching Art line in / CVC in / PICC marker when there is exactly one, else the case start.",
     type: "concept_id",
     missingnessRule: "No row = no line of that kind was placed during this case. Absence does not mean the patient had no lines: a pre-existing line is recorded as a history observation instead, and the per-line preexisting flag carries the answer for both",
     derivationRule: "The stored vascularAccesses array becomes one VascularAccess mirror row per line, and each mirror row becomes either a procedure or a history observation depending on its preexisting flag. Depth, lumen count and the flag itself export as separate observations keyed to the same site",

@@ -98,6 +98,9 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
   afterAll(async () => {
     if (!prisma) return
     await prisma.case.deleteMany({ where: { institutionId } })
+    await prisma.vitalStatTally.deleteMany({ where: { scopeKey: `institution:${institutionId}` } })
+    await prisma.vitalStatTallyScope.deleteMany({ where: { scopeKey: `institution:${institutionId}` } })
+    await prisma.vitalStatTallyCase.deleteMany({ where: { scopeKey: `institution:${institutionId}` } })
     if (previousAutomationPolicy) {
       await prisma.intraopAutomationPolicy.upsert({
         where: { id: "local" },
@@ -120,6 +123,31 @@ describe.skipIf(!runPostgres)("intraoperative automation, PostgreSQL", () => {
     expect(stats.ADULT?.map).toEqual({ min: 80, counts: [2], cases: 1 })
     expect(stats.ADULT?.hr).toEqual({ min: 70, counts: [1, 0, 1], cases: 1 })
     expect(stats.PRESCHOOL?.hr).toEqual({ min: 110, counts: [1], cases: 1 })
+  })
+
+  it("keeps a running tally equal to the full count, and takes a reopened case back out", async () => {
+    lib.invalidateIntraopAutomationCaches()
+    const counted = await lib.countedStats(prisma, scope)
+    expect(await lib.vitalStats(prisma, scope, 2)).toEqual(counted)
+    // Each finalised case is in the tally exactly once.
+    expect(await prisma.vitalStatTallyCase.count({ where: { scopeKey: `institution:${institutionId}` } })).toBe(2)
+
+    // Undo finalisation: the case leaves the statistics in the same transaction.
+    await prisma.$transaction(async tx => {
+      await tx.case.update({ where: { id: adultCase }, data: { status: "IN_PROGRESS" } })
+      await lib.untallyCase(tx as never, adultCase)
+    })
+    lib.invalidateIntraopAutomationCaches()
+    const reopened = await lib.vitalStats(prisma, scope, 3)
+    expect(reopened.ADULT).toBeUndefined()
+    expect(reopened).toEqual(await lib.countedStats(prisma, scope))
+
+    // Finalised again: counted once more, and a second call adds nothing.
+    await prisma.case.update({ where: { id: adultCase }, data: { status: "COMPLETE" } })
+    expect(await lib.tallyFinalisedCase(prisma, adultCase)).toBe(true)
+    expect(await lib.tallyFinalisedCase(prisma, adultCase)).toBe(false)
+    lib.invalidateIntraopAutomationCaches()
+    expect(await lib.vitalStats(prisma, scope, 4)).toEqual(counted)
   })
 
   it("grows month by month", async () => {

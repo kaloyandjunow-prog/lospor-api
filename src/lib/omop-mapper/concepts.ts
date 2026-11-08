@@ -1,5 +1,6 @@
 import { TECHNIQUE_TREE } from "@lospor/core/catalog"
 import type { TreeNode } from "@lospor/core/catalog"
+import { normalizeAdministrationRoute, type AdministrationRouteCode } from "@lospor/core/clinical-rule-vocabulary"
 
 /**
  * OMOP concept maps for the mapper, split out of omop-mapper.ts.
@@ -369,6 +370,47 @@ export function vascularAccessConceptFor(site: string | null | undefined): numbe
     node = VASCULAR_ACCESS_PARENT[node]
   }
   return 0
+}
+
+/**
+ * The standard route concept for each route LOSPOR offers (10.2.0), all SNOMED Route-domain concepts checked
+ * against the OMOP vocabulary. Exhaustive over the route codes, and asserted so by test: a route missing here
+ * would export concept 0 with nothing to say why.
+ *
+ * Two are the vocabulary's nearest and say so: inhalation is "Respiratory tract" (447694001), the only standard
+ * route for it, and endotracheal is "Intratracheal" (404818005). ENTERAL is the general enteral route, not
+ * nasogastric, because a drug given down a gastrostomy or jejunostomy tube is the same route code.
+ */
+export const ROUTE_CONCEPTS: Record<AdministrationRouteCode, number> = {
+  IV:           4171047,  // Intravenous
+  IM:           4302612,  // Intramuscular
+  SC:           4142048,  // Subcutaneous
+  PO:           4132161,  // Oral
+  ENTERAL:      4167540,  // Enteral
+  SL:           4292110,  // Sublingual
+  BUCCAL:       4181897,  // Buccal
+  IN:           4262914,  // Nasal
+  PR:           4290759,  // Rectal
+  INHALATION:   40486069, // Respiratory tract
+  TOPICAL:      4263689,  // Topical
+  TRANSDERMAL:  4262099,  // Transdermal
+  INFILTRATION: 37397638, // Infiltration
+  PERINEURAL:   4157761,  // Perineural
+  EPIDURAL:     4225555,  // Epidural
+  INTRATHECAL:  4217202,  // Intrathecal
+  INTRAOSSEOUS: 4213522,  // Intraosseous
+  ENDOTRACHEAL: 4229543,  // Intratracheal
+}
+
+/**
+ * A route as written (a code, a word, or the "INHALATIONAL" a volatile agent is given under) as its standard
+ * concept, or 0 when it is none LOSPOR knows. The written route always stays in route_source_value.
+ */
+export function routeConceptFor(route: string | null | undefined): number {
+  if (!route) return 0
+  const written = route.trim().toUpperCase()
+  const code = written === "INHALATIONAL" ? "INHALATION" : normalizeAdministrationRoute(written)
+  return code ? ROUTE_CONCEPTS[code] : 0
 }
 
 export const AIRWAY_ACT_CONCEPTS: Record<string, number> = {

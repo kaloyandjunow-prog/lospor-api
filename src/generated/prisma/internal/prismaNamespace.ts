@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.9.1
- * Query Engine version: e922089b7d7502aff4249d5da3420f6fa55fc6ad
+ * Prisma Client JS version: 7.10.1
+ * Query Engine version: d1b3f377ca835d73fd50954a5e22128b9ebdd6b8
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.9.1",
-  engine: "e922089b7d7502aff4249d5da3420f6fa55fc6ad"
+  client: "7.10.1",
+  engine: "d1b3f377ca835d73fd50954a5e22128b9ebdd6b8"
 }
 
 /**
@@ -410,6 +410,9 @@ export const ModelName = {
   OperatingTheatre: 'OperatingTheatre',
   IndicatorPolicy: 'IndicatorPolicy',
   IntraopAutomationPolicy: 'IntraopAutomationPolicy',
+  VitalStatTally: 'VitalStatTally',
+  VitalStatTallyScope: 'VitalStatTallyScope',
+  VitalStatTallyCase: 'VitalStatTallyCase',
   CaseIndicatorSummary: 'CaseIndicatorSummary',
   OperatingTheatrePolicy: 'OperatingTheatrePolicy',
   CaseLock: 'CaseLock',
@@ -497,7 +500,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "operatingTheatre" | "indicatorPolicy" | "intraopAutomationPolicy" | "caseIndicatorSummary" | "operatingTheatrePolicy" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "drugColor" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopDocumentPolicy" | "consentTemplateVersion" | "caseConsentPrint" | "preopProfileQuestion" | "preopProfileSection" | "preopProfileOrderOption" | "preopProfileConsultSpecialty" | "preopWardOrder" | "preopMedicationInstruction" | "preopPremedicationOrder" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "performedProcedure" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "operatingTheatre" | "indicatorPolicy" | "intraopAutomationPolicy" | "vitalStatTally" | "vitalStatTallyScope" | "vitalStatTallyCase" | "caseIndicatorSummary" | "operatingTheatrePolicy" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "drugColor" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopDocumentPolicy" | "consentTemplateVersion" | "caseConsentPrint" | "preopProfileQuestion" | "preopProfileSection" | "preopProfileOrderOption" | "preopProfileConsultSpecialty" | "preopWardOrder" | "preopMedicationInstruction" | "preopPremedicationOrder" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "performedProcedure" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1460,6 +1463,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.IntraopAutomationPolicyCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.IntraopAutomationPolicyCountAggregateOutputType> | number
+        }
+      }
+    }
+    VitalStatTally: {
+      payload: Prisma.$VitalStatTallyPayload<ExtArgs>
+      fields: Prisma.VitalStatTallyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.VitalStatTallyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.VitalStatTallyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>
+        }
+        findFirst: {
+          args: Prisma.VitalStatTallyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.VitalStatTallyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>
+        }
+        findMany: {
+          args: Prisma.VitalStatTallyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>[]
+        }
+        create: {
+          args: Prisma.VitalStatTallyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>
+        }
+        createMany: {
+          args: Prisma.VitalStatTallyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.VitalStatTallyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>[]
+        }
+        delete: {
+          args: Prisma.VitalStatTallyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>
+        }
+        update: {
+          args: Prisma.VitalStatTallyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>
+        }
+        deleteMany: {
+          args: Prisma.VitalStatTallyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.VitalStatTallyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.VitalStatTallyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>[]
+        }
+        upsert: {
+          args: Prisma.VitalStatTallyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyPayload>
+        }
+        aggregate: {
+          args: Prisma.VitalStatTallyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateVitalStatTally>
+        }
+        groupBy: {
+          args: Prisma.VitalStatTallyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VitalStatTallyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.VitalStatTallyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VitalStatTallyCountAggregateOutputType> | number
+        }
+      }
+    }
+    VitalStatTallyScope: {
+      payload: Prisma.$VitalStatTallyScopePayload<ExtArgs>
+      fields: Prisma.VitalStatTallyScopeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.VitalStatTallyScopeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.VitalStatTallyScopeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>
+        }
+        findFirst: {
+          args: Prisma.VitalStatTallyScopeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.VitalStatTallyScopeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>
+        }
+        findMany: {
+          args: Prisma.VitalStatTallyScopeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>[]
+        }
+        create: {
+          args: Prisma.VitalStatTallyScopeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>
+        }
+        createMany: {
+          args: Prisma.VitalStatTallyScopeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.VitalStatTallyScopeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>[]
+        }
+        delete: {
+          args: Prisma.VitalStatTallyScopeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>
+        }
+        update: {
+          args: Prisma.VitalStatTallyScopeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>
+        }
+        deleteMany: {
+          args: Prisma.VitalStatTallyScopeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.VitalStatTallyScopeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.VitalStatTallyScopeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>[]
+        }
+        upsert: {
+          args: Prisma.VitalStatTallyScopeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyScopePayload>
+        }
+        aggregate: {
+          args: Prisma.VitalStatTallyScopeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateVitalStatTallyScope>
+        }
+        groupBy: {
+          args: Prisma.VitalStatTallyScopeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VitalStatTallyScopeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.VitalStatTallyScopeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VitalStatTallyScopeCountAggregateOutputType> | number
+        }
+      }
+    }
+    VitalStatTallyCase: {
+      payload: Prisma.$VitalStatTallyCasePayload<ExtArgs>
+      fields: Prisma.VitalStatTallyCaseFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.VitalStatTallyCaseFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.VitalStatTallyCaseFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>
+        }
+        findFirst: {
+          args: Prisma.VitalStatTallyCaseFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.VitalStatTallyCaseFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>
+        }
+        findMany: {
+          args: Prisma.VitalStatTallyCaseFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>[]
+        }
+        create: {
+          args: Prisma.VitalStatTallyCaseCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>
+        }
+        createMany: {
+          args: Prisma.VitalStatTallyCaseCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.VitalStatTallyCaseCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>[]
+        }
+        delete: {
+          args: Prisma.VitalStatTallyCaseDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>
+        }
+        update: {
+          args: Prisma.VitalStatTallyCaseUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>
+        }
+        deleteMany: {
+          args: Prisma.VitalStatTallyCaseDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.VitalStatTallyCaseUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.VitalStatTallyCaseUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>[]
+        }
+        upsert: {
+          args: Prisma.VitalStatTallyCaseUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VitalStatTallyCasePayload>
+        }
+        aggregate: {
+          args: Prisma.VitalStatTallyCaseAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateVitalStatTallyCase>
+        }
+        groupBy: {
+          args: Prisma.VitalStatTallyCaseGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VitalStatTallyCaseGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.VitalStatTallyCaseCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VitalStatTallyCaseCountAggregateOutputType> | number
         }
       }
     }
@@ -7030,6 +7255,37 @@ export const IntraopAutomationPolicyScalarFieldEnum = {
 export type IntraopAutomationPolicyScalarFieldEnum = (typeof IntraopAutomationPolicyScalarFieldEnum)[keyof typeof IntraopAutomationPolicyScalarFieldEnum]
 
 
+export const VitalStatTallyScalarFieldEnum = {
+  scopeKey: 'scopeKey',
+  band: 'band',
+  sign: 'sign',
+  value: 'value',
+  count: 'count'
+} as const
+
+export type VitalStatTallyScalarFieldEnum = (typeof VitalStatTallyScalarFieldEnum)[keyof typeof VitalStatTallyScalarFieldEnum]
+
+
+export const VitalStatTallyScopeScalarFieldEnum = {
+  scopeKey: 'scopeKey',
+  band: 'band',
+  sign: 'sign',
+  cases: 'cases'
+} as const
+
+export type VitalStatTallyScopeScalarFieldEnum = (typeof VitalStatTallyScopeScalarFieldEnum)[keyof typeof VitalStatTallyScopeScalarFieldEnum]
+
+
+export const VitalStatTallyCaseScalarFieldEnum = {
+  caseId: 'caseId',
+  scopeKey: 'scopeKey',
+  contribution: 'contribution',
+  talliedAt: 'talliedAt'
+} as const
+
+export type VitalStatTallyCaseScalarFieldEnum = (typeof VitalStatTallyCaseScalarFieldEnum)[keyof typeof VitalStatTallyCaseScalarFieldEnum]
+
+
 export const CaseIndicatorSummaryScalarFieldEnum = {
   caseId: 'caseId',
   institutionId: 'institutionId',
@@ -9293,6 +9549,9 @@ export type GlobalOmitConfig = {
   operatingTheatre?: Prisma.OperatingTheatreOmit
   indicatorPolicy?: Prisma.IndicatorPolicyOmit
   intraopAutomationPolicy?: Prisma.IntraopAutomationPolicyOmit
+  vitalStatTally?: Prisma.VitalStatTallyOmit
+  vitalStatTallyScope?: Prisma.VitalStatTallyScopeOmit
+  vitalStatTallyCase?: Prisma.VitalStatTallyCaseOmit
   caseIndicatorSummary?: Prisma.CaseIndicatorSummaryOmit
   operatingTheatrePolicy?: Prisma.OperatingTheatrePolicyOmit
   caseLock?: Prisma.CaseLockOmit

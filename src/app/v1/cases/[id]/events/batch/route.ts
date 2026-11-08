@@ -30,9 +30,8 @@ import {
 } from "@/lib/clinical-transaction"
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
-import { intraopSchema } from "@/lib/schemas/case"
+import { atomicIntraopPatchFrom } from "@/lib/atomic-intraop-patch-input"
 import { mapIntraop, mapIntraopUpdate } from "../../../_mappers"
-import { invalidateIntraopAutomationCaches } from "@/lib/intraop-automation"
 import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
 import { automationDuplicateClinicalEvent, automationTechniqueConflict, coalesceAutomationClinicalEvent } from "@/lib/automation-conflicts"
 
@@ -115,14 +114,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const normalize = (event: z.infer<typeof caseEventWriteSchema>) => {
     let normalized: Record<string, unknown> = { ...event, id: event.id ?? crypto.randomUUID() }
     if (normalized.intraopPatch !== undefined) {
-      const patch = intraopSchema.safeParse(normalized.intraopPatch)
-      if (!patch.success) {
-        throw new BatchRouteResponse(NextResponse.json({
-          error: "Invalid structured intraop change",
-          issues: patch.error.issues.map(issue => ({ field: issue.path.join("."), message: issue.message })),
-        }, { status: 400 }))
-      }
-      normalized = { ...normalized, intraopPatch: patch.data as Record<string, unknown> }
+      const patch = atomicIntraopPatchFrom(normalized.intraopPatch)
+      if (!patch.ok) throw new BatchRouteResponse(NextResponse.json(patch.body, { status: patch.status }))
+      normalized = { ...normalized, intraopPatch: patch.patch }
     }
     const piiError = checkEventPII(normalized)
     if (piiError) throw new BatchRouteResponse(NextResponse.json(piiErrorBody(piiError), { status: 400 }))
@@ -279,7 +273,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (result instanceof Response) return result
     if (result.changed) {
-      invalidateIntraopAutomationCaches()
       after(() => logAudit(user.id, "CASE_EVENT_ADD", id, {
         added: adds.length, updated: updates.length, removed: removes.length, source,
       }))

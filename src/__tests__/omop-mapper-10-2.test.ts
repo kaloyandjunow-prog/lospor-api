@@ -101,4 +101,110 @@ describe("the 10.2.0 export", () => {
     const all = [...b.condition_occurrence, ...b.observation] as { suggestion_source_value?: string | null }[]
     expect(all.some(row => row.suggestion_source_value === "lab:hyperkalaemia")).toBe(true)
   })
+
+  it("exports a placement procedure for every airway entry, each at its own time, and not the reintubation twice", () => {
+    const b = bundleWith(c => {
+      c.intraop.airwayDevices = ["LMA", "ORAL_ETT"]
+      c.intraop.airwayDeviceEntries = [
+        { id: "a", device: "LMA", details: {}, insertedAt: "2026-06-01T08:10:00.000Z", status: "failed", endedAt: "2026-06-01T08:20:00.000Z", replacedBy: "b", reason: "failed" },
+        { id: "b", device: "ORAL_ETT", details: {}, insertedAt: "2026-06-01T08:20:00.000Z", status: "failed", endedAt: "2026-06-01T09:00:00.000Z", replacedBy: "c", reason: "failed" },
+        { id: "c", device: "ORAL_ETT", details: {}, insertedAt: "2026-06-01T09:00:00.000Z", status: "in_use", sourceEventId: "re1" },
+      ]
+      c.events.push(event("clinical_event", 60, { label: "Reintubation" }, { id: "re1" }))
+    })
+    const placements = b.procedure_occurrence.filter(row => row.procedure_source_value?.startsWith("AIRWAY_MANAGEMENT:"))
+    expect(placements.map(row => [row.procedure_source_value, row.procedure_datetime?.slice(11, 16)])).toEqual([
+      ["AIRWAY_MANAGEMENT:SUPRAGLOTTIC_AIRWAY_PLACEMENT:failed", "08:10"],
+      ["AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL:failed", "08:20"],
+      ["AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL", "09:00"],
+    ])
+    // The entry is the placement; its Reintubation event is not a second one.
+    expect(b.procedure_occurrence.some(row => row.procedure_source_value === "INTRAOP_EVENT:Reintubation")).toBe(false)
+  })
+
+  it("keeps a Reintubation event that no airway entry accounts for", () => {
+    const b = bundleWith(c => { c.events.push(event("clinical_event", 60, { label: "Reintubation" }, { id: "re9" })) })
+    expect(b.procedure_occurrence.some(row => row.procedure_source_value === "INTRAOP_EVENT:Reintubation")).toBe(true)
+  })
+
+  it("dates a line at the time it went in", () => {
+    const b = bundleWith(c => {
+      const rows = c.intraop.vascularAccessRows as Record<string, unknown>[]
+      rows[0] = { ...rows[0], preexisting: false, insertedAt: at(25) }
+    })
+    const line = b.procedure_occurrence.find(row => row.procedure_source_value?.startsWith("VASCULAR_ACCESS:"))
+    expect(line?.procedure_datetime?.slice(11, 16)).toBe("08:25")
+  })
+
+  it("exports every tourniquet, each with its site and side", () => {
+    const b = bundleWith(c => {
+      c.events.push(
+        event("clinical_event", 10, { label: "Tourniquet on" }, { site: "lThigh" }),
+        event("clinical_event", 11, { label: "Tourniquet on" }, { site: "rForearm" }),
+        event("clinical_event", 70, { label: "Tourniquet off" }, { site: "lThigh" }),
+        event("clinical_event", 80, { label: "Tourniquet off" }, { site: "rForearm" }),
+        event("clinical_event", 90, { label: "Tourniquet on" }),
+      )
+    })
+    const rows = b.procedure_occurrence.filter(row => row.procedure_source_value?.startsWith("INTRAOP_EVENT:Tourniquet"))
+    expect(rows.map(row => [row.procedure_source_value, row.procedure_concept_id, row.modifier_source_value, row.modifier_concept_id])).toEqual([
+      ["INTRAOP_EVENT:Tourniquet on", 4049036, "SITE:lThigh", 4300877],
+      ["INTRAOP_EVENT:Tourniquet on", 4049036, "SITE:rForearm", 4080761],
+      ["INTRAOP_EVENT:Tourniquet off", 4084008, "SITE:lThigh", 4300877],
+      ["INTRAOP_EVENT:Tourniquet off", 4084008, "SITE:rForearm", 4080761],
+      ["INTRAOP_EVENT:Tourniquet on", 4049036, null, 0],
+    ])
+  })
+
+  it("gives every drug the moment it was given, and an administration the moment it stopped", () => {
+    const b = bundleWith(() => {})
+    const drug = (needle: string) => b.drug_exposure.find(row => row.drug_source_value?.includes(needle))!
+    expect(drug("Fentanyl").drug_exposure_start_datetime?.slice(0, 16)).toBe("2026-06-01T08:20")
+    expect(drug("Fentanyl").drug_exposure_end_datetime).toBeNull()
+    expect(drug("Propofol").drug_exposure_start_datetime?.slice(0, 16)).toBe("2026-06-01T08:25")
+    expect(drug("Propofol").drug_exposure_end_datetime?.slice(0, 16)).toBe("2026-06-01T09:10")
+    expect(drug("Sevoflurane").drug_exposure_end_datetime?.slice(0, 16)).toBe("2026-06-01T09:05")
+    // The day columns are unchanged.
+    expect(drug("Fentanyl").drug_exposure_start_date).toBe("2026-06-01")
+  })
+
+  it("exports only the day of an arrest dose whose time was reconstructed", () => {
+    const b = bundleWith(c => {
+      c.events.push(event("drug", 45, { label: "Epinephrine / Adrenaline", unit: "mcg", drugRoute: "IV", metadataJson: { name: "Epinephrine / Adrenaline", dose: "1000", timeApproximate: true } }))
+    })
+    const dose = b.drug_exposure.find(row => row.drug_source_value?.includes("Epinephrine"))!
+    expect(dose.drug_exposure_start_date).toBe("2026-06-01")
+    expect(dose.drug_exposure_start_datetime).toBeNull()
+  })
+
+  it("leaves the moment empty for a drug known by its day only", () => {
+    const b = bundleWith(() => {})
+    const premed = b.drug_exposure.find(row => row.drug_source_value?.startsWith("PREMED:"))!
+    expect(premed.drug_exposure_start_datetime).toBeNull()
+    expect(premed.drug_exposure_end_datetime).toBeNull()
+  })
+
+  it("codes the route: the standard concept beside the route as written", () => {
+    const b = bundleWith(c => {
+      c.events.push(
+        event("drug", 30, { label: "Bupivacaine", unit: "mg", drugRoute: "INTRATHECAL", standardConceptId: 1, metadataJson: { name: "Bupivacaine", dose: "10" } }),
+        event("drug", 31, { label: "Mystery", unit: "mg", drugRoute: "via the moon", metadataJson: { name: "Mystery", dose: "1" } }),
+      )
+    })
+    const row = (needle: string) => b.drug_exposure.find(item => item.drug_source_value?.includes(needle))!
+    expect([row("Fentanyl").route_concept_id, row("Fentanyl").route_source_value]).toEqual([4171047, "IV"])
+    expect([row("Bupivacaine").route_concept_id, row("Bupivacaine").route_source_value]).toEqual([4217202, "INTRATHECAL"])
+    expect([row("Sevoflurane").route_concept_id, row("Sevoflurane").route_source_value]).toEqual([40486069, "INHALATIONAL"])
+    expect([row("PREMED:").route_concept_id, row("PREMED:").route_source_value]).toEqual([4132161, "PO"])
+    // A route nobody knows is concept 0 and still readable.
+    expect([row("Mystery").route_concept_id, row("Mystery").route_source_value]).toEqual([0, "via the moon"])
+  })
+
+  it("has a standard concept for every route LOSPOR offers", async () => {
+    const { ADMINISTRATION_ROUTE_CODES } = await import("@lospor/core/clinical-rule-vocabulary")
+    const { ROUTE_CONCEPTS, routeConceptFor } = await import("@/lib/omop-mapper/concepts")
+    for (const code of ADMINISTRATION_ROUTE_CODES) expect(ROUTE_CONCEPTS[code], code).toBeGreaterThan(0)
+    expect(new Set(Object.values(ROUTE_CONCEPTS)).size).toBe(Object.keys(ROUTE_CONCEPTS).length)
+    expect([routeConceptFor("Oral"), routeConceptFor(" iv "), routeConceptFor(null), routeConceptFor("")]).toEqual([4132161, 4171047, 0, 0])
+  })
 })
