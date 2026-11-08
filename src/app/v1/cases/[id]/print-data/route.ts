@@ -3,6 +3,7 @@ import { caseTheatreName } from "@lospor/core/operating-theatres"
 import { operatingTheatresEnabled } from "@/lib/operating-theatres"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
+import { deletedCaseLog } from "@/lib/case-events"
 import { caseReadWhereForUser } from "@/lib/access-control"
 import { verifyPrintToken } from "@/lib/print-token"
 import { preopDocuments } from "@/lib/preop/documents"
@@ -74,6 +75,8 @@ export async function GET(
     // Off, nothing prints unless the case kept a name from its start.
     theatreName: record.operatingTheatreName ?? (await operatingTheatresEnabled(prisma) ? caseTheatreName(record) : null),
     preop: record.preop ? preop : null,
+    // Entries deleted during the case stay on the printed record, struck through (11.0).
+    deletedEvents: await deletedCaseLog(prisma, id),
     preopDocuments: await preopDocuments(prisma),
     preopQuestionnaire: preopQuestionnaire(record.preop, assessmentAnswers, profile, record.clinicalMode),
   })

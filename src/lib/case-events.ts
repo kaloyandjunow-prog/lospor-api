@@ -406,6 +406,26 @@ export async function activeCaseLog(tx: Tx, caseId: string): Promise<LogEvent[]>
 }
 
 /**
+ * The entries deleted from a case, as they were, each with the minute it was deleted (11.0). The printed
+ * record keeps them on the sheet, struck through. An entry deleted before 9.13.0 has no deletion minute.
+ * Of a logical event only its latest version counts, and one that is active again is not listed.
+ */
+export async function deletedCaseLog(tx: Tx, caseId: string): Promise<Array<LogEvent & { deletedAt?: string }>> {
+  const rows = await tx.caseEvent.findMany({
+    where:  { caseId, status: { in: ["active", "deleted"] } },
+    select: { logicalId: true, version: true, status: true, metadataJson: true, madeAt: true },
+  })
+  const latest = new Map<string, (typeof rows)[number]>()
+  for (const row of rows) {
+    const current = latest.get(row.logicalId)
+    if (!current || row.version > current.version) latest.set(row.logicalId, row)
+  }
+  return [...latest.values()]
+    .filter(row => row.status === "deleted" && row.metadataJson && typeof row.metadataJson === "object")
+    .map(row => ({ ...(row.metadataJson as unknown as LogEvent), id: (row.metadataJson as unknown as LogEvent).id ?? row.logicalId, ...(row.madeAt ? { deletedAt: row.madeAt.toISOString() } : {}) }))
+}
+
+/**
  * The Core timeline rules, applied on the server to the log a write would
  * produce (1.4.9): a stop before its start, a change or stop of something not
  * running, a stop before a later change, a vital in the future. Only issues

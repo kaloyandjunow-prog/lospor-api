@@ -5,6 +5,7 @@ import {
   timelineIssuesFor,
   buildRow,
   caseEventDrugAuditColumns,
+  deletedCaseLog,
   projectTimetable,
   reserveIntraopRevision,
   sortLogDeterministic,
@@ -350,5 +351,31 @@ describe("timeline rules on the server (1.4.9)", () => {
   it("deleting a start takes its change and stop", () => {
     expect(cascadeDeleteIds(log, "s")).toEqual(["s", "r", "x"])
     expect(cascadeDeleteIds(log, "unknown")).toEqual(["unknown"])
+  })
+})
+
+describe("deletedCaseLog", () => {
+  const tx = (rows: unknown[]) => ({ caseEvent: { findMany: vi.fn().mockResolvedValue(rows) } }) as unknown as Parameters<typeof deletedCaseLog>[0]
+  const ev = (id: string, name: string) => ({ id, type: "drug", name, dose: "10", unit: "mg", ts: at(10) })
+
+  it("lists a deleted entry as it was, with the minute it was deleted", async () => {
+    const out = await deletedCaseLog(tx([{ logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Fentanyl"), madeAt: new Date(at(12)) }]), "c1")
+    expect(out).toEqual([expect.objectContaining({ id: "a", name: "Fentanyl", deletedAt: at(12) })])
+  })
+
+  it("leaves the deletion minute out for a row deleted before it was recorded", async () => {
+    const out = await deletedCaseLog(tx([{ logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Fentanyl"), madeAt: null }]), "c1")
+    expect(out[0]).not.toHaveProperty("deletedAt")
+  })
+
+  it("skips an entry whose latest version is active again, and takes only the latest version of a deleted one", async () => {
+    const out = await deletedCaseLog(tx([
+      { logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Old"), madeAt: new Date(at(11)) },
+      { logicalId: "a", version: 2, status: "active", metadataJson: ev("a", "Back"), madeAt: null },
+      { logicalId: "b", version: 1, status: "active", metadataJson: ev("b", "Kept"), madeAt: null },
+      { logicalId: "c", version: 1, status: "deleted", metadataJson: ev("c", "First"), madeAt: new Date(at(12)) },
+      { logicalId: "c", version: 2, status: "deleted", metadataJson: ev("c", "Second"), madeAt: new Date(at(13)) },
+    ]), "c1")
+    expect(out.map(e => e.name)).toEqual(["Second"])
   })
 })
