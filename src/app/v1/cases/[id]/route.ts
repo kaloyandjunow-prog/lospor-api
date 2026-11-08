@@ -9,7 +9,7 @@ import { parseLenient } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
-import { activeCaseLog, rebuildProjection } from "@/lib/case-events"
+import { activeCaseLog, deletedCaseLog, rebuildProjection } from "@/lib/case-events"
 import { autoEndCaseIfStale } from "@/lib/intraop-auto-end"
 import { intraopEntriesOutsideCase } from "@lospor/core/intraop-commands"
 import { parseLogEvents } from "@lospor/core/intraop-types"
@@ -178,6 +178,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ...normalizedRecord,
     ...(preopOrders && normalizedRecord.preop ? { preop: { ...normalizedRecord.preop, wardOrders: undefined, medicationInstructions: undefined, premedicationOrders: undefined, ...preopOrders } } : {}),
     capabilities: caseCapabilitiesForUser(user, record),
+    // The record keeps what was deleted, struck through. Asked for, not sent to every reader of the case (11.0).
+    ...(req.nextUrl.searchParams.get("deleted") === "1" ? { deletedEvents: await deletedCaseLog(prisma, id) } : {}),
     // The operating theatre (10.0.0): the name it kept, and whether it can still change.
     theatre: theatresOn || record.operatingTheatreName ? caseTheatreView(record) : null,
     operatingTheatre: undefined,

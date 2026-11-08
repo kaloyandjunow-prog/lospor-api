@@ -20,7 +20,7 @@ function secret() {
 }
 
 // GET /api/cases/:id/pdf[?print_token=…]
-// Returns the finished-case record as a real A4-landscape PDF file, generated
+// Returns the finished-case record as a real A4 PDF file (portrait pages, one landscape page for the timetable), generated
 // server-side by rendering /cases/[id]/print in headless Chrome. This is what
 // the phone opens for "Print case" — a proper PDF instead of fighting the
 // mobile browser's print dialog. Auth: print token (mobile flow) or the normal
@@ -100,7 +100,7 @@ export async function GET(
   const lang = langParam === "bg" ? "bg" : langParam === "en" ? "en" : (req.cookies.get("locale")?.value === "bg" ? "bg" : undefined)
 
   try {
-    const pdf = await renderRecordPdf(pageUrl, lang, preopSummary ? { landscape: false, readySelector: "[data-preop-summary-ready]" } : {})
+    const pdf = await renderRecordPdf(pageUrl, lang, preopSummary ? { landscape: false, readySelector: "[data-preop-summary-ready]" } : { landscape: false, readySelector: "[data-testid=record-sheets]" })
     // Single use: the headless browser has finished with it, so burn it rather
     // than leave a valid token sitting in this process's logs for five minutes.
     // Only on success — the failure path below still needs it to redirect.
