@@ -564,6 +564,8 @@ export function mapIntraopToOmop(
           range_low:                 null,
           range_high:                null,
           visit_occurrence_id: ctx.visitId,
+          // 10.2.0: a gas change made from a treatment card is flagged, like a dose.
+          suggestion_source_value:   suggestionOf(ev),
         })
       }
       ctx.sourceObservation("LOSPOR:FGF_L_PER_MIN", ev.fgfLitersPerMin, isoDate(ev.timestamp),

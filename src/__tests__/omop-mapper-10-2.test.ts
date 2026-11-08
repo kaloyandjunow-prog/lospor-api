@@ -23,6 +23,17 @@ describe("the 10.2.0 export", () => {
     }
   })
 
+  it("flags a gas change made from a treatment card, and leaves one set by hand unflagged", () => {
+    const b = bundleWith(c => {
+      c.events.push(
+        event("gas_change", 20, { fio2Percent: 100 }, { suggestion: "card:Hypoxia / desaturation:oxygen" }),
+        event("gas_change", 40, { fio2Percent: 60 }),
+      )
+    })
+    const fio2 = b.measurement.filter(row => row.measurement_source_value === "LOINC:3150-0" && [100, 60].includes(row.value_as_number as number))
+    expect(fio2.map(row => [row.value_as_number, row.suggestion_source_value ?? null])).toEqual([[100, "card:Hypoxia / desaturation:oxygen"], [60, null]])
+  })
+
   it("exports each airway device as its own row, a failed tube and its replacement both", () => {
     const b = bundleWith(c => {
       c.intraop.airwayDevices = ["ORAL_ETT"]
