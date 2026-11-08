@@ -32,6 +32,27 @@
 - **Clinical baselines:** the release includes the new fingerprinted rule
   baselines and the updated data dictionary.
 
+- **Case reads for the anaesthesia record:** `GET /v1/cases/{id}?deleted=1` adds
+  `deletedEvents` (the entries deleted from the case, each with the minute it
+  was deleted); `GET /v1/cases/{id}?view=timetable` is a narrow read of the
+  chart, start, zone and procedure name (13 KB against 148 KB for a long demo
+  case); `print-data` always carries `deletedEvents`; the PDF route renders
+  the record as portrait pages with one landscape timetable page.
+- **Timed complications, shocks and end corrections (from the 10.1.0 work):**
+  `IntraopAutomationPolicy` and `GET /v1/intraop/automation` (the settings, and
+  per-band reading counts for the vitals questions); `complication`,
+  `defibrillation` and `prompt_answer` events validated at the boundary;
+  `CaseComplication.endTimestamp`; open vitals episodes close at the case end;
+  and changing the end of an ended case needs a coded reason and is audited
+  (`CASE_INTRAOP_END_CORRECTED`).
+- **Atomic intraoperative patches:** airway and vascular patches travel with
+  their event; events can be marked `timeApproximate`; suggestion acceptance per
+  automation and a succession overview are served for Status.
+- **Export:** complication start and end times in `CONDITION_OCCURRENCE`, the
+  drug moment and the standard route on drug exposures, a flag on a gas change
+  made from a treatment card, and the research export writes every table the
+  mapper emits. Data dictionary 4.11.0.
+
 ### Changed
 
 - **Vital-sign statistics:** the hospital's reading distribution behind the
@@ -47,6 +68,13 @@
 - **Research export:** invasive blood-pressure concepts, technique-side
   modifiers, catheter concepts, and complication start/end times are mapped to
   the release contract.
+
+- **Faster reads:** the deleted-entries query reads the deleted rows first and
+  only the version numbers of the active rows that share their ids, instead of
+  every event's JSON.
+- **Dependencies:** Next 16.4.5, Prisma 7.10.1, zod, puppeteer; `fast-uri` 3.1.9
+  (four moderate advisories).
+- **Scripts** no longer carry a hard-coded password or LAN addresses.
 
 ### Fixed
 
