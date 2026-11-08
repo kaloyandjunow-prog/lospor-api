@@ -409,19 +409,30 @@ export async function activeCaseLog(tx: Tx, caseId: string): Promise<LogEvent[]>
  * The entries deleted from a case, as they were, each with the minute it was deleted (11.0). The printed
  * record keeps them on the sheet, struck through. An entry deleted before 9.13.0 has no deletion minute.
  * Of a logical event only its latest version counts, and one that is active again is not listed.
+ *
+ * Two small reads rather than one large one: the deleted rows (usually none, and the only ones whose JSON
+ * is needed), then the version numbers, without the JSON, of the active rows that share their ids. A case
+ * of hundreds of events no longer ships every event's JSON to learn which few were deleted.
  */
 export async function deletedCaseLog(tx: Tx, caseId: string): Promise<Array<LogEvent & { deletedAt?: string }>> {
-  const rows = await tx.caseEvent.findMany({
-    where:  { caseId, status: { in: ["active", "deleted"] } },
-    select: { logicalId: true, version: true, status: true, metadataJson: true, madeAt: true },
+  const deleted = await tx.caseEvent.findMany({
+    where:  { caseId, status: "deleted" },
+    select: { logicalId: true, version: true, metadataJson: true, madeAt: true },
   })
-  const latest = new Map<string, (typeof rows)[number]>()
-  for (const row of rows) {
-    const current = latest.get(row.logicalId)
-    if (!current || row.version > current.version) latest.set(row.logicalId, row)
+  if (deleted.length === 0) return []
+  const latestDeleted = new Map<string, (typeof deleted)[number]>()
+  for (const row of deleted) {
+    const current = latestDeleted.get(row.logicalId)
+    if (!current || row.version > current.version) latestDeleted.set(row.logicalId, row)
   }
-  return [...latest.values()]
-    .filter(row => row.status === "deleted" && row.metadataJson && typeof row.metadataJson === "object")
+  const active = await tx.caseEvent.findMany({
+    where:  { caseId, status: "active", logicalId: { in: [...latestDeleted.keys()] } },
+    select: { logicalId: true, version: true },
+  })
+  const latestActive = new Map<string, number>()
+  for (const row of active) latestActive.set(row.logicalId, Math.max(row.version, latestActive.get(row.logicalId) ?? 0))
+  return [...latestDeleted.values()]
+    .filter(row => row.version > (latestActive.get(row.logicalId) ?? 0) && row.metadataJson && typeof row.metadataJson === "object")
     .map(row => ({ ...(row.metadataJson as unknown as LogEvent), id: (row.metadataJson as unknown as LogEvent).id ?? row.logicalId, ...(row.madeAt ? { deletedAt: row.madeAt.toISOString() } : {}) }))
 }
 

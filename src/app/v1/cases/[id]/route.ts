@@ -10,6 +10,7 @@ import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
 import { activeCaseLog, deletedCaseLog, rebuildProjection } from "@/lib/case-events"
+import { caseTimetableView } from "@/lib/case-timetable-view"
 import { autoEndCaseIfStale } from "@/lib/intraop-auto-end"
 import { intraopEntriesOutsideCase } from "@lospor/core/intraop-commands"
 import { parseLogEvents } from "@lospor/core/intraop-types"
@@ -105,6 +106,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     await autoEndCaseIfStale(id).catch(() => {
       console.error("[GET case] INTRAOP_AUTO_END_FAILED")
     })
+  }
+
+  // The timetable viewer asks for the chart alone (11.0): one narrow read instead of the whole case.
+  if (req.nextUrl.searchParams.get("view") === "timetable") {
+    const light = await caseTimetableView(prisma, where, { withDeleted: req.nextUrl.searchParams.get("deleted") === "1" })
+    return light ? NextResponse.json(light) : NextResponse.json({ error: "Not found" }, { status: 404 })
   }
 
   const record = await prisma.case.findFirst({

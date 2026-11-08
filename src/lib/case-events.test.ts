@@ -355,27 +355,48 @@ describe("timeline rules on the server (1.4.9)", () => {
 })
 
 describe("deletedCaseLog", () => {
-  const tx = (rows: unknown[]) => ({ caseEvent: { findMany: vi.fn().mockResolvedValue(rows) } }) as unknown as Parameters<typeof deletedCaseLog>[0]
+  type Row = { logicalId: string; version: number; status: string; metadataJson?: unknown; madeAt?: Date | null }
+  // A table that answers the way the database would for the two reads the function makes.
+  const tx = (rows: Row[]) => {
+    const findMany = vi.fn(async ({ where }: { where: { status: string; logicalId?: { in: string[] } } }) =>
+      rows.filter(r => r.status === where.status && (!where.logicalId || where.logicalId.in.includes(r.logicalId))))
+    return { client: { caseEvent: { findMany } } as unknown as Parameters<typeof deletedCaseLog>[0], findMany }
+  }
   const ev = (id: string, name: string) => ({ id, type: "drug", name, dose: "10", unit: "mg", ts: at(10) })
 
   it("lists a deleted entry as it was, with the minute it was deleted", async () => {
-    const out = await deletedCaseLog(tx([{ logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Fentanyl"), madeAt: new Date(at(12)) }]), "c1")
-    expect(out).toEqual([expect.objectContaining({ id: "a", name: "Fentanyl", deletedAt: at(12) })])
+    const { client } = tx([{ logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Fentanyl"), madeAt: new Date(at(12)) }])
+    expect(await deletedCaseLog(client, "c1")).toEqual([expect.objectContaining({ id: "a", name: "Fentanyl", deletedAt: at(12) })])
   })
 
   it("leaves the deletion minute out for a row deleted before it was recorded", async () => {
-    const out = await deletedCaseLog(tx([{ logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Fentanyl"), madeAt: null }]), "c1")
-    expect(out[0]).not.toHaveProperty("deletedAt")
+    const { client } = tx([{ logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Fentanyl"), madeAt: null }])
+    expect((await deletedCaseLog(client, "c1"))[0]).not.toHaveProperty("deletedAt")
   })
 
   it("skips an entry whose latest version is active again, and takes only the latest version of a deleted one", async () => {
-    const out = await deletedCaseLog(tx([
+    const { client } = tx([
       { logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Old"), madeAt: new Date(at(11)) },
       { logicalId: "a", version: 2, status: "active", metadataJson: ev("a", "Back"), madeAt: null },
       { logicalId: "b", version: 1, status: "active", metadataJson: ev("b", "Kept"), madeAt: null },
       { logicalId: "c", version: 1, status: "deleted", metadataJson: ev("c", "First"), madeAt: new Date(at(12)) },
       { logicalId: "c", version: 2, status: "deleted", metadataJson: ev("c", "Second"), madeAt: new Date(at(13)) },
-    ]), "c1")
-    expect(out.map(e => e.name)).toEqual(["Second"])
+    ])
+    expect((await deletedCaseLog(client, "c1")).map(e => e.name)).toEqual(["Second"])
+  })
+
+  it("reads nothing more when nothing was deleted, and never loads the active events' JSON", async () => {
+    const none = tx([{ logicalId: "b", version: 1, status: "active", metadataJson: ev("b", "Kept"), madeAt: null }])
+    expect(await deletedCaseLog(none.client, "c1")).toEqual([])
+    expect(none.findMany).toHaveBeenCalledTimes(1)
+
+    const some = tx([
+      { logicalId: "a", version: 1, status: "deleted", metadataJson: ev("a", "Gone"), madeAt: null },
+      { logicalId: "b", version: 1, status: "active", metadataJson: ev("b", "Kept"), madeAt: null },
+    ])
+    await deletedCaseLog(some.client, "c1")
+    const activeRead = some.findMany.mock.calls[1]![0] as unknown as { select: Record<string, boolean>; where: { logicalId: { in: string[] } } }
+    expect(activeRead.select).toEqual({ logicalId: true, version: true })
+    expect(activeRead.where.logicalId.in).toEqual(["a"])
   })
 })
