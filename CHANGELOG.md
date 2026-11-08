@@ -4,6 +4,10 @@
 
 ### Added
 
+- **`clinical-rules:install-v4`:** installs the v4 baselines on a deployment whose
+  earlier baselines were arranged by hand (the public cloud), as `install-v3`
+  did for v3. A dry run unless `--apply`; `--select` points the platform at v4
+  with an audited `CLINICAL_RULESET_SELECT` row.
 - **Account-wide interface preferences:** the existing `User.preferences` JSON
   contract now stores case layout, timetable layout, and vitals-chart expansion;
   legacy browser/device keys are imported without replacing sibling settings.
