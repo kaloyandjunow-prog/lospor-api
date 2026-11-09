@@ -13,7 +13,7 @@ describe("pediatric OMOP source preservation", () => {
       bundle.measurement.map(row => [row.measurement_source_value, row]),
     )
 
-    expect(bundle.metadata.source_version).toBe("3.8.0")
+    expect(bundle.metadata.source_version).toBe("3.9.0")
     expect(bundle.metadata.schema_version).toBe("3.6.0")
     expect(bundle.person[0].year_of_birth).toBe(2026)
 

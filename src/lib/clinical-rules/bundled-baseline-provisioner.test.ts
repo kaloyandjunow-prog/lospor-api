@@ -187,12 +187,20 @@ describe("bundled clinical baseline provisioner", () => {
           { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", presetVersion: 3, ruleCount: 367, selected: true },
         ],
       },
+      v4: {
+        outcome: "installed",
+        releaseVersion: "10.2.0",
+        baselines: [
+          { clinicalMode: "ADULT", presetId: "lospor-adults-v4", presetVersion: 4, ruleCount: 268, selected: true },
+          { clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v4", presetVersion: 4, ruleCount: 366, selected: true },
+        ],
+      },
     })
-    // A fresh appliance gets both releases and ends on v3.
-    expect(db.state.principals.map(row => row.id)).toEqual(["lospor-release:1.2.0", "lospor-release:9.15.0"])
-    expect(db.state.presets).toHaveLength(4)
-    expect(db.state.selections.map(row => row.presetId)).toEqual(["lospor-adults-v3", "lospor-pediatrics-v3"])
-    expect(db.state.audits).toHaveLength(4)
+    // A fresh appliance gets all three releases and ends on v4.
+    expect(db.state.principals.map(row => row.id)).toEqual(["lospor-release:1.2.0", "lospor-release:9.15.0", "lospor-release:10.2.0"])
+    expect(db.state.presets).toHaveLength(6)
+    expect(db.state.selections.map(row => row.presetId)).toEqual(["lospor-adults-v4", "lospor-pediatrics-v4"])
+    expect(db.state.audits).toHaveLength(6)
     expect(db.writes).toEqual([
       "technicalPrincipal.create",
       "clinicalPreset.create:DRAFT",
@@ -205,6 +213,18 @@ describe("bundled clinical baseline provisioner", () => {
       "clinicalPreset.update:PUBLISHED",
       "platformSelection.create",
       "auditLog.create",
+      "technicalPrincipal.create",
+      "clinicalPreset.create:DRAFT",
+      "publicationEvidence.create",
+      "clinicalPreset.update:PUBLISHED",
+      "platformSelection.update",
+      "auditLog.create",
+      "clinicalPreset.create:DRAFT",
+      "publicationEvidence.create",
+      "clinicalPreset.update:PUBLISHED",
+      "platformSelection.update",
+      "auditLog.create",
+      // 10.2.0, the same again on top of 9.15.0.
       "technicalPrincipal.create",
       "clinicalPreset.create:DRAFT",
       "publicationEvidence.create",
@@ -322,7 +342,7 @@ describe("bundled clinical baseline provisioner", () => {
       outcome: "installed",
     })
     expect(db.transactionAttempts).toBe(2)
-    expect(db.state.presets).toHaveLength(4)
+    expect(db.state.presets).toHaveLength(6)
   })
 
   it("turns a repeated concurrent unique claim into a typed fail-closed collision", async () => {
@@ -339,9 +359,9 @@ describe("bundled clinical baseline provisioner", () => {
     const db = new InMemoryPrisma()
     const installedAt = new Date("2026-08-23T12:00:00.000Z")
     await provisionBundledClinicalBaselines(db as never, { installedAt })
-    const v3 = new Set(["lospor-adults-v3", "lospor-pediatrics-v3"])
+    const later = new Set(["lospor-adults-v3", "lospor-pediatrics-v3", "lospor-adults-v4", "lospor-pediatrics-v4"])
     db.state.principals = db.state.principals.filter(row => row.id === "lospor-release:1.2.0")
-    db.state.presets = db.state.presets.filter(row => !v3.has(String(row.id)))
+    db.state.presets = db.state.presets.filter(row => !later.has(String(row.id)))
     db.state.audits = db.state.audits.filter(row => row.userId === "lospor-release:1.2.0")
     for (const selection of db.state.selections) {
       Object.assign(selection, {
@@ -355,7 +375,7 @@ describe("bundled clinical baseline provisioner", () => {
     return db
   }
 
-  it("upgrades a v2 appliance: installs v3 beside v2, moves the release selection, leaves v2 untouched", async () => {
+  it("upgrades a v2 appliance: installs v3 and v4 beside v2, moves the release selection on, leaves v2 untouched", async () => {
     const db = await applianceOnV2()
     const v2Before = structuredClone(db.state.presets)
     const upgradedAt = new Date("2026-10-20T08:00:00.000Z")
@@ -365,10 +385,12 @@ describe("bundled clinical baseline provisioner", () => {
     expect(result.outcome).toBe("verified")
     expect(result.v3.outcome).toBe("installed")
     expect(result.v3.baselines.map(item => item.selected)).toEqual([true, true])
+    expect(result.v4.outcome).toBe("installed")
+    expect(result.v4.baselines.map(item => item.selected)).toEqual([true, true])
     expect(db.state.presets.filter(row => String(row.id).endsWith("-v2"))).toEqual(v2Before)
     expect(db.state.selections).toEqual([
-      expect.objectContaining({ clinicalMode: "ADULT", presetId: "lospor-adults-v3", selectedByTechnicalPrincipalId: "lospor-release:9.15.0", selectedAt: upgradedAt }),
-      expect.objectContaining({ clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v3", selectedByTechnicalPrincipalId: "lospor-release:9.15.0", selectedAt: upgradedAt }),
+      expect.objectContaining({ clinicalMode: "ADULT", presetId: "lospor-adults-v4", selectedByTechnicalPrincipalId: "lospor-release:10.2.0", selectedAt: upgradedAt }),
+      expect.objectContaining({ clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v4", selectedByTechnicalPrincipalId: "lospor-release:10.2.0", selectedAt: upgradedAt }),
     ])
     const evidence = db.state.presets.find(row => row.id === "lospor-adults-v3")?.publicationEvidence as Row
     expect(evidence).toMatchObject({ baselinePresetId: "lospor-adults-v2", baselinePresetVersion: 2 })
@@ -378,7 +400,7 @@ describe("bundled clinical baseline provisioner", () => {
     // The next update verifies both releases without writing.
     db.writes.length = 0
     const retry = await provisionBundledClinicalBaselines(db as never, { installedAt: new Date("2031-01-01T00:00:00.000Z") })
-    expect([retry.outcome, retry.v3.outcome]).toEqual(["verified", "verified"])
+    expect([retry.outcome, retry.v3.outcome, retry.v4.outcome]).toEqual(["verified", "verified", "verified"])
     expect(db.writes).toEqual([])
   })
 
@@ -410,6 +432,57 @@ describe("bundled clinical baseline provisioner", () => {
     await expect(provisionBundledClinicalBaselines(db as never)).rejects.toMatchObject({
       code: "BUNDLED_BASELINE_VERIFICATION_FAILED",
     })
+    expect(db.writes).toEqual([])
+  })
+
+  /** An appliance on 9.15.0 (live sites, 10.0.x): v2 and v3 installed, v3 selected by 9.15.0, nothing of v4. */
+  async function applianceOnV3(): Promise<InMemoryPrisma> {
+    const db = new InMemoryPrisma()
+    const installedAt = new Date("2026-10-19T12:00:00.000Z")
+    await provisionBundledClinicalBaselines(db as never, { installedAt })
+    const v4 = new Set(["lospor-adults-v4", "lospor-pediatrics-v4"])
+    db.state.principals = db.state.principals.filter(row => row.id !== "lospor-release:10.2.0")
+    db.state.presets = db.state.presets.filter(row => !v4.has(String(row.id)))
+    db.state.audits = db.state.audits.filter(row => row.userId !== "lospor-release:10.2.0")
+    for (const selection of db.state.selections) {
+      Object.assign(selection, {
+        presetId: selection.clinicalMode === "ADULT" ? "lospor-adults-v3" : "lospor-pediatrics-v3",
+        selectedByTechnicalPrincipalId: "lospor-release:9.15.0",
+        selectedAt: installedAt,
+        updatedAt: installedAt,
+      })
+    }
+    db.writes.length = 0
+    return db
+  }
+
+  it("upgrades a 9.15.0 appliance: installs v4 beside v3, moves the release selection, leaves v2 and v3 untouched", async () => {
+    const db = await applianceOnV3()
+    const before = structuredClone(db.state.presets)
+    const upgradedAt = new Date("2026-11-10T08:00:00.000Z")
+    const result = await provisionBundledClinicalBaselines(db as never, { installedAt: upgradedAt })
+    expect([result.outcome, result.v3.outcome, result.v4.outcome]).toEqual(["verified", "verified", "installed"])
+    expect(db.state.presets.filter(row => !String(row.id).endsWith("-v4"))).toEqual(before)
+    expect(db.state.selections).toEqual([
+      expect.objectContaining({ clinicalMode: "ADULT", presetId: "lospor-adults-v4", selectedByTechnicalPrincipalId: "lospor-release:10.2.0", selectedAt: upgradedAt }),
+      expect.objectContaining({ clinicalMode: "PEDIATRIC", presetId: "lospor-pediatrics-v4", selectedByTechnicalPrincipalId: "lospor-release:10.2.0", selectedAt: upgradedAt }),
+    ])
+    const evidence = db.state.presets.find(row => row.id === "lospor-adults-v4")?.publicationEvidence as Row
+    expect(evidence).toMatchObject({ baselinePresetId: "lospor-adults-v3", baselinePresetVersion: 3 })
+    db.writes.length = 0
+    const retry = await provisionBundledClinicalBaselines(db as never, { installedAt: new Date("2031-01-01T00:00:00.000Z") })
+    expect([retry.outcome, retry.v3.outcome, retry.v4.outcome]).toEqual(["verified", "verified", "verified"])
+    expect(db.writes).toEqual([])
+  })
+
+  it("fails closed when stored v4 content drifts", async () => {
+    const db = new InMemoryPrisma()
+    await provisionBundledClinicalBaselines(db as never)
+    const rule = db.state.presets.find(row => row.id === "lospor-adults-v4")?.rules[0]
+    if (!rule) throw new Error("missing fake v4 rule")
+    rule.payload = { drifted: true }
+    db.writes.length = 0
+    await expect(provisionBundledClinicalBaselines(db as never)).rejects.toMatchObject({ code: "BUNDLED_BASELINE_VERIFICATION_FAILED" })
     expect(db.writes).toEqual([])
   })
 })

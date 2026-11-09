@@ -2,7 +2,7 @@
  * Start/end time smoke test — the real HTTP path against a running server.
  *
  *   npm run smoke:start-time
- *   BASE_URL=http://192.168.0.105:3000 npm run smoke:start-time
+ *   BASE_URL=http://192.168.x.x:3000 npm run smoke:start-time
  *
  * Guards two defects that shared one cause — a column that could not express
  * "not started yet":

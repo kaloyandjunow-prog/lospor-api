@@ -11,6 +11,8 @@ const principalId = "lospor-release:1.2.0"
 const presetIds = ["lospor-adults-v2", "lospor-pediatrics-v2"]
 const v3PrincipalId = "lospor-release:9.15.0"
 const v3PresetIds = ["lospor-adults-v3", "lospor-pediatrics-v3"]
+const v4PrincipalId = "lospor-release:10.2.0"
+const v4PresetIds = ["lospor-adults-v4", "lospor-pediatrics-v4"]
 
 describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
   let prisma: typeof import("@/lib/prisma").prisma
@@ -21,9 +23,9 @@ describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
 
   async function expectPristine(): Promise<void> {
     const [principals, presets, audits] = await Promise.all([
-      prisma.technicalPrincipal.count({ where: { id: { in: [principalId, v3PrincipalId] } } }),
-      prisma.clinicalPreset.count({ where: { id: { in: [...presetIds, ...v3PresetIds] } } }),
-      prisma.auditLog.count({ where: { userId: { in: [principalId, v3PrincipalId] } } }),
+      prisma.technicalPrincipal.count({ where: { id: { in: [principalId, v3PrincipalId, v4PrincipalId] } } }),
+      prisma.clinicalPreset.count({ where: { id: { in: [...presetIds, ...v3PresetIds, ...v4PresetIds] } } }),
+      prisma.auditLog.count({ where: { userId: { in: [principalId, v3PrincipalId, v4PrincipalId] } } }),
     ])
     expect({ principals, presets, audits }).toEqual({ principals: 0, presets: 0, audits: 0 })
   }
@@ -54,6 +56,7 @@ describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
       expect(installed.outcome).toBe("installed")
       expect(retry.outcome).toBe("verified")
       expect([installed.v3.outcome, retry.v3.outcome]).toEqual(["installed", "verified"])
+      expect([installed.v4.outcome, retry.v4.outcome]).toEqual(["installed", "verified"])
       // v3 beside v2, published through the same triggers, and selected.
       await expect(tx.clinicalPreset.count({
         where: { id: { in: v3PresetIds }, status: "PUBLISHED", publishedByTechnicalPrincipalId: v3PrincipalId },
@@ -65,9 +68,17 @@ describe.skipIf(!runPostgres)("bundled baseline PostgreSQL transaction", () => {
         orderBy: { clinicalMode: "asc" },
         select: { presetId: true, selectedByTechnicalPrincipalId: true },
       })).resolves.toEqual([
-        { presetId: "lospor-adults-v3", selectedByTechnicalPrincipalId: v3PrincipalId },
-        { presetId: "lospor-pediatrics-v3", selectedByTechnicalPrincipalId: v3PrincipalId },
+        // 10.2.0 moved the 9.15.0 selection on to v4.
+        { presetId: "lospor-adults-v4", selectedByTechnicalPrincipalId: v4PrincipalId },
+        { presetId: "lospor-pediatrics-v4", selectedByTechnicalPrincipalId: v4PrincipalId },
       ])
+      // v4 beside v3, through the same triggers.
+      await expect(tx.clinicalPreset.count({
+        where: { id: { in: v4PresetIds }, status: "PUBLISHED", publishedByTechnicalPrincipalId: v4PrincipalId },
+      })).resolves.toBe(2)
+      await expect(tx.clinicalPresetRule.count({
+        where: { presetId: { in: v4PresetIds } },
+      })).resolves.toBe(634)
       await expect(tx.clinicalPreset.count({
         where: { id: { in: presetIds }, status: "PUBLISHED" },
       })).resolves.toBe(2)

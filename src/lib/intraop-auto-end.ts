@@ -8,6 +8,7 @@ import { parseLogEvents } from "@lospor/core/intraop-types"
 import { durationMinutesBetween, isValidTimeZone, legacyWallClock, localTimeOf } from "@/lib/intraop-time"
 import { activeCaseLog, rebuildProjection } from "@/lib/case-events"
 import { logAuditInTransaction } from "@/lib/audit"
+import { closeOpenVitalEpisodes } from "@/lib/intraop-automation"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
 
 /**
@@ -93,6 +94,8 @@ export async function autoEndCaseIfStale(caseId: string, now = new Date()): Prom
         syncRevision: { increment: 1 },
       },
     })
+    // An episode from the vitals questions still open ends with the case (10.1.0).
+    await closeOpenVitalEpisodes(tx, caseId, endedAt, record.userId, "system")
     await rebuildProjection(tx, caseId, { revisionAlreadyReserved: true })
     await logAuditInTransaction(tx, AUTO_END_SYSTEM_ACTOR_ID, "CASE_INTRAOP_AUTO_ENDED", caseId, {
       assignedUserId: record.userId,

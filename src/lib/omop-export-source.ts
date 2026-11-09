@@ -91,7 +91,7 @@ export const CASE_SELECT = {
     orderBy: [{ section: "asc" }, { category: "asc" }, { ordinal: "asc" }],
   },
   complications: {
-    select: { section: true, label: true, note: true, timestamp: true, source: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
+    select: { section: true, label: true, note: true, timestamp: true, endTimestamp: true, source: true, suggestion: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
     orderBy: [{ section: "asc" }, { ordinal: "asc" }],
   },
   events: {
@@ -111,6 +111,10 @@ export const CASE_SELECT = {
       bis: true,
       tofRatio: true,
       cvp: true,
+      ibpSystolic: true,
+      ibpDiastolic: true,
+      ibpMap: true,
+      nibpMap: true,
       fgfLitersPerMin: true,
       carrierGas: true,
       fio2Percent: true,
@@ -266,7 +270,7 @@ export const CASE_SELECT = {
       // an export could say a tube was placed but never which one, what size,
       // whether it was cuffed, or how hard the laryngoscopy was -- the part a
       // difficult-airway study is actually about.
-      airwayDevices: true, cormackLehane: true, airwayTools: true, fob: true,
+      airwayDevices: true, airwayDeviceEntries: true, techniqueSides: true, cormackLehane: true, airwayTools: true, fob: true,
       lmaSize: true,
       oralTubeSize: true, oralCuffed: true, nasalTubeSize: true, nasalCuffed: true,
       dltType: true, dltSide: true, dltSize: true, endobronchialSize: true,
@@ -276,7 +280,7 @@ export const CASE_SELECT = {
       crystalloidsMl: true, colloidsMl: true, bloodMl: true, infusionsMl: true, urineMl: true, bloodLossMl: true,
       complications: true, premedicationEvening: true, premedicationMorning: true,
       vascularAccessRows: {
-        select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
+        select: { site: true, siteLabel: true, size: true, sizeUnit: true, depthCm: true, lumens: true, preexisting: true, failed: true, failedAt: true, insertedAt: true, ordinal: true, sourceVocabulary: true, sourceCode: true, standardConceptId: true, mappingStatus: true, },
         orderBy: { ordinal: "asc" },
       },
       premedicationRows: {

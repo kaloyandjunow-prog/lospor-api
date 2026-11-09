@@ -27,10 +27,12 @@ export type AggregateUser = {
 }
 
 export type UserAvgAggregateOutputType = {
+  preferencesRevision: number | null
   mfaLastTotpStep: number | null
 }
 
 export type UserSumAggregateOutputType = {
+  preferencesRevision: number | null
   mfaLastTotpStep: number | null
 }
 
@@ -52,6 +54,7 @@ export type UserMinAggregateOutputType = {
   acceptedTermsAt: Date | null
   acceptedPrivacyAt: Date | null
   termsVersion: string | null
+  preferencesRevision: number | null
   lastLoginAt: Date | null
   passwordChangedAt: Date | null
   mfaTotpSecretCiphertext: string | null
@@ -82,6 +85,7 @@ export type UserMaxAggregateOutputType = {
   acceptedTermsAt: Date | null
   acceptedPrivacyAt: Date | null
   termsVersion: string | null
+  preferencesRevision: number | null
   lastLoginAt: Date | null
   passwordChangedAt: Date | null
   mfaTotpSecretCiphertext: string | null
@@ -113,6 +117,7 @@ export type UserCountAggregateOutputType = {
   acceptedPrivacyAt: number
   termsVersion: number
   preferences: number
+  preferencesRevision: number
   lastLoginAt: number
   passwordChangedAt: number
   mfaTotpSecretCiphertext: number
@@ -128,10 +133,12 @@ export type UserCountAggregateOutputType = {
 
 
 export type UserAvgAggregateInputType = {
+  preferencesRevision?: true
   mfaLastTotpStep?: true
 }
 
 export type UserSumAggregateInputType = {
+  preferencesRevision?: true
   mfaLastTotpStep?: true
 }
 
@@ -153,6 +160,7 @@ export type UserMinAggregateInputType = {
   acceptedTermsAt?: true
   acceptedPrivacyAt?: true
   termsVersion?: true
+  preferencesRevision?: true
   lastLoginAt?: true
   passwordChangedAt?: true
   mfaTotpSecretCiphertext?: true
@@ -183,6 +191,7 @@ export type UserMaxAggregateInputType = {
   acceptedTermsAt?: true
   acceptedPrivacyAt?: true
   termsVersion?: true
+  preferencesRevision?: true
   lastLoginAt?: true
   passwordChangedAt?: true
   mfaTotpSecretCiphertext?: true
@@ -214,6 +223,7 @@ export type UserCountAggregateInputType = {
   acceptedPrivacyAt?: true
   termsVersion?: true
   preferences?: true
+  preferencesRevision?: true
   lastLoginAt?: true
   passwordChangedAt?: true
   mfaTotpSecretCiphertext?: true
@@ -332,6 +342,7 @@ export type UserGroupByOutputType = {
   acceptedPrivacyAt: Date | null
   termsVersion: string | null
   preferences: runtime.JsonValue
+  preferencesRevision: number
   lastLoginAt: Date | null
   passwordChangedAt: Date | null
   mfaTotpSecretCiphertext: string | null
@@ -386,6 +397,7 @@ export type UserWhereInput = {
   acceptedPrivacyAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   termsVersion?: Prisma.StringNullableFilter<"User"> | string | null
   preferences?: Prisma.JsonFilter<"User">
+  preferencesRevision?: Prisma.IntFilter<"User"> | number
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.StringNullableFilter<"User"> | string | null
@@ -446,6 +458,7 @@ export type UserOrderByWithRelationInput = {
   acceptedPrivacyAt?: Prisma.SortOrderInput | Prisma.SortOrder
   termsVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   preferences?: Prisma.SortOrder
+  preferencesRevision?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   mfaTotpSecretCiphertext?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -509,6 +522,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   acceptedPrivacyAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   termsVersion?: Prisma.StringNullableFilter<"User"> | string | null
   preferences?: Prisma.JsonFilter<"User">
+  preferencesRevision?: Prisma.IntFilter<"User"> | number
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.StringNullableFilter<"User"> | string | null
@@ -569,6 +583,7 @@ export type UserOrderByWithAggregationInput = {
   acceptedPrivacyAt?: Prisma.SortOrderInput | Prisma.SortOrder
   termsVersion?: Prisma.SortOrderInput | Prisma.SortOrder
   preferences?: Prisma.SortOrder
+  preferencesRevision?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   mfaTotpSecretCiphertext?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -608,6 +623,7 @@ export type UserScalarWhereWithAggregatesInput = {
   acceptedPrivacyAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   termsVersion?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   preferences?: Prisma.JsonWithAggregatesFilter<"User">
+  preferencesRevision?: Prisma.IntWithAggregatesFilter<"User"> | number
   lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -638,6 +654,7 @@ export type UserCreateInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -698,6 +715,7 @@ export type UserUncheckedCreateInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -756,6 +774,7 @@ export type UserUpdateInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -816,6 +835,7 @@ export type UserUncheckedUpdateInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -875,6 +895,7 @@ export type UserCreateManyInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -905,6 +926,7 @@ export type UserUpdateManyMutationInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -936,6 +958,7 @@ export type UserUncheckedUpdateManyInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -967,6 +990,7 @@ export type UserCountOrderByAggregateInput = {
   acceptedPrivacyAt?: Prisma.SortOrder
   termsVersion?: Prisma.SortOrder
   preferences?: Prisma.SortOrder
+  preferencesRevision?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrder
   mfaTotpSecretCiphertext?: Prisma.SortOrder
@@ -980,6 +1004,7 @@ export type UserCountOrderByAggregateInput = {
 }
 
 export type UserAvgOrderByAggregateInput = {
+  preferencesRevision?: Prisma.SortOrder
   mfaLastTotpStep?: Prisma.SortOrder
 }
 
@@ -1001,6 +1026,7 @@ export type UserMaxOrderByAggregateInput = {
   acceptedTermsAt?: Prisma.SortOrder
   acceptedPrivacyAt?: Prisma.SortOrder
   termsVersion?: Prisma.SortOrder
+  preferencesRevision?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrder
   mfaTotpSecretCiphertext?: Prisma.SortOrder
@@ -1031,6 +1057,7 @@ export type UserMinOrderByAggregateInput = {
   acceptedTermsAt?: Prisma.SortOrder
   acceptedPrivacyAt?: Prisma.SortOrder
   termsVersion?: Prisma.SortOrder
+  preferencesRevision?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   passwordChangedAt?: Prisma.SortOrder
   mfaTotpSecretCiphertext?: Prisma.SortOrder
@@ -1044,6 +1071,7 @@ export type UserMinOrderByAggregateInput = {
 }
 
 export type UserSumOrderByAggregateInput = {
+  preferencesRevision?: Prisma.SortOrder
   mfaLastTotpStep?: Prisma.SortOrder
 }
 
@@ -1085,6 +1113,14 @@ export type EnumAccountKindFieldUpdateOperationsInput = {
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
+}
+
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type NullableIntFieldUpdateOperationsInput = {
@@ -1571,6 +1607,7 @@ export type UserCreateWithoutEmailVerificationTokensInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -1630,6 +1667,7 @@ export type UserUncheckedCreateWithoutEmailVerificationTokensInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -1703,6 +1741,7 @@ export type UserUpdateWithoutEmailVerificationTokensInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1762,6 +1801,7 @@ export type UserUncheckedUpdateWithoutEmailVerificationTokensInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1819,6 +1859,7 @@ export type UserCreateWithoutPasswordResetTokensInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -1878,6 +1919,7 @@ export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -1951,6 +1993,7 @@ export type UserUpdateWithoutPasswordResetTokensInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2010,6 +2053,7 @@ export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2067,6 +2111,7 @@ export type UserCreateWithoutAuthSessionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2126,6 +2171,7 @@ export type UserUncheckedCreateWithoutAuthSessionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2199,6 +2245,7 @@ export type UserUpdateWithoutAuthSessionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2258,6 +2305,7 @@ export type UserUncheckedUpdateWithoutAuthSessionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2315,6 +2363,7 @@ export type UserCreateWithoutMfaLoginChallengesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2374,6 +2423,7 @@ export type UserUncheckedCreateWithoutMfaLoginChallengesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2447,6 +2497,7 @@ export type UserUpdateWithoutMfaLoginChallengesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2506,6 +2557,7 @@ export type UserUncheckedUpdateWithoutMfaLoginChallengesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2563,6 +2615,7 @@ export type UserCreateWithoutMfaRecoveryCodesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2622,6 +2675,7 @@ export type UserUncheckedCreateWithoutMfaRecoveryCodesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2695,6 +2749,7 @@ export type UserUpdateWithoutMfaRecoveryCodesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2754,6 +2809,7 @@ export type UserUncheckedUpdateWithoutMfaRecoveryCodesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2811,6 +2867,7 @@ export type UserCreateWithoutLegalAcceptancesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2870,6 +2927,7 @@ export type UserUncheckedCreateWithoutLegalAcceptancesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -2943,6 +3001,7 @@ export type UserUpdateWithoutLegalAcceptancesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3002,6 +3061,7 @@ export type UserUncheckedUpdateWithoutLegalAcceptancesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3059,6 +3119,7 @@ export type UserCreateWithoutInstitutionInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3117,6 +3178,7 @@ export type UserUncheckedCreateWithoutInstitutionInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3205,6 +3267,7 @@ export type UserScalarWhereInput = {
   acceptedPrivacyAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   termsVersion?: Prisma.StringNullableFilter<"User"> | string | null
   preferences?: Prisma.JsonFilter<"User">
+  preferencesRevision?: Prisma.IntFilter<"User"> | number
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   passwordChangedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.StringNullableFilter<"User"> | string | null
@@ -3235,6 +3298,7 @@ export type UserCreateWithoutCasesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3294,6 +3358,7 @@ export type UserUncheckedCreateWithoutCasesInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3356,6 +3421,7 @@ export type UserCreateWithoutCasesCreatedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3415,6 +3481,7 @@ export type UserUncheckedCreateWithoutCasesCreatedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3488,6 +3555,7 @@ export type UserUpdateWithoutCasesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3547,6 +3615,7 @@ export type UserUncheckedUpdateWithoutCasesInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3615,6 +3684,7 @@ export type UserUpdateWithoutCasesCreatedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3674,6 +3744,7 @@ export type UserUncheckedUpdateWithoutCasesCreatedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3731,6 +3802,7 @@ export type UserCreateWithoutTransfersSentInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3790,6 +3862,7 @@ export type UserUncheckedCreateWithoutTransfersSentInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3852,6 +3925,7 @@ export type UserCreateWithoutTransfersReceivedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3911,6 +3985,7 @@ export type UserUncheckedCreateWithoutTransfersReceivedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -3984,6 +4059,7 @@ export type UserUpdateWithoutTransfersSentInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4043,6 +4119,7 @@ export type UserUncheckedUpdateWithoutTransfersSentInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4111,6 +4188,7 @@ export type UserUpdateWithoutTransfersReceivedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4170,6 +4248,7 @@ export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4227,6 +4306,7 @@ export type UserCreateWithoutRoleRequestsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -4286,6 +4366,7 @@ export type UserUncheckedCreateWithoutRoleRequestsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -4359,6 +4440,7 @@ export type UserUpdateWithoutRoleRequestsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4418,6 +4500,7 @@ export type UserUncheckedUpdateWithoutRoleRequestsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4475,6 +4558,7 @@ export type UserCreateWithoutInstitutionChangeRequestsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -4534,6 +4618,7 @@ export type UserUncheckedCreateWithoutInstitutionChangeRequestsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -4607,6 +4692,7 @@ export type UserUpdateWithoutInstitutionChangeRequestsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4666,6 +4752,7 @@ export type UserUncheckedUpdateWithoutInstitutionChangeRequestsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4723,6 +4810,7 @@ export type UserCreateWithoutClinicalRuleReviewsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -4782,6 +4870,7 @@ export type UserUncheckedCreateWithoutClinicalRuleReviewsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -4855,6 +4944,7 @@ export type UserUpdateWithoutClinicalRuleReviewsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4914,6 +5004,7 @@ export type UserUncheckedUpdateWithoutClinicalRuleReviewsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4971,6 +5062,7 @@ export type UserCreateWithoutClinicalPresetsOwnedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5030,6 +5122,7 @@ export type UserUncheckedCreateWithoutClinicalPresetsOwnedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5092,6 +5185,7 @@ export type UserCreateWithoutClinicalPresetsCreatedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5151,6 +5245,7 @@ export type UserUncheckedCreateWithoutClinicalPresetsCreatedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5213,6 +5308,7 @@ export type UserCreateWithoutClinicalPresetsPublishedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5272,6 +5368,7 @@ export type UserUncheckedCreateWithoutClinicalPresetsPublishedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5345,6 +5442,7 @@ export type UserUpdateWithoutClinicalPresetsOwnedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5404,6 +5502,7 @@ export type UserUncheckedUpdateWithoutClinicalPresetsOwnedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5472,6 +5571,7 @@ export type UserUpdateWithoutClinicalPresetsCreatedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5531,6 +5631,7 @@ export type UserUncheckedUpdateWithoutClinicalPresetsCreatedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5599,6 +5700,7 @@ export type UserUpdateWithoutClinicalPresetsPublishedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5658,6 +5760,7 @@ export type UserUncheckedUpdateWithoutClinicalPresetsPublishedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5715,6 +5818,7 @@ export type UserCreateWithoutClinicalPublicationsConfirmedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5774,6 +5878,7 @@ export type UserUncheckedCreateWithoutClinicalPublicationsConfirmedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -5847,6 +5952,7 @@ export type UserUpdateWithoutClinicalPublicationsConfirmedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5906,6 +6012,7 @@ export type UserUncheckedUpdateWithoutClinicalPublicationsConfirmedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5963,6 +6070,7 @@ export type UserCreateWithoutPlatformPresetSelectionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6022,6 +6130,7 @@ export type UserUncheckedCreateWithoutPlatformPresetSelectionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6095,6 +6204,7 @@ export type UserUpdateWithoutPlatformPresetSelectionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6154,6 +6264,7 @@ export type UserUncheckedUpdateWithoutPlatformPresetSelectionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6211,6 +6322,7 @@ export type UserCreateWithoutInstitutionPresetSelectionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6270,6 +6382,7 @@ export type UserUncheckedCreateWithoutInstitutionPresetSelectionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6343,6 +6456,7 @@ export type UserUpdateWithoutInstitutionPresetSelectionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6402,6 +6516,7 @@ export type UserUncheckedUpdateWithoutInstitutionPresetSelectionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6459,6 +6574,7 @@ export type UserCreateWithoutClinicalPresetSelectionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6518,6 +6634,7 @@ export type UserUncheckedCreateWithoutClinicalPresetSelectionsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6591,6 +6708,7 @@ export type UserUpdateWithoutClinicalPresetSelectionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6650,6 +6768,7 @@ export type UserUncheckedUpdateWithoutClinicalPresetSelectionsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6707,6 +6826,7 @@ export type UserCreateWithoutClinicalOverridesProposedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6766,6 +6886,7 @@ export type UserUncheckedCreateWithoutClinicalOverridesProposedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6828,6 +6949,7 @@ export type UserCreateWithoutClinicalOverridesToReviewInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6887,6 +7009,7 @@ export type UserUncheckedCreateWithoutClinicalOverridesToReviewInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -6949,6 +7072,7 @@ export type UserCreateWithoutClinicalOverridesApprovedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -7008,6 +7132,7 @@ export type UserUncheckedCreateWithoutClinicalOverridesApprovedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -7081,6 +7206,7 @@ export type UserUpdateWithoutClinicalOverridesProposedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7140,6 +7266,7 @@ export type UserUncheckedUpdateWithoutClinicalOverridesProposedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7208,6 +7335,7 @@ export type UserUpdateWithoutClinicalOverridesToReviewInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7267,6 +7395,7 @@ export type UserUncheckedUpdateWithoutClinicalOverridesToReviewInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7335,6 +7464,7 @@ export type UserUpdateWithoutClinicalOverridesApprovedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7394,6 +7524,7 @@ export type UserUncheckedUpdateWithoutClinicalOverridesApprovedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7451,6 +7582,7 @@ export type UserCreateWithoutResearchAccessGrantsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -7510,6 +7642,7 @@ export type UserUncheckedCreateWithoutResearchAccessGrantsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -7572,6 +7705,7 @@ export type UserCreateWithoutResearchGrantsIssuedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -7631,6 +7765,7 @@ export type UserUncheckedCreateWithoutResearchGrantsIssuedInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -7704,6 +7839,7 @@ export type UserUpdateWithoutResearchAccessGrantsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7763,6 +7899,7 @@ export type UserUncheckedUpdateWithoutResearchAccessGrantsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7831,6 +7968,7 @@ export type UserUpdateWithoutResearchGrantsIssuedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7890,6 +8028,7 @@ export type UserUncheckedUpdateWithoutResearchGrantsIssuedInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7947,6 +8086,7 @@ export type UserCreateWithoutResearchSelfAuthorizationsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -8006,6 +8146,7 @@ export type UserUncheckedCreateWithoutResearchSelfAuthorizationsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -8079,6 +8220,7 @@ export type UserUpdateWithoutResearchSelfAuthorizationsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8138,6 +8280,7 @@ export type UserUncheckedUpdateWithoutResearchSelfAuthorizationsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8195,6 +8338,7 @@ export type UserCreateWithoutResearchCohortsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -8254,6 +8398,7 @@ export type UserUncheckedCreateWithoutResearchCohortsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -8327,6 +8472,7 @@ export type UserUpdateWithoutResearchCohortsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8386,6 +8532,7 @@ export type UserUncheckedUpdateWithoutResearchCohortsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8443,6 +8590,7 @@ export type UserCreateWithoutResearchExportsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -8502,6 +8650,7 @@ export type UserUncheckedCreateWithoutResearchExportsInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -8575,6 +8724,7 @@ export type UserUpdateWithoutResearchExportsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8634,6 +8784,7 @@ export type UserUncheckedUpdateWithoutResearchExportsInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8691,6 +8842,7 @@ export type UserCreateManyInstitutionInput = {
   acceptedPrivacyAt?: Date | string | null
   termsVersion?: string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
   lastLoginAt?: Date | string | null
   passwordChangedAt?: Date | string | null
   mfaTotpSecretCiphertext?: string | null
@@ -8721,6 +8873,7 @@ export type UserUpdateWithoutInstitutionInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8779,6 +8932,7 @@ export type UserUncheckedUpdateWithoutInstitutionInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8837,6 +8991,7 @@ export type UserUncheckedUpdateManyWithoutInstitutionInput = {
   acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9142,6 +9297,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   acceptedPrivacyAt?: boolean
   termsVersion?: boolean
   preferences?: boolean
+  preferencesRevision?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
   mfaTotpSecretCiphertext?: boolean
@@ -9203,6 +9359,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   acceptedPrivacyAt?: boolean
   termsVersion?: boolean
   preferences?: boolean
+  preferencesRevision?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
   mfaTotpSecretCiphertext?: boolean
@@ -9235,6 +9392,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   acceptedPrivacyAt?: boolean
   termsVersion?: boolean
   preferences?: boolean
+  preferencesRevision?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
   mfaTotpSecretCiphertext?: boolean
@@ -9267,6 +9425,7 @@ export type UserSelectScalar = {
   acceptedPrivacyAt?: boolean
   termsVersion?: boolean
   preferences?: boolean
+  preferencesRevision?: boolean
   lastLoginAt?: boolean
   passwordChangedAt?: boolean
   mfaTotpSecretCiphertext?: boolean
@@ -9279,7 +9438,7 @@ export type UserSelectScalar = {
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "usernameCanonical" | "name" | "firstName" | "lastName" | "title" | "passwordHash" | "role" | "accountKind" | "institutionId" | "activatedAt" | "emailVerifiedAt" | "acceptedTermsAt" | "acceptedPrivacyAt" | "termsVersion" | "preferences" | "lastLoginAt" | "passwordChangedAt" | "mfaTotpSecretCiphertext" | "mfaEnabledAt" | "mfaLastTotpStep" | "suspendedAt" | "recoveryRequiredAt" | "deletedAt" | "anonymizedAt" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "username" | "usernameCanonical" | "name" | "firstName" | "lastName" | "title" | "passwordHash" | "role" | "accountKind" | "institutionId" | "activatedAt" | "emailVerifiedAt" | "acceptedTermsAt" | "acceptedPrivacyAt" | "termsVersion" | "preferences" | "preferencesRevision" | "lastLoginAt" | "passwordChangedAt" | "mfaTotpSecretCiphertext" | "mfaEnabledAt" | "mfaLastTotpStep" | "suspendedAt" | "recoveryRequiredAt" | "deletedAt" | "anonymizedAt" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   institution?: boolean | Prisma.User$institutionArgs<ExtArgs>
   cases?: boolean | Prisma.User$casesArgs<ExtArgs>
@@ -9385,6 +9544,12 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     acceptedPrivacyAt: Date | null
     termsVersion: string | null
     preferences: runtime.JsonValue
+    /**
+     * Optimistic concurrency token for account-wide preferences. Every
+     * successful preference write increments it, so Web and Mobile cannot
+     * silently overwrite one another's settings.
+     */
+    preferencesRevision: number
     lastLoginAt: Date | null
     passwordChangedAt: Date | null
     /**
@@ -9885,6 +10050,7 @@ export interface UserFieldRefs {
   readonly acceptedPrivacyAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly termsVersion: Prisma.FieldRef<"User", 'String'>
   readonly preferences: Prisma.FieldRef<"User", 'Json'>
+  readonly preferencesRevision: Prisma.FieldRef<"User", 'Int'>
   readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly passwordChangedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly mfaTotpSecretCiphertext: Prisma.FieldRef<"User", 'String'>

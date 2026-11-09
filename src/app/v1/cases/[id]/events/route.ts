@@ -4,10 +4,10 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
 import { logAudit } from "@/lib/audit"
-import { activeCaseLog, addEvent, laterChangeMade, madeAtFrom, rebuildProjection, reserveIntraopRevision, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
+import { activeCaseLog, addEvent, laterChangeMade, madeAtFrom, rebuildProjection, reserveIntraopRevision, sameContent, timelineIssuesFor, type LogEvent } from "@/lib/case-events"
 import { supersededRefusal, timelineRefusal } from "@/lib/timeline-refusal"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
-import { resolveDrugExposureConcepts } from "@/lib/relational-sync"
+import { resolveDrugExposureConcepts, syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { corsHeaders } from "@/lib/cors"
 import {
   CaseWriteError,
@@ -18,6 +18,10 @@ import { z } from "zod"
 
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
+import { atomicIntraopPatchFrom } from "@/lib/atomic-intraop-patch-input"
+import { mapIntraop, mapIntraopUpdate } from "../../_mappers"
+import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
+import { automationDuplicateClinicalEvent, automationTechniqueConflict, coalesceAutomationClinicalEvent } from "@/lib/automation-conflicts"
 const CORS = (req: NextRequest) => corsHeaders(req, "POST, PUT, OPTIONS")
 // PUT stays in CORS only to answer the retired full-log write with 410.
 
@@ -93,6 +97,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         : [],
     }, { status: 400 })
   }
+  let atomicIntraopPatch: Record<string, unknown> | undefined
+  if (event.intraopPatch !== undefined) {
+    const parsedPatch = atomicIntraopPatchFrom(event.intraopPatch)
+    if (!parsedPatch.ok) return NextResponse.json(parsedPatch.body, { status: parsedPatch.status })
+    atomicIntraopPatch = parsedPatch.patch
+    event = { ...event, intraopPatch: atomicIntraopPatch }
+  }
   if (!event.id) event.id = crypto.randomUUID()
 
   const piiError = piiForEvent(event)
@@ -136,12 +147,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
-        select: { updatedAt: true, syncRevision: true },
+        select: {
+          updatedAt: true,
+          syncRevision: true,
+          airwayDeviceEntries: true,
+          airwayDevices: true,
+          airwayTools: true,
+          airwayNotApplicable: true,
+          vascularAccesses: true,
+          techniques: true,
+          techniqueSides: true,
+        },
       })
       const existing = { ...caseRecord, intraop: existingIntraop }
-      if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
-        return revisionConflict(existing.intraop)
-      }
 
       // An add sent again because its first reply was lost must not undo a
       // change made to the entry since, on another screen: a deletion there
@@ -150,15 +168,57 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const madeAt = madeAtFrom(req.headers.get("x-lospor-made-at"))
       if (await laterChangeMade(tx, id, String(event.id), madeAt)) return supersededRefusal()
 
+      const current = await activeCaseLog(tx, id)
+      // A lost response must be safe to replay even when the section revision
+      // has already advanced. The event id and complete event content cover
+      // the structured patch as well, so this is an idempotent acknowledgement
+      // of the original atomic operation rather than a second write.
+      const existingEvent = current.find(item => item.id === event.id)
+      if (existingEvent && sameContent(existingEvent as unknown as Record<string, unknown>, event as unknown as Record<string, unknown>)) {
+        return { added: false, intraop: existingIntraop }
+      }
+
+      const duplicateContextEvent = automationDuplicateClinicalEvent(current, event as unknown as LogEvent)
+      const eventToWrite = duplicateContextEvent
+        ? coalesceAutomationClinicalEvent(duplicateContextEvent, event as unknown as LogEvent)
+        : event as unknown as LogEvent
+      if (atomicIntraopPatch && event.suggestion?.startsWith("context:")) {
+        const techniqueConflict = automationTechniqueConflict(
+          existingIntraop as unknown as Record<string, unknown> | null,
+          atomicIntraopPatch,
+        )
+        if (techniqueConflict) {
+          return NextResponse.json({
+            error: "automation_conflict",
+            kind: techniqueConflict.kind,
+            current: techniqueConflict.current,
+            incoming: techniqueConflict.incoming,
+          }, { status: 409 })
+        }
+      }
+
+      const revisionConflictDetected = revision != null && existing.intraop && existing.intraop.syncRevision !== revision
+      if (revisionConflictDetected && !atomicIntraopPatch) {
+        return revisionConflict(existing.intraop)
+      }
+
+      // Structured airway/vascular actions are additive clinical operations,
+      // not stale whole-section snapshots. Rebase them against the locked
+      // record so an offline retry remains safe when another screen advanced
+      // the section revision. The event itself stays unchanged for audit and
+      // idempotent replay; only the materialized section patch is rebased.
+      const patchToApply = atomicIntraopPatch && revisionConflictDetected
+        ? rebaseAtomicIntraopPatch(existing.intraop as unknown as Record<string, unknown>, atomicIntraopPatch)
+        : atomicIntraopPatch
+
       // Checked before the revision is reserved, so a refusal changes nothing.
       // The same timeline rules the apps apply (Core), on the log this write
       // would produce. A refusal is a 400, which the outbox records and drops.
-      const current = await activeCaseLog(tx, id)
-      const next = [...current.filter(item => item.id !== event.id), event as unknown as LogEvent]
+      const next = [...current.filter(item => item.id !== eventToWrite.id), eventToWrite]
       const refused = timelineRefusal(timelineIssuesFor(current, next))
       if (refused) return refused
 
-      const revisionReserved = revision != null && !!existing.intraop
+      const revisionReserved = revision != null && !!existing.intraop && !revisionConflictDetected
       if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
         const fresh = await tx.intraoperativeRecord.findUnique({
           where: { caseId: id },
@@ -167,7 +227,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         throw new EventRouteResponse(revisionConflict(fresh))
       }
 
-      const added = await addEvent(tx, id, user.id, event as unknown as LogEvent, source, madeAt)
+      const added = await addEvent(tx, id, user.id, eventToWrite, source, madeAt)
+      if (added && patchToApply && Object.keys(patchToApply).length > 0) {
+        const mappedPatch = mapIntraopUpdate(patchToApply)
+        if (Object.keys(mappedPatch).length > 0) {
+          if (existingIntraop) {
+            await tx.intraoperativeRecord.update({ where: { caseId: id }, data: mappedPatch })
+          } else {
+            await tx.intraoperativeRecord.create({
+              data: { caseId: id, ...mapIntraop(patchToApply) },
+            })
+          }
+        }
+      }
       await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
       if (existing.status === "DRAFT") {
         await tx.case.update({ where: { id }, data: { status: "IN_PROGRESS" } })
@@ -182,6 +254,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (result instanceof Response) return result
     if (result.added) {
       after(() => logAudit(user.id, "CASE_EVENT_ADD", id, { type: event.type, source }))
+      // A timed complication is a row the export reads (10.1.0): keep it current.
+      if (event.type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))
     }
     return NextResponse.json({
       ok: true,

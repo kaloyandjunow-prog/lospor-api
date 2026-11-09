@@ -2,7 +2,7 @@
  * Autosave smoke test — exercises the real HTTP path against a running server.
  *
  *   npm run smoke:autosave                  # defaults to http://localhost:3002
- *   BASE_URL=http://192.168.0.105:3002 npm run smoke:autosave
+ *   BASE_URL=http://192.168.x.x:3002 npm run smoke:autosave
  *
  * Unit tests cover the parser and the mapper in isolation; this covers the wire:
  * auth → create → PATCH → read back. It guards the two failures that shipped

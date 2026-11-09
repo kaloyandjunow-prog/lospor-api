@@ -85,10 +85,11 @@ const CURATED_MONITORING: { value: string; conceptId: number; label: string }[] 
   // SNOMED has no single concept naming that exact combination.
   { value: "evokedPotentials", conceptId: 4154582, label: "Evoked potentials monitoring" },
   { value: "tofMonitor", conceptId: 4152647, label: "Neuromuscular blockade monitoring" },
-  // Matches the field's own catalogue label ("Urine output") better than a
-  // generic urinary-catheterization concept would: this flag is about
-  // monitoring output, not the act of placing the catheter.
-  { value: "urinaryCatheter", conceptId: 44813911, label: "Intraoperative fluid balance monitoring" },
+  // The act of placing the catheter (10.2.0). The flag means a urinary catheter is in place, which is what
+  // the Equipment tab ticks and what makes the urine output field appear in Fluid status. The volume itself
+  // is exported on its own as a measurement (LOSPOR:URINE_OUTPUT_ML), so this row no longer stands for
+  // "urine output was monitored". SNOMED 446583004, Procedure domain.
+  { value: "urinaryCatheter", conceptId: 40488365, label: "Insertion of indwelling catheter into urinary bladder" },
   { value: "stomachTube", conceptId: 4227418, label: "Insertion of nasogastric tube" },
 ]
 
@@ -206,6 +207,9 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   { value: "Drug overdose", conceptId: 438028, label: "Poisoning by drug AND/OR medicinal substance" },
   // Observation-domain, despite the Disorder concept class.
   { value: "Serotonin syndrome", conceptId: 4154707, label: "Serotonin syndrome" },
+  // 10.2.0. Vasoplegia has no standard concept (MeSH D056987 only, unmapped)
+  // and stays source-only, which is the honest answer.
+  { value: "Masseter spasm", conceptId: 4079444, label: "Masseter spasm" },
 
   // Haematological.
   // Observation-domain. Shares its concept with Unexpected major
@@ -213,6 +217,7 @@ const CURATED_COMPLICATIONS: { value: string; conceptId: number; label: string }
   { value: "Massive haemorrhage", conceptId: 4010901, label: "Massive hemorrhage" },
   { value: "DIC (disseminated intravascular coagulation)", conceptId: 436093, label: "Disseminated intravascular coagulation" },
   { value: "Haemolytic transfusion reaction", conceptId: 4218193, label: "Hemolytic transfusion reaction" },
+  { value: "Methaemoglobinaemia", conceptId: 432882, label: "Methemoglobinemia" },
   { value: "Febrile non-haemolytic transfusion reaction", conceptId: 763017, label: "Febrile transfusion reaction without hemolysis" },
   { value: "TRALI (transfusion-related acute lung injury)", conceptId: 37116369, label: "Acute lung injury during and following administration of blood product" },
   { value: "TACO (transfusion-associated circulatory overload)", conceptId: 4261830, label: "Transfusion reaction due to excess volume" },

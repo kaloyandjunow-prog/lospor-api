@@ -67,7 +67,7 @@ describe("mapCasesToOmop", () => {
       generated_by_user_id: "admin-1",
       generated_by_role: "ADMIN",
       source: "LOSPOR",
-      source_version: "3.8.0",
+      source_version: "3.9.0",
       included_case_count: 1,
       excluded_case_count: 2,
       app_git_commit: "abc123",
@@ -119,6 +119,8 @@ describe("mapCasesToOmop", () => {
       // which are plans and so observations (the operations performed are
       // the procedure rows above, because the timeline says one started).
       observation: 49,
+      // 10.2.0: DEATH, empty unless Death is charted in theatre.
+      death: 0,
     })
     expect(bundle.metadata.deidentification.direct_patient_identifiers_stored).toBe(false)
 
@@ -295,7 +297,7 @@ describe("mapCasesToOmop", () => {
       forcedOverride: false,
     })
 
-    expect(bundle.metadata.source_version).toBe("3.8.0")
+    expect(bundle.metadata.source_version).toBe("3.9.0")
     expect(bundle.visit_occurrence[0]).toEqual(expect.objectContaining({
       visit_start_date: "2026-07-21",
       visit_end_date: "2026-07-21",
@@ -654,6 +656,21 @@ describe("a technique's timeline marker refines its procedure row instead of dup
     const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:SPINAL/.test(String(row.procedure_source_value)))
     expect(line!.procedure_datetime).toBeNull()
     expect(line!.procedure_date).toBe("2026-06-01")
+  })
+
+  it("uses Sedation started to timestamp the selected sedation technique", () => {
+    const c = completeCase() as never as { intraop: { techniques: string[] }, events: unknown[] }
+    c.intraop.techniques = ["SEDATION_DEEP"]
+    c.events = [{
+      type: "clinical_event", timestamp: new Date("2026-06-01T08:06:00Z"),
+      label: "Sedation started", value: null, unit: null, metadataJson: {},
+    }]
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const line = bundle.procedure_occurrence.find(row => /ANAESTHESIA_TECHNIQUE:SEDATION_DEEP/.test(String(row.procedure_source_value)))
+    expect(line, "fixture must contain the sedation technique row").toBeDefined()
+    expect(line!.procedure_concept_id).toBe(4219502)
+    expect(line!.procedure_datetime).toBe("2026-06-01T08:06:00.000Z")
+    expect(bundle.procedure_occurrence.filter(row => /ANAESTHESIA_TECHNIQUE:SEDATION_DEEP/.test(String(row.procedure_source_value)))).toHaveLength(1)
   })
 
   it("uses Block done's timestamp when exactly one peripheral block is on the technique list", () => {
@@ -1983,6 +2000,12 @@ describe("how a general anaesthetic was maintained", () => {
     expect(techRow("GENERAL_TIVA")?.procedure_concept_id).toBe(4086418)
   })
 
+  it("codes TCI with its exact standard procedure concept", () => {
+    // TCI is more specific than ordinary TIVA and has its own valid SNOMED
+    // procedure concept: 448585004 -> OMOP 40490493.
+    expect(techRow("GENERAL_TCI")?.procedure_concept_id).toBe(40490493)
+  })
+
   it("keeps a balanced anaesthetic at the parent, deliberately", () => {
     // Neither sibling is true of it. TIVA means *total* intravenous, so a case
     // running a volatile is not TIVA, and it is not inhalation-only either.
@@ -2998,5 +3021,35 @@ describe("a cancelled procedure, a plan not yet known, and the procedure done (1
     expect(performed).toHaveLength(1)
     // The plan is not also exported as performed.
     expect(bundle.procedure_occurrence.filter(row => row.procedure_concept_id === 4301351)).toHaveLength(0)
+  })
+})
+
+describe("the side of a block or unilateral spinal is the procedure's modifier (10.2.0)", () => {
+  const options = {
+    userId: "admin-1", userRole: "ADMIN", statusFilter: ["COMPLETE"],
+    excludedCaseCount: 0, gitCommit: "abc123", forcedOverride: false,
+  }
+  const rowFor = (techniques: string[], techniqueSides: unknown, code: string) => {
+    const c = completeCase() as never as { intraop: { techniques: string[]; techniqueSides?: unknown } }
+    c.intraop.techniques = techniques
+    c.intraop.techniqueSides = techniqueSides
+    const bundle = mapCasesToOmop([c as never], options as never)
+    return bundle.procedure_occurrence.find(row => new RegExp(`ANAESTHESIA_TECHNIQUE:${code}$`).test(String(row.procedure_source_value)))
+  }
+
+  it("codes Left, Right and Both with SNOMED qualifiers and keeps the code in the source value", () => {
+    expect(rowFor(["BLOCK_FEMORAL"], { BLOCK_FEMORAL: "LEFT" }, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 4300877, modifier_source_value: "SIDE:LEFT" })
+    expect(rowFor(["BLOCK_FEMORAL"], { BLOCK_FEMORAL: "RIGHT" }, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 4080761, modifier_source_value: "SIDE:RIGHT" })
+    expect(rowFor(["BLOCK_TAP"], { BLOCK_TAP: "BOTH" }, "BLOCK_TAP")).toMatchObject({ modifier_concept_id: 4197258, modifier_source_value: "SIDE:BOTH" })
+  })
+
+  it("exports the unilateral spinal as a spinal anaesthetic with its side", () => {
+    expect(rowFor(["SPINAL_UNILATERAL"], { SPINAL_UNILATERAL: "RIGHT" }, "SPINAL_UNILATERAL")).toMatchObject({ procedure_concept_id: 4332593, modifier_concept_id: 4080761 })
+  })
+
+  it("leaves the modifier at 0 for a technique with no side, an older case, or a side that does not belong", () => {
+    expect(rowFor(["GENERAL_TIVA"], { GENERAL_TIVA: "LEFT" }, "GENERAL_TIVA")).toMatchObject({ modifier_concept_id: 0, modifier_source_value: null })
+    expect(rowFor(["BLOCK_FEMORAL"], undefined, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 0, modifier_source_value: null })
+    expect(rowFor(["BLOCK_FEMORAL"], { BLOCK_FEMORAL: "UP" }, "BLOCK_FEMORAL")).toMatchObject({ modifier_concept_id: 0 })
   })
 })

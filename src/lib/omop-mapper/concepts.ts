@@ -1,5 +1,6 @@
 import { TECHNIQUE_TREE } from "@lospor/core/catalog"
 import type { TreeNode } from "@lospor/core/catalog"
+import { normalizeAdministrationRoute, type AdministrationRouteCode } from "@lospor/core/clinical-rule-vocabulary"
 
 /**
  * OMOP concept maps for the mapper, split out of omop-mapper.ts.
@@ -77,7 +78,7 @@ export const AIRWAY_TOOL_CONCEPTS: Record<string, number> = {
 
 // ─── What anaesthetic was given ──────────────────────────────────────────────
 //
-// The technique tree is about a hundred nodes deep — GENERAL to GENERAL_TIVA,
+// The technique tree is about a hundred nodes deep — GENERAL to GENERAL_TCI,
 // SPINAL to SPINAL_SINGLE to SPINAL_SINGLE_LUMBAR — and the vocabulary is not
 // that granular in the same shape. So a concept is attached at the level where
 // one honestly exists, and any node below it inherits from its nearest mapped
@@ -102,10 +103,14 @@ export const TECHNIQUE_CONCEPTS: Record<string, number> = {
   // anaesthesia: sedation sits elsewhere, under 4249997, so this does not widen
   // into sedation cases.
   GENERAL:  4174669,
-  // The three children split on what maintained the anaesthetic, which is the
-  // axis research asks about: volatile only, intravenous only, or both.
+  // The four children split on what maintained the anaesthetic, which is the
+  // axis research asks about: volatile only, intravenous only, target-controlled
+  // intravenous, or both.
   GENERAL_INHALATION: 4118897,
   GENERAL_TIVA:       4086418,
+  // Exact SNOMED procedure concept for target-controlled total intravenous
+  // anaesthesia (SNOMED code 448585004).
+  GENERAL_TCI:        40490493,
   // Balanced is stated here rather than left to inherit, so it reads as a
   // decision and not as a node nobody reached.
   //
@@ -253,6 +258,16 @@ export const TECHNIQUE_CONCEPTS: Record<string, number> = {
 
 /** Every technique node's parent, derived from the catalogue rather than kept
  *  in step with it by hand. */
+/**
+ * The side of a block or unilateral spinal (10.2.0), as the procedure's modifier. SNOMED qualifier values,
+ * checked against the OMOP vocabulary: Left 7771000, Right 24028007, Right and left 51440002.
+ */
+export const TECHNIQUE_SIDE_MODIFIER: Record<string, { concept_id: number; label: string }> = {
+  LEFT:  { concept_id: 4300877, label: "Left" },
+  RIGHT: { concept_id: 4080761, label: "Right" },
+  BOTH:  { concept_id: 4197258, label: "Right and left" },
+}
+
 export const TECHNIQUE_PARENT: Record<string, string> = (() => {
   const parents: Record<string, string> = {}
   const walk = (nodes: readonly TreeNode[], parent: string | null) => {
@@ -355,6 +370,47 @@ export function vascularAccessConceptFor(site: string | null | undefined): numbe
     node = VASCULAR_ACCESS_PARENT[node]
   }
   return 0
+}
+
+/**
+ * The standard route concept for each route LOSPOR offers (10.2.0), all SNOMED Route-domain concepts checked
+ * against the OMOP vocabulary. Exhaustive over the route codes, and asserted so by test: a route missing here
+ * would export concept 0 with nothing to say why.
+ *
+ * Two are the vocabulary's nearest and say so: inhalation is "Respiratory tract" (447694001), the only standard
+ * route for it, and endotracheal is "Intratracheal" (404818005). ENTERAL is the general enteral route, not
+ * nasogastric, because a drug given down a gastrostomy or jejunostomy tube is the same route code.
+ */
+export const ROUTE_CONCEPTS: Record<AdministrationRouteCode, number> = {
+  IV:           4171047,  // Intravenous
+  IM:           4302612,  // Intramuscular
+  SC:           4142048,  // Subcutaneous
+  PO:           4132161,  // Oral
+  ENTERAL:      4167540,  // Enteral
+  SL:           4292110,  // Sublingual
+  BUCCAL:       4181897,  // Buccal
+  IN:           4262914,  // Nasal
+  PR:           4290759,  // Rectal
+  INHALATION:   40486069, // Respiratory tract
+  TOPICAL:      4263689,  // Topical
+  TRANSDERMAL:  4262099,  // Transdermal
+  INFILTRATION: 37397638, // Infiltration
+  PERINEURAL:   4157761,  // Perineural
+  EPIDURAL:     4225555,  // Epidural
+  INTRATHECAL:  4217202,  // Intrathecal
+  INTRAOSSEOUS: 4213522,  // Intraosseous
+  ENDOTRACHEAL: 4229543,  // Intratracheal
+}
+
+/**
+ * A route as written (a code, a word, or the "INHALATIONAL" a volatile agent is given under) as its standard
+ * concept, or 0 when it is none LOSPOR knows. The written route always stays in route_source_value.
+ */
+export function routeConceptFor(route: string | null | undefined): number {
+  if (!route) return 0
+  const written = route.trim().toUpperCase()
+  const code = written === "INHALATIONAL" ? "INHALATION" : normalizeAdministrationRoute(written)
+  return code ? ROUTE_CONCEPTS[code] : 0
 }
 
 export const AIRWAY_ACT_CONCEPTS: Record<string, number> = {
@@ -496,6 +552,14 @@ export const VITAL_CONCEPTS: Record<string, { concept_id: number; code: string; 
   // Always mmHg. The clinician may enter cmH2O; the conversion happens at entry
   // so the exported figure never depends on a display preference.
   cvp:         { concept_id: 21490675, code: "60985-9", unit: "mmHg", unitConceptId: 8876 },
+  // The arterial line and the cuff's mean (10.2.0). systolic and diastolic above stay the cuff and keep
+  // their generic concepts, so cases exported before this release read the same. Standard LOINC concepts,
+  // checked against the OMOP vocabulary: invasive systolic 76215-3, invasive diastolic 76213-8, invasive
+  // mean 76214-6, and mean pressure by noninvasive 76536-2.
+  ibpSystolic:  { concept_id: 21490853, code: "76215-3", unit: "mmHg", unitConceptId: 8876 },
+  ibpDiastolic: { concept_id: 21490851, code: "76213-8", unit: "mmHg", unitConceptId: 8876 },
+  ibpMap:       { concept_id: 21490852, code: "76214-6", unit: "mmHg", unitConceptId: 8876 },
+  nibpMap:      { concept_id: 21492241, code: "76536-2", unit: "mmHg", unitConceptId: 8876 },
   // Height and weight are required before a case can reach the intraoperative
   // form, so every case has them — and until they were added here the export
   // silently dropped both, while the data dictionary documented them. Weight in

@@ -26,6 +26,12 @@ type Db = PrismaClient | Prisma.TransactionClient
 type JsonItem = Record<string, unknown>
 const arr = (v: unknown): JsonItem[] => (Array.isArray(v) ? v : [])
 const str = (v: unknown): string | null => (v == null ? null : String(v))
+/** An instant from JSON, or null when absent or not a date. */
+const instantOrNull = (v: unknown): Date | null => {
+  if (typeof v !== "string") return null
+  const parsed = new Date(v)
+  return Number.isFinite(parsed.getTime()) ? parsed : null
+}
 const SYNC_SOURCE = "relational-sync"
 const SYNC_SOURCE_VERSION = "research-grade-v1"
 
@@ -528,6 +534,10 @@ function vascularRows(intraopId: string, caseId: string, json: unknown, concepts
     depthCm:   str(v?.depthCm),
     lumens:    str(v?.lumens),
     preexisting: v?.preexisting === true,
+    // 10.2.0: a failed line stays, marked with the time.
+    failed: v?.failed === true,
+    failedAt: instantOrNull(v?.failedAt),
+    insertedAt: instantOrNull(v?.insertedAt),
     ...concept(concepts, "procedure", "LOSPOR_VASCULAR_ACCESS", str(v?.site)),
     source: SYNC_SOURCE,
     sourceVersion: SYNC_SOURCE_VERSION,
@@ -554,6 +564,51 @@ function complicationRows(caseId: string, section: "intraop" | "postop", raw: un
       ordinal: i,
     }
   })
+}
+
+/**
+ * Timed complications (10.1.0): one row per complication event, with its time,
+ * its end for an episode, and the event it came from. Mapped exactly as the
+ * old text items are, through the curated LOSPOR_COMPLICATION concepts.
+ */
+function timedComplicationRows(
+  caseId: string,
+  events: { logicalId: string; metadataJson: unknown }[],
+  concepts: Map<string, ConceptInfo>,
+  ordinalFrom: number,
+) {
+  const timed = events
+    .map(row => ({ id: row.logicalId, ev: row.metadataJson as { ts?: string; endTs?: string; label?: string; suggestion?: string } }))
+    .filter(item => typeof item.ev?.label === "string" && item.ev.label.trim() && item.ev.ts && Number.isFinite(Date.parse(item.ev.ts)))
+    .sort((a, b) => Date.parse(a.ev.ts!) - Date.parse(b.ev.ts!))
+  return timed.map((item, i) => ({
+    caseId,
+    section: "intraop",
+    label: item.ev.label!.trim().slice(0, 200),
+    note: null,
+    timestamp: new Date(item.ev.ts!),
+    endTimestamp: item.ev.endTs && Number.isFinite(Date.parse(item.ev.endTs)) ? new Date(item.ev.endTs) : null,
+    eventId: item.id,
+    suggestion: typeof item.ev.suggestion === "string" ? item.ev.suggestion.slice(0, 240) : null,
+    source: SYNC_SOURCE,
+    ...concept(concepts, "observation", "LOSPOR_COMPLICATION", item.ev.label!.trim()),
+    sourceVersion: SYNC_SOURCE_VERSION,
+    ordinal: ordinalFrom + i,
+  }))
+}
+
+/** The active version of each complication event in a case. */
+async function activeComplicationEvents(db: Db, caseId: string) {
+  const rows = await db.caseEvent.findMany({
+    where: { caseId, status: "active", type: "complication" },
+    select: { logicalId: true, version: true, metadataJson: true },
+  })
+  const latest = new Map<string, { logicalId: string; version: number; metadataJson: unknown }>()
+  for (const row of rows) {
+    const current = latest.get(row.logicalId)
+    if (!current || row.version > current.version) latest.set(row.logicalId, row)
+  }
+  return [...latest.values()]
 }
 
 /**
@@ -877,7 +932,11 @@ export async function syncCaseRelational(db: Db, caseId: string): Promise<void> 
       ...premedRows(it.id, caseId, "MORNING", it.premedicationMorning, concepts),
     ] })
     await db.caseComplication.deleteMany({ where: { caseId, section: "intraop" } })
-    await db.caseComplication.createMany({ data: complicationRows(caseId, "intraop", it.complications, concepts) })
+    const legacyComplications = complicationRows(caseId, "intraop", it.complications, concepts)
+    await db.caseComplication.createMany({ data: [
+      ...legacyComplications,
+      ...timedComplicationRows(caseId, await activeComplicationEvents(db, caseId), concepts, legacyComplications.length),
+    ] })
     await db.caseSelection.deleteMany({ where: { caseId, section: "intraop" } })
     await db.caseSelection.createMany({ data: selections })
   }

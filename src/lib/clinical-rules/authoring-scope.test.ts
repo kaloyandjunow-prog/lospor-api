@@ -306,6 +306,17 @@ describe("scopeGuardIssues protects the dose calculation", () => {
     expect(issues.some(i => i.message.includes("every dose this profile produces"))).toBe(true)
   })
 
+  it("keeps the weight from which the fixed dose applies: it may be raised, never lowered, removed or brought in (10.2.0)", () => {
+    const withFlat = pedVariant(d => { Object.assign(doseCalcOfDraft(d), { flat: 50, flatFromKg: 50 }) })
+    const check = (change: (calc: Record<string, unknown>) => void) =>
+      scopeGuardIssues({ scope: "USER", baseline: withFlat, next: pedVariant(d => { Object.assign(doseCalcOfDraft(d), { flat: 50, flatFromKg: 50 }); change(doseCalcOfDraft(d)) }) })
+    expect(check(() => {})).toEqual([])
+    expect(check(calc => { calc.flatFromKg = 60 })).toEqual([])
+    expect(check(calc => { calc.flatFromKg = 30 }).map(i => i.field)).toContain("routeModes.IV.doseCalc.flatFromKg")
+    expect(check(calc => { delete calc.flatFromKg }).map(i => i.field)).toContain("routeModes.IV.doseCalc.flatFromKg")
+    expect(guard(pedVariant(d => { doseCalcOfDraft(d).flatFromKg = 40 })).map(i => i.field)).toContain("routeModes.IV.doseCalc.flatFromKg")
+  })
+
   it("blocks switching off the cap at the patient's actual weight", () => {
     const issues = guard(pedVariant(d => { doseCalcOfDraft(d).capAtActualWeight = false }))
     expect(issues.map(i => i.field)).toContain("routeModes.IV.doseCalc.capAtActualWeight")

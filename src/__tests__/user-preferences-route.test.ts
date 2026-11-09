@@ -54,6 +54,33 @@ describe("/api/user preferences", () => {
     })
   })
 
+  it("rejects a stale account-preferences revision before writing", async () => {
+    findUniqueMock.mockResolvedValue({
+      firstName: "Ana",
+      lastName: "User",
+      title: "Dr",
+      preferences: { theme: "dark" },
+      preferencesRevision: 4,
+    })
+
+    const { PATCH } = await import("@/app/v1/user/route")
+    const response = await PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({
+        preferences: { theme: "light" },
+        preferencesRevision: 3,
+      }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toMatchObject({
+      code: "PREFERENCES_CONFLICT",
+      preferences: { theme: "dark" },
+      preferencesRevision: 4,
+    })
+    expect(updateMock).not.toHaveBeenCalled()
+  })
+
   it("merges and de-duplicates favourite arrays on PATCH", async () => {
     findUniqueMock.mockResolvedValue({
       firstName: "Ana",
@@ -86,14 +113,14 @@ describe("/api/user preferences", () => {
 
     expect(response.status).toBe(200)
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
-      data: {
+      data: expect.objectContaining({
         preferences: expect.objectContaining({
           theme: "dark",
           intraopFavouriteInfusions: ["Propofol"],
           intraopFavouriteDrugs: ["Propofol", "Fentanyl"],
           clinicalPreferencesVersion: 1,
         }),
-      },
+      }),
     }))
   })
 
@@ -121,12 +148,12 @@ describe("/api/user preferences", () => {
 
     expect(response.status).toBe(200)
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
-      data: {
+      data: expect.objectContaining({
         preferences: expect.objectContaining({
           theme: "dark",
           ui: { locale: "en", density: "compact" },
         }),
-      },
+      }),
     }))
     await expect(response.json()).resolves.toMatchObject({ preferredLocale: "en" })
   })
@@ -161,11 +188,11 @@ describe("/api/user preferences", () => {
 
     expect(response.status).toBe(200)
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
-      data: {
+      data: expect.objectContaining({
         preferences: expect.objectContaining({
           units: expect.objectContaining({ cvp: "mmHg" }),
         }),
-      },
+      }),
     }))
   })
 
@@ -193,13 +220,103 @@ describe("/api/user preferences", () => {
 
     expect((await patch({ drugs: true, fluids: true })).status).toBe(200)
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
-      data: {
+      data: expect.objectContaining({
         preferences: expect.objectContaining({
           bulgarianNames: { premed: false, drugs: true, infusions: false, agents: false, fluids: true },
         }),
-      },
+      }),
     }))
     expect((await patch({ labs: true })).status).toBe(400)
+  })
+
+  it("stores the suggestion groups a clinician turned off and the energy knob look (10.2.0)", async () => {
+    findUniqueMock.mockResolvedValue({ firstName: "Ana", lastName: "User", title: "Dr", preferences: {} })
+    updateMock.mockResolvedValue({ name: "Dr Ana User", firstName: "Ana", lastName: "User", title: "Dr", institution: null, preferences: {} })
+    const { PATCH } = await import("@/app/v1/user/route")
+    const patch = (preferences: unknown) => PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect((await patch({ automationGroups: { timers: false, reminders: true }, energyKnobSkin: "B" })).status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ preferences: expect.objectContaining({ automationGroups: { timers: false }, energyKnobSkin: "B" }) }),
+    }))
+    expect((await patch({ energyKnobSkin: "Z" })).status).toBe(400)
+    expect((await patch({ airwayScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ airwayScreen: "legacy" }) }) }))
+    expect((await patch({ airwayScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ vascularScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ vascularScreen: "legacy" }) }) }))
+    expect((await patch({ vascularScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ monitoringScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ monitoringScreen: "legacy" }) }) }))
+    expect((await patch({ monitoringScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ equipmentScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ equipmentScreen: "legacy" }) }) }))
+    expect((await patch({ equipmentScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ techniqueScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ techniqueScreen: "legacy" }) }) }))
+    expect((await patch({ techniqueScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ eventsScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ eventsScreen: "legacy" }) }) }))
+    expect((await patch({ eventsScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ fluidsScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ fluidsScreen: "legacy" }) }) }))
+    expect((await patch({ fluidsScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ eventLogScreen: "legacy" })).status).toBe(200)
+    expect(updateMock).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ preferences: expect.objectContaining({ eventLogScreen: "legacy" }) }) }))
+    expect((await patch({ eventLogScreen: "fancy" })).status).toBe(400)
+    expect((await patch({ automationGroups: { timers: "off" } })).status).toBe(400)
+  })
+
+  it("stores per-suggestion account switches, including vital and opt-in context lines", async () => {
+    findUniqueMock.mockResolvedValue({ firstName: "Ana", lastName: "User", title: "Dr", preferences: {} })
+    updateMock.mockResolvedValue({ name: "Dr Ana User", firstName: "Ana", lastName: "User", title: "Dr", institution: null, preferences: {} })
+    const { PATCH } = await import("@/app/v1/user/route")
+    const response = await PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences: { automationLines: { "vital:hypotension": false, "context:induction-agent-context": true, "reminder:ponv": false } } }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect(response.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ preferences: expect.objectContaining({ automationLines: { "vital:hypotension": false, "context:induction-agent-context": true, "reminder:ponv": false } }) }),
+    }))
+  })
+
+  it("stores shared case and timetable layout preferences without dropping siblings", async () => {
+    findUniqueMock.mockResolvedValue({
+      firstName: "Ana",
+      lastName: "User",
+      title: "Dr",
+      preferences: { theme: "dark", caseLayout: { sidebar: false, preop: "tabs" } },
+    })
+    updateMock.mockResolvedValue({ name: "Dr Ana User", firstName: "Ana", lastName: "User", title: "Dr", institution: null, preferences: {} })
+    const { PATCH } = await import("@/app/v1/user/route")
+    const response = await PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences: {
+        caseLayout: { intraop: "tabs" },
+        timetableLayout: "scroll",
+        vitalsChartExpanded: false,
+      } }),
+    }) as Parameters<typeof PATCH>[0])
+
+    expect(response.status).toBe(200)
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ preferences: expect.objectContaining({
+        theme: "dark",
+        caseLayout: { sidebar: false, preop: "tabs", intraop: "tabs", postop: "scroll" },
+        timetableLayout: "scroll",
+        vitalsChartExpanded: false,
+      }) }),
+    }))
+    const invalid = await PATCH(new Request("http://localhost/api/user", {
+      method: "PATCH",
+      body: JSON.stringify({ preferences: { caseLayout: { preop: "sidebar" } } }),
+    }) as Parameters<typeof PATCH>[0])
+    expect(invalid.status).toBe(400)
   })
 
   it("rejects invalid preference payloads", async () => {

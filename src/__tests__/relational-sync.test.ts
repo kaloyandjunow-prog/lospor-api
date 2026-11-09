@@ -16,9 +16,12 @@ function delegate(): Delegate {
   }
 }
 
-function makeDb(caseRow: Record<string, unknown>) {
+function makeDb(caseRow: Record<string, unknown>, complicationEvents: unknown[] = []) {
   const { preop, intraop, postop, ...caseRecord } = caseRow
   return {
+    caseEvent: {
+      findMany: vi.fn().mockResolvedValue(complicationEvents),
+    },
     case: {
       findUnique: vi.fn().mockResolvedValue(caseRecord),
       update: vi.fn().mockResolvedValue({}),
@@ -664,5 +667,38 @@ describe("laboratory draws taken during a case", () => {
       // The draw time survives, which is the whole point of intraop labs.
       takenAt: new Date("2026-06-01T08:40:00.000Z"),
     }))
+  })
+})
+
+describe("timed complications (10.1.0)", () => {
+  it("mirror each complication event with its time, its episode end and its event, after the old text items", async () => {
+    const { syncCaseRelational } = await import("@/lib/relational-sync")
+    const caseRow = makeCaseRow()
+    const db = makeDb(caseRow, [
+      { logicalId: "c-2", version: 1, metadataJson: { id: "c-2", type: "complication", label: "Bradycardia", ts: "2026-06-01T09:30:00.000Z" } },
+      { logicalId: "c-1", version: 1, metadataJson: { id: "c-1", type: "complication", label: "Hypotension", ts: "2026-06-01T09:00:00.000Z", endTs: "2026-06-01T09:20:00.000Z" } },
+      { logicalId: "c-1", version: 2, metadataJson: { id: "c-1", type: "complication", label: "Hypotension", ts: "2026-06-01T09:00:00.000Z", endTs: "2026-06-01T09:25:00.000Z" } },
+    ])
+
+    await syncCaseRelational(db as never, "case-1")
+
+    expect(db.caseEvent.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { caseId: "case-1", status: "active", type: "complication" },
+    }))
+    const rows = db.caseComplication.createMany.mock.calls
+      .map((call: unknown[]) => (call[0] as { data: Record<string, unknown>[] }).data)
+      .find((data: Record<string, unknown>[]) => data.some(row => row.section === "intraop"))!
+    const timed = rows.filter(row => row.eventId)
+    expect(timed.map(row => [row.label, row.eventId])).toEqual([["Hypotension", "c-1"], ["Bradycardia", "c-2"]])
+    expect(timed[0]).toEqual(expect.objectContaining({
+      timestamp: new Date("2026-06-01T09:00:00.000Z"),
+      endTimestamp: new Date("2026-06-01T09:25:00.000Z"),
+      sourceVocabulary: "LOSPOR_COMPLICATION",
+      sourceCode: "Hypotension",
+    }))
+    expect(timed[1].endTimestamp).toBeNull()
+    const legacy = rows.filter(row => !row.eventId)
+    expect(legacy.length).toBeGreaterThan(0)
+    expect(Number(timed[0].ordinal)).toBe(legacy.length)
   })
 })

@@ -36,6 +36,7 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
   let prisma: typeof import("@/lib/prisma").prisma
   let disconnectClinicalPrismaForTests: typeof import("@/lib/clinical-transaction").disconnectClinicalPrismaForTests
   let postEvent: typeof import("@/app/v1/cases/[id]/events/route").POST
+  let postBatchEvent: typeof import("@/app/v1/cases/[id]/events/batch/route").POST
   let putEvent: typeof import("@/app/v1/cases/[id]/events/[eventId]/route").PUT
   let deleteEvent: typeof import("@/app/v1/cases/[id]/events/[eventId]/route").DELETE
 
@@ -43,6 +44,8 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
   const userId = `event-routes-user-${suffix}`
   const caseId = `event-routes-case-${suffix}`
   const finalCaseId = `event-routes-final-${suffix}`
+  const atomicCaseId = `event-routes-atomic-${suffix}`
+  const batchCaseId = `event-routes-batch-${suffix}`
   const startedAt = new Date(Date.now() - 60 * 60_000)
   const at = (minutes: number) => new Date(startedAt.getTime() + minutes * 60_000).toISOString()
   const madeAt = (minutesAgo: number) => new Date(Date.now() - minutesAgo * 60_000).toISOString()
@@ -56,10 +59,25 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
     }) as never,
     { params: Promise.resolve({ id }) },
   )
-  const put = (id: string, eventId: string, event: Record<string, unknown>, made?: string) => putEvent(
+  const postBatch = (id: string, body: Record<string, unknown>, revision?: number) => postBatchEvent(
+    new Request(`http://localhost/v1/cases/${id}/events/batch`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(revision != null ? { "x-lospor-intraop-revision": String(revision) } : {}),
+      },
+      body: JSON.stringify(body),
+    }) as never,
+    { params: Promise.resolve({ id }) },
+  )
+  const put = (id: string, eventId: string, event: Record<string, unknown>, made?: string, revision?: number) => putEvent(
     new Request(`http://localhost/v1/cases/${id}/events/${eventId}`, {
       method: "PUT",
-      headers: { "content-type": "application/json", ...(made ? { "x-lospor-made-at": made } : {}) },
+      headers: {
+        "content-type": "application/json",
+        ...(made ? { "x-lospor-made-at": made } : {}),
+        ...(revision != null ? { "x-lospor-intraop-revision": String(revision) } : {}),
+      },
       body: JSON.stringify(event),
     }) as never,
     { params: Promise.resolve({ id, eventId }) },
@@ -81,6 +99,7 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
     ;({ prisma } = await import("@/lib/prisma"))
     ;({ disconnectClinicalPrismaForTests } = await import("@/lib/clinical-transaction"))
     ;({ POST: postEvent } = await import("@/app/v1/cases/[id]/events/route"))
+    ;({ POST: postBatchEvent } = await import("@/app/v1/cases/[id]/events/batch/route"))
     ;({ PUT: putEvent, DELETE: deleteEvent } = await import("@/app/v1/cases/[id]/events/[eventId]/route"))
     getAuthUserMock.mockResolvedValue({
       id: userId, role: "MEMBER", institutionId: null, institutionName: null,
@@ -89,7 +108,7 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
     await prisma.user.create({
       data: { id: userId, email: `${userId}@example.test`, username: userId, usernameCanonical: userId.toLowerCase(), name: "Event routes test", passwordHash: "not-a-real-password" },
     })
-    for (const id of [caseId, finalCaseId]) {
+    for (const id of [caseId, finalCaseId, atomicCaseId, batchCaseId]) {
       await prisma.case.create({ data: { id, userId, createdById: userId, status: "IN_PROGRESS" } })
       await prisma.intraoperativeRecord.create({ data: { caseId: id, startedAt, timezone: "UTC", techniques: [], syncRevision: 1 } })
     }
@@ -98,8 +117,8 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
   afterAll(async () => {
     if (!prisma) return
     await prisma.$executeRaw`UPDATE "Case" SET "status" = 'IN_PROGRESS' WHERE "id" = ${finalCaseId}`.catch(() => {})
-    await prisma.case.deleteMany({ where: { id: { in: [caseId, finalCaseId] } } })
-    await prisma.auditLog.deleteMany({ where: { entityId: { in: [caseId, finalCaseId] } } })
+    await prisma.case.deleteMany({ where: { id: { in: [caseId, finalCaseId, atomicCaseId, batchCaseId] } } })
+    await prisma.auditLog.deleteMany({ where: { entityId: { in: [caseId, finalCaseId, atomicCaseId, batchCaseId] } } })
     await prisma.user.deleteMany({ where: { id: userId } })
     await disconnectClinicalPrismaForTests()
     await prisma.$disconnect()
@@ -197,6 +216,117 @@ describe.skipIf(!runPostgres)("event edit and delete routes, PostgreSQL", () => 
     const again = await removeAt(madeAt(0))
     expect(again.status).toBe(200)
     expect(await revision()).toBe(before + 1)
+  }, 30_000)
+
+  it("rebases a stale atomic airway event and keeps the newer structured record", async () => {
+    const revision = async () => (await prisma.intraoperativeRecord.findUniqueOrThrow({ where: { caseId: atomicCaseId }, select: { syncRevision: true } })).syncRevision
+    const atRevision = async (event: Record<string, unknown>, expected: number) => postEvent(
+      new Request(`http://localhost/v1/cases/${atomicCaseId}/events`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-lospor-made-at": madeAt(1),
+          "x-lospor-intraop-revision": String(expected),
+        },
+        body: JSON.stringify(event),
+      }) as never,
+      { params: Promise.resolve({ id: atomicCaseId }) },
+    )
+
+    const staleRevision = await revision()
+    expect((await atRevision({
+      id: "atomic-first",
+      type: "clinical_event",
+      label: "Intubated",
+      ts: at(10),
+      intraopPatch: {
+        airwayDeviceEntries: [{ id: "atomic-first-tube", device: "ORAL_ETT", details: { oralTubeSize: 7 }, insertedAt: at(10), status: "in_use" }],
+        airwayDevices: ["ORAL_ETT"],
+      },
+    }, staleRevision)).status).toBe(200)
+
+    // Another screen advances the record after the first client read.
+    expect((await post(atomicCaseId, { id: "atomic-remote", type: "clinical_event", label: "Positioned", ts: at(11) })).status).toBe(200)
+
+    const staleSecond = await atRevision({
+      id: "atomic-second",
+      type: "clinical_event",
+      label: "Reintubation",
+      ts: at(12),
+      intraopPatch: {
+        airwayDeviceEntries: [
+          { id: "atomic-first-tube", device: "ORAL_ETT", details: { oralTubeSize: 7 }, insertedAt: at(10), status: "failed", endedAt: at(12), replacedBy: "atomic-second-tube" },
+          { id: "atomic-second-tube", device: "ORAL_ETT", details: { oralTubeSize: 8 }, insertedAt: at(12), status: "in_use" },
+        ],
+        airwayDevices: ["ORAL_ETT"],
+      },
+    }, staleRevision + 1)
+    expect(staleSecond.status).toBe(200)
+    const stored = await prisma.intraoperativeRecord.findUniqueOrThrow({ where: { caseId: atomicCaseId }, select: { airwayDeviceEntries: true, syncRevision: true } })
+    expect(stored.syncRevision).toBe(staleRevision + 3)
+    expect(stored.airwayDeviceEntries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "atomic-first-tube", status: "failed" }),
+      expect.objectContaining({ id: "atomic-second-tube", status: "in_use" }),
+    ]))
+
+    // Web edits the same logical event through PUT. The structured patch must
+    // follow that path too, including when the client is one revision behind.
+    const stalePutRevision = await revision()
+    expect((await post(atomicCaseId, { id: "atomic-put-remote", type: "clinical_event", label: "Positioned", ts: at(13) })).status).toBe(200)
+    const putResult = await put(atomicCaseId, "atomic-put", {
+      type: "clinical_event",
+      label: "CVC in",
+      ts: at(14),
+      intraopPatch: {
+        vascularAccesses: [{ id: "atomic-cvc", site: "IJ_RIGHT", siteLabel: "Right IJ", size: "7", sizeUnit: "Fr", depthCm: "15", insertedAt: at(14), origin: "here" }],
+      },
+    }, madeAt(0), stalePutRevision)
+    expect(putResult.status).toBe(200)
+    const afterPut = await prisma.intraoperativeRecord.findUniqueOrThrow({ where: { caseId: atomicCaseId }, select: { vascularAccesses: true } })
+    expect(afterPut.vascularAccesses).toEqual(expect.arrayContaining([expect.objectContaining({ id: "atomic-cvc" })]))
+  }, 30_000)
+
+  it("does not conflict or reserve a revision when an automation batch is replayed", async () => {
+    const airway = {
+      id: "batch-airway",
+      type: "clinical_event",
+      label: "Intubated",
+      ts: at(16),
+      suggestion: "context:airway-record",
+      clinicalRelation: "airway-record",
+      sourceEventId: "airway-source",
+      intraopPatch: {
+        airwayDeviceEntries: [{ id: "batch-tube", device: "ORAL_ETT", details: {}, insertedAt: at(16), status: "in_use" }],
+        airwayDevices: ["ORAL_ETT"],
+      },
+    }
+    const first = await postBatch(batchCaseId, { add: [airway], update: [], remove: [] }, 1)
+    expect(first.status).toBe(200)
+    const afterFirst = await prisma.intraoperativeRecord.findUniqueOrThrow({ where: { caseId: batchCaseId }, select: { syncRevision: true } })
+    const retry = await postBatch(batchCaseId, { add: [airway], update: [], remove: [] }, 1)
+    expect(retry.status).toBe(200)
+    const afterRetry = await prisma.intraoperativeRecord.findUniqueOrThrow({ where: { caseId: batchCaseId }, select: { syncRevision: true, airwayDeviceEntries: true } })
+    expect(afterRetry.syncRevision).toBe(afterFirst.syncRevision)
+    expect(afterRetry.airwayDeviceEntries).toEqual(expect.arrayContaining([expect.objectContaining({ id: "batch-tube" })]))
+    expect(await prisma.caseEvent.count({ where: { caseId: batchCaseId, logicalId: "batch-airway", status: "active" } })).toBe(1)
+  }, 30_000)
+
+  it("refuses a contradictory inferred technique while keeping the first automation result", async () => {
+    const first = await post(batchCaseId, {
+      id: "context-technique-first", type: "clinical_event", label: "Induction", ts: at(20),
+      suggestion: "context:induction-agent", clinicalRelation: "anaesthesia-technique", sourceEventId: "propofol-1",
+      intraopPatch: { techniques: ["GENERAL_TIVA"] },
+    })
+    expect(first.status).toBe(200)
+    const conflictResult = await post(batchCaseId, {
+      id: "context-technique-second", type: "clinical_event", label: "Induction", ts: at(21),
+      suggestion: "context:induction-agent", clinicalRelation: "anaesthesia-technique", sourceEventId: "propofol-2",
+      intraopPatch: { techniques: ["GENERAL_BALANCED"] },
+    })
+    expect(conflictResult.status).toBe(409)
+    expect(await conflictResult.json()).toMatchObject({ error: "automation_conflict", kind: "technique" })
+    expect(await prisma.intraoperativeRecord.findUniqueOrThrow({ where: { caseId: batchCaseId }, select: { techniques: true } })).toMatchObject({ techniques: ["GENERAL_TIVA"] })
+    expect(await prisma.caseEvent.count({ where: { caseId: batchCaseId, logicalId: "context-technique-second", status: "active" } })).toBe(0)
   }, 30_000)
 
   it("a finalised case takes no edit and no deletion -- refused by the route itself", async () => {

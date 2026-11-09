@@ -21,6 +21,8 @@ vi.mock("@/lib/clinical-transaction", () => ({
     operation({ case: { findUnique: findUniqueMock, update: updateMock } })),
 }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
+const untallyCaseMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
+vi.mock("@/lib/intraop-automation", () => ({ untallyCase: untallyCaseMock, invalidateIntraopAutomationCaches: vi.fn() }))
 
 function makeRequest(caseId = "case-1") {
   return new Request(`http://localhost/api/cases/${caseId}/unfinalize`, { method: "POST" }) as Parameters<typeof POST>[0]
@@ -51,6 +53,8 @@ describe("POST /api/cases/:id/unfinalize", () => {
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ status: "IN_PROGRESS", finalizedAt: null }),
     }))
+    // A reopened case leaves the vitals statistics in the same transaction.
+    expect(untallyCaseMock).toHaveBeenCalledWith(expect.anything(), "case-1")
   })
 
   it("returns 403 after the undo window expires", async () => {

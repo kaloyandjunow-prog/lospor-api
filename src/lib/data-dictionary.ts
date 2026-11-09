@@ -44,6 +44,22 @@
 // whatever unit was typed: the entry unit is a per-user display preference and
 // a column following it could not be pooled.
 //
+// 4.11.0 (10.2.0) adds suggestion_source_value to the six clinical tables (the
+// rule an entry was made from, null for one charted by hand), the DEATH table
+// for a death in theatre, the resuscitation and front-of-neck events, jet
+// ventilation with its pressure and rate, each airway device as its own row
+// with its state (and a placement procedure per entry at its own time), a vascular
+// line dated at the time it went in, every tourniquet with its site and side, and a
+// failed vascular line as its own observation, the moment of every drug dose and
+// the standard route concept beside the route as written.
+//
+// 4.10.0 adds the intraoperative shock (a procedure with its energy beside
+// it) and gives a complication charted on the timeline its exact date: the
+// timed complications of 10.1.0 reach the same rows the old text items did,
+// mapped the same way. CONDITION_OCCURRENCE gains the CDM's start and end
+// date-times, so a complication carries its instant and an episode logged
+// from the vitals questions its end.
+//
 // 4.3.0 documents what the traceability pass found: the risk-score and COLDS
 // factors, which exported their totals and not one component; the allergy flag,
 // whose absence made a documented "no known allergies" identical to an unasked
@@ -73,7 +89,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.9.0"
+export const DICTIONARY_VERSION = "4.11.0"
 
 export interface DictionaryEntry {
   name: string
@@ -559,7 +575,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     exportName: "procedure_occurrence.procedure_concept_id",
     meaning: "Anaesthesia techniques used (multi-select), one procedure row per "
       + "technique, each source value prefixed ANAESTHESIA_TECHNIQUE:. Coded as "
-      + "SNOMED: 4174669 (Administration of general anesthetic), 4332593 "
+      + "SNOMED: 4174669 (Administration of general anesthetic), 40490493 "
+      + "(Target controlled total intravenous anesthesia), 4332593 "
       + "(Spinal anesthesia), 4078199 (Epidural anesthesia), 4219502 "
       + "(Sedation). GENERAL is 4174669 rather than 4171773 (Operative general "
       + "anesthesia), which looked like the obvious parent and is not one: "
@@ -724,6 +741,130 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "No row = no medication instructions recorded (the section may be switched off at the site)",
     sourceTable: "PreopMedicationInstruction", sourceColumn: "hoursBefore",
     versionIntroduced: "4.9.0",
+  },
+  {
+    name: "intraopDefibrillation",
+    exportName: "procedure_occurrence.procedure_concept_id (INTRAOP_EVENT:Defibrillation / Cardioversion)",
+    meaning: "A shock charted during the case, one procedure_occurrence each, "
+      + "timed to the minute it was given: Direct current defibrillation "
+      + "(4204802) when not synchronised, Direct current cardioversion "
+      + "(4078793) when synchronised. Repeated shocks are repeated rows.",
+    type: "concept_id",
+    missingnessRule: "No row = no shock charted",
+    sourceTable: "CaseEvent", sourceColumn: "label",
+    versionIntroduced: "4.10.0",
+  },
+  {
+    name: "intraopDefibrillationEnergy",
+    exportName: "measurement.value_as_number (INTRAOP_EVENT:<Defibrillation|Cardioversion>:energy)",
+    meaning: "The energy of one shock, in joules (unit_concept_id 9522, J), as a "
+      + "measurement at the same instant as its procedure and with its source "
+      + "value plus \":energy\". measurement_concept_id is 0: no standard concept "
+      + "means energy delivered (LOINC 88667-1 is a device's maximum, a different fact).",
+    type: "integer",
+    unit: "J",
+    allowedValues: "1-360",
+    missingnessRule: "No row = no shock charted",
+    sourceTable: "CaseEvent", sourceColumn: "value",
+    versionIntroduced: "4.10.0",
+  },
+  {
+    name: "intraopComplicationStart",
+    exportName: "condition_occurrence.condition_start_datetime (LOSPOR_COMPLICATION)",
+    meaning: "The instant a complication with a reviewed concept began, in the "
+      + "theatre's local time with its offset: when it was charted on the timeline, "
+      + "or the reading a question from the vitals was answered for.",
+    type: "datetime",
+    missingnessRule: "Blank = a complication from the old line of text, which has no time (its date is the case start)",
+    sourceTable: "CaseComplication", sourceColumn: "timestamp",
+    versionIntroduced: "4.10.0",
+  },
+  {
+    name: "intraopComplicationEnd",
+    exportName: "condition_occurrence.condition_end_date / condition_end_datetime (LOSPOR_COMPLICATION)",
+    meaning: "The end of an episode logged from the vitals questions: the first "
+      + "reading back inside both the fixed and the statistical limits, or the "
+      + "case end when the readings never came back. A moment logged with "
+      + "continued logging switched off ends at its own start.",
+    type: "datetime",
+    missingnessRule: "Blank = a complication charted as a moment on the timeline, or one from the old line of text; never an episode still open, since an open episode is closed at the case end before finalisation",
+    sourceTable: "CaseComplication", sourceColumn: "endTimestamp",
+    versionIntroduced: "4.10.0",
+  },
+  {
+    name: "fromSuggestion",
+    exportName: "drug_exposure.suggestion_source_value (the same column on condition_occurrence, measurement, procedure_occurrence, device_exposure and observation)",
+    meaning: "The intraoperative suggestion an entry was made from: a treatment card row (card:Hypotension:ephedrine), a reverse question (reverse:lipid), a reading, lab or reminder question. Non-empty means the entry came from a suggestion the clinician accepted.",
+    type: "string",
+    missingnessRule: "Blank = charted by hand, or a row that does not come from an intraoperative entry",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "deathInTheatre",
+    exportName: "observation.observation_concept_id (4306655 Death, at the Death event; and one row in DEATH: death_date, death_datetime)",
+    meaning: "A death charted in theatre, at the first Death event. The cause is not recorded (cause_concept_id 0).",
+    type: "datetime",
+    missingnessRule: "No row = no death charted in theatre; deaths after the case are outside this register",
+    sourceTable: "CaseEvent", sourceColumn: "timestamp",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "resuscitationEvents",
+    exportName: "procedure_occurrence.procedure_concept_id (CPR started 4232320, Reintubation 4013354, Cricothyrotomy 37206251, Needle cricothyrotomy 37205949, Active cooling started 4086433, Charcoal filters fitted 0); condition_occurrence 44791216 (ROSC); observation 0 (ROSB)",
+    meaning: "Each resuscitation, airway rescue and malignant hyperthermia action charted, one row per occurrence at its own time.",
+    type: "datetime",
+    missingnessRule: "No row = not charted",
+    sourceTable: "CaseEvent", sourceColumn: "timestamp",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "jetVentilationSettings",
+    exportName: "measurement.value_as_number (driving pressure in bar 9464 and rate per minute 8541, concept 0; the procedure 4168475 Jet ventilation at each start)",
+    meaning: "Jet ventilation: the procedure at each start, and the driving pressure and rate at the start and every change. No standard concept names either setting.",
+    type: "float",
+    allowedValues: "pressure 0-6 bar; rate 1-600 /min",
+    missingnessRule: "No row = no jet ventilation charted",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "tourniquet",
+    exportName: "procedure_occurrence.procedure_concept_id (INTRAOP_EVENT:Tourniquet on = 4049036 Application of tourniquet, INTRAOP_EVENT:Tourniquet off = 4084008 Tourniquet cuff deflation)",
+    meaning: "Every tourniquet inflation and release, each its own procedure at its own time, so two limbs or a cuff let down and inflated again are all counted. From 10.2.0 the site (a thigh, a forearm and so on) is the modifier source value (SITE:<code>, for example SITE:lThigh) and its side the modifier concept (Left 4300877, Right 4080761); a tourniquet charted without a site has neither.",
+    type: "string",
+    allowedValues: "SITE:<l|r><limb> | empty",
+    missingnessRule: "No row = no tourniquet charted",
+    sourceTable: "CaseEvent", sourceColumn: "metadataJson",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "airwayDeviceEntries",
+    exportName: "device_exposure.device_source_value (AIRWAY_DEVICE:<code>[:failed|:replaced])",
+    meaning: "Each airway device its own row from 10.2.0, with the time it went in and came out; a device that failed or was replaced is marked in the source value, so a reintubation counts two tubes.",
+    type: "string",
+    missingnessRule: "Cases before 10.2.0 have one row per kind of device, with no state",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "airwayDeviceEntries",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "techniqueSides",
+    exportName: "procedure_occurrence.modifier_concept_id (SNOMED 7771000 Left, 24028007 Right, 51440002 Right and left) and modifier_source_value (SIDE:LEFT|RIGHT|BOTH)",
+    meaning: "The side of a peripheral block or of a unilateral spinal, on that technique's procedure row; techniques without a side keep modifier 0.",
+    type: "string",
+    allowedValues: "LEFT, RIGHT, BOTH",
+    missingnessRule: "Cases before 10.2.0 have no side; the technique row carries modifier 0",
+    sourceTable: "IntraoperativeRecord", sourceColumn: "techniqueSides",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "vascularLineFailed",
+    exportName: "observation.observation_source_value (the line source value with :failed)",
+    meaning: "A vascular line that failed during the case, at the time it failed. The insertion row of the line stands.",
+    type: "boolean",
+    missingnessRule: "No row = the line did not fail, or the case predates 10.2.0",
+    sourceTable: "VascularAccess", sourceColumn: "failed / failedAt",
+    versionIntroduced: "4.11.0",
   },
   {
     name: "preopPremedicationOrders",
@@ -1099,7 +1240,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "this vocabulary are deprecated regardless. Not 4134560 (Emergency "
       + "cricothyroidotomy): real-world use of this device is almost always an "
       + "emergency, but the form does not record emergency or elective for it, "
-      + "so this states what is known rather than what is likely.",
+      + "so this states what is known rather than what is likely. From 10.2.0 "
+      + "there is one row per airway entry, at the time that entry went in, so a "
+      + "tube that failed and the one that replaced it are two placements; a "
+      + "device that failed or was replaced carries :failed or :replaced in the "
+      + "source value. A Reintubation event whose tube is an airway entry is not "
+      + "exported a second time.",
     type: "string",
     allowedValues: "SUPRAGLOTTIC_AIRWAY_PLACEMENT | TRACHEAL_INTUBATION_ORAL | TRACHEAL_INTUBATION_NASAL | DOUBLE_LUMEN_TUBE_PLACEMENT | ENDOBRONCHIAL_TUBE_PLACEMENT | SURGICAL_AIRWAY",
     missingnessRule: "No row = no instrumented airway recorded",
@@ -1433,6 +1579,46 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     versionIntroduced: "3.0.0",
   },
   {
+    name: "event.ibpSystolic",
+    exportName: "measurement.value_as_number (LOINC:76215-3)",
+    meaning: "Intraoperative systolic pressure from the arterial line (invasive)",
+    unit: "mmHg",
+    type: "integer",
+    missingnessRule: "NULL = not recorded in this event",
+    sourceTable: "CaseEvent", sourceColumn: "ibpSystolic",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "event.ibpDiastolic",
+    exportName: "measurement.value_as_number (LOINC:76213-8)",
+    meaning: "Intraoperative diastolic pressure from the arterial line (invasive)",
+    unit: "mmHg",
+    type: "integer",
+    missingnessRule: "NULL = not recorded in this event",
+    sourceTable: "CaseEvent", sourceColumn: "ibpDiastolic",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "event.ibpMap",
+    exportName: "measurement.value_as_number (LOINC:76214-6)",
+    meaning: "Intraoperative mean arterial pressure from the arterial line (invasive)",
+    unit: "mmHg",
+    type: "integer",
+    missingnessRule: "NULL = not recorded in this event",
+    sourceTable: "CaseEvent", sourceColumn: "ibpMap",
+    versionIntroduced: "4.11.0",
+  },
+  {
+    name: "event.nibpMap",
+    exportName: "measurement.value_as_number (LOINC:76536-2)",
+    meaning: "Intraoperative mean arterial pressure from the cuff (noninvasive)",
+    unit: "mmHg",
+    type: "integer",
+    missingnessRule: "NULL = not recorded in this event",
+    sourceTable: "CaseEvent", sourceColumn: "nibpMap",
+    versionIntroduced: "4.11.0",
+  },
+  {
     name: "event.heartRate",
     exportName: "measurement.value_as_number (LOINC:8867-4)",
     meaning: "Intraoperative heart rate",
@@ -1555,14 +1741,21 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.drugRoute",
-    // Carried as the source value: LOSPOR has no reviewed mapping to the OMOP
-    // route vocabulary, and route_concept_id is not emitted at all.
-    exportName: "drug_exposure.route_source_value",
-    meaning: "Administration route, as recorded",
+    exportName: "drug_exposure.route_source_value (and drug_exposure.route_concept_id from 4.11.0)",
+    meaning: "Administration route, as recorded. From 4.11.0 the standard route concept is exported beside it (route_concept_id, SNOMED Route domain): IV 4171047, IM 4302612, SC 4142048, oral 4132161, enteral 4167540, sublingual 4292110, buccal 4181897, nasal 4262914, rectal 4290759, inhalation 40486069 (Respiratory tract, the vocabulary's only standard inhalation route), topical 4263689, transdermal 4262099, infiltration 37397638, perineural 4157761, epidural 4225555, intrathecal 4217202, intraosseous 4213522, endotracheal 4229543 (Intratracheal). A volatile agent is given by inhalation. A route that is none of these is concept 0 with the written route kept in the source value. Earlier exports carried the source value only.",
     type: "string",
-    missingnessRule: "NULL = not recorded",
+    missingnessRule: "NULL = not recorded (concept 0). A drug charted without a route is exported as intravenous, as before",
     sourceTable: "CaseEvent", sourceColumn: "drugRoute",
     versionIntroduced: "3.0.0",
+  },
+  {
+    name: "drugAdministrationTime",
+    exportName: "drug_exposure.drug_exposure_start_datetime / drug_exposure_end_datetime",
+    meaning: "The moment a dose was given, in the theatre's clock with its offset, and for an infusion, fluid or volatile agent the moment it stopped. Before 4.11.0 a drug carried its day only, so a dose could not be placed in the case (before induction, at incision, during an arrest). A premedication, a ward order and a home medicine are known by their day only and leave both blank. A dose tapped during a cardiac arrest and charted afterwards has a reconstructed time (the chart marks it with ≈); its start moment is left blank and only its day is exported, so the file never claims a time of day nobody charted.",
+    type: "datetime",
+    missingnessRule: "start blank = a drug known by its day only; end blank = a single dose, or an administration with no recorded stop (which reads as still running)",
+    sourceTable: "CaseEvent", sourceColumn: "timestamp",
+    versionIntroduced: "4.11.0",
   },
   {
     name: "event.concentrationValue",
@@ -1790,7 +1983,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not all three components recorded, or an adult case (scored on Aldrete)",
     derivationRule: "Sum of 3 Steward components (consciousness, airway, movement)",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardTotal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "stewardConsciousness",
@@ -1800,7 +1993,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not recorded, or an adult case",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardConsciousness",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "stewardAirway",
@@ -1810,7 +2003,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not recorded, or an adult case",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardAirway",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "stewardMovement",
@@ -1820,7 +2013,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not recorded, or an adult case",
     sourceTable: "PostoperativeRecord", sourceColumn: "stewardMovement",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccTotal",
@@ -1831,7 +2024,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not all five items scored, or not offered (offered to children from 28 days to under 8 years)",
     derivationRule: "Sum of 5 FLACC items (face, legs, activity, cry, consolability)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccTotal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccFace",
@@ -1841,7 +2034,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccFace",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccLegs",
@@ -1851,7 +2044,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccLegs",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccActivity",
@@ -1861,7 +2054,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccActivity",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccCry",
@@ -1871,7 +2064,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccCry",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "flaccConsolability",
@@ -1881,7 +2074,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "flaccConsolability",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "fpsrScore",
@@ -1891,7 +2084,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–10",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "fpsrScore",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsTotal",
@@ -1902,7 +2095,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     missingnessRule: "NULL = not all six items scored, or not a newborn",
     derivationRule: "Sum of 6 NIPS items",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsTotal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsFacialExpression",
@@ -1912,7 +2105,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsFacialExpression",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsCry",
@@ -1922,7 +2115,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–2",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsCry",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsBreathing",
@@ -1932,7 +2125,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsBreathing",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsArms",
@@ -1942,7 +2135,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsArms",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsLegs",
@@ -1952,7 +2145,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsLegs",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "nipsArousal",
@@ -1962,7 +2155,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–1",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "nipsArousal",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedEyeContact",
@@ -1972,7 +2165,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedEyeContact",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedPurposeful",
@@ -1982,7 +2175,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedPurposeful",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedAware",
@@ -1992,7 +2185,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedAware",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedRestless",
@@ -2002,7 +2195,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedRestless",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "paedInconsolable",
@@ -2012,7 +2205,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     allowedValues: "0–4",
     missingnessRule: "NULL = not scored; offered to children under 8 (FLACC/FPS-R), newborns under 28 days (NIPS) or every child (PAED)",
     sourceTable: "PostoperativeRecord", sourceColumn: "paedInconsolable",
-    versionIntroduced: "10.0.0",
+    versionIntroduced: "4.9.0",
   },
   {
     name: "aldreteActivity",
@@ -2202,7 +2395,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "vascularAccessLine",
     exportName: "procedure_occurrence.procedure_concept_id (VASCULAR_ACCESS:<site>)",
-    meaning: "One row per vascular line placed during this case, coded to the site: a radial arterial line and an internal jugular central line carry different concepts rather than sharing concept 0. A line the patient already had produces no procedure row at all -- it appears instead as an observation coded 1340204 (History of event) with the line's own concept as the value, because crediting this team with an insertion somebody else performed would overstate the work done here.",
+    meaning: "One row per vascular line placed during this case, coded to the site: a radial arterial line and an internal jugular central line carry different concepts rather than sharing concept 0. A line the patient already had produces no procedure row at all -- it appears instead as an observation coded 1340204 (History of event) with the line's own concept as the value, because crediting this team with an insertion somebody else performed would overstate the work done here. From 10.2.0 the row is dated and timed at the moment the line went in when that was charted; otherwise at the matching Art line in / CVC in / PICC marker when there is exactly one, else the case start.",
     type: "concept_id",
     missingnessRule: "No row = no line of that kind was placed during this case. Absence does not mean the patient had no lines: a pre-existing line is recorded as a history observation instead, and the per-line preexisting flag carries the answer for both",
     derivationRule: "The stored vascularAccesses array becomes one VascularAccess mirror row per line, and each mirror row becomes either a procedure or a history observation depending on its preexisting flag. Depth, lumen count and the flag itself export as separate observations keyed to the same site",
@@ -2778,7 +2971,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "monitoring.urinaryCatheter",
     exportName: "observation.value_as_concept_id (LOSPOR:INTRAOP_MONITORING)",
-    meaning: "Urine output was used for this case. Coded as 44813911. The row lands in OBSERVATION because that is the concept's own OMOP domain -- monitoring modalities are not all one domain, and a procedure of monitoring, an observation about the patient and a measurement are different claims.",
+    meaning: "A urinary catheter was in place for this case (10.2.0). Coded as 40488365, the insertion of an indwelling catheter into the urinary bladder, so the row lands in PROCEDURE_OCCURRENCE, the concept's own OMOP domain. Cases exported before 10.2.0 carried 44813911 (intraoperative fluid balance monitoring) for the same flag. The urine volume is a separate measurement (LOSPOR:URINE_OUTPUT_ML).",
     type: "boolean",
     missingnessRule: "No row = the modality was not selected. Absence is not evidence it was unused: only a positive selection is recorded, so this cannot distinguish a case that did not use it from one where nobody ticked it",
     sourceTable: "IntraoperativeRecord", sourceColumn: "urinaryCatheter",

@@ -1,5 +1,107 @@
 # Changelog - LOSPOR API
 
+## [10.2.0] - 2026-11-02
+
+### Added
+
+- **`clinical-rules:install-v4`:** installs the v4 baselines on a deployment whose
+  earlier baselines were arranged by hand (the public cloud), as `install-v3`
+  did for v3. A dry run unless `--apply`; `--select` points the platform at v4
+  with an audited `CLINICAL_RULESET_SELECT` row.
+- **Account-wide interface preferences:** the existing `User.preferences` JSON
+  contract now stores case layout, timetable layout, and vitals-chart expansion;
+  legacy browser/device keys are imported without replacing sibling settings.
+
+- **Intraoperative contract:** invasive-pressure vitals, technique sides,
+  unilateral spinal, urinary-catheter records, airway-device entries, and the
+  expanded event and suggestion data are persisted and exported.
+- **Equipment preparation state:** the intraoperative contract stores optional
+  Smart Equipment preparation markers separately from the clinical record.
+- **Automation service:** the API serves reminders, learned event succession,
+  per-clinician screen preferences, and per-automation settings.
+- **Context-link persistence:** account-wide per-suggestion switches,
+  case-scoped definitive dismissals, exact technique/side answers, and
+  structured airway/technique patches now use the canonical event contract.
+- **Vital-question settings:** the existing account preference contract now
+  carries independent vital-question line switches, and Core provenance for
+  accepted/dismissed vital questions is available to the automation statistics
+  path.
+- **Sedation OMOP timing:** a `Sedation started` event can provide the clinical
+  timestamp for the selected sedation technique without creating a duplicate
+  procedure row.
+- **Fluid status preference:** the user preference contract now accepts the
+  Smart Hybrid or Legacy Fluid status presentation.
+- **Event log preference:** the user preference contract now accepts the Smart
+  Timeline stream or Legacy event-log presentation.
+- **Clinical baselines:** the release includes the new fingerprinted rule
+  baselines and the updated data dictionary.
+
+- **Case reads for the anaesthesia record:** `GET /v1/cases/{id}?deleted=1` adds
+  `deletedEvents` (the entries deleted from the case, each with the minute it
+  was deleted); `GET /v1/cases/{id}?view=timetable` is a narrow read of the
+  chart, start, zone and procedure name (13 KB against 148 KB for a long demo
+  case); `print-data` always carries `deletedEvents`; the PDF route renders
+  the record as portrait pages with one landscape timetable page.
+- **Timed complications, shocks and end corrections (from the 10.1.0 work):**
+  `IntraopAutomationPolicy` and `GET /v1/intraop/automation` (the settings, and
+  per-band reading counts for the vitals questions); `complication`,
+  `defibrillation` and `prompt_answer` events validated at the boundary;
+  `CaseComplication.endTimestamp`; open vitals episodes close at the case end;
+  and changing the end of an ended case needs a coded reason and is audited
+  (`CASE_INTRAOP_END_CORRECTED`).
+- **Atomic intraoperative patches:** airway and vascular patches travel with
+  their event; events can be marked `timeApproximate`; suggestion acceptance per
+  automation and a succession overview are served for Status.
+- **Export:** complication start and end times in `CONDITION_OCCURRENCE`, the
+  drug moment and the standard route on drug exposures, a flag on a gas change
+  made from a treatment card, and the research export writes every table the
+  mapper emits. Data dictionary 4.11.0.
+
+### Changed
+
+- **Core comes from its tag:** `@lospor/core` is pinned to `github:…/lospor-core#v10.2.0`
+  again; the 10.2 work had swapped it for `file:../lospor-core`, which a clean checkout
+  cannot resolve.
+- **Vital-sign statistics:** the hospital's reading distribution behind the
+  vitals questions now counts finalised cases only, and reads invasive and
+  cuff pressures alike. A case in progress no longer feeds the limits it is
+  being measured against.
+- **Running tally for the vitals questions:** the distribution is kept as a
+  small running tally (`VitalStatTally`, migration
+  `20261107100000_vital_stat_tally`). Finalising a case adds its readings and
+  undoing finalisation takes them back, so opening an intraoperative screen
+  costs the same whatever the size of the database. Existing finalised cases
+  are counted once, the first time the statistics are read after the update.
+- **Research export:** invasive blood-pressure concepts, technique-side
+  modifiers, catheter concepts, and complication start/end times are mapped to
+  the release contract.
+
+- **Faster reads:** the deleted-entries query reads the deleted rows first and
+  only the version numbers of the active rows that share their ids, instead of
+  every event's JSON.
+- **Dependencies:** Next 16.4.5, Prisma 7.10.1, zod, puppeteer; `fast-uri` 3.1.9
+  (four moderate advisories).
+- **Scripts** no longer carry a hard-coded password or LAN addresses.
+
+### Fixed
+
+- **A stale PostgreSQL test:** the intraoperative automation test assumed the vitals
+  questions are off by default; they have been on since the suggestion defaults changed,
+  so its "off" case now says so. Found by the first PostgreSQL run on a fresh database.
+- **A 5 s test limit:** the 300-case event schema test takes about 5 s on a busy machine
+  and now has a 30 s limit.
+- **Airway list clearing:** an explicit empty Smart airway list now clears the
+  legacy airway-device and size fields as part of the same partial save, so a
+  removed device is not reconstructed on the next load.
+
+- **Automation write races:** linked context events are coalesced under the
+  case lock, contradictory inferred techniques or block sides return a typed
+  conflict, and stale additive airway/vascular patches are rebased safely.
+
+- **Replay-safe batches:** an identical automation batch retry is a no-op and
+  does not consume another intraoperative revision; automation statistics read
+  from a repeatable-read snapshot when supported by PostgreSQL.
+
 ## [10.0.2] - 2026-10-29
 
 ### Changed

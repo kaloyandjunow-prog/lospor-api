@@ -1,5 +1,5 @@
 import type {
-  OmopCareSite, OmopCondition, OmopDevice, OmopDrug, OmopLabRow, OmopMeasurement,
+  OmopCareSite, OmopCondition, OmopDeath, OmopDevice, OmopDrug, OmopLabRow, OmopMeasurement,
   OmopObservation, OmopObservationPeriod, OmopPerson, OmopProcedure, OmopVisit,
 } from "./types"
 import type { AIRWAY_GRADES } from "./concepts"
@@ -36,6 +36,7 @@ export type CaseMapperCtx = {
   procedures: OmopProcedure[]
   devices: OmopDevice[]
   observations: OmopObservation[]
+  deaths: OmopDeath[]
 
   /** Tallies MAPPED/MANUALLY_CURATED/REJECTED/UNMAPPED/SOURCE_ONLY across every domain. */
   trackMapping: (status: string | null | undefined) => void

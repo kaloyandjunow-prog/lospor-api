@@ -66,6 +66,19 @@ export interface OmopBundle {
   procedure_occurrence: OmopProcedure[]
   device_exposure: OmopDevice[]
   observation: OmopObservation[]
+  /** A death in theatre (10.2.0), from the Death event. */
+  death: OmopDeath[]
+}
+
+/** OMOP CDM v5.4 DEATH: one row per person who died, here only in theatre. */
+export interface OmopDeath {
+  person_id: number
+  death_date: string
+  death_datetime: string | null
+  death_type_concept_id: number
+  cause_concept_id: number
+  cause_source_value: string | null
+  cause_source_concept_id: number
 }
 
 /**
@@ -97,6 +110,7 @@ export interface OmopDevice {
   visit_occurrence_id: number
   unit_concept_id: number | null
   unit_source_value: string | null
+  suggestion_source_value?: string | null
 }
 
 export interface OmopCareSite {
@@ -153,9 +167,23 @@ export interface OmopCondition {
   person_id: number
   condition_concept_id: number
   condition_start_date: string | null
+  /**
+   * 10.1.0: a complication with its time, and the end of an episode logged
+   * from the vitals questions. Null (blank) on a diagnosis or a postop
+   * finding, which carry a date only.
+   */
+  condition_start_datetime: string | null
+  condition_end_date: string | null
+  condition_end_datetime: string | null
   condition_type_concept_id: number
   condition_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export interface OmopDrug {
@@ -163,9 +191,13 @@ export interface OmopDrug {
   person_id: number
   drug_concept_id: number
   drug_exposure_start_date: string | null
+  /** The moment, in the theatre's clock with its offset (10.2.0). Null for a drug known by its day only: a premedication, an order, a home medicine. */
+  drug_exposure_start_datetime: string | null
   // Null means genuinely open — an administration still running when the case
   // ended — not "unknown". A single-shot drug has no interval and is null too.
   drug_exposure_end_date: string | null
+  /** When a continuous administration stopped, as a moment (10.2.0); null as for the end date. */
+  drug_exposure_end_datetime: string | null
   drug_type_concept_id: number
   drug_source_value: string | null
   // A concept id, per the CDM: an integer or nothing. Source vocabulary text
@@ -174,8 +206,16 @@ export interface OmopDrug {
   drug_source_concept_id: number | null
   dose_value: number | null
   dose_unit_source_value: string | null
+  /** The standard route concept (10.2.0), 0 when the route is not one LOSPOR knows; the route as written is route_source_value. */
+  route_concept_id: number
   route_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export interface OmopMeasurement {
@@ -201,6 +241,12 @@ export interface OmopMeasurement {
   range_low: number | null
   range_high: number | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export interface OmopProcedure {
@@ -228,6 +274,12 @@ export interface OmopProcedure {
   modifier_source_value: string | null
   procedure_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 /**
@@ -298,6 +350,12 @@ export interface OmopObservation {
   unit_source_value: string | null
   observation_source_value: string | null
   visit_occurrence_id: number
+  /**
+   * The suggestion the entry was made from (10.2.0): the rule, e.g.
+   * "card:Hypotension:ephedrine". Empty for everything charted by hand, so a
+   * non-empty value is the "from suggestion" flag research asked for.
+   */
+  suggestion_source_value?: string | null
 }
 
 export type CaseRow = {
@@ -350,6 +408,10 @@ export type CaseRow = {
     bis?: number | null
     tofRatio?: number | null
     cvp?: number | null
+    ibpSystolic?: number | null
+    ibpDiastolic?: number | null
+    ibpMap?: number | null
+    nibpMap?: number | null
     atcCode: string | null
     drugId: string | null
     standardConceptId?: number | null
@@ -378,7 +440,11 @@ export type CaseRow = {
     label: string
     note: string | null
     timestamp: Date | null
+    /** The end of an episode from the vitals questions (10.1.0); null for a moment or an old text item. */
+    endTimestamp?: Date | null
     source: string | null
+    /** The suggestion it was logged from (10.2.0). */
+    suggestion?: string | null
     ordinal: number
     sourceVocabulary?: string | null
     sourceCode?: string | null
@@ -619,6 +685,10 @@ export type CaseRow = {
     // Airway management detail. `airwayDevices` is the current multi-device
     // list; `airwayDevice` is the older single value and both may be set.
     airwayDevices?: unknown
+    /** Each airway device its own entry (10.2.0); empty on older cases. */
+    airwayDeviceEntries?: unknown
+    /** The side of a block or unilateral spinal, by technique code (10.2.0); empty on older cases. */
+    techniqueSides?: unknown
     cormackLehane?: string | null
     airwayTools?: unknown
     fob?: boolean | null
@@ -650,6 +720,10 @@ export type CaseRow = {
       depthCm: string | null
       lumens: string | null
       preexisting: boolean
+      /** 10.2.0: a line that failed, and when; when it went in. */
+      failed?: boolean
+      failedAt?: Date | null
+      insertedAt?: Date | null
       ordinal: number
       sourceVocabulary?: string | null
       sourceCode?: string | null

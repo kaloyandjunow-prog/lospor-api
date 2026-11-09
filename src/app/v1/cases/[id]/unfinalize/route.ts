@@ -6,6 +6,7 @@ import { corsHeaders } from "@/lib/cors"
 import { FINALIZE_UNDO_WINDOW_MS } from "@/lib/constants"
 import { CaseWriteError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
+import { invalidateIntraopAutomationCaches, untallyCase } from "@/lib/intraop-automation"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -60,10 +61,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       await logAuditInTransaction(tx, user.id, "CASE_UNFINALIZED", id, {
         finalizedAt: caseRecord.finalizedAt?.toISOString() ?? null,
       })
+      // An open case is not in the vitals statistics: take back what it added.
+      await untallyCase(tx, id)
       return updated
     })
 
     if (result instanceof Response) return result
+    invalidateIntraopAutomationCaches()
     return NextResponse.json(result)
   } catch (error: unknown) {
     if (error instanceof CaseWriteError) {

@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { logAudit } from "@/lib/audit"
-import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent, activeCaseLog, cascadeDeleteIds, laterChangeMade, madeAtFrom, timelineIssuesFor } from "@/lib/case-events"
+import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent, activeCaseLog, cascadeDeleteIds, laterChangeMade, madeAtFrom, timelineIssuesFor, sameContent } from "@/lib/case-events"
 import { supersededRefusal as superseded, timelineRefusal } from "@/lib/timeline-refusal"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
 import { corsHeaders } from "@/lib/cors"
@@ -17,6 +17,10 @@ import { clinicalEventSource } from "@/lib/event-provenance"
 
 import { pediatricMutationResponse } from "@/lib/pediatric-http"
 import { caseEventWriteSchema } from "@/lib/case-event-schema"
+import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
+import { atomicIntraopPatchFrom } from "@/lib/atomic-intraop-patch-input"
+import { mapIntraop, mapIntraopUpdate } from "../../../_mappers"
+import { rebaseAtomicIntraopPatch } from "@/lib/atomic-intraop-patch"
 const CORS = (req: NextRequest) => corsHeaders(req, "PUT, DELETE, OPTIONS")
 
 // The path id remains authoritative (`{ ...parsed, id: eventId }` below).
@@ -80,7 +84,13 @@ export async function PUT(
         : [],
     }, { status: 400 })
   }
-  const event = { ...parsed, id: eventId }
+  let atomicIntraopPatch: Record<string, unknown> | undefined
+  if (parsed.intraopPatch !== undefined) {
+    const parsedPatch = atomicIntraopPatchFrom(parsed.intraopPatch)
+    if (!parsedPatch.ok) return NextResponse.json(parsedPatch.body, { status: parsedPatch.status })
+    atomicIntraopPatch = parsedPatch.patch
+  }
+  const event = { ...parsed, ...(atomicIntraopPatch ? { intraopPatch: atomicIntraopPatch } : {}), id: eventId }
   const piiError = checkEventPII(event)
   if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
 
@@ -105,10 +115,26 @@ export async function PUT(
       if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
-        select: { updatedAt: true, syncRevision: true },
+        select: {
+          updatedAt: true,
+          syncRevision: true,
+          airwayDeviceEntries: true,
+          airwayDevices: true,
+          airwayTools: true,
+          airwayNotApplicable: true,
+          vascularAccesses: true,
+          techniques: true,
+          techniqueSides: true,
+        },
       })
       const existing = { ...caseRecord, intraop: existingIntraop }
-      if (revision != null && existing.intraop && existing.intraop.syncRevision !== revision) {
+      const current = await activeCaseLog(tx, id)
+      const existingEvent = current.find(item => item.id === event.id)
+      if (existingEvent && sameContent(existingEvent as unknown as Record<string, unknown>, event as unknown as Record<string, unknown>)) {
+        return { changed: false, fresh: existingIntraop }
+      }
+      const revisionConflictDetected = revision != null && existing.intraop && existing.intraop.syncRevision !== revision
+      if (revisionConflictDetected && !atomicIntraopPatch) {
         return conflict(existing.intraop)
       }
 
@@ -117,12 +143,14 @@ export async function PUT(
 
       // The Core timeline rules on the log this edit would produce, checked
       // before the revision is reserved so a refusal changes nothing (1.4.9).
-      const current = await activeCaseLog(tx, id)
       const next = [...current.filter(item => item.id !== eventId), event as LogEvent]
       const refused = timelineRefusal(timelineIssuesFor(current, next))
       if (refused) return refused
 
-      const revisionReserved = revision != null && !!existing.intraop
+      const patchToApply = atomicIntraopPatch && revisionConflictDetected
+        ? rebaseAtomicIntraopPatch(existing.intraop as unknown as Record<string, unknown>, atomicIntraopPatch)
+        : atomicIntraopPatch
+      const revisionReserved = revision != null && !!existing.intraop && !revisionConflictDetected
       if (revisionReserved && !await reserveIntraopRevision(tx, id, revision)) {
         const fresh = await tx.intraoperativeRecord.findUnique({
           where: { caseId: id },
@@ -130,17 +158,25 @@ export async function PUT(
         })
         return conflict(fresh)
       }
-      await addEvent(tx, id, user.id, event as LogEvent, source, madeAt)
-      await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
+      const changed = await addEvent(tx, id, user.id, event as LogEvent, source, madeAt)
+      if (changed && patchToApply && Object.keys(patchToApply).length > 0) {
+        const mappedPatch = mapIntraopUpdate(patchToApply)
+        if (Object.keys(mappedPatch).length > 0) {
+          if (existingIntraop) await tx.intraoperativeRecord.update({ where: { caseId: id }, data: mappedPatch })
+          else await tx.intraoperativeRecord.create({ data: { caseId: id, ...mapIntraop(patchToApply) } })
+        }
+      }
+      if (changed) await rebuildProjection(tx, id, { revisionAlreadyReserved: revisionReserved })
       const fresh = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
       })
-      return { fresh }
+      return { fresh, changed }
     })
 
     if (result instanceof Response) return result
     after(() => logAudit(user.id, "CASE_EVENT_EDIT", id, { eventId, source }))
+    if (result.changed && (event as LogEvent).type === "complication") after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({
       ok: true,
       intraopUpdatedAt: result.fresh?.updatedAt,
@@ -200,21 +236,26 @@ export async function DELETE(
       // a client's separate deletes for those arrive as harmless no-ops --
       // no-ops for the revision too, which moves only when something went.
       let removed = false
-      for (const logicalId of cascadeDeleteIds(await activeCaseLog(tx, id), eventId)) {
+      const log = await activeCaseLog(tx, id)
+      const ids = cascadeDeleteIds(log, eventId)
+      const deletedEvents = log.filter(entry => typeof entry.id === "string" && ids.includes(entry.id))
+      const complication = log.some(entry => !!entry.id && ids.includes(entry.id) && entry.type === "complication")
+      for (const logicalId of ids) {
         if (await deleteEvent(tx, id, logicalId, madeAt)) removed = true
       }
       // The revision was checked above under the case lock, which every
       // writer takes, so the rebuild's own increment is the reservation.
-      if (removed) await rebuildProjection(tx, id)
+      if (removed) await rebuildProjection(tx, id, { deletedEvents })
       const fresh = await tx.intraoperativeRecord.findUnique({
         where: { caseId: id },
         select: { updatedAt: true, syncRevision: true },
       })
-      return { fresh, removed }
+      return { fresh, removed, complication }
     })
 
     if (result instanceof Response) return result
     after(() => logAudit(user.id, "CASE_EVENT_DELETE", id, { eventId, removed: result.removed, source }))
+    if (result.removed && result.complication) after(() => syncCaseRelationalLockedSafe(id, user.id))
     return NextResponse.json({
       ok: true,
       intraopUpdatedAt: result.fresh?.updatedAt,

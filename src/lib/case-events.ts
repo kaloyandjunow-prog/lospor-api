@@ -12,6 +12,12 @@ import {
   newIntraopTimelineIssues,
   type IntraopTimelineIssue,
 } from "@lospor/core/intraop-commands"
+import {
+  legacyAirwayDeviceEntries,
+  parseAirwayDeviceEntries,
+} from "@lospor/core/airway-device-entries"
+import { airwayRecordFields } from "@lospor/core/airway-smart"
+import { mapIntraopUpdate } from "@/app/v1/cases/_mappers"
 import { parseLogEvents } from "@lospor/core/intraop-types"
 import type {
   LogEvent,
@@ -161,7 +167,7 @@ function stable(v: unknown): unknown {
   }
   return v
 }
-function sameContent(a: Record<string, unknown> | null | undefined, b: Record<string, unknown> | null | undefined): boolean {
+export function sameContent(a: Record<string, unknown> | null | undefined, b: Record<string, unknown> | null | undefined): boolean {
   const sa: Record<string, unknown> = { ...(a ?? {}) }; const sb: Record<string, unknown> = { ...(b ?? {}) }
   delete sa.syncStatus; delete sb.syncStatus
   return JSON.stringify(stable(sa)) === JSON.stringify(stable(sb))
@@ -199,7 +205,10 @@ export function buildRow(
     mappingStatus?: string | null
   }
   const fluidVolume = audited.administeredVolumeMl ?? audited.bagVolumeMl ?? ev.volume
-  const primary = ev.dose ?? ev.value ?? ev.rate ?? fluidVolume
+  // A shock (10.1.0) keeps its energy in value/unit and says in its label
+  // whether it was synchronised, so the export reads them from the row.
+  const isShock = ev.type === "defibrillation"
+  const primary = ev.dose ?? ev.value ?? ev.rate ?? fluidVolume ?? (isShock ? ev.energyJ : undefined)
   // Typed vital columns (only for vital events) so vitals are queryable as columns.
   const isVital = ev.type === "vital"
   const isGas = ev.type === "gas_start" || ev.type === "gas_change"
@@ -216,9 +225,9 @@ export function buildRow(
     status,
     type:           ev.type ?? "unknown",
     timestamp:      ev.ts && !Number.isNaN(new Date(ev.ts).getTime()) ? new Date(ev.ts) : new Date(),
-    label:          (ev.label ?? ev.name ?? null) as string | null,
+    label:          isShock ? (ev.synchronized ? "Cardioversion" : "Defibrillation") : (ev.label ?? ev.name ?? null) as string | null,
     value:          primary != null ? String(primary) : null,
-    unit:           ev.unit ?? null,
+    unit:           ev.unit ?? (isShock ? "J" : null),
     systolic:       isVital ? numI(ev.systolic)  : null,
     diastolic:      isVital ? numI(ev.diastolic) : null,
     heartRate:      isVital ? numI(ev.heartRate) : null,
@@ -231,6 +240,10 @@ export function buildRow(
     bis:            isVital ? numF(ev.bis)      : null,
     tofRatio:       isVital ? numF(ev.tofRatio) : null,
     cvp:            isVital ? numF(ev.cvp)      : null,
+    ibpSystolic:    isVital ? numI(ev.ibpSystolic)  : null,
+    ibpDiastolic:   isVital ? numI(ev.ibpDiastolic) : null,
+    ibpMap:         isVital ? numI(ev.ibpMap)       : null,
+    nibpMap:        isVital ? numI(ev.nibpMap)      : null,
     fgfLitersPerMin: isGas ? numF(ev.fgf) : null,
     carrierGas:      isGas ? ev.carrierGas ?? null : null,
     fio2Percent:     gas?.fio2 ?? null,
@@ -393,6 +406,37 @@ export async function activeCaseLog(tx: Tx, caseId: string): Promise<LogEvent[]>
 }
 
 /**
+ * The entries deleted from a case, as they were, each with the minute it was deleted (11.0). The printed
+ * record keeps them on the sheet, struck through. An entry deleted before 9.13.0 has no deletion minute.
+ * Of a logical event only its latest version counts, and one that is active again is not listed.
+ *
+ * Two small reads rather than one large one: the deleted rows (usually none, and the only ones whose JSON
+ * is needed), then the version numbers, without the JSON, of the active rows that share their ids. A case
+ * of hundreds of events no longer ships every event's JSON to learn which few were deleted.
+ */
+export async function deletedCaseLog(tx: Tx, caseId: string): Promise<Array<LogEvent & { deletedAt?: string }>> {
+  const deleted = await tx.caseEvent.findMany({
+    where:  { caseId, status: "deleted" },
+    select: { logicalId: true, version: true, metadataJson: true, madeAt: true },
+  })
+  if (deleted.length === 0) return []
+  const latestDeleted = new Map<string, (typeof deleted)[number]>()
+  for (const row of deleted) {
+    const current = latestDeleted.get(row.logicalId)
+    if (!current || row.version > current.version) latestDeleted.set(row.logicalId, row)
+  }
+  const active = await tx.caseEvent.findMany({
+    where:  { caseId, status: "active", logicalId: { in: [...latestDeleted.keys()] } },
+    select: { logicalId: true, version: true },
+  })
+  const latestActive = new Map<string, number>()
+  for (const row of active) latestActive.set(row.logicalId, Math.max(row.version, latestActive.get(row.logicalId) ?? 0))
+  return [...latestDeleted.values()]
+    .filter(row => row.version > (latestActive.get(row.logicalId) ?? 0) && row.metadataJson && typeof row.metadataJson === "object")
+    .map(row => ({ ...(row.metadataJson as unknown as LogEvent), id: (row.metadataJson as unknown as LogEvent).id ?? row.logicalId, ...(row.madeAt ? { deletedAt: row.madeAt.toISOString() } : {}) }))
+}
+
+/**
  * The Core timeline rules, applied on the server to the log a write would
  * produce (1.4.9): a stop before its start, a change or stop of something not
  * running, a stop before a later change, a vital in the future. Only issues
@@ -457,7 +501,7 @@ export function sortLogDeterministic<T extends { version: number; logicalId: str
 export async function rebuildProjection(
   tx: Tx,
   caseId: string,
-  options: { revisionAlreadyReserved?: boolean } = {},
+  options: { revisionAlreadyReserved?: boolean; deletedEvents?: readonly LogEvent[] } = {},
 ): Promise<void> {
   const rows = await tx.caseEvent.findMany({
     where:   { caseId, status: "active" },
@@ -496,6 +540,12 @@ export async function rebuildProjection(
       colloidsMl: true,
       bloodMl: true,
       infusionsMl: true,
+      airwayDeviceEntries: true,
+      airwayDevices: true,
+      airwayDevice: true,
+      airwayTools: true,
+      airwayNotApplicable: true,
+      vascularAccesses: true,
     },
   })
   const existingKeyEvents = (intraopRec?.keyEvents as LegacyKeyEvents | null) ?? {}
@@ -527,7 +577,12 @@ export async function rebuildProjection(
     select: { ageYears: true, ageValue: true, ageUnit: true, weightKg: true, heightCm: true, sex: true },
   }) : null
   const fluidTotals = fluidTotalsPatch(calculateFluidTotals(projected.fluids, projected.infusions, new Date(), preop ? tciPatientFrom(preop) : null))
+  const structuredPatch = options.deletedEvents?.length
+    ? structuredPatchAfterEventDeletion(intraopRec as unknown as Record<string, unknown>, options.deletedEvents)
+    : null
+  const structuredMapped = structuredPatch ? mapIntraopUpdate(structuredPatch) : {}
   const projectionUnchanged = !!intraopRec
+    && structuredPatch == null
     && sameContent(
       intraopRec.keyEvents as Record<string, unknown>,
       keyEvents as unknown as Record<string, unknown>,
@@ -543,12 +598,76 @@ export async function rebuildProjection(
     update: {
       keyEvents,
       ...fluidTotals,
+      ...structuredMapped,
       ...(options.revisionAlreadyReserved ? {} : { syncRevision: { increment: 1 } }),
     },
     // No start time: logging an event does not mean the clinician has told us
     // when the case began. This used to plant a midnight sentinel, which — being
     // a truthy Date — read downstream as a genuine 00:00 start and locked the
     // form with no way back.
-    create: { caseId, startTime: null, keyEvents, ...fluidTotals, syncRevision: 1 },
+    create: {
+      caseId,
+      startTime: null,
+      keyEvents,
+      ...fluidTotals,
+      ...structuredMapped,
+      syncRevision: 1,
+    },
   })
+}
+
+/**
+ * A CaseEvent is the source of truth for the timeline, but airway and vascular
+ * panels also keep a materialized JSON projection for fast section reads. A
+ * tombstone used to rebuild only keyEvents, leaving a deleted CVC/ETT in that
+ * projection until another section save happened. Reconcile only records that
+ * carry the deleted event's source id; arrival/legacy records without one are
+ * deliberately left alone.
+ */
+export function structuredPatchAfterEventDeletion(
+  current: Record<string, unknown>,
+  deletedEvents: readonly LogEvent[],
+): Record<string, unknown> | null {
+  if (deletedEvents.length === 0) return null
+  const deletedIds = new Set(deletedEvents.map(event => event.id).filter((id): id is string => typeof id === "string" && id.length > 0))
+  const deletedDevices = new Set<string>()
+  for (const event of deletedEvents) {
+    const patch = event.intraopPatch
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) continue
+    const device = (patch as Record<string, unknown>).airwayEventDevice
+    if (typeof device === "string" && device) deletedDevices.add(device)
+  }
+
+  const patch: Record<string, unknown> = {}
+  const canonicalEntries = parseAirwayDeviceEntries(current.airwayDeviceEntries)
+  const legacyEntries = canonicalEntries.length === 0 ? legacyAirwayDeviceEntries(current) : []
+  const existingEntries = canonicalEntries.length > 0 ? canonicalEntries : legacyEntries
+  if (existingEntries.length > 0) {
+    const nextEntries = existingEntries.filter(entry => !entry.sourceEventId || !deletedIds.has(entry.sourceEventId))
+    if (nextEntries.length !== existingEntries.length) {
+      const currentTools = Array.isArray(current.airwayTools)
+        ? current.airwayTools.filter((value): value is string => typeof value === "string")
+        : []
+      Object.assign(patch, airwayRecordFields(nextEntries, currentTools))
+    } else if (deletedDevices.size > 0 && canonicalEntries.length === 0) {
+      const nextLegacyEntries = existingEntries.filter(entry => !deletedDevices.has(entry.device))
+      if (nextLegacyEntries.length !== existingEntries.length) {
+        const currentTools = Array.isArray(current.airwayTools)
+          ? current.airwayTools.filter((value): value is string => typeof value === "string")
+          : []
+        Object.assign(patch, airwayRecordFields(nextLegacyEntries, currentTools))
+      }
+    }
+  }
+
+  const accesses = Array.isArray(current.vascularAccesses) ? current.vascularAccesses : []
+  if (accesses.length > 0) {
+    const nextAccesses = accesses.filter(value => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return true
+      const sourceEventId = (value as Record<string, unknown>).sourceEventId
+      return typeof sourceEventId !== "string" || !deletedIds.has(sourceEventId)
+    })
+    if (nextAccesses.length !== accesses.length) patch.vascularAccesses = nextAccesses
+  }
+  return Object.keys(patch).length > 0 ? patch : null
 }

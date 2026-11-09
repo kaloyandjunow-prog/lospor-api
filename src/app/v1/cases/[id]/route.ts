@@ -9,10 +9,12 @@ import { parseLenient } from "@/lib/lenient-parse"
 import { checkClinicalPayloadPII, piiErrorBody } from "@/lib/clinical-pii"
 import { syncCaseRelationalLockedSafe } from "@/lib/relational-sync"
 import { writeFieldDiffsSafe } from "@/lib/case-audit"
-import { activeCaseLog, rebuildProjection } from "@/lib/case-events"
+import { activeCaseLog, deletedCaseLog, rebuildProjection } from "@/lib/case-events"
+import { caseTimetableView } from "@/lib/case-timetable-view"
 import { autoEndCaseIfStale } from "@/lib/intraop-auto-end"
 import { intraopEntriesOutsideCase } from "@lospor/core/intraop-commands"
 import { parseLogEvents } from "@lospor/core/intraop-types"
+import { isIntraopEndCorrection, isIntraopEndCorrectionReason } from "@lospor/core/intraop-end-correction"
 import {
   canWriteCaseWithOwnerFallback,
   caseCapabilitiesForUser,
@@ -106,6 +108,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   }
 
+  // The timetable viewer asks for the chart alone (11.0): one narrow read instead of the whole case.
+  if (req.nextUrl.searchParams.get("view") === "timetable") {
+    const light = await caseTimetableView(prisma, where, { withDeleted: req.nextUrl.searchParams.get("deleted") === "1" })
+    return light ? NextResponse.json(light) : NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
   const record = await prisma.case.findFirst({
     where,
     include: {
@@ -177,6 +185,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ...normalizedRecord,
     ...(preopOrders && normalizedRecord.preop ? { preop: { ...normalizedRecord.preop, wardOrders: undefined, medicationInstructions: undefined, premedicationOrders: undefined, ...preopOrders } } : {}),
     capabilities: caseCapabilitiesForUser(user, record),
+    // The record keeps what was deleted, struck through. Asked for, not sent to every reader of the case (11.0).
+    ...(req.nextUrl.searchParams.get("deleted") === "1" ? { deletedEvents: await deletedCaseLog(prisma, id) } : {}),
     // The operating theatre (10.0.0): the name it kept, and whether it can still change.
     theatre: theatresOn || record.operatingTheatreName ? caseTheatreView(record) : null,
     operatingTheatre: undefined,
@@ -311,6 +321,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         intraop: existingIntraop,
         postop: existingPostop,
       }
+      // Derived fluid totals are calculated from the event log. A timer can
+      // still send an old form snapshot containing only those fields; it is a
+      // true no-op and must not participate in revision conflicts.
+      const effectiveIntraopForConflict = intraop
+        ? { caseDay: existingIntraop?.createdAt ?? caseRecord.createdAt, ...intraop } as Record<string, unknown>
+        : null
+      const intraopHasMappedFields = effectiveIntraopForConflict != null
+        && Object.keys(mapIntraopUpdate(effectiveIntraopForConflict)).length > 0
+      const intraopTouched = intraop != null && (!existingIntraop || intraopHasMappedFields)
       const differentUser = existing.userId !== userId
       const requestedMode = clinicalMode ?? caseRecord.clinicalMode
       const enforceAgeDecision = clinicalMode !== undefined || (
@@ -355,7 +374,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             serverVersionForResponse: () => existing.postop,
           },
           intraop: {
-            client: { touched: !!intraop, base: intraopBase, revision: intraopRevision },
+            client: { touched: intraopTouched, base: intraopBase, revision: intraopRevision },
             server: existing.intraop,
             // Only the stale-revision reply carries the revision; the other two
             // guards deliberately send the timestamp alone.
@@ -433,7 +452,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         })
       }
     }
-    if (intraop) {
+    if (intraop && intraopTouched) {
       // The day this case belongs to, so a bare "HH:MM" plus the client's zone
       // can be resolved to a real instant. Taken from the record rather than
       // "now" — editing a case the morning after must not redate it.
@@ -441,6 +460,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         caseDay: existing.intraop?.createdAt ?? existing.createdAt,
         ...intraop,
       }
+      const mappedIntraop = mapIntraopUpdate(effectiveIntraop)
       if (existing.intraop) {
         const updated = await tx.intraoperativeRecord.updateMany({
           where: {
@@ -449,7 +469,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               ? { syncRevision: intraopRevision }
               : {}),
           },
-          data: { ...mapIntraopUpdate(effectiveIntraop), syncRevision: { increment: 1 } },
+          data: { ...mappedIntraop, syncRevision: { increment: 1 } },
         })
         if (updated.count === 0) {
           const current = await tx.intraoperativeRecord.findUnique({ where: { caseId: id } })
@@ -473,6 +493,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           select: { startedAt: true, endedAt: true },
         })
         const before = existing.intraop
+        // 10.1.0: changing the end of a case that had ended needs a coded
+        // reason, and is audited with the old and new end. Ending a case and
+        // Resume are not corrections. A finalised case never gets here.
+        if (isIntraopEndCorrection(before?.endedAt, saved?.endedAt)) {
+          const reason = (intraop as { endCorrectionReason?: unknown }).endCorrectionReason
+          if (!isIntraopEndCorrectionReason(reason)) {
+            throw new CaseRouteResponse(NextResponse.json({
+              error: "end_correction_reason",
+              message: "Changing the end of a case that has ended needs a reason.",
+            }, { status: 400 }))
+          }
+          await logAuditInTransaction(tx, userId, "CASE_INTRAOP_END_CORRECTED", id, {
+            reasonCode: reason,
+            previousEndedAt: before!.endedAt!.toISOString(),
+            correctedEndedAt: saved!.endedAt!.toISOString(),
+          })
+        }
         const endMovedEarlier = !!(before?.endedAt && saved?.endedAt && saved.endedAt < before.endedAt)
         const startMovedLater = !!(before?.startedAt && saved?.startedAt && saved.startedAt > before.startedAt)
         if (endMovedEarlier || startMovedLater) {

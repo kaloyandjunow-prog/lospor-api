@@ -8,6 +8,7 @@ import { DEFAULT_VISION_MODEL } from "@/lib/mistral-models"
 import { prisma } from "@/lib/prisma"
 import { rateLimit } from "@/lib/rate-limit"
 import { clinicalAiRefusal } from "@/lib/deployment-capabilities"
+import { bisFromScan, tofRatioFromScan } from "@lospor/core/monitor-scan"
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY ?? ""
 const MISTRAL_TIMEOUT_MS = Number(process.env.MISTRAL_TIMEOUT_MS ?? 45_000)
@@ -96,12 +97,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             },
             {
               type: "text",
-              text: "Extract numeric vital sign readings from this patient monitor screen. Return ONLY valid JSON in exactly this format: {\"systolic\":null,\"diastolic\":null,\"heartRate\":null,\"spO2\":null,\"etco2\":null,\"temp\":null,\"rr\":null}. Replace null with the numeric value for each parameter you can clearly read. Return null for any parameter not visible or not legible. No explanation, no markdown, no extra text.",
+              text: "Extract numeric vital sign readings from this patient monitor screen. Return ONLY valid JSON in exactly this format: {\"systolic\":null,\"diastolic\":null,\"heartRate\":null,\"spO2\":null,\"etco2\":null,\"temp\":null,\"rr\":null,\"bis\":null,\"tofRatio\":null,\"ibpSystolic\":null,\"ibpDiastolic\":null,\"ibpMap\":null,\"nibpMap\":null}. systolic and diastolic are the cuff (NIBP) pressure; ibpSystolic, ibpDiastolic and ibpMap are the arterial line, usually labelled ART or IBP; nibpMap is the mean shown with the cuff pressure. Never put an arterial line value in the cuff fields. Replace null with the numeric value for each parameter you can clearly read. bis is the bispectral index, 0 to 100. tofRatio is the train-of-four T4/T1 ratio exactly as displayed, a decimal such as 0.9 or a percent such as 90; never the train-of-four count. Return null for any parameter not visible or not legible. No explanation, no markdown, no extra text.",
             },
           ],
         },
       ],
-      max_tokens: 120,
+      max_tokens: 220,
       temperature: 0,
     }, { signal: controller.signal })
 
@@ -128,6 +129,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       etco2: number | null
       temp: number | null
       rr: number | null
+      bis: unknown
+      tofRatio: unknown
+      ibpSystolic: unknown
+      ibpDiastolic: unknown
+      ibpMap: unknown
+      nibpMap: unknown
     }
 
     // These are broad physical plausibility bounds, not age-specific normal
@@ -152,6 +159,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       etco2: plausible(vitals.etco2, 2, 150),
       temp: plausible(vitals.temp, 25, 45),
       rr: plausible(vitals.rr, 1, 150),
+      // BIS and TOF go through Core, which also turns a TOF percent into the stored ratio.
+      bis: bisFromScan(vitals.bis),
+      tofRatio: tofRatioFromScan(vitals.tofRatio),
+      ibpSystolic: plausible(vitals.ibpSystolic, 20, 300),
+      ibpDiastolic: plausible(vitals.ibpDiastolic, 10, 200),
+      ibpMap: plausible(vitals.ibpMap, 10, 250),
+      nibpMap: plausible(vitals.nibpMap, 10, 250),
     }
 
     // A successful send of a patient monitor photograph to an external provider

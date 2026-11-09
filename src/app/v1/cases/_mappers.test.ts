@@ -280,6 +280,33 @@ describe("mapIntraopUpdate — a partial save never blanks a stored time", () =>
   })
 })
 
+describe("mapIntraopUpdate — the airway list is authoritative", () => {
+  it("clears legacy airway fields when the smart list is explicitly empty", () => {
+    const r = mapIntraopUpdate({ airwayDeviceEntries: [] })
+    expect(r.airwayDeviceEntries).toEqual([])
+    expect(r.airwayDevices).toEqual([])
+    expect(r.airwayDevice).toBeNull()
+    expect(r.lmaSize).toBeNull()
+    expect(r.oralTubeSize).toBeNull()
+    expect(r.oralCuffed).toBeNull()
+    expect(r.nasalTubeSize).toBeNull()
+    expect(r.nasalCuffed).toBeNull()
+    expect(r.dltType).toBeNull()
+    expect(r.dltSide).toBeNull()
+    expect(r.dltSize).toBeNull()
+    expect(r.endobronchialSize).toBeNull()
+  })
+
+  it("keeps no-airway intervention exclusive with devices and tools", () => {
+    const cleared = mapIntraopUpdate({ airwayNotApplicable: true, airwayDevices: ["ORAL_ETT"], airwayTools: ["VIDEO_LARY"] })
+    expect(cleared).toMatchObject({ airwayNotApplicable: true, airwayDevices: [], airwayTools: [], airwayDevice: null })
+    expect(cleared.airwayDeviceEntries).toEqual([])
+
+    expect(mapIntraopUpdate({ airwayNotApplicable: true, airwayDevices: ["LMA"] })).toMatchObject({ airwayNotApplicable: true, airwayDevices: [] })
+    expect(mapIntraopUpdate({ airwayDevices: ["LMA"] })).toMatchObject({ airwayNotApplicable: false, airwayDevices: ["LMA"] })
+  })
+})
+
 describe("planned anaesthesia", () => {
   it("stores the plan in its full shape, codes once", () => {
     expect(mapPreop({ plannedAnaesthesia: { techniques: ["GENERAL_TIVA", "GENERAL_TIVA"], vascularAccesses: [{ site: "ART_RADIAL" }] } }).plannedAnaesthesia)

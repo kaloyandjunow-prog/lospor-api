@@ -1,7 +1,7 @@
 import type { CaseMapperCtx } from "../case-context"
 import type { CaseRow } from "../types"
 import { numOrNull, isoDate, isoInstant } from "../date-helpers"
-import { doseUnitOf } from "../concepts"
+import { doseUnitOf, routeConceptFor } from "../concepts"
 import { nextId } from "../ids"
 import { UNDETERMINED_PROCEDURE } from "@lospor/core/procedure-codes"
 import { CANCELLATION_REASONS } from "@lospor/core/case-cancellation"
@@ -224,8 +224,10 @@ export function mapPlannedProcedureAndMedicationsToOmop(
       person_id: ctx.personId,
       drug_concept_id: conceptId,
       drug_exposure_start_date: isoDate(c.createdAt),
+      drug_exposure_start_datetime: null,
       // A single administration, not an interval: no end to record.
       drug_exposure_end_date: null,
+      drug_exposure_end_datetime: null,
       // 32865, Patient self-report. This row is not a witnessed
       // administration -- it is what the patient (or an old chart) told the
       // assessor they take at home, which nobody here watched happen. That is
@@ -240,6 +242,7 @@ export function mapPlannedProcedureAndMedicationsToOmop(
       drug_source_concept_id: null,
       dose_value: split ? null : dose,
       dose_unit_source_value: split ? null : doseUnitOf(med.dose),
+      route_concept_id: routeConceptFor(med.route),
       route_source_value: med.route,
       visit_occurrence_id: ctx.visitId,
     })

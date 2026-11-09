@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { INTRAOP_END_CORRECTION_REASONS } from "@lospor/core/intraop-end-correction"
 import {
   CLINICAL_NUMBER_RULES,
   validateIntraopPatch,
@@ -75,6 +76,7 @@ const labelledItem = z.object({
  * written once -- two copies of a clinical shape is how the two drift.
  */
 const labResultsSchema = z.array(z.object({
+  id:    z.string().max(200).optional(),
   test:  z.string(),
   value: z.string(),
   unit:  z.string().optional(),
@@ -251,6 +253,9 @@ export const preopSchema = z.object({
 
 export const intraopSchema = z.object({
   monthYear:       z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),
+  // 10.1.0: why the end of a case that had ended is being changed. Required
+  // for that change, never stored on the record; it goes to the audit log.
+  endCorrectionReason: z.enum(INTRAOP_END_CORRECTION_REASONS).optional(),
   durationMinutes: cInt("intraop", "durationMinutes"),
   startTime: z.string().optional(),
   endTime:   z.string().nullable().optional(),
@@ -275,6 +280,10 @@ export const intraopSchema = z.object({
   airwayNotes:      z.string().max(2000).nullable().optional(),
   cormackLehane:    z.enum(["I", "IIa", "IIb", "III", "IV"]).nullable().optional(),
   airwayDevices:    z.array(z.unknown()).optional(),
+  airwayDeviceEntries: z.array(z.unknown()).max(40).optional(),
+  // Smart Equipment preparation markers are not clinical use records.
+  equipmentPrepared: z.record(z.string().max(200), z.boolean()).optional(),
+  techniqueSides: z.record(z.string().max(200), z.string().max(10)).optional().refine(value => value == null || Object.keys(value).length <= 20, "At most 20 sides"),
   ventilationModes: z.array(z.unknown()).optional(),
   lmaSize:          cNum("intraop", "lmaSize"),
   oralTubeSize:     cNum("intraop", "oralTubeSize"),
@@ -368,7 +377,7 @@ export const postopSchema = z.object({
   recoveryTemperatureUnobtainable: z.boolean().optional(),
 
   complications:    z.string().max(2000).nullable().optional(),
-  disposition:      z.enum(["WARD", "PACU", "ICU"]).nullable().optional(),
+  disposition:      z.enum(["WARD", "PACU", "ICU", "DECEASED"]).nullable().optional(),
   dispositionNotes: z.string().max(1000).nullable().optional(),
   handoverItems:    z.array(z.unknown()).optional(),
   // The procedure done (10.0.0), kept as the planned procedures are.

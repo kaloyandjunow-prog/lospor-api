@@ -43,18 +43,26 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
   ],
   condition_occurrence: [
     "condition_occurrence_id", "person_id", "condition_concept_id", "condition_start_date",
+    "condition_start_datetime", "condition_end_date", "condition_end_datetime",
     "condition_type_concept_id", "condition_source_value", "visit_occurrence_id",
+    // 10.2.0: the suggestion an entry was made from (exchange contract 2.8.0).
+    "suggestion_source_value",
   ],
   drug_exposure: [
-    "drug_exposure_id", "person_id", "drug_concept_id", "drug_exposure_start_date", "drug_exposure_end_date",
+    "drug_exposure_id", "person_id", "drug_concept_id", "drug_exposure_start_date",
+    // 10.2.0: the moment of a dose and of an administration's end (exchange contract 2.8.0).
+    "drug_exposure_start_datetime", "drug_exposure_end_date", "drug_exposure_end_datetime",
     "drug_type_concept_id", "drug_source_value", "drug_source_concept_id", "dose_value",
-    "dose_unit_source_value", "route_source_value", "visit_occurrence_id",
+    // 10.2.0: the standard route concept; route_source_value keeps the route as written.
+    "dose_unit_source_value", "route_concept_id", "route_source_value", "visit_occurrence_id",
+    "suggestion_source_value",
   ],
   measurement: [
     "measurement_id", "person_id", "measurement_concept_id", "measurement_date",
     "measurement_datetime", "measurement_type_concept_id", "value_as_number", "value_as_concept_id", "unit_concept_id",
     "unit_source_value", "measurement_source_value", "value_source_value",
     "range_low", "range_high", "visit_occurrence_id",
+    "suggestion_source_value",
   ],
   procedure_occurrence: [
     "procedure_occurrence_id", "person_id", "procedure_concept_id", "procedure_date",
@@ -68,6 +76,7 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     // appendectomy counting as one procedure.
     "modifier_concept_id", "modifier_source_value",
     "procedure_source_value", "visit_occurrence_id",
+    "suggestion_source_value",
   ],
   // A device the patient had placed. Separate from the airway act in
   // procedure_occurrence on purpose: placing a tube is something done to the
@@ -80,6 +89,7 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     // 2.5.0). Empty for an airway device.
     "device_type_concept_id", "quantity", "device_source_value", "visit_occurrence_id",
     "unit_concept_id", "unit_source_value",
+    "suggestion_source_value",
   ],
   observation: [
     "observation_id", "person_id", "observation_concept_id", "observation_date",
@@ -92,5 +102,11 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     // The unit of value_as_number: a medication hold's hours.
     "unit_concept_id", "unit_source_value",
     "observation_source_value", "visit_occurrence_id",
+    "suggestion_source_value",
+  ],
+  // 10.2.0: a death in theatre, from the Death event.
+  death: [
+    "person_id", "death_date", "death_datetime", "death_type_concept_id",
+    "cause_concept_id", "cause_source_value", "cause_source_concept_id",
   ],
 }

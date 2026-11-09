@@ -6,7 +6,9 @@ import {
   isValidTimeZone,
 } from "@/lib/intraop-time"
 import { canonicalizeIntraopPatch } from "@lospor/core/case-payloads"
+import { legacyFieldsFromEntries, parseAirwayDeviceEntries } from "@lospor/core/airway-device-entries"
 import { normalizeOptionCodes } from "@lospor/core/option-aliases"
+import { parseTechniqueSides, techniqueSidesFor } from "@lospor/core/technique-smart"
 import { copyKey, safeEnum } from "./shared"
 
 /** A bare wall clock, the only shape the legacy startTime/endTime columns accept. */
@@ -38,7 +40,7 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
   const DIRECT = [
     "positions","techniques",
     "tubeSize","cuffed","peepCmH2O","airwayNotes","cormackLehane",
-    "presentsIntubated","airwayNotApplicable",
+    "presentsIntubated","airwayNotApplicable","equipmentPrepared",
     "lmaSize","oralTubeSize","oralCuffed","nasalTubeSize","nasalCuffed",
     "dltType","dltSide","dltSize","endobronchialSize",
     "volatileAgent",
@@ -67,6 +69,40 @@ export function mapIntraopUpdate(intraop: Record<string, unknown>) {
     r.airwayDevices = full.airwayDevices
     r.airwayDevice  = full.airwayDevice
   }
+  // 10.2.0: the airway device list. Sent, it is the record, and the old
+  // per-kind fields are rewritten from it for every reader that knows only those.
+  if (has("airwayDeviceEntries")) {
+    r.airwayDeviceEntries = full.airwayDeviceEntries
+    // The list is authoritative whenever it is present, including an empty
+    // list. An empty list is an explicit clinical action ("no airway devices")
+    // and must clear the legacy per-kind columns as well; otherwise the next
+    // load reconstructs the just-deleted devices from stale legacy fields.
+    for (const key of ["airwayDevices", "airwayDevice", "lmaSize", "oralTubeSize", "oralCuffed", "nasalTubeSize", "nasalCuffed", "dltType", "dltSide", "dltSize", "endobronchialSize"] as const) {
+      copyKey(r, full, key)
+    }
+  }
+  // "No airway intervention" is a statement about this team's work, not a
+  // second way of retaining selected devices. Enforce the UI rule at the API
+  // boundary too, because offline clients and older clients can send a stale
+  // combination. A device/tool selection is the inverse signal and clears the
+  // flag even when the client omitted it from a partial patch.
+  const airwayEntries = Array.isArray(full.airwayDeviceEntries) ? full.airwayDeviceEntries : []
+  const airwayDevices = Array.isArray(full.airwayDevices) ? full.airwayDevices : []
+  const airwayTools = Array.isArray(full.airwayTools) ? full.airwayTools : []
+  if (has("airwayNotApplicable") && full.airwayNotApplicable === true) {
+    r.airwayNotApplicable = true
+    r.airwayTools = []
+    r.airwayDevices = []
+    r.airwayDevice = null
+    r.airwayDeviceEntries = [] as unknown as typeof full.airwayDeviceEntries
+    for (const key of ["lmaSize", "oralTubeSize", "oralCuffed", "nasalTubeSize", "nasalCuffed", "dltType", "dltSide", "dltSize", "endobronchialSize"] as const) {
+      copyKey(r, { [key]: null } as typeof full, key)
+    }
+  } else if (airwayEntries.length > 0 || airwayDevices.length > 0 || airwayTools.length > 0) {
+    r.airwayNotApplicable = false
+  }
+  // 10.2.0: the side of a block or unilateral spinal, by technique code.
+  if (has("techniqueSides")) r.techniqueSides = full.techniqueSides
   if (has("ventilationModes")) {
     r.ventilationModes = full.ventilationModes
     r.ippv             = full.ippv
@@ -138,7 +174,10 @@ function resolveIntraopInstants(intraop: Record<string, unknown>): {
 }
 
 export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.IntraoperativeRecordUncheckedCreateWithoutCaseInput {
-  const intraop = canonicalizeIntraopPatch(rawIntraop) as IntraopRawInput
+  const canonical = canonicalizeIntraopPatch(rawIntraop) as IntraopRawInput
+  // 10.2.0: with an airway device list, the old per-kind fields come from it.
+  const airwayEntries = parseAirwayDeviceEntries((canonical as Record<string, unknown>).airwayDeviceEntries)
+  const intraop = (airwayEntries.length > 0 ? { ...canonical, ...legacyFieldsFromEntries(airwayEntries) } : canonical) as IntraopRawInput
   // Use a stable reference date (2000-01-01) for startTime/endTime — only the HH:MM matters for the timetable.
   const REF_DATE = "2000-01-01"
   const isHHMM  = (s: unknown): s is string => typeof s === "string" && HHMMRE.test(s)
@@ -199,6 +238,15 @@ export function mapIntraop(rawIntraop: Record<string, unknown>): Prisma.Intraope
     presentsIntubated:   intraop.presentsIntubated   ?? false,
     airwayNotApplicable: intraop.airwayNotApplicable ?? false,
     airwayDevices:   Array.isArray(intraop.airwayDevices)    ? intraop.airwayDevices    : [],
+    airwayDeviceEntries: airwayEntries as unknown as Prisma.InputJsonValue,
+    equipmentPrepared: (intraop.equipmentPrepared && typeof intraop.equipmentPrepared === "object" && !Array.isArray(intraop.equipmentPrepared)
+      ? intraop.equipmentPrepared
+      : {}) as Prisma.InputJsonValue,
+    // Only for techniques that are on the list: a side outlives nothing it belongs to.
+    techniqueSides: techniqueSidesFor(
+      Array.isArray(intraop.techniques) ? intraop.techniques.filter((value): value is string => typeof value === "string") : [],
+      parseTechniqueSides((intraop as Record<string, unknown>).techniqueSides),
+    ) as unknown as Prisma.InputJsonValue,
     ventilationModes:Array.isArray(intraop.ventilationModes) ? intraop.ventilationModes : [],
     dltType:         intraop.dltType         ?? null,
     dltSide:         intraop.dltSide         ?? null,

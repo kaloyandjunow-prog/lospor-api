@@ -13,7 +13,7 @@ export const E2E_MEMBER_A_EMAIL = process.env.E2E_MEMBER_A_EMAIL ?? "member-a-e2
 // A second member inside institution A, so a case can be handed along a chain
 // -- registrar to consultant to whoever is actually on the list -- without
 // doubling back through the same two people.
-export const E2E_MEMBER_A2_EMAIL = process.env.E2E_MEMBER_A2_EMAIL ?? "member-a2-e2e@lospor.test"
+export const E2E_MEMBER_A2_EMAIL = process.env.E2E_MEMBER_A2_EMAIL ?? "member-a-two-e2e@lospor.test"
 export const E2E_HOD_B_EMAIL    = process.env.E2E_HOD_B_EMAIL    ?? "hod-b-e2e@lospor.test"
 export const E2E_MEMBER_B_EMAIL = process.env.E2E_MEMBER_B_EMAIL ?? "member-b-e2e@lospor.test"
 

@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("server-only", () => ({}))
 
 import { mapCasesToOmop } from "@/lib/omop-mapper"
+import { OMOP_COLUMNS } from "@/lib/omop-columns"
+import { OMOP_TABLES as researchOmopTables } from "@/lib/research/omop-csv"
 import { completeCaseFixture } from "@/__tests__/fixtures/complete-case"
 import { pediatricCaseFixture } from "@/__tests__/fixtures/pediatric-case"
 import {
@@ -79,7 +81,9 @@ const bundle = mapCasesToOmop([completeCaseFixture() as never], {
 
 const pediatricBundle = mapCasesToOmop([pediatricCaseFixture()])
 
+// Every table the research export writes, except death: the complete case has none (see the death test below).
 const OMOP_TABLES: OmopTableName[] = [
+  "care_site",
   "person",
   "observation_period",
   "visit_occurrence",
@@ -87,10 +91,27 @@ const OMOP_TABLES: OmopTableName[] = [
   "drug_exposure",
   "measurement",
   "procedure_occurrence",
+  "device_exposure",
   "observation",
 ]
 
 describe("OMOP export CSV columns", () => {
+  it("writes a file for every table the mapper emits, and for no table it does not", () => {
+    const emitted = Object.keys(bundle).filter(key => key !== "metadata").sort()
+    expect([...researchOmopTables].sort()).toEqual(emitted)
+    expect(Object.keys(OMOP_COLUMNS).sort()).toEqual(emitted)
+  })
+
+  it("writes every field of the death table", () => {
+    const withDeath = completeCaseFixture() as unknown as { events: Record<string, unknown>[] }
+    withDeath.events.push({ type: "clinical_event", timestamp: new Date("2026-06-01T10:00:00Z"), label: "Death (exitus letalis)", value: null, unit: null, metadataJson: { type: "clinical_event" } })
+    const died = mapCasesToOmop([withDeath as never])
+    expect(died.death.length).toBe(1)
+    const rows = died.death as unknown as Record<string, unknown>[]
+    expect([...omopCsvColumns("death")].sort()).toEqual([...new Set(rows.flatMap(row => Object.keys(row)))].sort())
+    expect(parseCsvLine(omopCsvValueLine("death", rows[0]!).trimEnd())).toHaveLength(omopCsvColumns("death").length)
+  })
+
   it.each(OMOP_TABLES)("writes every field the mapper emits for %s", table => {
     const rows = bundle[table] as unknown as Record<string, unknown>[]
     expect(rows.length).toBeGreaterThan(0)

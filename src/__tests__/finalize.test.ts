@@ -32,6 +32,11 @@ vi.mock("@/lib/clinical-transaction", () => ({
 }))
 vi.mock("@/lib/case-audit", () => ({ writeSnapshotAsync: writeSnapshotAsyncMock }))
 vi.mock("@/lib/relational-sync", () => ({ syncCaseRelational: syncCaseRelationalMock }))
+// Closing open vitals episodes at finalisation has its own tests (10.1.0).
+const invalidateCachesMock = vi.hoisted(() => vi.fn())
+const tallyCaseMock = vi.hoisted(() => vi.fn().mockResolvedValue(true))
+vi.mock("@/lib/prisma", () => ({ prisma: {} }))
+vi.mock("@/lib/intraop-automation", () => ({ closeOpenVitalEpisodes: vi.fn().mockResolvedValue(0), invalidateIntraopAutomationCaches: invalidateCachesMock, tallyFinalisedCase: tallyCaseMock }))
 vi.mock("@/lib/access-control", () => ({ canWriteCaseWithOwnerFallback: canAccessCaseMock }))
 vi.mock("@/lib/audit", () => ({ logAudit: logAuditMock, logAuditInTransaction: logAuditMock }))
 
@@ -121,6 +126,9 @@ describe("POST /api/cases/:id/finalize", () => {
     const res = await POST(makeRequest(), { params: Promise.resolve({ id: "case-1" }) })
     expect(res.status).toBe(200)
     expect(writeSnapshotAsyncMock).toHaveBeenCalled()
+    // The automation statistics read finalised cases, so finalising refreshes them.
+    expect(invalidateCachesMock).toHaveBeenCalled()
+    expect(tallyCaseMock).toHaveBeenCalledWith(expect.anything(), "case-1")
     expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "COMPLETE" }) }))
   })
 

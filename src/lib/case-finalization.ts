@@ -1,6 +1,8 @@
 import { logAuditInTransaction } from "@/lib/audit"
 import { writeSnapshotAsync } from "@/lib/case-audit"
 import { syncCaseRelational } from "@/lib/relational-sync"
+import { rebuildProjection } from "@/lib/case-events"
+import { closeOpenVitalEpisodes } from "@/lib/intraop-automation"
 import {
   evaluateCaseFinalization,
   type ClinicalIssue,
@@ -125,6 +127,13 @@ export async function finalizeCaseWithinTransaction(
   const readiness = await evaluateCaseReadiness(tx, caseId, options.clinicalMode)
   if (!readiness.valid) {
     return { ok: false, blockers: readiness.issues.filter(issue => issue.severity === "error") }
+  }
+
+  // An episode from the vitals questions still open ends with the case
+  // (10.1.0): closed now, before finalisation, never rewritten after it.
+  const intraopEnd = await tx.intraoperativeRecord.findUnique({ where: { caseId }, select: { endedAt: true } })
+  if (intraopEnd?.endedAt && await closeOpenVitalEpisodes(tx, caseId, intraopEnd.endedAt, actorUserId, "system") > 0) {
+    await rebuildProjection(tx, caseId)
   }
 
   try {
