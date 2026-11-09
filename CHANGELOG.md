@@ -1,5 +1,13 @@
 # Changelog - LOSPOR API
 
+## [10.3.1] - 2026-11-09
+
+### Changed
+
+- **Version only.** The API moves to 10.3.1 so that the web app, the phone app and the API stay one version, as the
+  cross-repo gate and the hospital appliance require. This release's changes are in the phone app (the Jet button in
+  the timetable, the Equipment airway shortcut, calmer overflow cues, the preop header) and the web end-to-end test.
+
 ## [10.3.0] - 2026-11-09
 
 ### Changed
