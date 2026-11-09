@@ -1,6 +1,6 @@
 {
   "name": "lospor-api",
-  "version": "10.2.0",
+  "version": "10.3.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -63,7 +63,7 @@
     "postcss": "8.5.23",
     "sharp": "0.35.5",
     "serialize-javascript": "^7.0.6",
-    "minimatch": "10.2.6",
+    "minimatch": "11.0.5",
     "deepmerge-ts": "^8.0.1",
     "nanoid": "^3.3.18",
     "fast-uri": "^3.1.7",
@@ -79,7 +79,7 @@
     "@sparticuz/chromium": "^149.0.0",
     "archiver": "^8.0.0",
     "bcryptjs": "^3.0.3",
-    "jose": "^6.2.15",
+    "jose": "^6.2.16",
     "next": "16.4.5",
     "pg": "^8.23.1",
     "puppeteer-core": "^25.16.0",

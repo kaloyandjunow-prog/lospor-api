@@ -1,5 +1,18 @@
 # Changelog - LOSPOR API
 
+## [10.3.0] - 2026-11-09
+
+### Changed
+
+- Released with Core 10.3.0 and the web and phone apps: the planned procedure on the postoperative record became a
+  Status switch in the SPS Reminders group. The API needed no new field or route for it; the switch travels in the
+  SPS settings the clients already read.
+
+### Dependencies
+
+- `minimatch` is overridden to the patched 11.0.5 (GHSA-g3hv-75wg-m249, reached through `archiver`'s `readdir-glob`
+  and the lint tool chain), and `jose` takes its patch update. `npm audit --omit=dev --audit-level=high` finds nothing.
+
 ## [10.2.0] - 2026-11-02
 
 ### Added
