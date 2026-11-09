@@ -59,6 +59,9 @@
 
 ### Changed
 
+- **Core comes from its tag:** `@lospor/core` is pinned to `github:…/lospor-core#v10.2.0`
+  again; the 10.2 work had swapped it for `file:../lospor-core`, which a clean checkout
+  cannot resolve.
 - **Vital-sign statistics:** the hospital's reading distribution behind the
   vitals questions now counts finalised cases only, and reads invasive and
   cuff pressures alike. A case in progress no longer feeds the limits it is
@@ -82,6 +85,11 @@
 
 ### Fixed
 
+- **A stale PostgreSQL test:** the intraoperative automation test assumed the vitals
+  questions are off by default; they have been on since the suggestion defaults changed,
+  so its "off" case now says so. Found by the first PostgreSQL run on a fresh database.
+- **A 5 s test limit:** the 300-case event schema test takes about 5 s on a busy machine
+  and now has a 30 s limit.
 - **Airway list clearing:** an explicit empty Smart airway list now clears the
   legacy airway-device and size fields as part of the same partial save, so a
   removed device is not reconstructed on the next load.
