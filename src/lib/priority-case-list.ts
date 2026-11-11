@@ -49,7 +49,9 @@ export async function findCasesByPriority<Include extends Prisma.CaseInclude>(
     const rows = await prisma.case.findMany({
       where: tierWhere,
       include,
-      orderBy: { createdAt: "desc" },
+      // The id breaks a tie: cases created in the same instant (a bulk import) would otherwise come in no fixed
+      // order, and a page boundary falling between them repeated one case and lost another.
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       skip: remainingSkip,
       take: remainingTake,
     }) as Prisma.CaseGetPayload<{ include: Include }>[]
