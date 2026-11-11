@@ -1,5 +1,21 @@
 # Changelog - LOSPOR API
 
+## [10.3.2] - 2026-11-12
+
+### Fixed
+
+- **The case list pages in a fixed order.** Cases created in the same instant (a bulk import) had no fixed order, so
+  a page boundary between them could repeat one case and lose another; the list now orders by creation time, then
+  id.
+- **Lost audit entries and a failed auto-end say what they lost.** The log line names the audit action and entity,
+  and the auto-end failure names the case and the error.
+
+### Dependencies
+
+- Next 16.4.6, jose 6.2.17, read-excel-file 9.3.15, puppeteer-core 25.17, the AWS S3 clients 3.1167. `npm audit
+  --omit=dev`: 0. The version also moves with the web and phone apps, which carry this release's other changes.
+
+
 ## [10.3.1] - 2026-11-09
 
 ### Changed
