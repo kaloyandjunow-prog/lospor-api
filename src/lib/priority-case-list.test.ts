@@ -16,6 +16,13 @@ describe("findCasesByPriority", () => {
     vi.clearAllMocks()
   })
 
+  it("orders by creation time with the id as tie-breaker, so a page boundary cannot repeat or lose a case", async () => {
+    mocks.count.mockResolvedValue(3)
+    mocks.findMany.mockResolvedValue([{ id: "a" }])
+    await findCasesByPriority({}, {}, 0, 1)
+    expect(mocks.findMany.mock.calls[0][0].orderBy).toEqual([{ createdAt: "desc" }, { id: "desc" }])
+  })
+
   it("skips an empty tier entirely without querying it for rows", async () => {
     mocks.count.mockImplementation(({ where }: { where: { status: string } }) =>
       Promise.resolve(where.status === "AWAITING_REVIEW" ? 0 : where.status === "IN_PROGRESS" ? 2 : 0))
