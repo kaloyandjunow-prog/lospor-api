@@ -24,11 +24,17 @@ export async function GET(req: NextRequest) {
 
   const rows = procedureRowsFromData()
   const codes = filterProcedureCodes(rows, group, q, suggested)
-  // A group can span ICD-10-PCS sections, so each operation carries its own.
-  const domainByCode = new Map(rows.map(row => [row.code, row.domain]))
+  // A group can span ICD-10-PCS sections, so each operation carries its own,
+  // in both languages; the group's Bulgarian name rides along for the tag.
+  const byCode = new Map(rows.map(row => [row.code, row]))
+  const groupBg = codes.length ? byCode.get(codes[0].code)?.groupBg ?? null : null
   return NextResponse.json({
     group,
+    ...(groupBg ? { groupBg } : {}),
     total: codes.length,
-    codes: codes.slice(0, CODE_LIMIT).map(code => ({ ...code, domain: domainByCode.get(code.code) ?? null })),
+    codes: codes.slice(0, CODE_LIMIT).map(code => {
+      const row = byCode.get(code.code)
+      return { ...code, domain: row?.domain ?? null, ...(row?.domainBg ? { domainBg: row.domainBg } : {}) }
+    }),
   })
 }

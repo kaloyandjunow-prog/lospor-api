@@ -13,5 +13,8 @@ export async function GET(req: NextRequest) {
 
   // Ranking lives in core so the offline bundle in the mobile app orders
   // results the same way this endpoint does.
-  return NextResponse.json(searchProcedures(procedureRowsFromData(), q, 100))
+  // The Bulgarian search text is what a query matched; the client needs the
+  // names (groupBg, domainBg, descriptionBg), not the 100 rows of match words.
+  return NextResponse.json(searchProcedures(procedureRowsFromData(), q, 100)
+    .map(({ searchBg: _searchBg, groupTerms: _groupTerms, ...row }) => row))
 }

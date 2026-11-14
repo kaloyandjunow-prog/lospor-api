@@ -66,6 +66,11 @@ export const ICD10_ROW_COUNT = ${rows.length}
 `
 }
 
+/** The Bulgarian group, section and operation names (hisbg-nomenclatures, 2026-11-14). */
+function bulgarianNames(): { groups: Record<string, string>; domains: Record<string, string>; groupTerms: Record<string, string>; labels: Record<string, string> } {
+  return JSON.parse(fs.readFileSync(path.join(process.cwd(), "src", "data", "procedure-labels-bg.json"), "utf8"))
+}
+
 function procedures(): string {
   const file = path.join(process.cwd(), "src", "data", "pcs.json")
   const data = JSON.parse(fs.readFileSync(file, "utf8")) as PcsEntry[]
@@ -95,10 +100,21 @@ function procedures(): string {
     const words = Object.entries(bg.terms).find(([name]) => name.toLowerCase().trim() === key)?.[1]
     for (const word of words?.split(" ") ?? []) if (word) group.words.add(word)
   }
+  // And every word of every operation's Bulgarian name (hisbg-nomenclatures),
+  // so a Bulgarian query finds offline the groups it finds online.
+  const names = bulgarianNames()
+  for (const entry of data) {
+    const group = byGroup.get(entry.group.toLowerCase().trim())!
+    for (const word of (names.labels[entry.code] ?? "").toLowerCase().split(/[^0-9a-zа-яё]+/)) {
+      if (word.length > 2) group.words.add(word)
+    }
+  }
   const rows = [...byGroup.values()].sort((a, b) => a.entry.group.localeCompare(b.entry.group))
   const tuples = rows.map(({ entry, words }) => JSON.stringify([
     entry.code, entry.group, entry.domain, entry.description,
     [...words].sort().join(" "),
+    names.groups[entry.group] ?? "", names.domains[entry.domain] ?? "",
+    names.groupTerms[entry.group] ?? "",
   ]))
 
   return `${header(
@@ -115,7 +131,8 @@ import type { ProcedureSearchRow } from "../search"
  * Single-word queries therefore match as they do online; a multi-word phrase
  * may not, because the words are stored deduplicated rather than in order.
  */
-const ROWS: [string, string, string, string, string][] = [
+/** [code, group, section, description, search words, group in Bulgarian, section in Bulgarian, clinical words]. */
+const ROWS: [string, string, string, string, string, string, string, string][] = [
 ${tuples.map(t => `  ${t},`).join("\n")}
 ]
 
@@ -123,8 +140,10 @@ let expanded: ProcedureSearchRow[] | null = null
 
 export function procedureRows(): ProcedureSearchRow[] {
   if (!expanded) {
-    expanded = ROWS.map(([code, group, domain, description, terms]) => ({
+    expanded = ROWS.map(([code, group, domain, description, terms, groupBg, domainBg, groupTerms]) => ({
       code, group, domain, description, terms,
+      ...(groupTerms ? { groupTerms } : {}),
+      ...(groupBg ? { groupBg, domainBg, searchBg: (groupBg + " " + domainBg).toLowerCase() } : {}),
     }))
   }
   return expanded
@@ -168,13 +187,18 @@ function procedureCodes(): string {
   const groups = new Map<string, number>()
   const domains = new Map<string, number>()
   const parts = new Map<string, number>()
+  const partsBg = new Map<string, number>()
+  const names = bulgarianNames()
   const rows = [...data].sort((a, b) => a.code.localeCompare(b.code)).map(entry => JSON.stringify([
     entry.code,
     indexOf(groups, entry.group),
     indexOf(domains, entry.domain),
     entry.description.split(", ").map(part => indexOf(parts, part)),
+    (names.labels[entry.code] ?? "").split(", ").filter(Boolean).map(part => indexOf(partsBg, part)),
   ]))
   const list = (values: Map<string, number>) => [...values.keys()].map(value => `  ${JSON.stringify(value)},`).join("\n")
+  const listBg = (values: Map<string, number>, table: Record<string, string>) =>
+    [...values.keys()].map(value => `  ${JSON.stringify(table[value] ?? "")},`).join("\n")
 
   return `${header(`${data.length} ICD-10-PCS operations in ${groups.size} procedure groups.`)}
 import type { ProcedureSearchRow } from "../search"
@@ -191,8 +215,22 @@ const PARTS: readonly string[] = [
 ${list(parts)}
 ]
 
-/** [code, group index, section index, description part indexes]. */
-const ROWS: readonly [string, number, number, number[]][] = [
+/** The groups and sections in Bulgarian, in the same order as GROUPS and DOMAINS. */
+const GROUPS_BG: readonly string[] = [
+${listBg(groups, names.groups)}
+]
+
+const DOMAINS_BG: readonly string[] = [
+${listBg(domains, names.domains)}
+]
+
+/** The comma-separated parts of the Bulgarian operation names, each stored once. */
+const PARTS_BG: readonly string[] = [
+${list(partsBg)}
+]
+
+/** [code, group index, section index, description part indexes, Bulgarian name part indexes]. */
+const ROWS: readonly [string, number, number, number[], number[]][] = [
 ${rows.map(row => `  ${row},`).join("\n")}
 ]
 
@@ -205,12 +243,18 @@ export function procedureCodeRowsForGroup(group: string): ProcedureSearchRow[] {
   if (groupIndex < 0) return []
   return ROWS
     .filter(row => row[1] === groupIndex)
-    .map(([code, groupAt, domainAt, description]) => ({
-      code,
-      group: GROUPS[groupAt],
-      domain: DOMAINS[domainAt],
-      description: description.map(part => PARTS[part]).join(", "),
-    }))
+    .map(([code, groupAt, domainAt, description, bulgarian]) => {
+      const descriptionBg = bulgarian.map(part => PARTS_BG[part]).join(", ")
+      return {
+        code,
+        group: GROUPS[groupAt],
+        domain: DOMAINS[domainAt],
+        description: description.map(part => PARTS[part]).join(", "),
+        ...(GROUPS_BG[groupAt] ? { groupBg: GROUPS_BG[groupAt] } : {}),
+        ...(DOMAINS_BG[domainAt] ? { domainBg: DOMAINS_BG[domainAt] } : {}),
+        ...(descriptionBg ? { descriptionBg, searchBg: descriptionBg.toLowerCase() } : {}),
+      }
+    })
 }
 `
 }
