@@ -1,5 +1,39 @@
 # Changelog - LOSPOR API
 
+## [10.4.1] - 2026-11-14
+
+### Fixed
+
+- **Lab report scans put values on the wrong rows.** A phone stores a portrait photo with its pixels sideways and an
+  EXIF tag saying how to turn it; the AI provider ignores the tag, so the model read the table at 90 degrees. On a
+  blood gas plus blood count photo the count came back shifted by a row or two (WBC 19 for 34.57, MCV 74 for 89).
+  Tested against Mistral with that photo, three runs each: as the phone stores it 31 right / 15 wrong; upright
+  51 / 0. The clients now send upright pixels (Web and Mobile 10.4.1); for an image that still arrives turned, the
+  server reads the EXIF orientation (`src/lib/jpeg-orientation.ts`, no image library) and tells the model how to
+  turn it.
+- **A saturation was filed as a partial pressure.** The old prompt could store sO2 68.8 % as PaO2 68.8 mmHg and a
+  total CO2 as PaCO2. The prompt now says what sO2 and tCO2 are not, and leaves tCO2 out.
+
+### Changed
+
+- **The lab-scan prompt asks for each row whole before naming it**: printed name, value, unit and section, then the
+  library entry by the row's own name. Answers come in JSON mode (`{ "results": [...] }`); the earlier bare array is
+  still read. A test printed twice on one report (haemoglobin in the blood gas and in the blood count) is returned
+  twice.
+- The scan itself is one function, `scanLabImage()` in `src/lib/lab-scan.ts` (prompt, provider call, conversion from
+  the printed unit), so the appliance's Status test scan shows exactly what a clinician gets.
+
+### Added
+
+- `LabScanLocal` in `src/lib/lab-scan-prompt.ts`, for a hospital's own lab-scan settings (Hospital 1.9.1, Status):
+  the names its laboratory prints, each tied to a library entry, and a short note. Both are added after the
+  released rules and never replace them; a printed name in the table goes to its entry in code, whatever the model
+  chose. `labScanLocalProblems()` refuses a target outside the library, a repeated name and over-long settings.
+
+### Dependencies
+
+- No minor or patch updates since 10.4.0. `npm audit --omit=dev`: 0.
+
 ## [10.4.0] - 2026-11-14
 
 ### Added
