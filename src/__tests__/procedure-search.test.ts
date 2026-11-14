@@ -118,3 +118,30 @@ describe("operations suggested by a hospital code", () => {
     ])
   })
 })
+
+// Bulgarian names on every result (2026-11-14): the group stays the answer,
+// the client shows its Bulgarian name when the screen is in Bulgarian.
+describe("procedure names in Bulgarian", () => {
+  beforeEach(() => { getAuthUserMock.mockResolvedValue({ id: "user-1" }) })
+
+  it("returns the group and section in Bulgarian, without the match words", async () => {
+    const results = await (await GET(new NextRequest(
+      `http://localhost/v1/search/procedures?q=${encodeURIComponent("лапароскопска холецистектомия")}`,
+    ))).json() as Array<Record<string, unknown>>
+    expect(results[0]).toMatchObject({
+      group: "Cholecystectomy", groupBg: "Холецистектомия", domainBg: "Черен дроб, жлъчни пътища и панкреас",
+    })
+    expect(results[0]).not.toHaveProperty("searchBg")
+  })
+
+  it("lists the operations with their Bulgarian names, narrowed by Bulgarian words", async () => {
+    const { GET: CODES } = await import("@/app/v1/search/procedures/codes/route")
+    const body = await (await CODES(new NextRequest(
+      `http://localhost/v1/search/procedures/codes?group=Cholecystectomy&q=${encodeURIComponent("лапароскопски")}`,
+    ))).json() as { groupBg?: string; codes: Array<Record<string, unknown>> }
+    expect(body.groupBg).toBe("Холецистектомия")
+    expect(body.codes).toContainEqual(expect.objectContaining({
+      code: "0FT44ZZ", descriptionBg: "Холецистектомия, лапароскопски достъп", domainBg: "Черен дроб, жлъчни пътища и панкреас",
+    }))
+  })
+})
