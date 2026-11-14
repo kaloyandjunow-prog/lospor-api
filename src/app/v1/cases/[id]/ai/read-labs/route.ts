@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { convertLabValue, isConfidentConversion } from "@lospor/core/lab-unit-conversion"
-import { LAB_LIBRARY } from "@/lib/labs"
+import { scanLabImage } from "@/lib/lab-scan"
 import { logAudit } from "@/lib/audit"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { canWriteCase } from "@/lib/access-control"
-import { fetchMistralChatCompletions } from "@/lib/mistral"
 import { DEFAULT_VISION_MODEL } from "@/lib/mistral-models"
 import { prisma } from "@/lib/prisma"
 import { rateLimit } from "@/lib/rate-limit"
@@ -17,42 +15,10 @@ const MAX_BASE64_CHARS = Math.ceil(MAX_BYTES * 4 / 3)
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY ?? ""
 const MISTRAL_TIMEOUT_MS = Number(process.env.MISTRAL_TIMEOUT_MS ?? 45_000)
 
-const LIBRARY_MAP = new Map(LAB_LIBRARY.map(test => [test.name, test.unit]))
-const LIBRARY_TABLE = LAB_LIBRARY.map(test => `${test.name} | ${test.unit || "-"}`).join("\n")
-
-const EXTRACT_PROMPT = `You are processing a laboratory report image.
-
-CANONICAL LAB LIBRARY (exact name | canonical unit):
-${LIBRARY_TABLE}
-
-INSTRUCTIONS:
-1. Extract every numerical laboratory test result visible in the image.
-2. For each result, match it to the closest entry in the complete library above, considering all languages, abbreviations, and alternate spellings. Examples:
-   - "Хемоглобин", "HGB", "Haemoglobin", "Hb" -> Haemoglobin (Hb)
-   - "Лев.", "Leuk.", "WBC", "Leucocytes" -> Leucocytes (WBC)
-   - "Тромбоцити", "Thrombozyten", "PLT" -> Platelets
-   - "Креатинин", "CREA" -> Creatinine
-   - "Глюкоза" -> Glucose
-3. Use the EXACT name string from the library including all parentheses, subscripts, and special characters.
-4. DISCARD any result that does not match a library entry. Do not guess and do not use the printed name.
-5. DO NOT CONVERT ANYTHING. Report the number and the unit exactly as they are
-   printed on the report. Unit conversion is performed afterwards by the server,
-   which needs the original unit to do it correctly. If you convert, the value
-   will be converted a second time and the stored result will be wrong.
-   - If the report prints "1.0 mg/dL", return value "1.0" and unit "mg/dL".
-   - If the report prints "88 μmol/L", return value "88" and unit "μmol/L".
-   - Copy the unit even when it looks unusual. Never substitute the library unit.
-6. Return ONLY a valid JSON array. Each element: { "test": string, "value": string, "unit": string }.
-   - "test" must be an exact name from the library.
-   - "value" is the number exactly as printed, as a string.
-   - "unit" is the unit exactly as printed. If no unit is printed, return "".
-7. No markdown, no explanation. If no matching results are found, return [].`
-
-// Unit conversion lives in @lospor/core/lab-unit-conversion and is driven by the
-// unit printed on the report. The heuristic that used to live here inferred the
-// source unit from the magnitude of the number, which cannot work: canonical and
-// conventional ranges overlap. A neonate's normal creatinine of 10 µmol/L was
-// read as 10 mg/dL and stored as 884 µmol/L.
+// The scan itself -- prompt, answer, unit conversion -- lives in @/lib/lab-scan
+// (10.4.1), shared with the appliance's Status test scan. Conversion is driven
+// by the unit printed on the report: inferring it from the number's magnitude
+// once stored a neonate's creatinine of 10 µmol/L as 884 µmol/L.
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -138,91 +104,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "AI advice not enabled for this case" }, { status: 403 })
   }
 
-  let mistralRes: Response
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), MISTRAL_TIMEOUT_MS)
-  try {
-    mistralRes = await fetchMistralChatCompletions(MISTRAL_API_KEY, {
-      model: process.env.MISTRAL_VISION_MODEL ?? DEFAULT_VISION_MODEL,
-      messages: [{
-        role: "user",
-        content: [
-          { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-          { type: "text", text: EXTRACT_PROMPT },
-        ],
-      }],
-      temperature: 0.1,
-      max_tokens: 2000,
-      stream: false,
-    }, { signal: controller.signal })
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
+  const outcome = await scanLabImage({
+    apiKey: MISTRAL_API_KEY,
+    model: process.env.MISTRAL_VISION_MODEL ?? DEFAULT_VISION_MODEL,
+    imageBase64,
+    mimeType,
+    timeoutMs: MISTRAL_TIMEOUT_MS,
+  })
+  if (!outcome.ok) {
+    if (outcome.kind === "timeout") {
       console.error("[cases/ai/read-labs] Mistral fetch timed out")
       return NextResponse.json({ error: "Lab scan timed out. Please crop the image tighter or try again." }, { status: 504 })
     }
-    console.error("[cases/ai/read-labs] Mistral fetch error:", err)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  } finally {
-    clearTimeout(timeout)
-  }
-
-  if (!mistralRes.ok) {
     // body withheld: provider errors can echo the clinical payload
-    console.error("[cases/ai/read-labs] Mistral error:", mistralRes.status)
+    console.error("[cases/ai/read-labs] Mistral", outcome.kind === "provider" ? `error: ${outcome.response.status}` : "fetch error")
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-
-  const json = await mistralRes.json()
-  const content: string = json.choices?.[0]?.message?.content ?? ""
-
-  let results: {
-    test: string
-    value: string
-    unit: string
-    /** As printed on the report, so the reviewer can check the conversion. */
-    sourceValue: string
-    sourceUnit: string
-    conversionStatus: string
-    /** False when the unit was unrecognised — such rows are not pre-selected. */
-    confident: boolean
-  }[] = []
-  try {
-    const clean = content.replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "").trim()
-    const parsed = JSON.parse(clean)
-    if (Array.isArray(parsed)) {
-      results = (parsed as unknown[])
-        .filter((row): row is { test: string; value: string; unit?: string } =>
-          !!row &&
-          typeof row === "object" &&
-          typeof (row as Record<string, unknown>).test === "string" &&
-          typeof (row as Record<string, unknown>).value === "string")
-        .filter(row => LIBRARY_MAP.has(row.test))
-        .map(row => {
-          // Convert once, from the unit the report actually printed. The source
-          // value and unit are kept so the review screen can show them beside
-          // the converted result, and so nothing is ever silently rewritten.
-          const conversion = convertLabValue(row.test, String(row.value), String(row.unit ?? ""))
-          const converted = conversion.status === "converted" || conversion.status === "already-canonical"
-          return {
-            test: String(row.test),
-            value: converted ? String(conversion.value) : String(row.value),
-            // An unconverted value is still in whatever unit the report printed,
-            // so it must not be labelled with the canonical one. Doing that put a
-            // haematocrit of 0.41 on screen as "0.41 %" — a number and a unit that
-            // do not belong together, in an editable field the clinician would
-            // reasonably take as already reconciled.
-            unit: converted ? conversion.unit : String(row.unit ?? ""),
-            sourceValue: String(row.value),
-            sourceUnit: String(row.unit ?? ""),
-            conversionStatus: conversion.status,
-            // Only rows converted with a known unit are safe to offer ticked.
-            confident: isConfidentConversion(conversion),
-          }
-        })
-    }
-  } catch {
-    console.warn("[cases/ai/read-labs] Could not parse model output:", content.slice(0, 200))
-  }
+  if (outcome.unreadable) console.warn("[cases/ai/read-labs] Could not parse model output")
+  const results = outcome.results
 
   // A successful send of a laboratory report photograph to an external provider
   // must leave a record. Previously only failures emitted anything, so the one
