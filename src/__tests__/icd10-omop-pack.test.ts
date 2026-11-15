@@ -23,6 +23,21 @@ describe("the bundled ICD-10 research numbers", () => {
     expect(Object.keys(pack.maps).length).toBeGreaterThan(15_000)
   })
 
+  // 2026-11-15: an NHIS subdivision OMOP does not hold maps through its nearest
+  // parent the vocabulary has, and says which; the full code stays the source value.
+  it("map an NHIS subdivision through the nearest parent the vocabulary holds", () => {
+    const viaParent = (pack as { viaParent?: Record<string, string> }).viaParent ?? {}
+    expect(viaParent["W37.48"]).toBe("W37")
+    expect(viaParent["M15.81"]).toBe("M15.8")
+    expect(pack.maps["W37.48"]).toEqual(pack.maps["W37"])
+    expect(pack.maps["M15.81"]).toEqual(pack.maps["M15.8"])
+    // Every lifted code names a parent that itself maps in its own right.
+    expect(Object.entries(viaParent).every(([code, parent]) => code.startsWith(parent) && !(parent in viaParent) && pack.maps[parent])).toBe(true)
+    // A code the vocabulary holds but does not map is not lifted.
+    expect(viaParent["C79.5"]).toBeUndefined()
+    expect(pack.maps["C79.5"]).toBeUndefined()
+  })
+
   it("carry numbers only, never SNOMED CT codes or descriptions", () => {
     for (const ids of Object.values(pack.maps)) {
       expect(ids.every(id => Number.isSafeInteger(id) && id > 0)).toBe(true)
@@ -32,7 +47,7 @@ describe("the bundled ICD-10 research numbers", () => {
     const words = new Set(JSON.stringify(pack).match(/[A-Za-z]{4,}/g))
     const allowed = new Set([
       "Athena", "Extension", "ICD10", "OHDSI", "OMOP", "Release", "SNOMED", "codes", "concept",
-      "defaultVocabulary", "deprecated", "descriptions", "maps", "note", "only", "source", "vocabularies",
+      "defaultVocabulary", "deprecated", "descriptions", "maps", "note", "only", "source", "viaParent", "vocabularies",
     ])
     expect([...words].filter(word => !allowed.has(word))).toEqual([])
   })

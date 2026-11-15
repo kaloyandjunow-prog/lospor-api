@@ -15,7 +15,7 @@ import { PrismaClient, Prisma, ConceptMappingStatus } from "../src/generated/pri
 import { PrismaPg } from "@prisma/adapter-pg"
 import fs from "fs"
 import path from "path"
-import { selectStandardMapResolutions, type StandardMapResolution } from "./standard-map-selection"
+import { icd10ParentsOf, selectStandardMapResolutions, type StandardMapResolution } from "./standard-map-selection"
 import { NHIS_CL024_LAB_CONCEPT_MAPS } from "./nhis-cl024-lab-mappings"
 import { normalizeAtcCode } from "../src/lib/atc"
 
@@ -489,7 +489,11 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 async function resolveStandardMap(vocabularyId: string, codes: string[], athenaVersion: string | null): Promise<Map<string, StandardMapResolution>> {
-  const uniqueCodes = [...new Set(codes.filter(Boolean))]
+  const requested = [...new Set(codes.filter(Boolean))]
+  // ICD-10 codes the vocabulary may not hold are looked up with their parents.
+  const uniqueCodes = vocabularyId === "ICD10"
+    ? [...new Set([...requested, ...requested.flatMap(icd10ParentsOf)])]
+    : requested
   if (uniqueCodes.length === 0) return new Map()
 
   const sourceConcepts = []
@@ -543,7 +547,7 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
 
   return selectStandardMapResolutions({
     vocabularyId,
-    codes: uniqueCodes,
+    codes: requested,
     sourceConcepts,
     relationships,
     targets,
@@ -573,6 +577,7 @@ function withStandard(seed: Omit<ConceptSeed, "mappingStatus">, resolution: Stan
     mappingConfidence: standard.mappingConfidence,
     reviewed: false,
     athenaVersion: standard.athenaVersion,
+    ...(standard.mappingNotes ? { mappingNotes: standard.mappingNotes } : {}),
   }
 }
 async function main() {
@@ -705,11 +710,13 @@ async function main() {
   // imported Athena. One standard target maps. Several targets -- a combination
   // code OMOP decomposes, E11.2 into diabetes and a kidney disorder -- map to all
   // of them, and the export writes a condition row for each (decided 14 Sep
-  // 2026). A code Athena does not hold, such as an NHIS national extension,
-  // stays source-only: it takes no number from its parent (decided 14 Sep 2026).
+  // 2026). A code Athena does not hold, such as an NHIS subdivision, takes its
+  // nearest held parent's numbers (decided 15 Nov 2026, replacing the decision of
+  // 14 Sep 2026 that left it source-only); see generate-icd10-omop.mts.
   const icdPack = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "src", "data", "icd10-omop.json"), "utf8"),
-  ) as { source: string; defaultVocabulary: string; maps: Record<string, number[]>; vocabularies: Record<string, string>; deprecated?: string[] }
+  ) as { source: string; defaultVocabulary: string; maps: Record<string, number[]>; vocabularies: Record<string, string>; deprecated?: string[]; viaParent?: Record<string, string> }
+  const icdParent = icdPack.viaParent ?? {}
   const retiredIcd = new Set(icdPack.deprecated ?? [])
   const bundledIcdStandard = (code: string): StandardMapResolution | undefined => {
     const ids = icdPack.maps[code]
@@ -718,7 +725,7 @@ async function main() {
       return {
         kind: "source-only",
         mappingMethod: "athena-multiple-standard-targets",
-        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")}).`,
+        mappingNotes: `Athena supplies ${ids.length} distinct active standard targets (${ids.join(", ")})${icdParent[code] ? ` through parent ${icdParent[code]}` : ""}.`,
         athenaVersion: icdPack.source,
         targetIds: ids,
       }
@@ -730,8 +737,10 @@ async function main() {
       standardLabel: "",
       // A code WHO has retired (K35.0) maps through its retired concept, which
       // Athena keeps with a valid "Maps to"; named so a review can find them.
-      mappingMethod: retiredIcd.has(code) ? "bundled-icd10-deprecated-maps-to" : "bundled-icd10-maps-to",
-      mappingConfidence: retiredIcd.has(code) ? 0.9 : 0.95,
+      mappingMethod: icdParent[code] ? "bundled-icd10-parent-maps-to"
+        : retiredIcd.has(code) ? "bundled-icd10-deprecated-maps-to" : "bundled-icd10-maps-to",
+      mappingConfidence: icdParent[code] ? 0.8 : retiredIcd.has(code) ? 0.9 : 0.95,
+      ...(icdParent[code] ? { mappingNotes: `Mapped through parent ${icdParent[code]}; the subdivision is kept in the source value only.` } : {}),
       athenaVersion: icdPack.source,
     } }
   }
@@ -758,7 +767,7 @@ async function main() {
       mappingMethod: "athena-multiple-standard-targets",
       mappingConfidence: 0.95,
       reviewed: false,
-      mappingNotes: `OMOP decomposes this code into ${several.length} standard concepts; the export writes one condition row for each.`,
+      mappingNotes: `OMOP decomposes this code into ${several.length} standard concepts; the export writes one condition row for each.${icdParent[code.code] ? ` Mapped through parent ${icdParent[code.code]}; the subdivision is kept in the source value only.` : ""}`,
       athenaVersion: resolution?.kind === "source-only" ? resolution.athenaVersion : null,
     } : withStandard(base, resolution))
   }

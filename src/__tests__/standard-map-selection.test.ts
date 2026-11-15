@@ -6,6 +6,36 @@ import { selectStandardMapResolutions } from "../../scripts/standard-map-selecti
 const version = "Athena test snapshot"
 
 describe("Athena standard-map selection", () => {
+  it("maps a code the vocabulary lacks through its nearest parent, and says so", () => {
+    const result = selectStandardMapResolutions({
+      vocabularyId: "ICD10",
+      codes: ["M15.81"],
+      sourceConcepts: [{ conceptId: 8, conceptCode: "M15.8", conceptName: "Other polyarthrosis", vocabularyId: "ICD10", standardConcept: null }],
+      relationships: [{ conceptId1: 8, conceptId2: 75897 }],
+      targets: new Map([[75897, { conceptId: 75897, conceptName: "Polyarthropathy", vocabularyId: "SNOMED" }]]),
+      athenaVersion: version,
+    }).get("M15.81")
+    expect(result).toMatchObject({ kind: "mapped", standard: {
+      standardConceptId: 75897, mappingMethod: "athena-parent-code-maps-to", mappingConfidence: 0.8,
+      mappingNotes: "Mapped through parent M15.8; the subdivision is kept in the source value only.",
+    } })
+  })
+
+  it("does not lift a code the vocabulary holds but does not map", () => {
+    const result = selectStandardMapResolutions({
+      vocabularyId: "ICD10",
+      codes: ["C79.5"],
+      sourceConcepts: [
+        { conceptId: 9, conceptCode: "C79.5", conceptName: "Secondary of bone", vocabularyId: "ICD10", standardConcept: null },
+        { conceptId: 10, conceptCode: "C79", conceptName: "Secondary of other sites", vocabularyId: "ICD10", standardConcept: null },
+      ],
+      relationships: [{ conceptId1: 10, conceptId2: 100 }],
+      targets: new Map([[100, { conceptId: 100, conceptName: "Secondary", vocabularyId: "SNOMED" }]]),
+      athenaVersion: version,
+    }).get("C79.5")
+    expect(result).toMatchObject({ kind: "source-only", mappingMethod: "athena-no-active-standard-target" })
+  })
+
   // NHIS keeps codes WHO retired (K35.0 was replaced in 2010); Athena keeps them
   // deprecated with a valid "Maps to" (2026-11-15).
   it("maps a retired code through its retired concept, and names the method", () => {
