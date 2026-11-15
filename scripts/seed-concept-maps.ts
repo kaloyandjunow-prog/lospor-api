@@ -498,7 +498,8 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
       where: {
         vocabularyId,
         conceptCode: { in: codeChunk },
-        invalidReason: null,
+        // Retired codes too: selectStandardMapResolutions uses one only when
+        // its code has no active concept (2026-11-15).
       },
       select: {
         conceptId: true,
@@ -506,6 +507,7 @@ async function resolveStandardMap(vocabularyId: string, codes: string[], athenaV
         conceptName: true,
         vocabularyId: true,
         standardConcept: true,
+        invalidReason: true,
       },
     }))
   }
@@ -707,7 +709,8 @@ async function main() {
   // stays source-only: it takes no number from its parent (decided 14 Sep 2026).
   const icdPack = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "src", "data", "icd10-omop.json"), "utf8"),
-  ) as { source: string; defaultVocabulary: string; maps: Record<string, number[]>; vocabularies: Record<string, string> }
+  ) as { source: string; defaultVocabulary: string; maps: Record<string, number[]>; vocabularies: Record<string, string>; deprecated?: string[] }
+  const retiredIcd = new Set(icdPack.deprecated ?? [])
   const bundledIcdStandard = (code: string): StandardMapResolution | undefined => {
     const ids = icdPack.maps[code]
     if (!ids?.length) return undefined
@@ -725,8 +728,10 @@ async function main() {
       standardConceptId: ids[0],
       // A number only: the bundle carries no SNOMED description.
       standardLabel: "",
-      mappingMethod: "bundled-icd10-maps-to",
-      mappingConfidence: 0.95,
+      // A code WHO has retired (K35.0) maps through its retired concept, which
+      // Athena keeps with a valid "Maps to"; named so a review can find them.
+      mappingMethod: retiredIcd.has(code) ? "bundled-icd10-deprecated-maps-to" : "bundled-icd10-maps-to",
+      mappingConfidence: retiredIcd.has(code) ? 0.9 : 0.95,
       athenaVersion: icdPack.source,
     } }
   }

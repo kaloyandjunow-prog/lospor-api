@@ -6,6 +6,38 @@ import { selectStandardMapResolutions } from "../../scripts/standard-map-selecti
 const version = "Athena test snapshot"
 
 describe("Athena standard-map selection", () => {
+  // NHIS keeps codes WHO retired (K35.0 was replaced in 2010); Athena keeps them
+  // deprecated with a valid "Maps to" (2026-11-15).
+  it("maps a retired code through its retired concept, and names the method", () => {
+    const result = selectStandardMapResolutions({
+      vocabularyId: "ICD10",
+      codes: ["K35.0"],
+      sourceConcepts: [{ conceptId: 5, conceptCode: "K35.0", conceptName: "Acute appendicitis with generalized peritonitis", vocabularyId: "ICD10", standardConcept: null, invalidReason: "D" }],
+      relationships: [{ conceptId1: 5, conceptId2: 196149 }],
+      targets: new Map([[196149, { conceptId: 196149, conceptName: "Acute appendicitis with generalized peritonitis", vocabularyId: "SNOMED" }]]),
+      athenaVersion: version,
+    }).get("K35.0")
+    expect(result).toMatchObject({ kind: "mapped", standard: { standardConceptId: 196149, mappingMethod: "athena-deprecated-code-maps-to", mappingConfidence: 0.9 } })
+  })
+
+  it("prefers an active concept over a retired one for the same code", () => {
+    const result = selectStandardMapResolutions({
+      vocabularyId: "ICD10",
+      codes: ["X01"],
+      sourceConcepts: [
+        { conceptId: 6, conceptCode: "X01", conceptName: "old meaning", vocabularyId: "ICD10", standardConcept: null, invalidReason: "U" },
+        { conceptId: 7, conceptCode: "X01", conceptName: "current meaning", vocabularyId: "ICD10", standardConcept: null },
+      ],
+      relationships: [{ conceptId1: 6, conceptId2: 60 }, { conceptId1: 7, conceptId2: 70 }],
+      targets: new Map([
+        [60, { conceptId: 60, conceptName: "Old", vocabularyId: "SNOMED" }],
+        [70, { conceptId: 70, conceptName: "Current", vocabularyId: "SNOMED" }],
+      ]),
+      athenaVersion: version,
+    }).get("X01")
+    expect(result).toMatchObject({ kind: "mapped", standard: { standardConceptId: 70, mappingMethod: "athena-exact-code-maps-to" } })
+  })
+
   it("accepts one exact active Maps to target", () => {
     const result = selectStandardMapResolutions({
       vocabularyId: "ICD10",

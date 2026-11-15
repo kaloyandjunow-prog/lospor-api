@@ -16,8 +16,16 @@
  *   maps[code]     every active standard target id of its "Maps to" rows,
  *                  ascending (one for most codes, several for a combination
  *                  such as E11.2, diabetes with kidney complication);
- *   vocabularies   the vocabulary of any target that is not SNOMED.
+ *   vocabularies   the vocabulary of any target that is not SNOMED;
+ *   deprecated     the codes mapped through a concept WHO has since retired.
  * Codes Athena does not have (the NHIS national extensions) are absent.
+ *
+ * A retired code still counts (2026-11-15). NHIS keeps codes from older WHO
+ * revisions -- K35.0, appendicitis with generalised peritonitis, was replaced in
+ * 2010 -- and Athena keeps them too, deprecated, with their "Maps to" still
+ * valid. Only an active concept used to count, so 64 such codes went out as
+ * concept 0 with a perfectly good SNOMED target sitting in the vocabulary. An
+ * active concept for the same code still wins over a retired one.
  */
 
 import fs from "node:fs"
@@ -49,10 +57,14 @@ if (!vocabularyLine) throw new Error("This Athena download has no ICD10 vocabula
 const version = vocabularyLine.split("\t")[3]
 
 // CONCEPT.csv: concept_id, name, domain, vocabulary, class, standard, code, start, end, invalid
-const source = new Map<string, string>()
+const active = new Map<string, string>()
+const retired = new Map<string, string>()
 await each("CONCEPT.csv", c => {
-  if (c[3] === "ICD10" && !c[9] && wanted.has(c[6])) source.set(c[0], c[6])
+  if (c[3] === "ICD10" && wanted.has(c[6])) (c[9] ? retired : active).set(c[0], c[6])
 })
+const activeCodes = new Set(active.values())
+const source = new Map([...active, ...[...retired].filter(([, code]) => !activeCodes.has(code))])
+const retiredIds = new Set([...retired.keys()].filter(id => source.has(id)))
 
 const mapsTo = new Map<string, Set<string>>()
 await each("CONCEPT_RELATIONSHIP.csv", r => {
@@ -70,18 +82,21 @@ await each("CONCEPT.csv", c => {
 
 const maps: Record<string, number[]> = {}
 const vocabularies: Record<string, string> = {}
-const counts = { one: 0, several: 0, noStandardTarget: 0, notInAthena: wanted.size - new Set(source.values()).size }
+const deprecated = new Set<string>()
+const counts = { one: 0, several: 0, noStandardTarget: 0, notInAthena: wanted.size - new Set(source.values()).size, retired: 0 }
 for (const [id, code] of source) {
   const standard = [...(mapsTo.get(id) ?? [])].filter(target => targets.has(target))
   if (standard.length === 0) { counts.noStandardTarget++; continue }
   const ids = [...new Set([...(maps[code] ?? []), ...standard.map(Number)])].sort((a, b) => a - b)
   maps[code] = ids
+  if (retiredIds.has(id)) deprecated.add(code)
   for (const target of standard) {
     const vocabulary = targets.get(target)!
     if (vocabulary !== "SNOMED") vocabularies[target] = vocabulary
   }
 }
 for (const ids of Object.values(maps)) counts[ids.length === 1 ? "one" : "several"]++
+counts.retired = deprecated.size
 
 const output = {
   source: `OHDSI Athena, ICD10 ${version}`,
@@ -89,6 +104,7 @@ const output = {
   defaultVocabulary: "SNOMED",
   maps: Object.fromEntries(Object.entries(maps).sort(([a], [b]) => a.localeCompare(b))),
   vocabularies,
+  deprecated: [...deprecated].sort((a, b) => a.localeCompare(b)),
 }
 fs.writeFileSync(path.join(process.cwd(), "src", "data", "icd10-omop.json"), `${JSON.stringify(output)}\n`)
 console.log(`ICD10 ${version}:`, counts)

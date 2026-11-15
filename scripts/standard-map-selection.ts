@@ -4,6 +4,8 @@ export type AthenaSourceConcept = {
   conceptName: string
   vocabularyId: string
   standardConcept: string | null
+  /** Set when WHO has retired the code; its "Maps to" may still be valid. */
+  invalidReason?: string | null
 }
 
 export type AthenaMapsToRelationship = {
@@ -21,7 +23,7 @@ export type StandardConceptMapping = {
   standardVocabulary: string
   standardConceptId: number
   standardLabel: string
-  mappingMethod: "athena-exact-standard-code" | "athena-exact-code-maps-to" | "bundled-icd10pcs-standard" | "bundled-icd10pcs-maps-to" | "bundled-icd10-maps-to" | "bundled-loinc-standard" | "bundled-atc-maps-to"
+  mappingMethod: "athena-exact-standard-code" | "athena-exact-code-maps-to" | "bundled-icd10pcs-standard" | "bundled-icd10pcs-maps-to" | "bundled-icd10-maps-to" | "bundled-icd10-deprecated-maps-to" | "athena-deprecated-code-maps-to" | "bundled-loinc-standard" | "bundled-atc-maps-to"
   mappingConfidence: number
   athenaVersion: string | null
 }
@@ -67,7 +69,12 @@ export function selectStandardMapResolutions(input: SelectionInput): Map<string,
     candidatesByCode.set(code, candidates)
   }
 
-  for (const source of input.sourceConcepts) {
+  // A retired source concept counts only when its code has no active one
+  // (2026-11-15): NHIS still uses codes WHO replaced, and Athena keeps their
+  // mapping. An active concept for the same code always wins.
+  const activeCodes = new Set(input.sourceConcepts.filter(source => !source.invalidReason).map(source => source.conceptCode))
+  const usable = input.sourceConcepts.filter(source => !source.invalidReason || !activeCodes.has(source.conceptCode))
+  for (const source of usable) {
     sourceById.set(source.conceptId, source)
     const sources = sourcesByCode.get(source.conceptCode) ?? []
     sources.push(source)
@@ -92,8 +99,8 @@ export function selectStandardMapResolutions(input: SelectionInput): Map<string,
       standardVocabulary: target.vocabularyId,
       standardConceptId: target.conceptId,
       standardLabel: target.conceptName,
-      mappingMethod: "athena-exact-code-maps-to",
-      mappingConfidence: 0.95,
+      mappingMethod: source.invalidReason ? "athena-deprecated-code-maps-to" : "athena-exact-code-maps-to",
+      mappingConfidence: source.invalidReason ? 0.9 : 0.95,
       athenaVersion: input.athenaVersion,
     })
   }

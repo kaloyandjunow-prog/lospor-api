@@ -32,7 +32,7 @@ describe("the bundled ICD-10 research numbers", () => {
     const words = new Set(JSON.stringify(pack).match(/[A-Za-z]{4,}/g))
     const allowed = new Set([
       "Athena", "Extension", "ICD10", "OHDSI", "OMOP", "Release", "SNOMED", "codes", "concept",
-      "defaultVocabulary", "descriptions", "maps", "note", "only", "source", "vocabularies",
+      "defaultVocabulary", "deprecated", "descriptions", "maps", "note", "only", "source", "vocabularies",
     ])
     expect([...words].filter(word => !allowed.has(word))).toEqual([])
   })
