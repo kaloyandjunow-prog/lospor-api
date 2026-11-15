@@ -38,9 +38,12 @@ export async function scanLabImage(input: {
   timeoutMs: number
 }): Promise<LabScanOutcome> {
   const local = input.local ?? EMPTY_LAB_SCAN_LOCAL
-  let response: Response
+  let response: Response | undefined
+  let body: unknown
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), input.timeoutMs)
+  // The answer's body is read inside the same timeout and the same catch (10.4.2): a 200
+  // whose body stalls, or is not JSON (a proxy's error page), was neither timed nor caught.
   try {
     response = await fetchMistralChatCompletions(input.apiKey, {
       model: input.model,
@@ -56,18 +59,20 @@ export async function scanLabImage(input: {
       response_format: { type: "json_object" },
       stream: false,
     }, { signal: controller.signal })
+    if (!response.ok) return { ok: false, kind: "provider", response }
+    body = await response.json()
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") return { ok: false, kind: "timeout" }
+    // The provider answered, but not in JSON: as unreadable as a model answer that is not.
+    if (response?.ok && error instanceof SyntaxError) return { ok: true, results: [], unreadable: true }
     return { ok: false, kind: "network", error }
   } finally {
     clearTimeout(timeout)
   }
-  if (!response.ok) return { ok: false, kind: "provider", response }
 
-  const json = await response.json()
-  const content: string = json.choices?.[0]?.message?.content ?? ""
+  const content = (body as { choices?: { message?: { content?: unknown } }[] } | null)?.choices?.[0]?.message?.content
   try {
-    return { ok: true, results: scannedRows(content, local), unreadable: false }
+    return { ok: true, results: scannedRows(typeof content === "string" ? content : "", local), unreadable: false }
   } catch {
     // Model output can contain clinical content: the caller reports only that it was unreadable.
     return { ok: true, results: [], unreadable: true }
