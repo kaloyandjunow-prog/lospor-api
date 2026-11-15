@@ -1,3 +1,4 @@
+import { losporConceptId } from "@/lib/omop-mapper/lospor-vocabulary"
 import { describe, expect, it } from "vitest"
 import { mapCasesToOmop } from "@/lib/omop-mapper"
 
@@ -17,8 +18,8 @@ describe("pediatric OMOP source preservation", () => {
     expect(bundle.metadata.schema_version).toBe("3.6.0")
     expect(bundle.person[0].year_of_birth).toBe(2026)
 
-    expect(observations.get("LOSPOR:CLINICAL_RULES_VERSION")?.value_as_string)
-      .toBe("2026.08.04-release.1")
+    // 2.9.0: the rules version is software provenance and no longer a patient row.
+    expect(observations.has("LOSPOR:CLINICAL_RULES_VERSION")).toBe(false)
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_string).toBe("14 DAYS")
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS")?.value_as_string)
       .toBe("14")
@@ -38,9 +39,9 @@ describe("pediatric OMOP source preservation", () => {
     expect(measurements.get("LOSPOR:PEDIATRIC_PAIN_FLACC_0_10")?.measurement_concept_id).toBe(3036118)
     expect(observations.get("LOSPOR:PAED_SCORE")?.value_as_number).toBe(7)
     // Steward (10.0.0) has no concept of its own, and is not filed under the
-    // Aldrete/PAR one: four numeric observations at concept 0.
+    // Aldrete/PAR one: four numeric observations, under LOSPOR's own concepts (2.9.0).
     for (const [code, value] of [["TOTAL", 5], ["CONSCIOUSNESS", 2], ["AIRWAY", 1], ["MOVEMENT", 2]] as const) {
-      expect(observations.get(`LOSPOR:STEWARD_${code}`)).toMatchObject({ observation_concept_id: 0, value_as_number: value })
+      expect(observations.get(`LOSPOR:STEWARD_${code}`)).toMatchObject({ observation_concept_id: losporConceptId(`LOSPOR:STEWARD_${code}`), value_as_number: value })
     }
     expect(measurements.has("LOSPOR:STEWARD_TOTAL")).toBe(false)
     expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS")?.value_as_number).toBe(14)
@@ -48,19 +49,19 @@ describe("pediatric OMOP source preservation", () => {
     expect(measurements.get("LOSPOR:BODY_SURFACE_AREA_M2")).toMatchObject({
       measurement_concept_id: 3005424, value_as_number: 0.35,
     })
-    // "14 DAYS" is a rendering, not a quantity: 14 alone would be meaningless
-    // without its unit, and the normalised age above is the numeric form.
-    expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")?.value_as_number).toBeNull()
+    // 2.9.0: the age as charted is Age (3022304) with its unit, so 14 means 14 days.
+    expect(observations.get("LOSPOR:AGE_AT_PROCEDURE_EXACT")).toMatchObject({ observation_concept_id: 3022304, value_as_number: 14, unit_concept_id: 8512 })
     // A nil-by-mouth assignment is a number of hours before surgery.
     expect(observations.get("LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS")?.value_as_number).toBe(1)
 
+    // No standard concept invented: these carry LOSPOR's own (2.9.0).
     for (const source of [
-      "LOSPOR:AGE_AT_PROCEDURE_EXACT",
       "LOSPOR:POVOC_SCORE",
       "LOSPOR:COLDS_SCORE",
       "LOSPOR:PAED_SCORE",
     ]) {
-      expect(observations.get(source)?.observation_concept_id).toBe(0)
+      expect(observations.get(source)?.observation_concept_id).toBe(losporConceptId(source))
+      expect(observations.get(source)?.observation_concept_id).toBeGreaterThanOrEqual(2_000_000_000)
     }
   })
 })

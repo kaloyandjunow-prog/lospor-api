@@ -97,6 +97,7 @@ import { DICTIONARY_VERSION } from "@/lib/data-dictionary"
 import { deriveQualityStatus } from "@lospor/core/omop"
 import { nextId, resetIds, pseudonymId } from "./omop-mapper/ids"
 import { inCaseZone, isoDate, isoInstant } from "./omop-mapper/date-helpers"
+import { losporConceptId } from "./omop-mapper/lospor-vocabulary"
 import {
   AIRWAY_ACTS,
   UNOBTAINABLE_CONCEPT_ID,
@@ -224,7 +225,10 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     const sourceObservation = (
       source: string,
       value: string | number | boolean | null | undefined,
-      date = startDate,
+      // A day, or the moment itself (2.9.0): an instant also fills
+      // observation_datetime, so a gas setting or a pump rate keeps its time
+      // instead of collapsing into the day it was made.
+      date: string | Date | null = startDate,
       // Where the exported text is a formatted rendering of a number — a
       // concentration written "0.5%" — the number is passed in rather than
       // parsed back out of the string.
@@ -242,14 +246,18 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
       // worse than an uncoded one, which is the lesson of every other concept
       // on this page.
       valueConceptId = 0,
+      unitConceptId = 0,
+      unitSourceValue: string | null = null,
     ) => {
       if (value == null || value === "") return
+      const at = date instanceof Date ? date : null
       observations.push({
         observation_id: nextId(),
         person_id: personId,
         observation_concept_id: conceptId,
         value_as_concept_id: valueConceptId,
-        observation_date: date,
+        observation_date: at ? isoDate(at) : date as string | null,
+        observation_datetime: at ? isoInstant(at) : null,
         observation_type_concept_id: 32817,
         // A boolean is not a measurement, so it stays text only: "true" in
         // value_as_number would be indistinguishable from a score of 1.
@@ -258,8 +266,8 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
         value_as_string: String(value),
         qualifier_concept_id: 0,
         qualifier_source_value: null,
-        unit_concept_id: 0,
-        unit_source_value: null,
+        unit_concept_id: unitConceptId,
+        unit_source_value: unitSourceValue,
         observation_source_value: source,
         visit_occurrence_id: visitId,
       })
@@ -435,7 +443,9 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     // Clinical mode is not exported -- see the module doc comment in
     // preop-clinical.ts's neighbouring history for why; kept here rather than
     // inside a domain module because it belongs to no one domain.
-    ctx.sourceObservation("LOSPOR:CLINICAL_RULES_VERSION", c.clinicalRulesVersion)
+    // The clinical rules version is provenance about the software, not a fact
+    // about the patient, and no longer leaves as an observation (2.9.0); the
+    // batch manifest names the versions it was written with.
 
     if (c.preop) mapPreopClinicalToOmop(ctx, c, c.preop)
     mapPlannedProcedureAndMedicationsToOmop(ctx, c, c.preop)
@@ -445,6 +455,16 @@ export function mapCasesToOmop(cases: CaseRow[], ctx?: ExportContext): OmopBundl
     mapComplicationsToOmop(ctx, c)
     if (c.postop) mapPostopToOmop(ctx, c, c.postop)
   })
+
+  // What the OHDSI vocabularies cannot name, LOSPOR's own vocabulary does
+  // (2.9.0): a row left at concept 0 takes its LOSPOR concept, whichever
+  // domain module wrote it. A row with a standard concept is never touched.
+  for (const row of observations) {
+    if (!row.observation_concept_id) row.observation_concept_id = losporConceptId(row.observation_source_value, row.value_as_string)
+  }
+  for (const row of measurements) {
+    if (!row.measurement_concept_id) row.measurement_concept_id = losporConceptId(row.measurement_source_value)
+  }
 
   const tableCounts = {
     person: persons.length,

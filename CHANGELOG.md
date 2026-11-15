@@ -1,5 +1,35 @@
 # Changelog - LOSPOR API
 
+## [Unreleased]
+
+### Changed — OMOP export (exchange contract 2.9.0, data dictionary 4.12.0)
+
+Found by a 200-case end-to-end export through a Hospital appliance and Central on 2026-11-15.
+
+- **Times.** `observation_datetime`, `device_exposure_start_datetime`/`_end_datetime` and
+  `procedure_end_date`/`_end_datetime` are exported.
+  - Gas settings, pump rates, TCI targets, drug concentrations, a failed line and resuscitation events keep
+    their moment.
+  - An airway device and a blood unit keep their time in and out.
+  - Monitoring runs from the anaesthesia start to its end.
+  - General anaesthesia is timed at the Induction marker, else at the anaesthesia start.
+  - Positions charted on the timeline leave at the moment each began, instead of as an untimed list.
+- **One row per fact.** The technique, airway device, airway tool and ventilation mode used to leave a second,
+  concept-0 observation beside the procedure, device or measurement that already carried them. Those
+  observations are gone.
+- **Standard concepts that were not used.**
+  - Blood loss is 4254486 Estimated blood loss, in mL.
+  - A drug allergy is 439224 Allergy to drug, with the drug as its value.
+  - The charted age is 3022304 Age, in its own unit and in days.
+- **LOSPOR's own vocabulary.** What the OHDSI vocabularies cannot name now carries a LOSPOR concept at or above
+  2,000,000,000 instead of 0: Aldrete items, Apfel, POVOC, COLDS, Steward, PAED, NIPS items, TCI settings, fluid
+  totals, line details and others.
+  - The vocabulary ships as `data/omop/LOSPOR_CONCEPT.csv` (Athena CONCEPT format), generated from
+    `src/lib/omop-mapper/lospor-vocabulary.ts`.
+  - Ids are permanent.
+- **Provenance leaves the patient rows.** Rule, preset and dose-calculation provenance and the clinical rules
+  version stay in LOSPOR's audit and are no longer OMOP observations.
+
 ## [10.4.2] - 2026-11-15
 
 ### Fixed

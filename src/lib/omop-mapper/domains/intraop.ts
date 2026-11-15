@@ -61,7 +61,8 @@ export function mapIntraopToOmop(
   // its own time in and out and its state in the source value. A case saved
   // before has no entries and keeps the one row per kind it always had.
   const airwayEntries = airwayDeviceEntriesOf({ airwayDevices: devices, airwayDeviceEntries: ia.airwayDeviceEntries })
-  for (const device of devices) ctx.sourceObservation("LOSPOR:AIRWAY_DEVICE", device)
+  // The device used to leave twice: as this concept-0 observation and as the
+  // DEVICE_EXPOSURE row below, which carries its concept (2.9.0 keeps only that).
   // The device itself, alongside the act of placing it. Both are true and
   // they answer different questions -- see OmopDevice.
   for (const entry of airwayEntries) {
@@ -71,6 +72,9 @@ export function mapIntraopToOmop(
       device_concept_id:          AIRWAY_DEVICE_CONCEPTS[entry.device] ?? 0,
       device_exposure_start_date: entry.insertedAt ? isoDate(new Date(entry.insertedAt)) : ctx.startDate,
       device_exposure_end_date:   entry.endedAt ? isoDate(new Date(entry.endedAt)) : ctx.endDate,
+      // 2.9.0: the moments themselves, where the entry recorded them.
+      device_exposure_start_datetime: entry.insertedAt ? isoInstant(new Date(entry.insertedAt)) : null,
+      device_exposure_end_datetime:   entry.endedAt ? isoInstant(new Date(entry.endedAt)) : null,
       device_type_concept_id:     32817,
       quantity:                   null,
       device_source_value:        "AIRWAY_DEVICE:" + entry.device + (entry.status === "in_use" ? "" : ":" + entry.status),
@@ -85,8 +89,9 @@ export function mapIntraopToOmop(
   // rather than a LOSPOR-only code. There is no unobtainable flag on the
   // intraoperative record: an absent grade means no direct laryngoscopy.
   ctx.emitAirwayGrade("cormackLehane", ia.cormackLehane, ctx.startDate, false)
+  // The tool is a DEVICE_EXPOSURE row with its concept; the concept-0
+  // observation that repeated it went in 2.9.0.
   for (const tool of strList(ia.airwayTools)) {
-    ctx.sourceObservation("LOSPOR:AIRWAY_TOOL", tool)
     ctx.devices.push({
       device_exposure_id:         nextId(),
       person_id:                  ctx.personId,
@@ -350,6 +355,9 @@ export function mapIntraopToOmop(
       : techConceptId === TECHNIQUE_CONCEPTS.SPINAL ? clinicalEventTimestamp("Spinal in")
       : techConceptId === TECHNIQUE_CONCEPTS.EPIDURAL ? clinicalEventTimestamp("Epidural in")
       : (peripheralBlockTechs.length === 1 && tech === peripheralBlockTechs[0]) ? blockDoneTs
+      // 2.9.0: general anaesthesia begins at induction; a chart without that
+      // marker has the anaesthesia start, which is where induction sits.
+      : isUnderTechniqueNode(tech, "GENERAL") ? clinicalEventTimestamp("Induction") ?? ia.startedAt ?? undefined
       : undefined
     ctx.procedures.push({
       procedure_occurrence_id:    nextId(),
@@ -568,11 +576,11 @@ export function mapIntraopToOmop(
           suggestion_source_value:   suggestionOf(ev),
         })
       }
-      ctx.sourceObservation("LOSPOR:FGF_L_PER_MIN", ev.fgfLitersPerMin, isoDate(ev.timestamp),
+      ctx.sourceObservation("LOSPOR:FGF_L_PER_MIN", ev.fgfLitersPerMin, ev.timestamp,
         ev.fgfLitersPerMin, 4108006)
-      ctx.sourceObservation("LOSPOR:FIN2O_PERCENT", ev.fiN2OPercent, isoDate(ev.timestamp),
+      ctx.sourceObservation("LOSPOR:FIN2O_PERCENT", ev.fiN2OPercent, ev.timestamp,
         ev.fiN2OPercent, 4354273)
-      ctx.sourceObservation("LOSPOR:CARRIER_GAS", ev.carrierGas, isoDate(ev.timestamp))
+      ctx.sourceObservation("LOSPOR:CARRIER_GAS", ev.carrierGas, ev.timestamp)
     }
     // fluid_start joins the administration types: the volume and category
     // were selected from the database and then discarded, leaving only case
@@ -604,6 +612,9 @@ export function mapIntraopToOmop(
             device_concept_id:          fluid.conceptId,
             device_exposure_start_date: givenOn,
             device_exposure_end_date:   endFor(ev, index) ?? givenOn,
+            // 2.9.0: when the unit went up and when it was finished.
+            device_exposure_start_datetime: isoInstant(ev.timestamp),
+            device_exposure_end_datetime:   isoInstant(endAtFor(ev, index)),
             device_type_concept_id:     32817,
             // The CDM column is an integer, and a unit is charted in whole mL.
             quantity:                   volume == null ? null : Math.round(volume),
@@ -691,15 +702,15 @@ export function mapIntraopToOmop(
     if (ev.type === "infusion_start") {
       const pumpRate = numOrNull(meta.volumeRateMlPerHour)
       const syringe = ev.concentration ?? (typeof meta.concentration === "string" ? meta.concentration : null)
-      if (pumpRate != null) ctx.sourceObservation("LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR", String(pumpRate), isoDate(ev.timestamp), pumpRate)
-      if (syringe) ctx.sourceObservation("LOSPOR:INFUSION_STRENGTH", syringe, isoDate(ev.timestamp), null)
+      if (pumpRate != null) ctx.sourceObservation("LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR", String(pumpRate), ev.timestamp, pumpRate)
+      if (syringe) ctx.sourceObservation("LOSPOR:INFUSION_STRENGTH", syringe, ev.timestamp, null)
       if (tci) {
-        const on = isoDate(ev.timestamp)
+        const on = ev.timestamp
         ctx.sourceObservation("LOSPOR:TCI_MODEL", tci.model, on, null)
         ctx.sourceObservation("LOSPOR:TCI_SITE", tci.site, on, null)
         if (typeof tci.opioids === "boolean") ctx.sourceObservation("LOSPOR:TCI_WITH_OPIOIDS", String(tci.opioids), on, null)
         for (const target of tci.targets) {
-          ctx.sourceObservation("LOSPOR:TCI_TARGET", String(target.target), isoDate(new Date(target.atMs)), target.target)
+          ctx.sourceObservation("LOSPOR:TCI_TARGET", String(target.target), new Date(target.atMs), target.target)
         }
         if (tci.total?.calculated != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_CALCULATED", String(tci.total.calculated), on, tci.total.calculated)
         if (tci.total?.pump != null) ctx.sourceObservation("LOSPOR:TCI_TOTAL_PUMP", String(tci.total.pump), on, tci.total.pump)
@@ -716,28 +727,13 @@ export function mapIntraopToOmop(
       const auditObservations: Array<[string, string | null | undefined, number | null]> = [
         ["LOSPOR:DRUG_CONCENTRATION", concentration, ev.concentrationValue ?? null],
         ["LOSPOR:DRUG_FORMULATION", ev.formulation, null],
-        ["LOSPOR:DOSE_CALCULATION_BASIS", ev.calculationBasis, null],
-        ["LOSPOR:DOSE_CALCULATION_METHOD", ev.calculationMethod, null],
-        ["LOSPOR:CLINICAL_RULE_KEY", ev.clinicalRuleKey, null],
-        ["LOSPOR:CLINICAL_RULE_VERSION", ev.clinicalRuleVersion, null],
-        ["LOSPOR:CLINICAL_PRESET_ID", ev.clinicalPresetId, null],
-        [
-          "LOSPOR:CLINICAL_PRESET_VERSION",
-          ev.clinicalPresetVersion == null ? null : String(ev.clinicalPresetVersion),
-          ev.clinicalPresetVersion ?? null,
-        ],
-        ["LOSPOR:CLINICAL_PRESET_SCOPE", ev.clinicalPresetScope, null],
-        [
-          "LOSPOR:CLINICAL_RULE_SOURCE_IDS",
-          Array.isArray(ev.clinicalRuleSourceIds)
-            ? ev.clinicalRuleSourceIds.filter(value => typeof value === "string").join("|")
-            : null,
-          null,
-        ],
+        // 2.9.0: which rule, preset and dose method produced the number is
+        // provenance about the software, not a fact about the patient; it stays
+        // in LOSPOR's own event audit and no longer leaves as an observation.
       ]
       for (const [source, value, numericValue] of auditObservations) {
         if (!value) continue
-        ctx.sourceObservation(source, value, isoDate(ev.timestamp), numericValue)
+        ctx.sourceObservation(source, value, ev.timestamp, numericValue)
       }
       if (ev.calculationWeightKg != null) {
         ctx.measurements.push({
@@ -879,7 +875,7 @@ export function mapIntraopToOmop(
     // here. Its insertion (or history) stands; the failure is its own
     // observation, at the time it failed.
     if (line.failed) {
-      ctx.sourceObservation(`${lineSource}:failed`, true, line.failedAt ? isoDate(line.failedAt) : ctx.startDate)
+      ctx.sourceObservation(`${lineSource}:failed`, true, line.failedAt ? new Date(line.failedAt) : ctx.startDate)
     }
     // Depth and lumen count were selected and discarded. The pre-existing
     // flag is kept alongside the coded history above: it is the per-line
@@ -980,7 +976,10 @@ export function mapIntraopToOmop(
   // a collection window this records nothing about -- what is stored is a
   // case total.
   ctx.sourceMeasurement("LOSPOR:URINE_OUTPUT_ML", ia.urineMl, 3014315, 8587, "mL", ctx.endDate)
-  ctx.sourceObservation("LOSPOR:BLOOD_LOSS_ML", ia.bloodLossMl, ctx.endDate)
+  // 4254486, Estimated blood loss (SNOMED, Observation domain), in mL (8587),
+  // at the end of the case: it is the estimate for the whole case.
+  ctx.sourceObservation("LOSPOR:BLOOD_LOSS_ML", ia.bloodLossMl, ctx.endDateTime ? new Date(ctx.endDateTime) : ctx.endDate,
+    numOrNull(ia.bloodLossMl), 4254486, 0, 8587, "mL")
 
 
   // ── Lab draws taken during the case -> MEASUREMENT ────────────────────
@@ -1078,7 +1077,7 @@ function mapResuscitationAndJetToOmop(ctx: CaseMapperCtx, c: CaseRow, placedByEn
     suggestion_source_value:   suggestionOf(ev),
   })
   const observation = (ev: typeof events[number], source: string, conceptId: number) => {
-    ctx.sourceObservation(source, true, isoDate(ev.timestamp), null, conceptId)
+    ctx.sourceObservation(source, true, ev.timestamp, null, conceptId)
     const row = ctx.observations[ctx.observations.length - 1]
     if (row) row.suggestion_source_value = suggestionOf(ev)
   }

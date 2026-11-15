@@ -89,7 +89,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.11.0"
+export const DICTIONARY_VERSION = "4.12.0"
 
 export interface DictionaryEntry {
   name: string
@@ -1206,8 +1206,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "airwayDevice",
-    exportName: "observation.value_as_string (LOSPOR:AIRWAY_DEVICE) + device_exposure.device_concept_id",
-    // The device also leaves as a device_exposure row carrying its Device-domain concept, which is the CDM table for a thing that was in the patient. Both are emitted on purpose: the observation preserves the exact option the anaesthetist chose, and the device_exposure row is what a concept-set search can actually find.
+    exportName: "device_exposure.device_concept_id (AIRWAY_DEVICE:<device>)",
+    // 4.12.0: the device leaves once, as its device_exposure row, whose source value keeps the exact option chosen. The concept-0 observation that repeated it is gone.
     meaning: "Airway device used. One row per device; the legacy single-device column and the current device list are merged and de-duplicated, so a case written across that change exports each device once.",
     type: "string",
     allowedValues: "FACE_MASK | OPA | NPA | LMA | ORAL_ETT | NASAL_ETT | DOUBLE_LUMEN_TUBE | ENDOBRONCHIAL_TUBE | SURGICAL_AIRWAY",
@@ -1264,8 +1264,8 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "airwayTools",
-    exportName: "observation.value_as_string (LOSPOR:AIRWAY_TOOL) + device_exposure.device_concept_id",
-    // The device also leaves as a device_exposure row carrying its Device-domain concept, which is the CDM table for a thing that was in the patient. Both are emitted on purpose: the observation preserves the exact option the anaesthetist chose, and the device_exposure row is what a concept-set search can actually find.
+    exportName: "device_exposure.device_concept_id (AIRWAY_TOOL:<tool>)",
+    // 4.12.0: the tool leaves once, as its device_exposure row. The concept-0 observation that repeated it is gone.
     meaning: "Instruments and techniques used to secure the airway. One row per tool.",
     type: "string",
     allowedValues: "VIDEO_LARY | DIRECT_LARY | FOB | BOUGIE | STYLET | AWAKE | RETROGRADE | SUPRAGLOTTIC",
@@ -1549,7 +1549,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   {
     name: "bloodLossMl",
     exportName: "observation.value_as_number (LOSPOR:BLOOD_LOSS_ML)",
-    meaning: "Estimated blood loss during the procedure",
+    meaning: "Estimated blood loss during the procedure. Coded 4254486 (Estimated blood loss, SNOMED) with unit 8587 (mL), timed at the end of the case (4.12.0)",
     unit: "mL",
     type: "integer",
     allowedValues: "0–20000",
@@ -1864,10 +1864,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.calculationBasis",
-    exportName: "observation.value_as_string (LOSPOR:DOSE_CALCULATION_BASIS)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Body-size basis used to calculate the selected dose",
     type: "string",
-    missingnessRule: "NULL = manual dose or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "calculationBasis",
     versionIntroduced: "3.1.0",
   },
@@ -1883,65 +1885,79 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
   },
   {
     name: "event.calculationMethod",
-    exportName: "observation.value_as_string (LOSPOR:DOSE_CALCULATION_METHOD)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Versioned method used to derive dose inputs, such as McLaren or Devine",
     type: "string",
-    missingnessRule: "NULL = direct/manual calculation or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "calculationMethod",
     versionIntroduced: "3.1.0",
   },
   {
     name: "event.clinicalRuleKey",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_RULE_KEY)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Stable route-profile rule identifier used for the dose selection",
     type: "string",
-    missingnessRule: "NULL = manual or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "clinicalRuleKey",
     versionIntroduced: "3.1.0",
   },
   {
     name: "event.clinicalRuleVersion",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_RULE_VERSION)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Immutable version of the selected route-profile rule",
     type: "string",
-    missingnessRule: "NULL = manual or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "clinicalRuleVersion",
     versionIntroduced: "3.1.0",
   },
   {
     name: "event.clinicalRuleSourceIds",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_RULE_SOURCE_IDS)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Ordered immutable ruleset/source identifiers contributing to the selected rule",
     type: "json",
-    missingnessRule: "NULL = manual or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "clinicalRuleSourceIds",
     versionIntroduced: "3.1.0",
   },
   {
     name: "event.clinicalPresetId",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_PRESET_ID)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Immutable effective ruleset snapshot identifier used when selecting the dose",
     type: "string",
-    missingnessRule: "NULL = manual or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "clinicalPresetId",
     versionIntroduced: "3.1.0",
   },
   {
     name: "event.clinicalPresetVersion",
-    exportName: "observation.value_as_number (LOSPOR:CLINICAL_PRESET_VERSION)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Version number of the effective ruleset snapshot",
     type: "integer",
-    missingnessRule: "NULL = manual or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "clinicalPresetVersion",
     versionIntroduced: "3.1.0",
   },
   {
     name: "event.clinicalPresetScope",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_PRESET_SCOPE)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Scope from which the effective ruleset snapshot was selected",
     type: "enum",
     allowedValues: "PLATFORM | INSTITUTION | USER",
-    missingnessRule: "NULL = manual or legacy event",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "CaseEvent", sourceColumn: "clinicalPresetScope",
     versionIntroduced: "3.1.0",
   },
@@ -3210,10 +3226,12 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
 
   {
     name: "clinicalRulesVersion",
-    exportName: "observation.value_as_string (LOSPOR:CLINICAL_RULES_VERSION)",
+    // 4.12.0: software provenance, kept in LOSPOR's own audit; no longer a patient row in OMOP.
+    exportName: "(not exported)",
+    exported: false,
     meaning: "Version of the clinical ruleset snapshot the case was documented against, which fixes the doses the chart was suggesting at the time",
     type: "string",
-    missingnessRule: "No row = the case predates ruleset versioning",
+    missingnessRule: "Never present in the OMOP export since 4.12.0; it stays in LOSPOR's own event audit",
     sourceTable: "Case", sourceColumn: "clinicalRulesVersion",
     versionIntroduced: "4.0.0",
   },

@@ -46,10 +46,13 @@ export type CaseMapperCtx = {
   sourceObservation: (
     source: string,
     value: string | number | boolean | null | undefined,
-    date?: string | null,
+    /** A day, or the moment itself, which also fills observation_datetime (2.9.0). */
+    date?: string | Date | null,
     numericValue?: number | null,
     conceptId?: number,
     valueConceptId?: number,
+    unitConceptId?: number,
+    unitSourceValue?: string | null,
   ) => void
   /** A numeric MEASUREMENT row with a concept and a unit, skipped when `value` is null. */
   sourceMeasurement: (

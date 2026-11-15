@@ -1,0 +1,77 @@
+concept_id	concept_name	domain_id	vocabulary_id	concept_class_id	standard_concept	concept_code	valid_start_date	valid_end_date	invalid_reason
+2000000001	Laryngeal mask airway size	Observation	LOSPOR	Clinical Observation	S	LOSPOR:LMA_SIZE	20261115	20991231	
+2000000002	Double-lumen tube type	Observation	LOSPOR	Clinical Observation	S	LOSPOR:DLT_TYPE	20261115	20991231	
+2000000003	Double-lumen tube side	Observation	LOSPOR	Clinical Observation	S	LOSPOR:DLT_SIDE	20261115	20991231	
+2000000004	Double-lumen tube size	Observation	LOSPOR	Clinical Observation	S	LOSPOR:DLT_SIZE	20261115	20991231	
+2000000005	Endobronchial tube size	Observation	LOSPOR	Clinical Observation	S	LOSPOR:ENDOBRONCHIAL_TUBE_SIZE	20261115	20991231	
+2000000006	Difficult airway note	Observation	LOSPOR	Clinical Observation	S	LOSPOR:DIFFICULT_AIRWAY_NOTES	20261115	20991231	
+2000000007	Upper lip bite test class	Observation	LOSPOR	Staging / Scales	S	LOSPOR:UPPER_LIP_BITE_TEST	20261115	20991231	
+2000000008	Facial hair present	Observation	LOSPOR	Clinical Observation	S	LOSPOR:FACIAL_HAIR	20261115	20991231	
+2000000009	Carrier gas	Observation	LOSPOR	Clinical Observation	S	LOSPOR:CARRIER_GAS	20261115	20991231	
+2000000010	Fraction of inspired air	Measurement	LOSPOR	Clinical Observation	S	LOSPOR:FIAIR_PERCENT	20261115	20991231	
+2000000011	Intraoperative crystalloid volume, case total	Observation	LOSPOR	Clinical Observation	S	LOSPOR:CRYSTALLOIDS_ML	20261115	20991231	
+2000000012	Intraoperative colloid volume, case total	Observation	LOSPOR	Clinical Observation	S	LOSPOR:COLLOIDS_ML	20261115	20991231	
+2000000013	Intraoperative blood product volume, case total	Observation	LOSPOR	Clinical Observation	S	LOSPOR:BLOOD_PRODUCTS_ML	20261115	20991231	
+2000000014	Intraoperative drug infusion volume, case total	Observation	LOSPOR	Clinical Observation	S	LOSPOR:DRUG_INFUSIONS_ML	20261115	20991231	
+2000000015	Blood product unit volume	Observation	LOSPOR	Clinical Observation	S	LOSPOR:BLOOD_PRODUCT_UNIT_ML	20261115	20991231	
+2000000016	Infusion pump rate	Observation	LOSPOR	Clinical Observation	S	LOSPOR:INFUSION_PUMP_RATE_ML_PER_HOUR	20261115	20991231	
+2000000017	Infusion syringe strength	Observation	LOSPOR	Clinical Observation	S	LOSPOR:INFUSION_STRENGTH	20261115	20991231	
+2000000018	Target-controlled infusion model	Observation	LOSPOR	Clinical Observation	S	LOSPOR:TCI_MODEL	20261115	20991231	
+2000000019	Target-controlled infusion target site	Observation	LOSPOR	Clinical Observation	S	LOSPOR:TCI_SITE	20261115	20991231	
+2000000020	Target-controlled infusion with opioid interaction	Observation	LOSPOR	Clinical Observation	S	LOSPOR:TCI_WITH_OPIOIDS	20261115	20991231	
+2000000021	Target-controlled infusion target concentration	Observation	LOSPOR	Clinical Observation	S	LOSPOR:TCI_TARGET	20261115	20991231	
+2000000022	Target-controlled infusion total dose, calculated	Observation	LOSPOR	Clinical Observation	S	LOSPOR:TCI_TOTAL_CALCULATED	20261115	20991231	
+2000000023	Target-controlled infusion total dose, from the pump	Observation	LOSPOR	Clinical Observation	S	LOSPOR:TCI_TOTAL_PUMP	20261115	20991231	
+2000000024	Target-controlled infusion total volume, from the pump	Observation	LOSPOR	Clinical Observation	S	LOSPOR:TCI_TOTAL_PUMP_ML	20261115	20991231	
+2000000025	Drug concentration as given	Observation	LOSPOR	Clinical Observation	S	LOSPOR:DRUG_CONCENTRATION	20261115	20991231	
+2000000026	Drug formulation baricity	Observation	LOSPOR	Clinical Observation	S	LOSPOR:DRUG_FORMULATION	20261115	20991231	
+2000000027	Weight used for dose calculation	Measurement	LOSPOR	Clinical Observation	S	LOSPOR:DOSE_CALCULATION_WEIGHT_KG	20261115	20991231	
+2000000028	Premedication phase	Observation	LOSPOR	Clinical Observation	S	LOSPOR:PREMEDICATION_PHASE	20261115	20991231	
+2000000029	Premedication order phase	Observation	LOSPOR	Clinical Observation	S	LOSPOR:PREMEDICATION_ORDER_PHASE	20261115	20991231	
+2000000030	Vascular access insertion depth	Observation	LOSPOR	Clinical Observation	S	LOSPOR:VASCULAR_ACCESS_DEPTH_CM	20261115	20991231	
+2000000031	Vascular access lumen count	Observation	LOSPOR	Clinical Observation	S	LOSPOR:VASCULAR_ACCESS_LUMENS	20261115	20991231	
+2000000032	Vascular access present on arrival	Observation	LOSPOR	Clinical Observation	S	LOSPOR:VASCULAR_ACCESS_PREEXISTING	20261115	20991231	
+2000000033	Vascular access attempt failed	Observation	LOSPOR	Clinical Observation	S	LOSPOR:VASCULAR_ACCESS_FAILED	20261115	20991231	
+2000000034	Bispectral index monitoring	Observation	LOSPOR	Clinical Observation	S	LOSPOR:INTRAOP_MONITORING=bis	20261115	20991231	
+2000000035	Spectral entropy monitoring	Observation	LOSPOR	Clinical Observation	S	LOSPOR:INTRAOP_MONITORING=entropyMonitor	20261115	20991231	
+2000000036	End-tidal carbon dioxide monitoring	Observation	LOSPOR	Clinical Observation	S	LOSPOR:INTRAOP_MONITORING=etco2Monitor	20261115	20991231	
+2000000037	Aldrete activity score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:ALDRETE_ACTIVITY	20261115	20991231	
+2000000038	Aldrete respiration score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:ALDRETE_RESPIRATION	20261115	20991231	
+2000000039	Aldrete circulation score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:ALDRETE_CIRCULATION	20261115	20991231	
+2000000040	Aldrete consciousness score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:ALDRETE_CONSCIOUSNESS	20261115	20991231	
+2000000041	Aldrete oxygen saturation score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:ALDRETE_SPO2	20261115	20991231	
+2000000042	Steward consciousness score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:STEWARD_CONSCIOUSNESS	20261115	20991231	
+2000000043	Steward airway score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:STEWARD_AIRWAY	20261115	20991231	
+2000000044	Steward movement score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:STEWARD_MOVEMENT	20261115	20991231	
+2000000045	Steward recovery score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:STEWARD_TOTAL	20261115	20991231	
+2000000046	Pediatric Anesthesia Emergence Delirium score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:PAED_SCORE	20261115	20991231	
+2000000047	PAED eye contact item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:PAED_EYE_CONTACT	20261115	20991231	
+2000000048	PAED purposeful actions item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:PAED_PURPOSEFUL	20261115	20991231	
+2000000049	PAED awareness of surroundings item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:PAED_AWARE	20261115	20991231	
+2000000050	PAED restlessness item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:PAED_RESTLESS	20261115	20991231	
+2000000051	PAED inconsolability item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:PAED_INCONSOLABLE	20261115	20991231	
+2000000052	NIPS facial expression item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:NIPS_FACIAL_EXPRESSION	20261115	20991231	
+2000000053	NIPS cry item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:NIPS_CRY	20261115	20991231	
+2000000054	NIPS breathing pattern item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:NIPS_BREATHING	20261115	20991231	
+2000000055	NIPS arms item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:NIPS_ARMS	20261115	20991231	
+2000000056	NIPS legs item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:NIPS_LEGS	20261115	20991231	
+2000000057	NIPS state of arousal item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:NIPS_AROUSAL	20261115	20991231	
+2000000058	Apfel postoperative nausea and vomiting risk score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:APFEL	20261115	20991231	
+2000000059	Postoperative vomiting in children score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:POVOC_SCORE	20261115	20991231	
+2000000060	Postoperative vomiting in children risk	Observation	LOSPOR	Clinical Observation	S	LOSPOR:POVOC_RISK_PERCENT	20261115	20991231	
+2000000061	POVOC age 3 years or older	Observation	LOSPOR	Clinical Observation	S	LOSPOR:POVOC_AGE_3_YEARS	20261115	20991231	
+2000000062	COLDS respiratory risk score	Observation	LOSPOR	Staging / Scales	S	LOSPOR:COLDS_SCORE	20261115	20991231	
+2000000063	COLDS current symptoms item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:COLDS_CURRENT_SYMPTOMS	20261115	20991231	
+2000000064	COLDS onset of symptoms item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:COLDS_ONSET	20261115	20991231	
+2000000065	COLDS lung disease item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:COLDS_LUNG_DISEASE	20261115	20991231	
+2000000066	COLDS airway device item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:COLDS_AIRWAY_DEVICE	20261115	20991231	
+2000000067	COLDS surgery item	Observation	LOSPOR	Staging / Scales	S	LOSPOR:COLDS_SURGERY	20261115	20991231	
+2000000068	Gupta perioperative myocardial infarction or cardiac arrest risk	Observation	LOSPOR	Clinical Observation	S	LOSPOR:GUPTA_MICA_RISK_PERCENT	20261115	20991231	
+2000000069	Pediatric preoperative fasting time	Observation	LOSPOR	Clinical Observation	S	LOSPOR:PEDIATRIC_NPO_HOURS	20261115	20991231	
+2000000070	Family history of anaesthetic problems, details	Observation	LOSPOR	Clinical Observation	S	LOSPOR:FAMILY_ANAESTHESIA_DETAILS	20261115	20991231	
+2000000071	Allergy details	Observation	LOSPOR	Clinical Observation	S	LOSPOR:ALLERGY_DETAILS	20261115	20991231	
+2000000072	Laboratory abnormal flag	Observation	LOSPOR	Clinical Observation	S	LOSPOR:LAB_ABNORMAL_FLAG	20261115	20991231	
+2000000073	Preoperative complication note	Observation	LOSPOR	Clinical Observation	S	LOSPOR:PREOP_COMPLICATION_NOTE	20261115	20991231	
+2000000074	Intraoperative complication note	Observation	LOSPOR	Clinical Observation	S	LOSPOR:INTRAOP_COMPLICATION_NOTE	20261115	20991231	
+2000000075	Postoperative complication note	Observation	LOSPOR	Clinical Observation	S	LOSPOR:POSTOP_COMPLICATION_NOTE	20261115	20991231	
+2000000076	Defibrillation energy delivered	Measurement	LOSPOR	Clinical Observation	S	LOSPOR:DEFIBRILLATION_ENERGY_J	20261115	20991231	

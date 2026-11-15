@@ -10,6 +10,9 @@ import { guptaRiskPercent } from "@/lib/preop/gupta-record"
 import { isoDate } from "../date-helpers"
 import { nextId } from "../ids"
 
+/** UCUM day, month and year (verified in the vocabulary), for an age charted in its own unit. */
+const AGE_UNIT_CONCEPTS: Record<string, number> = { DAYS: 8512, MONTHS: 9580, YEARS: 9448 }
+
 /** Preoperative vitals, labs, comorbidities, diagnoses, risk scores and findings. */
 /**
  * One condition row per standard concept. OMOP decomposes some ICD-10
@@ -27,9 +30,14 @@ export function mapPreopClinicalToOmop(
 ): void {
   const vitDate = isoDate(c.createdAt)
   if (preop.ageValue != null && preop.ageUnit) {
-    ctx.sourceObservation("LOSPOR:AGE_AT_PROCEDURE_EXACT", `${preop.ageValue} ${preop.ageUnit}`, vitDate)
+    // 3022304, Age (LOINC 30525-0, Observation domain): the age as charted,
+    // in its own unit -- a neonate in days, an infant in months (2.9.0).
+    ctx.sourceObservation("LOSPOR:AGE_AT_PROCEDURE_EXACT", `${preop.ageValue} ${preop.ageUnit}`, vitDate,
+      preop.ageValue, 3022304, 0, AGE_UNIT_CONCEPTS[preop.ageUnit] ?? 0, preop.ageUnit.toLowerCase())
   }
-  ctx.sourceObservation("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS", preop.ageApproxDays, vitDate)
+  // The same age in days (8512), for comparing patients charted in different units.
+  ctx.sourceObservation("LOSPOR:AGE_AT_PROCEDURE_APPROX_DAYS", preop.ageApproxDays, vitDate,
+    preop.ageApproxDays, 3022304, 0, 8512, "day")
   // 3005424, Body surface area -- a Measurement-domain concept, so it
   // moves out of observation.
   ctx.sourceMeasurement("LOSPOR:BODY_SURFACE_AREA_M2", preop.bodySurfaceAreaM2, 3005424, 8617, "m2", vitDate)
