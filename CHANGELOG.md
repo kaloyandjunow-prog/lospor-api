@@ -1,5 +1,22 @@
 # Changelog - LOSPOR API
 
+## [10.4.2] - 2026-11-15
+
+### Fixed
+
+- **Unit indicators counted the first hours of a day on the day before.** The period is read as Europe/Sofia
+  calendar days (`src/lib/indicators-period.ts`), so a case started between midnight and 02:00/03:00 is today's.
+- **Lab scan.** The provider's response body was read outside the timeout and the error handling: a non-JSON 200
+  became a 500, and a body that stalled never timed out. Both are now handled.
+
+### Changed
+
+- Core 10.4.2.
+
+### Dependencies
+
+- No minor or patch updates since 10.4.1. `npm audit --omit=dev`: 0.
+
 ## [10.4.1] - 2026-11-14
 
 ### Fixed

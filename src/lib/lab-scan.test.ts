@@ -38,4 +38,23 @@ describe("scanLabImage (10.4.1)", () => {
     fetchMistral.mockRejectedValue(Object.assign(new Error("aborted"), { name: "AbortError" }))
     expect(await scanLabImage(input)).toEqual({ ok: false, kind: "timeout" })
   })
+
+  it("reads a 200 that is not JSON as unreadable, not as a crash (10.4.2)", async () => {
+    fetchMistral.mockResolvedValue(new Response("<html>Bad gateway</html>", { status: 200 }))
+    expect(await scanLabImage(input)).toEqual({ ok: true, results: [], unreadable: true })
+    fetchMistral.mockResolvedValue(new Response("null", { status: 200 }))
+    expect(await scanLabImage(input)).toEqual({ ok: true, results: [], unreadable: true })
+  })
+
+  it("times out a body that never finishes, not only the headers (10.4.2)", async () => {
+    fetchMistral.mockImplementation((_key: string, _body: unknown, init: { signal: AbortSignal }) => {
+      const stalled = new ReadableStream({
+        start(stream) {
+          init.signal.addEventListener("abort", () => stream.error(Object.assign(new Error("aborted"), { name: "AbortError" })))
+        },
+      })
+      return Promise.resolve(new Response(stalled, { status: 200 }))
+    })
+    expect(await scanLabImage({ ...input, timeoutMs: 20 })).toEqual({ ok: false, kind: "timeout" })
+  })
 })
