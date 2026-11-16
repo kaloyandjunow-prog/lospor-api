@@ -1,5 +1,34 @@
 # Changelog - LOSPOR API
 
+## [10.6.0] - 2026-11-16
+
+Data dictionary 4.13.0; no column changes. Released with Core 10.6.0.
+
+### Added
+
+- **Preoperative vitals can be made optional, per population.** Four switches -- the vitals section required, and
+  blood pressure, heart rate and respiratory rate each -- are stored beside the preop section switches (no
+  migration; no row means required, so nothing changes until an operator chooses) and returned in the section
+  config. `updatePreopSectionConfig` takes them as `vitals` and refuses an unknown key.
+  - Finalization, submit-for-review and the direct-create promotion read the population's rule from the published
+    profile, so a case the form lets through without vitals can also be closed, and one a site still requires them
+    for cannot. A paediatric case falls back to the adult profile, as the case read does.
+- **A current medication typed as written**, behind a per-population switch (`medicationsFreeText`, off by
+  default). With it off the server still accepts an uncoded medication: older cases, EHR imports and queued
+  offline saves can hold one.
+
+### Changed
+
+- **Export of a typed medication.** Its name (no ATC code, no INN) is cleaned of ЕГН, long numbers, dates and
+  email, as a note is. The two-capitalised-words name guess stands down only when the text starts with a product
+  or INN from the drug list, so "Prestarium Neo 5 mg" keeps its name and "Ivan Petrov" does not.
+
+### Fixed
+
+- **A medication list with one typed entry was refused at save where identifying text is screened.** The name
+  guess switched on for the whole list, list drugs included. It now stands down when every entry is from the list
+  or starts with a known medicine.
+
 ## [10.5.0] - 2026-11-16
 
 ### Changed — OMOP export (exchange contract 2.9.0, data dictionary 4.12.0)
