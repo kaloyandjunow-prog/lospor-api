@@ -61,12 +61,64 @@ describe("case vitals scan route", () => {
       where: { id: "case-1" },
       select: {
         userId: true,
+        // The case's own institution: a head of department is scoped by it.
+        institutionId: true,
         user: { select: { institutionId: true } },
         // Consent is read from the database, never from the client, exactly as
         // the case advise route does it.
         preop: { select: { aiOptIn: true } },
       },
     })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  // The route selected only the owner's institution, and canWriteCase scopes a
+  // head of department by the case's own, so every department case not
+  // assigned to them was refused. Reaching the consent check proves the
+  // access check passed, without sending anything.
+  it("lets a head of department scan a case of their department", async () => {
+    getAuthUserMock.mockResolvedValue({ id: "hod-1", role: "HEAD_OF_DEPT", institutionId: "inst-1" })
+    findUniqueMock.mockResolvedValue({
+      userId: "other-user",
+      institutionId: "inst-1",
+      user: { institutionId: "inst-1" },
+      preop: { aiOptIn: false },
+    })
+
+    const { POST } = await import("@/app/v1/cases/[id]/vitals-scan/route")
+    const response = await POST(
+      new Request("http://localhost/api/cases/case-1/vitals-scan", {
+        method: "POST",
+        body: JSON.stringify({ image: "base64-image" }),
+      }) as Parameters<typeof POST>[0],
+      { params: Promise.resolve({ id: "case-1" }) },
+    )
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({ error: "AI advice not enabled for this case" })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("still refuses a head of department a case of another department", async () => {
+    getAuthUserMock.mockResolvedValue({ id: "hod-1", role: "HEAD_OF_DEPT", institutionId: "inst-1" })
+    findUniqueMock.mockResolvedValue({
+      userId: "other-user",
+      institutionId: "inst-2",
+      user: { institutionId: "inst-1" },
+      preop: { aiOptIn: true },
+    })
+
+    const { POST } = await import("@/app/v1/cases/[id]/vitals-scan/route")
+    const response = await POST(
+      new Request("http://localhost/api/cases/case-1/vitals-scan", {
+        method: "POST",
+        body: JSON.stringify({ image: "base64-image" }),
+      }) as Parameters<typeof POST>[0],
+      { params: Promise.resolve({ id: "case-1" }) },
+    )
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({ error: "Forbidden" })
     expect(fetch).not.toHaveBeenCalled()
   })
 

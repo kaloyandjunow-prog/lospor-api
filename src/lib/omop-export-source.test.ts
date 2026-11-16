@@ -15,6 +15,10 @@ const row = {
     familyAnesthesiaDetails: "Майка Мария Иванова, реакция 12.03.1990",
     difficultAirwayNotes: "ЕГН 7501020018 в бележката",
     medications: [{ nameRaw: "Sodium Chloride" }],
+    assessmentAnswers: [
+      { state: "YES", optionKey: "CLEAR_FLUIDS", valueText: "Гладно от 06:00, звъннете на майката Елена Димитрова 0888123456" },
+      { state: "YES", optionKey: "YES", valueText: null },
+    ],
   },
   events: [{ label: "Propofol Fresenius", value: "Обадете се на Петър Георгиев" }],
   complications: [{ note: "имейл pacient@example.com" }],
@@ -50,6 +54,14 @@ describe("the OMOP export cleans free text only", () => {
     expect(preop.difficultAirwayNotes).not.toContain("7501020018")
     expect((out as unknown as { events: { value: string }[] }).events[0].value).not.toContain("Петър Георгиев")
     expect((out as unknown as { complications: { note: string }[] }).complications[0].note).not.toContain("@")
+  })
+
+  // A typed answer leaves as the observation value; it used to leave as typed.
+  it("cleans the typed answer to a preoperative question, and only that", () => {
+    const answers = preop.assessmentAnswers as { state: string; optionKey: string; valueText: string | null }[]
+    expect(answers[0].valueText).not.toMatch(/Елена Димитрова|0888123456/)
+    expect(answers[0]).toMatchObject({ state: "YES", optionKey: "CLEAR_FLUIDS" })
+    expect(answers[1]).toEqual({ state: "YES", optionKey: "YES", valueText: null })
   })
 
   it("cleans only the typed parts of the event log", () => {

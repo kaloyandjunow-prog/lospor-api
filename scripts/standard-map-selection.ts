@@ -4,6 +4,8 @@ export type AthenaSourceConcept = {
   conceptName: string
   vocabularyId: string
   standardConcept: string | null
+  /** Set when WHO has retired the code; its "Maps to" may still be valid. */
+  invalidReason?: string | null
 }
 
 export type AthenaMapsToRelationship = {
@@ -21,9 +23,11 @@ export type StandardConceptMapping = {
   standardVocabulary: string
   standardConceptId: number
   standardLabel: string
-  mappingMethod: "athena-exact-standard-code" | "athena-exact-code-maps-to" | "bundled-icd10pcs-standard" | "bundled-icd10pcs-maps-to" | "bundled-icd10-maps-to" | "bundled-loinc-standard" | "bundled-atc-maps-to"
+  mappingMethod: "athena-exact-standard-code" | "athena-exact-code-maps-to" | "bundled-icd10pcs-standard" | "bundled-icd10pcs-maps-to" | "bundled-icd10-maps-to" | "bundled-icd10-deprecated-maps-to" | "athena-deprecated-code-maps-to" | "bundled-icd10-parent-maps-to" | "athena-parent-code-maps-to" | "bundled-loinc-standard" | "bundled-atc-maps-to"
   mappingConfidence: number
   athenaVersion: string | null
+  /** Why the mapping is less than exact: the parent it went through. */
+  mappingNotes?: string
 }
 
 export type StandardMapResolution =
@@ -55,6 +59,14 @@ type SelectionInput = {
  * decomposition; LOSPOR's single-concept operational fields cannot represent
  * that honestly, so they remain source-only instead of taking the first row.
  */
+/** The nearer parents of an ICD-10 code with subdivisions: M15.81 -> M15.8 -> M15. */
+export function icd10ParentsOf(code: string): string[] {
+  return [
+    ...(/^[A-Z]\d{2}\.\d{2,}$/.test(code) ? [code.slice(0, 5)] : []),
+    ...(/^[A-Z]\d{2}\.\d+$/.test(code) ? [code.slice(0, 3)] : []),
+  ]
+}
+
 export function selectStandardMapResolutions(input: SelectionInput): Map<string, StandardMapResolution> {
   const requestedCodes = [...new Set(input.codes.filter(Boolean))]
   const sourcesByCode = new Map<string, AthenaSourceConcept[]>()
@@ -67,7 +79,12 @@ export function selectStandardMapResolutions(input: SelectionInput): Map<string,
     candidatesByCode.set(code, candidates)
   }
 
-  for (const source of input.sourceConcepts) {
+  // A retired source concept counts only when its code has no active one
+  // (2026-11-15): NHIS still uses codes WHO replaced, and Athena keeps their
+  // mapping. An active concept for the same code always wins.
+  const activeCodes = new Set(input.sourceConcepts.filter(source => !source.invalidReason).map(source => source.conceptCode))
+  const usable = input.sourceConcepts.filter(source => !source.invalidReason || !activeCodes.has(source.conceptCode))
+  for (const source of usable) {
     sourceById.set(source.conceptId, source)
     const sources = sourcesByCode.get(source.conceptCode) ?? []
     sources.push(source)
@@ -92,16 +109,32 @@ export function selectStandardMapResolutions(input: SelectionInput): Map<string,
       standardVocabulary: target.vocabularyId,
       standardConceptId: target.conceptId,
       standardLabel: target.conceptName,
-      mappingMethod: "athena-exact-code-maps-to",
-      mappingConfidence: 0.95,
+      mappingMethod: source.invalidReason ? "athena-deprecated-code-maps-to" : "athena-exact-code-maps-to",
+      mappingConfidence: source.invalidReason ? 0.9 : 0.95,
       athenaVersion: input.athenaVersion,
     })
   }
 
   const resolutions = new Map<string, StandardMapResolution>()
   for (const code of requestedCodes) {
-    const sources = sourcesByCode.get(code) ?? []
-    const candidates = candidatesByCode.get(code) ?? new Map<number, StandardConceptMapping>()
+    let sources = sourcesByCode.get(code) ?? []
+    let candidates = candidatesByCode.get(code) ?? new Map<number, StandardConceptMapping>()
+    // A code the vocabulary does not hold maps through its nearest parent that
+    // it does (2026-11-15): W37.48 -> W37.4 -> W37, M15.81 -> M15.8. The caller
+    // keeps the full code as the source value. A code the vocabulary holds but
+    // does not map is left as it is.
+    if (sources.length === 0) {
+      const parent = icd10ParentsOf(code).find(candidate => (candidatesByCode.get(candidate)?.size ?? 0) > 0)
+      if (parent) {
+        sources = sourcesByCode.get(parent) ?? []
+        candidates = new Map([...candidatesByCode.get(parent)!].map(([id, mapping]) => [id, {
+          ...mapping,
+          mappingMethod: "athena-parent-code-maps-to" as const,
+          mappingConfidence: 0.8,
+          mappingNotes: `Mapped through parent ${parent}; the subdivision is kept in the source value only.`,
+        }]))
+      }
+    }
     if (sources.length === 0) {
       resolutions.set(code, {
         kind: "source-only",

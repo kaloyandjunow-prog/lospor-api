@@ -34,7 +34,8 @@ function sender() {
 export async function sendTransactionalEmail(input: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.BREVO_API_KEY
   if (!apiKey) {
-    console.warn(`[email] BREVO_API_KEY missing; skipped "${input.subject}" to ${input.to.email}`)
+    // Never the recipient: a log line is not where an account's address belongs.
+    console.warn(`[email] BREVO_API_KEY missing; skipped "${input.subject}"`)
     return { sent: false, provider: "none", reason: "BREVO_API_KEY missing" }
   }
 
@@ -54,8 +55,12 @@ export async function sendTransactionalEmail(input: SendEmailInput): Promise<Sen
   })
 
   if (!response.ok) {
-    const body = await response.text().catch(() => "")
-    throw new Error(`Brevo email failed ${response.status}: ${body.slice(0, 500)}`)
+    // The callers log this error. Brevo's body can repeat the recipient's
+    // address ("invalid email address x@y"), so only its error code is kept,
+    // and only when it is a bare identifier.
+    const failure = await response.json().catch(() => null) as { code?: unknown } | null
+    const code = typeof failure?.code === "string" && /^[a-z_]{1,64}$/i.test(failure.code) ? ` (${failure.code})` : ""
+    throw new Error(`Brevo email failed ${response.status}${code}`)
   }
 
   const body = await response.json().catch(() => ({})) as { messageId?: string }

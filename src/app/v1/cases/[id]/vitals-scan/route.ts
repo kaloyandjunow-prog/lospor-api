@@ -39,6 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id },
     select: {
       userId: true,
+      institutionId: true,
       user: { select: { institutionId: true } },
       preop: { select: { aiOptIn: true } },
     },
@@ -107,8 +108,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }, { signal: controller.signal })
 
     if (!res.ok) {
-      const err = await res.text()
-      console.error("[vitals-scan] Mistral error:", res.status, err)
+      // body withheld: provider errors can echo the clinical payload
+      console.error("[vitals-scan] Mistral error:", res.status)
       return NextResponse.json({ error: "AI analysis failed" }, { status: 502 })
     }
 

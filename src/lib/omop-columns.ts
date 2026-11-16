@@ -77,6 +77,9 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     "modifier_concept_id", "modifier_source_value",
     "procedure_source_value", "visit_occurrence_id",
     "suggestion_source_value",
+    // 2.9.0: when a procedure that lasts ended -- monitoring runs for the whole
+    // anaesthesia. Blank for a procedure that is an act at one moment.
+    "procedure_end_date", "procedure_end_datetime",
   ],
   // A device the patient had placed. Separate from the airway act in
   // procedure_occurrence on purpose: placing a tube is something done to the
@@ -90,6 +93,8 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     "device_type_concept_id", "quantity", "device_source_value", "visit_occurrence_id",
     "unit_concept_id", "unit_source_value",
     "suggestion_source_value",
+    // 2.9.0: when the device went in and came out, beside the day.
+    "device_exposure_start_datetime", "device_exposure_end_datetime",
   ],
   observation: [
     "observation_id", "person_id", "observation_concept_id", "observation_date",
@@ -103,6 +108,9 @@ export const OMOP_COLUMNS: Record<OmopTableName, readonly string[]> = {
     "unit_concept_id", "unit_source_value",
     "observation_source_value", "visit_occurrence_id",
     "suggestion_source_value",
+    // 2.9.0: the moment of an observation that has one -- a gas setting, a
+    // position, a pump rate. Blank for a fact about the whole case.
+    "observation_datetime",
   ],
   // 10.2.0: a death in theatre, from the Death event.
   death: [

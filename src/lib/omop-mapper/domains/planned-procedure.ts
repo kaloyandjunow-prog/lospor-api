@@ -206,6 +206,11 @@ export function mapPlannedProcedureAndMedicationsToOmop(
         "LOSPOR:DRUG_ALLERGY",
         ctx.sourceValue("MEDICATION", med.sourceVocabulary, med.sourceCode, med.nameRaw),
         isoDate(c.createdAt),
+        null,
+        // 439224, Allergy to drug (SNOMED, Observation domain); the drug itself
+        // as the value where it maps (2.9.0), the OHDSI convention for an allergy.
+        439224,
+        med.standardConceptId ?? 0,
       )
       continue
     }

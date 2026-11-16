@@ -1,3 +1,4 @@
+import { losporConceptId } from "@/lib/omop-mapper/lospor-vocabulary"
 import { describe, expect, it } from "vitest"
 import { AIRWAY_ACTS, mapCasesToOmop } from "@/lib/omop-mapper"
 
@@ -91,6 +92,9 @@ describe("mapCasesToOmop", () => {
       // Airway devices and laryngoscopy tools, which had exact Device-domain
       // concepts and no table to put them in until now.
       device_exposure: 4,
+      // 2.9.0: four fewer observations. The airway device and tool left twice
+      // (a concept-0 observation beside their DEVICE_EXPOSURE row), and the
+      // clinical rules version was software provenance, not a patient fact.
       // Six: two preop (diazepam, premedication) + fentanyl + the propofol
       // infusion + the sevoflurane agent + the fluid administration. The last
       // three used to be one, two, or none of these.
@@ -118,7 +122,7 @@ describe("mapCasesToOmop", () => {
       // 48 less the never-filled GUTA_SCORE, plus the two planned operations,
       // which are plans and so observations (the operations performed are
       // the procedure rows above, because the timeline says one started).
-      observation: 49,
+      observation: 45,
       // 10.2.0: DEATH, empty unless Death is charted in theatre.
       death: 0,
     })
@@ -397,17 +401,11 @@ describe("mapCasesToOmop", () => {
     expect(bundle.observation).toEqual(expect.arrayContaining([
       expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_CONCENTRATION", value_as_string: "0.5%", value_as_number: 0.5 }),
       expect.objectContaining({ observation_source_value: "LOSPOR:DRUG_FORMULATION", value_as_string: "HYPERBARIC" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_BASIS", value_as_string: "IBW" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:DOSE_CALCULATION_METHOD", value_as_string: "MCLAREN_CDC_2000" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_KEY", value_as_string: "PEDIATRIC_DRUG_PROFILE:BUPIVACAINE:0-6575" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_VERSION", value_as_string: "rules.v2.7" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_ID", value_as_string: "user-preset" }),
-      // Both columns: the text is the canonical rendering a clinician would
-      // recognise, the number is the one a query can use.
-      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_VERSION", value_as_string: "7", value_as_number: 7 }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_PRESET_SCOPE", value_as_string: "USER" }),
-      expect.objectContaining({ observation_source_value: "LOSPOR:CLINICAL_RULE_SOURCE_IDS", value_as_string: "user-preset|institution-preset|platform-preset" }),
     ]))
+    // 2.9.0: which rule, preset and dose method produced a number is software
+    // provenance, kept in LOSPOR's event audit; none of it leaves as a patient row.
+    const provenance = bundle.observation.filter(row => /^LOSPOR:(DOSE_CALCULATION_(BASIS|METHOD)|CLINICAL_(RULE|PRESET)_)/.test(row.observation_source_value ?? ""))
+    expect(provenance).toEqual([])
     expect(bundle.measurement).toContainEqual(expect.objectContaining({
       measurement_source_value: "LOSPOR:DOSE_CALCULATION_WEIGHT_KG",
       value_as_number: 18.25,
@@ -1184,8 +1182,10 @@ describe("airway management", () => {
     // not the measured airway pressure), which is a Measurement-domain concept.
     expect(bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:PEEP_CMH2O"))
       .toMatchObject({ measurement_concept_id: 3022875, value_as_number: 5 })
-    expect(obs(bundle, "LOSPOR:AIRWAY_TOOL").map(o => o.value_as_string).sort())
-      .toEqual(["BOUGIE", "VIDEO_LARY"])
+    // The tools are DEVICE_EXPOSURE rows; the concept-0 observation repeating them went in 2.9.0.
+    expect(bundle.device_exposure.filter(d => d.device_source_value?.startsWith("AIRWAY_TOOL:")).map(d => d.device_source_value).sort())
+      .toEqual(["AIRWAY_TOOL:BOUGIE", "AIRWAY_TOOL:VIDEO_LARY"])
+    expect(obs(bundle, "LOSPOR:AIRWAY_TOOL")).toEqual([])
     // Measurement, not observation -- 3004921 is a Measurement-domain LOINC
     // concept -- and the mode itself now carries a real answer concept too.
     const ventMode = bundle.measurement.find(m => m.measurement_source_value === "LOSPOR:VENTILATION_MODE")
@@ -1212,14 +1212,15 @@ describe("airway management", () => {
     // Rows written across the single-column-to-list change carry both. Taking
     // one and ignoring the other would drop a device; taking both naively
     // would export the same device twice.
+    // The devices are DEVICE_EXPOSURE rows (2.9.0: no longer also observations).
+    const airwayDevices = (b: ReturnType<typeof omop>) => b.device_exposure
+      .filter(d => d.device_source_value?.startsWith("AIRWAY_DEVICE:")).map(d => d.device_source_value).sort()
     const both = omop({ airwayDevice: "ORAL_ETT", airwayDevices: ["ORAL_ETT", "LMA"] })
-    expect(obs(both, "LOSPOR:AIRWAY_DEVICE").map(o => o.value_as_string).sort())
-      .toEqual(["LMA", "ORAL_ETT"])
+    expect(airwayDevices(both)).toEqual(["AIRWAY_DEVICE:LMA", "AIRWAY_DEVICE:ORAL_ETT"])
 
     // A legacy row has only the single column, and it must still be exported.
     const legacyOnly = omop({ airwayDevice: "NASAL_ETT", airwayDevices: [] })
-    expect(obs(legacyOnly, "LOSPOR:AIRWAY_DEVICE").map(o => o.value_as_string))
-      .toEqual(["NASAL_ETT"])
+    expect(airwayDevices(legacyOnly)).toEqual(["AIRWAY_DEVICE:NASAL_ETT"])
   })
 
   it("separates being intubated from having a tube", () => {
@@ -1227,7 +1228,7 @@ describe("airway management", () => {
     // them. Exporting only the observation means no procedure count can ever
     // find the intubation.
     const bundle = omop({ airwayDevice: null, airwayDevices: ["ORAL_ETT"] })
-    expect(obs(bundle, "LOSPOR:AIRWAY_DEVICE")).toHaveLength(1)
+    expect(bundle.device_exposure.filter(d => d.device_source_value?.startsWith("AIRWAY_DEVICE:"))).toHaveLength(1)
     expect(airwayProcs(bundle)).toEqual(["AIRWAY_MANAGEMENT:TRACHEAL_INTUBATION_ORAL"])
   })
 
@@ -1235,7 +1236,7 @@ describe("airway management", () => {
     // Counting a face mask as an airway procedure would inflate every such
     // count, and the inflation would look like a real clinical signal.
     const bundle = omop({ airwayDevice: null, airwayDevices: ["FACE_MASK", "OPA", "NPA"] })
-    expect(obs(bundle, "LOSPOR:AIRWAY_DEVICE")).toHaveLength(3)
+    expect(bundle.device_exposure.filter(d => d.device_source_value?.startsWith("AIRWAY_DEVICE:"))).toHaveLength(3)
     expect(airwayProcs(bundle)).toEqual([])
   })
 
@@ -1692,7 +1693,9 @@ describe("the risk scores that have a concept", () => {
       .observation.filter(row => row.observation_source_value === "LOSPOR:APFEL")
 
     expect(apfel).toHaveLength(1)
-    expect(apfel[0].observation_concept_id).toBe(0)
+    // No standard concept still: LOSPOR's own vocabulary names it (2.9.0).
+    expect(apfel[0].observation_concept_id).toBe(losporConceptId("LOSPOR:APFEL"))
+    expect(apfel[0].observation_concept_id).toBeGreaterThanOrEqual(2_000_000_000)
   })
 })
 
@@ -1779,7 +1782,9 @@ describe("the airway examination findings that gained a concept", () => {
     c.preop.facialHair = true
 
     expect(mapCasesToOmop([c as never]).observation
-      .filter(row => row.observation_source_value === "LOSPOR:FACIAL_HAIR")[0].observation_concept_id).toBe(0)
+      .filter(row => row.observation_source_value === "LOSPOR:FACIAL_HAIR")[0].observation_concept_id)
+      // Still no standard concept (each candidate means hirsutism): LOSPOR's own (2.9.0).
+      .toBe(losporConceptId("LOSPOR:FACIAL_HAIR"))
   })
 })
 
@@ -2182,8 +2187,9 @@ describe("postop recovery: Aldrete total, PONV, disposition, paediatric pain", (
 
     expect(total).toMatchObject({ measurement_concept_id: 40488911, value_as_number: 10 })
     // The five subscores have no concept in this vocabulary -- only the total
-    // is a scored entity in SNOMED, the same shape as RCRI's criteria.
-    expect(activity?.observation_concept_id).toBe(0)
+    // is a scored entity in SNOMED, the same shape as RCRI's criteria -- so the
+    // subscores carry LOSPOR's own concepts (2.9.0), never a standard one.
+    expect(activity?.observation_concept_id).toBe(losporConceptId("LOSPOR:ALDRETE_ACTIVITY"))
   })
 
   it("codes PONV as a condition that occurred, not an observation about one", () => {
@@ -2320,7 +2326,7 @@ describe("the numbers an anaesthetic chart records, coded", () => {
     // nitrous oxide concepts and no inspired-air equivalent. It sits in
     // measurement beside the inspired oxygen it is computed alongside.
     const fiAir = bundle().measurement.find(r => r.measurement_source_value === "LOSPOR:FIAIR_PERCENT")
-    if (fiAir) expect(fiAir.measurement_concept_id).toBe(0)
+    if (fiAir) expect(fiAir.measurement_concept_id).toBe(losporConceptId("LOSPOR:FIAIR_PERCENT"))
   })
 })
 
@@ -2497,7 +2503,7 @@ describe("the last concepts the vocabulary bundle was missing", () => {
   it("exports each nil-by-mouth assignment as its hours before surgery", () => {
     const observations = mapCasesToOmop([pediatricCaseFixture() as never]).observation
     const row = (source: string) => observations.find(r => r.observation_source_value === source)
-    expect(row("LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS")).toMatchObject({ value_as_number: 1, observation_concept_id: 0 })
+    expect(row("LOSPOR:PEDIATRIC_NPO_CLEAR_FLUIDS_HOURS")).toMatchObject({ value_as_number: 1, observation_concept_id: losporConceptId("LOSPOR:PEDIATRIC_NPO_HOURS") })
     expect(row("LOSPOR:PEDIATRIC_NPO_SOLID_FOOD_OR_COW_MILK_HOURS")).toMatchObject({ value_as_number: 6 })
     expect(row("LOSPOR:PEDIATRIC_FASTING_ASSESSMENT")).toBeUndefined()
   })

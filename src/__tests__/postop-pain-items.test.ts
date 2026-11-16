@@ -1,3 +1,4 @@
+import { losporConceptId } from "@/lib/omop-mapper/lospor-vocabulary"
 import { describe, expect, it } from "vitest"
 import { mapCasesToOmop } from "@/lib/omop-mapper"
 import { mapPostop, mapPostopUpdate } from "@/app/v1/cases/_mappers/postop"
@@ -43,7 +44,8 @@ describe("item-scored postop pain and delirium (10.0.0)", () => {
     expect(measurements.get("LOINC:98012-8")).toMatchObject({ measurement_concept_id: 1617629, value_as_number: 5 })
     expect(observations.get("LOINC:38218-4")).toMatchObject({ observation_concept_id: 3037008, value_as_number: 2 })
     expect(observations.get("LOSPOR:FPS_R")).toMatchObject({ observation_concept_id: 40760807, value_as_number: 4 })
-    expect(observations.get("LOSPOR:NIPS_CRY")).toMatchObject({ observation_concept_id: 0, value_as_number: 2 })
-    expect(observations.get("LOSPOR:PAED_EYE_CONTACT")).toMatchObject({ observation_concept_id: 0, value_as_number: 3 })
+    // No standard concept for the items: LOSPOR's own (2.9.0).
+    expect(observations.get("LOSPOR:NIPS_CRY")).toMatchObject({ observation_concept_id: losporConceptId("LOSPOR:NIPS_CRY"), value_as_number: 2 })
+    expect(observations.get("LOSPOR:PAED_EYE_CONTACT")).toMatchObject({ observation_concept_id: losporConceptId("LOSPOR:PAED_EYE_CONTACT"), value_as_number: 3 })
   })
 })

@@ -1,5 +1,63 @@
 # Changelog - LOSPOR API
 
+## [10.5.0] - 2026-11-16
+
+### Changed — OMOP export (exchange contract 2.9.0, data dictionary 4.12.0)
+
+Found by a 200-case end-to-end export through a Hospital appliance and Central on 2026-11-15.
+
+- **Times.** `observation_datetime`, `device_exposure_start_datetime`/`_end_datetime` and
+  `procedure_end_date`/`_end_datetime` are exported.
+  - Gas settings, pump rates, TCI targets, drug concentrations, a failed line and resuscitation events keep
+    their moment.
+  - An airway device and a blood unit keep their time in and out.
+  - Monitoring runs from the anaesthesia start to its end.
+  - General anaesthesia is timed at the Induction marker, else at the anaesthesia start.
+  - Positions charted on the timeline leave at the moment each began, instead of as an untimed list.
+- **One row per fact.** The technique, airway device, airway tool and ventilation mode used to leave a second,
+  concept-0 observation beside the procedure, device or measurement that already carried them. Those
+  observations are gone.
+- **Standard concepts that were not used.**
+  - Blood loss is 4254486 Estimated blood loss, in mL.
+  - A drug allergy is 439224 Allergy to drug, with the drug as its value.
+  - The charted age is 3022304 Age, in its own unit and in days.
+- **LOSPOR's own vocabulary.** What the OHDSI vocabularies cannot name now carries a LOSPOR concept at or above
+  2,000,000,000 instead of 0: Aldrete items, Apfel, POVOC, COLDS, Steward, PAED, NIPS items, TCI settings, fluid
+  totals, line details and others.
+  - The vocabulary ships as `data/omop/LOSPOR_CONCEPT.csv` (Athena CONCEPT format), generated from
+    `src/lib/omop-mapper/lospor-vocabulary.ts`.
+  - Ids are permanent.
+- **Provenance leaves the patient rows.** Rule, preset and dose-calculation provenance and the clinical rules
+  version stay in LOSPOR's audit and are no longer OMOP observations.
+
+### Changed — ICD-10 mapping
+
+- **A code WHO retired** (K35.0, Q35.2, I84 and 61 others) maps through its retired ICD10 concept when it has no active
+  one; the seed no longer filters sources on `invalidReason`.
+- **A code OMOP does not hold maps through its nearest parent.** NHIS uses WHO's optional subdivisions (an external
+  cause's place and activity, a musculoskeletal site), one level below OMOP's ICD10, so 23,373 codes left as concept 0.
+  They now take the concept of the nearest parent the vocabulary holds (W37.48 → W37, M15.81 → M15.8), method
+  `*-parent-maps-to`, confidence 0.8, with a note naming the parent; the full code stays in the source value. The
+  2026-09-14 decision to leave them at 0 is replaced. `icd10-omop.json`: 39,211 of 39,613 codes map (was 15,838).
+
+### Fixed — security
+
+- **OMOP export** redacts the typed answer to a preoperative question (`assessmentAnswers.valueText`); it left as the
+  observation value uncleaned.
+- **A head of department was refused lab and monitor scans** on every case of the department not assigned to them:
+  both routes selected the owner's institution, not the case's. `CaseAccessRecord.institutionId` is now required,
+  so a select that leaves it out does not compile.
+- **Monitor scan** no longer logs the AI provider's error body.
+- **Transactional email** no longer logs the recipient, and a Brevo failure keeps only its status and error code.
+
+### Changed
+
+- Core 10.5.0.
+
+### Dependencies
+
+- No minor or patch updates since 10.4.2. `npm audit --omit=dev`: 0.
+
 ## [10.4.2] - 2026-11-15
 
 ### Fixed

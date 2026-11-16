@@ -111,6 +111,9 @@ export interface OmopDevice {
   unit_concept_id: number | null
   unit_source_value: string | null
   suggestion_source_value?: string | null
+  /** 2.9.0: when the device went in and came out; null where only the day is known. */
+  device_exposure_start_datetime?: string | null
+  device_exposure_end_datetime?: string | null
 }
 
 export interface OmopCareSite {
@@ -280,6 +283,9 @@ export interface OmopProcedure {
    * non-empty value is the "from suggestion" flag research asked for.
    */
   suggestion_source_value?: string | null
+  /** 2.9.0: when a procedure that lasts ended (monitoring runs the whole anaesthesia). */
+  procedure_end_date?: string | null
+  procedure_end_datetime?: string | null
 }
 
 /**
@@ -356,6 +362,8 @@ export interface OmopObservation {
    * non-empty value is the "from suggestion" flag research asked for.
    */
   suggestion_source_value?: string | null
+  /** 2.9.0: the moment of an observation that has one; null for a fact about the whole case. */
+  observation_datetime?: string | null
 }
 
 export type CaseRow = {

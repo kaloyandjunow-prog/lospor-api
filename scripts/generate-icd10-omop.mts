@@ -16,8 +16,25 @@
  *   maps[code]     every active standard target id of its "Maps to" rows,
  *                  ascending (one for most codes, several for a combination
  *                  such as E11.2, diabetes with kidney complication);
- *   vocabularies   the vocabulary of any target that is not SNOMED.
- * Codes Athena does not have (the NHIS national extensions) are absent.
+ *   vocabularies   the vocabulary of any target that is not SNOMED;
+ *   deprecated     the codes mapped through a concept WHO has since retired;
+ *   viaParent      code -> the parent code it was mapped through.
+ *
+ * A code Athena does not have maps through its nearest parent that it does
+ * (2026-11-15, replacing the decision of 2026-09-14 that left them at 0). NHIS
+ * uses WHO's optional subdivisions -- the place and activity of an external
+ * cause (W37.48: place 4, activity 8), the site of a musculoskeletal disorder
+ * (M15.81: shoulder) -- and OMOP's ICD10 stops one level short of them. The
+ * full code stays in condition_source_value, so the subdivision is not lost; the
+ * concept says what the vocabulary can, the parent's diagnosis. A code Athena
+ * holds but does not map (C77, a block range) is not lifted to a parent.
+ *
+ * A retired code still counts (2026-11-15). NHIS keeps codes from older WHO
+ * revisions -- K35.0, appendicitis with generalised peritonitis, was replaced in
+ * 2010 -- and Athena keeps them too, deprecated, with their "Maps to" still
+ * valid. Only an active concept used to count, so 64 such codes went out as
+ * concept 0 with a perfectly good SNOMED target sitting in the vocabulary. An
+ * active concept for the same code still wins over a retired one.
  */
 
 import fs from "node:fs"
@@ -49,10 +66,14 @@ if (!vocabularyLine) throw new Error("This Athena download has no ICD10 vocabula
 const version = vocabularyLine.split("\t")[3]
 
 // CONCEPT.csv: concept_id, name, domain, vocabulary, class, standard, code, start, end, invalid
-const source = new Map<string, string>()
+const active = new Map<string, string>()
+const retired = new Map<string, string>()
 await each("CONCEPT.csv", c => {
-  if (c[3] === "ICD10" && !c[9] && wanted.has(c[6])) source.set(c[0], c[6])
+  if (c[3] === "ICD10" && wanted.has(c[6])) (c[9] ? retired : active).set(c[0], c[6])
 })
+const activeCodes = new Set(active.values())
+const source = new Map([...active, ...[...retired].filter(([, code]) => !activeCodes.has(code))])
+const retiredIds = new Set([...retired.keys()].filter(id => source.has(id)))
 
 const mapsTo = new Map<string, Set<string>>()
 await each("CONCEPT_RELATIONSHIP.csv", r => {
@@ -70,18 +91,41 @@ await each("CONCEPT.csv", c => {
 
 const maps: Record<string, number[]> = {}
 const vocabularies: Record<string, string> = {}
-const counts = { one: 0, several: 0, noStandardTarget: 0, notInAthena: wanted.size - new Set(source.values()).size }
+const deprecated = new Set<string>()
+const viaParent: Record<string, string> = {}
+const counts = { one: 0, several: 0, noStandardTarget: 0, notInAthena: wanted.size - new Set(source.values()).size, retired: 0 }
 for (const [id, code] of source) {
   const standard = [...(mapsTo.get(id) ?? [])].filter(target => targets.has(target))
   if (standard.length === 0) { counts.noStandardTarget++; continue }
   const ids = [...new Set([...(maps[code] ?? []), ...standard.map(Number)])].sort((a, b) => a - b)
   maps[code] = ids
+  if (retiredIds.has(id)) deprecated.add(code)
   for (const target of standard) {
     const vocabulary = targets.get(target)!
     if (vocabulary !== "SNOMED") vocabularies[target] = vocabulary
   }
 }
+// The nearest parent Athena maps, for a code Athena does not hold at all:
+// W37.48 -> W37.4 -> W37, M15.81 -> M15.8.
+const inAthena = new Set(source.values())
+const parentsOf = (code: string) => [
+  ...(/^[A-Z]\d{2}\.\d{2,}$/.test(code) ? [code.slice(0, 5)] : []),
+  ...(/^[A-Z]\d{2}\.\d+$/.test(code) ? [code.slice(0, 3)] : []),
+]
+let lifted = 0
+for (const code of wanted) {
+  if (inAthena.has(code) || maps[code]) continue
+  // Only a parent the vocabulary itself holds: the note names the code the
+  // concept really came from (W37, not the equally absent W37.4).
+  const parent = parentsOf(code).find(candidate => inAthena.has(candidate) && maps[candidate])
+  if (!parent) continue
+  maps[code] = maps[parent]
+  viaParent[code] = parent
+  lifted++
+}
 for (const ids of Object.values(maps)) counts[ids.length === 1 ? "one" : "several"]++
+counts.retired = deprecated.size
+;(counts as Record<string, number>).viaParent = lifted
 
 const output = {
   source: `OHDSI Athena, ICD10 ${version}`,
@@ -89,6 +133,8 @@ const output = {
   defaultVocabulary: "SNOMED",
   maps: Object.fromEntries(Object.entries(maps).sort(([a], [b]) => a.localeCompare(b))),
   vocabularies,
+  deprecated: [...deprecated].sort((a, b) => a.localeCompare(b)),
+  viaParent: Object.fromEntries(Object.entries(viaParent).sort(([a], [b]) => a.localeCompare(b))),
 }
 fs.writeFileSync(path.join(process.cwd(), "src", "data", "icd10-omop.json"), `${JSON.stringify(output)}\n`)
 console.log(`ICD10 ${version}:`, counts)
