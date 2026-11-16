@@ -14,8 +14,8 @@ describe("access control helpers", () => {
     const user = { id: "hod-1", role: "HEAD_OF_DEPT", institutionId: null }
 
     expect(caseReadWhereForUser(user)).toEqual({ userId: "hod-1" })
-    expect(canReadCase(user, { userId: "other", user: { institutionId: null } })).toBe(false)
-    expect(canReadCase(user, { userId: "hod-1", user: { institutionId: null } })).toBe(true)
+    expect(canReadCase(user, { userId: "other", institutionId: null, user: { institutionId: null } })).toBe(false)
+    expect(canReadCase(user, { userId: "hod-1", institutionId: null, user: { institutionId: null } })).toBe(true)
   })
 
   it("scopes head of department access to their institution, plus their own cases anywhere", () => {
@@ -39,8 +39,8 @@ describe("access control helpers", () => {
     expect(canReadCase(user, { userId: "other", institutionId: "inst-1" })).toBe(true)
     expect(canReadCase(user, { userId: "other", institutionId: "inst-2" })).toBe(false)
     // The owner's institution is not consulted, whichever it is.
-    expect(canReadCase(user, { userId: "other", user: { institutionId: "inst-1" } })).toBe(false)
-    expect(canReadCase(user, { userId: "other", user: { institutionId: "inst-2" } })).toBe(false)
+    expect(canReadCase(user, { userId: "other", institutionId: null, user: { institutionId: "inst-1" } })).toBe(false)
+    expect(canReadCase(user, { userId: "other", institutionId: null, user: { institutionId: "inst-2" } })).toBe(false)
     // canReadCase already said yes to this — the case reserving this
     // regression was that the list/detail scope disagreed with it.
     expect(canReadCase(user, { userId: "hod-1", institutionId: "inst-2" })).toBe(true)

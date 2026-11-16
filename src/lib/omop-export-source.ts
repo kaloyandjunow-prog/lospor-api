@@ -36,6 +36,14 @@ export function redactExportRow(c: ExportRow) {
       // redaction as every other note before it can leave.
       familyAnesthesiaDetails: c.preop.familyAnesthesiaDetails ? redactText(c.preop.familyAnesthesiaDetails) : c.preop.familyAnesthesiaDetails,
       difficultAirwayNotes: c.preop.difficultAirwayNotes ? redactText(c.preop.difficultAirwayNotes) : c.preop.difficultAirwayNotes,
+      // A typed answer to a catalogue question leaves as the observation's
+      // value. The server accepts any string for it, so it is prose as far as
+      // this export can tell, and it was the one written field that left
+      // uncleaned. Option keys and states are coded and pass through.
+      assessmentAnswers: (c.preop.assessmentAnswers ?? []).map(answer => ({
+        ...answer,
+        valueText: answer.valueText ? redactText(answer.valueText) : answer.valueText,
+      })),
     } : c.preop,
     events: (c.events ?? []).map(e => ({
       ...e,

@@ -73,6 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id },
     select: {
       userId: true,
+      institutionId: true,
       user: { select: { institutionId: true } },
       preop: { select: { aiOptIn: true } },
     },

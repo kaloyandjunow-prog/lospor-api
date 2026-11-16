@@ -57,6 +57,42 @@ describe("case lab report scan route", () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
+  // canWriteCase scopes a head of department by the case's own institution,
+  // which the route did not select, so every department case not assigned to
+  // them was refused. Reaching the consent check proves access passed.
+  it("lets a head of department scan into a case of their department", async () => {
+    getAuthUserMock.mockResolvedValue({ id: "hod-1", role: "HEAD_OF_DEPT", institutionId: "inst-1" })
+    findUniqueMock.mockResolvedValue({
+      userId: "other-user",
+      institutionId: "inst-1",
+      user: { institutionId: "inst-1" },
+      preop: { aiOptIn: false },
+    })
+
+    const res = await post({ imageBase64: "aaaa", mimeType: "image/jpeg" })
+
+    expect(res.status).toBe(403)
+    await expect(res.json()).resolves.toEqual({ error: "AI advice not enabled for this case" })
+    expect(findUniqueMock.mock.calls[0][0].select).toMatchObject({ institutionId: true })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("still refuses a head of department a case of another department", async () => {
+    getAuthUserMock.mockResolvedValue({ id: "hod-1", role: "HEAD_OF_DEPT", institutionId: "inst-1" })
+    findUniqueMock.mockResolvedValue({
+      userId: "other-user",
+      institutionId: "inst-2",
+      user: { institutionId: "inst-1" },
+      preop: { aiOptIn: true },
+    })
+
+    const res = await post({ imageBase64: "aaaa", mimeType: "image/jpeg" })
+
+    expect(res.status).toBe(403)
+    await expect(res.json()).resolves.toEqual({ error: "Forbidden" })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it("returns 404 for a case that does not exist", async () => {
     findUniqueMock.mockResolvedValue(null)
 

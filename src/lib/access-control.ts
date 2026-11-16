@@ -9,7 +9,12 @@ export type AuthUser = {
 type CaseAccessRecord = {
   userId: string
   createdById?: string | null
-  institutionId?: string | null
+  // Required, though it may be null. Every head-of-department decision reads the
+  // case's own institution; while this was optional, the lab and monitor scan
+  // routes selected only the owner's institution and compiled, so a head of
+  // department was refused scans on every case of the department not assigned
+  // to them. A select that leaves it out is now a type error.
+  institutionId: string | null
   user?: Record<string, unknown> | null
 }
 
