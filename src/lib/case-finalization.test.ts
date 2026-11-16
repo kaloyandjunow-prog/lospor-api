@@ -38,6 +38,8 @@ const COMPLETE_RECORD = {
 function fakeTx() {
   return {
     preoperativeAssessment: { findUnique: findPreopMock },
+    // No published profile: the pre-10.6.0 vitals rule, all three required.
+    preopAssessmentProfile: { findFirst: vi.fn().mockResolvedValue(null) },
     intraoperativeRecord: { findUnique: findIntraopMock },
     postoperativeRecord: { findUnique: findPostopMock },
     case: { update: updateMock },

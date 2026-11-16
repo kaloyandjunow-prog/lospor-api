@@ -1,4 +1,5 @@
-import { PREOP_ANSWER_REFUSED, PreopContractError, preopContractBlockedKeys, preparePreopProfile, savePreopAnswers, savePreopOrders } from "@/lib/preop/service"
+import { PREOP_ANSWER_REFUSED, PreopContractError, populationForMode, preopContractBlockedKeys, preparePreopProfile, savePreopAnswers, savePreopOrders } from "@/lib/preop/service"
+import { preopVitalsRequirement } from "@/lib/preop/sections"
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
@@ -140,6 +141,7 @@ export async function POST(req: NextRequest) {
           preop: mapPreop(mappedPreop),
           intraop: intraop ? mapIntraop(intraop) : null,
           postop: mapPostop(postop),
+          preopVitals: await preopVitalsRequirement(prisma, populationForMode(pediatricDecision.clinicalMode)),
         }).valid
       : false
     const status = readyToClose ? "AWAITING_REVIEW" : intraop ? "IN_PROGRESS" : "DRAFT"

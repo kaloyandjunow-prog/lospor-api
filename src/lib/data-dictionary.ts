@@ -1,3 +1,9 @@
+// 4.13.0 (10.6.0) changes no column. A hospital can now make the preoperative
+// blood pressure, heart rate and respiratory rate optional before theatre --
+// the whole vitals section or one reading, for adults or children separately --
+// so a reading nobody recorded can be the site's routine rather than a gap.
+// The missingness rules of those four entries say so.
+//
 // 4.9.0 exports a plan as a plan. The planned operation is an observation
 // (Planned procedure, 4226140) with its urgency as qualifier_concept_id, and
 // a procedure_occurrence only once the timeline shows the operation started.
@@ -89,7 +95,7 @@
 // 4.0.0 renamed every source value to NAMESPACE:CODE and added height and
 // weight, which were documented but never exported. Nothing had been exported
 // under 3.x, so no dataset needs migrating.
-export const DICTIONARY_VERSION = "4.12.0"
+export const DICTIONARY_VERSION = "4.13.0"
 
 export interface DictionaryEntry {
   name: string
@@ -227,7 +233,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     unit: "mmHg",
     type: "integer",
     allowedValues: "10–300",
-    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was",
+    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was. Since 4.13.0 a hospital can make this reading optional before theatre (the whole vitals section or this reading alone, for adults or children separately), so at such a site a reading nobody recorded is routine rather than a gap, typically on paediatric lists",
     sourceTable: "PreoperativeAssessment", sourceColumn: "bpSystolic",
     versionIntroduced: "3.0.0",
   },
@@ -238,7 +244,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     unit: "mmHg",
     type: "integer",
     allowedValues: "5–200",
-    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was",
+    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was. Since 4.13.0 a hospital can make this reading optional before theatre (the whole vitals section or this reading alone, for adults or children separately), so at such a site a reading nobody recorded is routine rather than a gap, typically on paediatric lists",
     sourceTable: "PreoperativeAssessment", sourceColumn: "bpDiastolic",
     versionIntroduced: "3.0.0",
   },
@@ -249,7 +255,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     unit: "bpm",
     type: "integer",
     allowedValues: "10–350",
-    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was",
+    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was. Since 4.13.0 a hospital can make this reading optional before theatre (the whole vitals section or this reading alone, for adults or children separately), so at such a site a reading nobody recorded is routine rather than a gap, typically on paediatric lists",
     sourceTable: "PreoperativeAssessment", sourceColumn: "heartRate",
     versionIntroduced: "3.0.0",
   },
@@ -282,7 +288,7 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
     unit: "breaths/min",
     type: "integer",
     allowedValues: "0–150",
-    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was",
+    missingnessRule: "Blank with value_as_concept_id 618772 = the reading was attempted and could not be obtained, which is a finding about the patient. Blank with an empty value_as_concept_id = nobody recorded it. These are different statements and must not be pooled: unobtainable readings cluster in shocked, arrhythmic and peripherally shut-down patients, so excluding them as missing data drops the sickest cases and makes the cohort look healthier than it was. Since 4.13.0 a hospital can make this reading optional before theatre (the whole vitals section or this reading alone, for adults or children separately), so at such a site a reading nobody recorded is routine rather than a gap, typically on paediatric lists",
     sourceTable: "PreoperativeAssessment", sourceColumn: "respiratoryRate",
     versionIntroduced: "3.0.0",
   },

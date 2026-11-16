@@ -147,4 +147,48 @@ describe.skipIf(!runPostgres)("preop ward orders and medication instructions in 
     }
     expect(await prisma.preopProfileOrderOption.count({ where: { profileId: before.id, key: "CUSTOM_ECG" } })).toBe(0)
   })
+
+  /**
+   * Preoperative vitals made optional for children (10.6.0). The switches live
+   * beside the section rows, and finalization reads them from the database:
+   * the form letting a case through is not enough if the server still refuses
+   * to close it.
+   */
+  it("makes preoperative vitals optional for one population, and finalization follows", async () => {
+    const { preopVitalsRequirement } = await import("@/lib/preop/sections")
+    const { evaluateCaseReadiness } = await import("@/lib/case-finalization")
+    const before = (await service.activePreopProfile(prisma, "PEDIATRIC", true))!
+    const shape = service.serializePreopProfile(before).sectionConfig!
+    const options = shape.orderOptions.map(option => ({ key: option.key, list: option.list, enabled: option.enabled, labelEn: option.labelEn, labelBg: option.labelBg, hoursMode: option.hoursMode }))
+    const write = (vitals: Record<string, unknown>) => prisma.$transaction(tx => service.updatePreopSectionConfig(tx, userId, {
+      sections: {}, orderOptions: options, consultSpecialtyKeys: shape.consultSpecialtyKeys, vitals: vitals as never,
+    }, "Vitals test", "PEDIATRIC"))
+
+    expect(shape.vitals).toEqual({ required: true, bloodPressure: true, heartRate: true, respiratoryRate: true })
+    const caseId = `preop-orders-case-${randomUUID()}`
+    caseIds.push(caseId)
+    await prisma.case.create({ data: { id: caseId, userId, createdById: userId, status: "IN_PROGRESS", clinicalMode: "PEDIATRIC" } })
+    await prisma.preoperativeAssessment.create({
+      data: { caseId, sex: "FEMALE", ageValue: 4, ageUnit: "YEARS", heightCm: 102, weightKg: 16, diagnosis: "Test", plannedProcedure: "Test", mallampati: "I", asaScore: "I" },
+    })
+    const physical = async () => (await evaluateCaseReadiness(prisma, caseId, "PEDIATRIC")).issues
+      .filter(item => item.path[0] === "preop.physical_exam")
+    try {
+      expect(await physical()).toHaveLength(1)
+      await expect(write({ required: "no" })).rejects.toMatchObject({ code: "UNKNOWN_VITALS_SETTING" })
+      await expect(write({ temperature: false })).rejects.toMatchObject({ code: "UNKNOWN_VITALS_SETTING" })
+
+      const changed = await write({ required: false })
+      expect(service.serializePreopProfile(changed).sectionConfig!.vitals).toMatchObject({ required: false, bloodPressure: true })
+      expect(await preopVitalsRequirement(prisma, "PEDIATRIC")).toEqual({ bloodPressure: false, heartRate: false, respiratoryRate: false })
+      expect(await preopVitalsRequirement(prisma, "ADULT")).toEqual({ bloodPressure: true, heartRate: true, respiratoryRate: true })
+      expect(await physical()).toEqual([])
+
+      await write({ required: true, heartRate: false, respiratoryRate: false })
+      expect(await preopVitalsRequirement(prisma, "PEDIATRIC")).toEqual({ bloodPressure: true, heartRate: false, respiratoryRate: false })
+      expect(await physical()).toHaveLength(1)
+    } finally {
+      await write({ required: true, bloodPressure: true, heartRate: true, respiratoryRate: true })
+    }
+  })
 })

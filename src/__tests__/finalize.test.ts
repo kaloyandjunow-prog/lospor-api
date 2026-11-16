@@ -26,6 +26,8 @@ vi.mock("@/lib/clinical-transaction", () => ({
     operation({
       case: { findUnique: findUniqueMock, update: updateMock },
       preoperativeAssessment: { findUnique: findPreopMock },
+      // No published profile: the pre-10.6.0 vitals rule, all three required.
+      preopAssessmentProfile: { findFirst: vi.fn().mockResolvedValue(null) },
       intraoperativeRecord: { findUnique: findIntraopMock },
       postoperativeRecord: { findUnique: findPostopMock },
     })),

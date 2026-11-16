@@ -8,6 +8,8 @@ import {
   type ClinicalIssue,
 } from "@lospor/core/clinical-validation"
 import type { ClinicalMode } from "@lospor/core/pediatric"
+import { preopVitalsRequirement } from "@/lib/preop/sections"
+import { populationForMode } from "@/lib/preop/service"
 import type { PrismaClient, Prisma } from "@/generated/prisma/client"
 
 type Db = PrismaClient | Prisma.TransactionClient
@@ -103,7 +105,10 @@ export async function evaluateCaseReadiness(tx: Db, caseId: string, clinicalMode
       performedProceduresJson: true,
     },
   })
-  return evaluateCaseFinalization({ clinicalMode, preop, intraop, postop })
+  // The site's vitals rule for this population (10.6.0): the form let the
+  // case through on it, so closing it must read the same rule.
+  const preopVitals = await preopVitalsRequirement(tx, populationForMode(clinicalMode))
+  return evaluateCaseFinalization({ clinicalMode, preop, intraop, postop, preopVitals })
 }
 
 /**
