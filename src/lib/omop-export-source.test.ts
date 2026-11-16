@@ -14,7 +14,11 @@ const row = {
     currentMedications: "Co-Diovan Novartis",
     familyAnesthesiaDetails: "Майка Мария Иванова, реакция 12.03.1990",
     difficultAirwayNotes: "ЕГН 7501020018 в бележката",
-    medications: [{ nameRaw: "Sodium Chloride" }],
+    medications: [
+      { nameRaw: "Sodium Chloride", inn: "sodium chloride", atcCode: "B05XA03" },
+      // Typed as written (10.6.0): no ATC code, no INN.
+      { nameRaw: "Билки от съседката Мария Иванова" },
+    ],
     assessmentAnswers: [
       { state: "YES", optionKey: "CLEAR_FLUIDS", valueText: "Гладно от 06:00, звъннете на майката Елена Димитрова 0888123456" },
       { state: "YES", optionKey: "YES", valueText: null },
@@ -75,5 +79,14 @@ describe("the OMOP export cleans free text only", () => {
     expect(redactEventFreeText([{ name: "Propofol Fresenius", comment: "Иван Петров" }]))
       .toEqual([{ name: "Propofol Fresenius", comment: "[REDACTED]" }])
     expect(redactEventFreeText(null)).toBeNull()
+  })
+})
+
+describe("a current medication typed as written (10.6.0)", () => {
+  const preop = (redactExportRow(row) as unknown as { preop: { medications: { nameRaw: string }[] } }).preop
+
+  it("is cleaned like a note, while one picked from the list passes through", () => {
+    expect(preop.medications[0].nameRaw).toBe("Sodium Chloride")
+    expect(preop.medications[1].nameRaw).not.toContain("Мария Иванова")
   })
 })

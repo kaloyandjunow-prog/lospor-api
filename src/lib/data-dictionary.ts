@@ -2,7 +2,9 @@
 // blood pressure, heart rate and respiratory rate optional before theatre --
 // the whole vitals section or one reading, for adults or children separately --
 // so a reading nobody recorded can be the site's routine rather than a gap.
-// The missingness rules of those four entries say so.
+// The missingness rules of those four entries say so. A current medication
+// not in the drug list can also be typed as written, where the hospital
+// allows it: concept 0, and its name cleaned like a note.
 //
 // 4.9.0 exports a plan as a plan. The planned operation is an observation
 // (Planned procedure, 4226140) with its urgency as qualifier_concept_id, and
@@ -697,7 +699,11 @@ export const DATA_DICTIONARY: DictionaryEntry[] = [
       + "drug_source_value and no dose, since the recorded dose is the "
       + "product's; and concept 0 when RxNorm names only some of its ingredients. "
       + "The ATC code alone is not used for a combination, since its \"Maps to\" "
-      + "can name one ingredient of several.",
+      + "can name one ingredient of several. "
+      + "Since 4.13.0 a hospital can let a medication not in the list be typed "
+      + "as written: it has no ATC code and no INN, exports as concept 0 with "
+      + "drug_source_value MEDICATION:<name>, and that name is cleaned like a "
+      + "free-text note, since it is not a catalogue drug name.",
     type: "concept_id",
     missingnessRule: "No row = no current medications recorded",
     sourceTable: "PreoperativeAssessment", sourceColumn: "medications",

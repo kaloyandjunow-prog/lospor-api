@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client"
 import { EVENT_FREE_TEXT_KEYS } from "@/lib/clinical-pii"
 import { redactText } from "@/lib/pii-check"
+import { isTypedMedication } from "@lospor/core/preop-orders"
 
 type ExportRow = Prisma.CaseGetPayload<{ select: typeof CASE_SELECT }>
 
@@ -31,7 +32,7 @@ export function redactExportRow(c: ExportRow) {
     preop: c.preop ? {
       ...c.preop,
       // Coded clinical vocabulary (diagnosis, procedure, allergy and medication
-      // lists, medication names) passes through.
+      // lists, medication names picked from the drug list) passes through.
       // Free prose written by a clinician, so it goes through the same
       // redaction as every other note before it can leave.
       familyAnesthesiaDetails: c.preop.familyAnesthesiaDetails ? redactText(c.preop.familyAnesthesiaDetails) : c.preop.familyAnesthesiaDetails,
@@ -44,6 +45,12 @@ export function redactExportRow(c: ExportRow) {
         ...answer,
         valueText: answer.valueText ? redactText(answer.valueText) : answer.valueText,
       })),
+      // A medication picked from the drug list is a drug name. One typed as
+      // written (10.6.0) -- no ATC code, no INN -- can say anything, so its
+      // name is cleaned like the notes are.
+      medications: (c.preop.medications ?? []).map(row => isTypedMedication(row) && row.nameRaw
+        ? { ...row, nameRaw: redactText(row.nameRaw) }
+        : row),
     } : c.preop,
     events: (c.events ?? []).map(e => ({
       ...e,

@@ -5,6 +5,7 @@ import {
   BUNDLED_PREOP_ORDER_OPTIONS,
   CUSTOM_ORDER_KEY_PREFIX,
   DEFAULT_PREOP_VITALS_SETTINGS,
+  PREOP_MEDICATIONS_FREE_TEXT_ROW,
   PREOP_VITALS_SETTING_ROWS,
   MORNING_GLUCOSE_CONCEPT_ID,
   MORNING_GLUCOSE_LOINC,
@@ -174,7 +175,16 @@ export function sectionConfigOf(profile: ProfileSectionRows, population: Clinica
     : [...DEFAULT_CONSULT_SPECIALTY_KEYS]
   const order = new Map(NHIS_SPECIALTIES.map((item, index) => [item.key, index]))
   specialties.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0))
-  return preopSectionConfigFor({ [population]: { sections, orderOptions, consultSpecialtyKeys: specialties, vitals: vitalsSettingsOf(stored) } }, population)
+  return preopSectionConfigFor({
+    [population]: {
+      sections,
+      orderOptions,
+      consultSpecialtyKeys: specialties,
+      vitals: vitalsSettingsOf(stored),
+      // No row is off (10.6.0): typing a medication is the hospital's choice.
+      medicationsFreeText: stored.get(PREOP_MEDICATIONS_FREE_TEXT_ROW) === true,
+    },
+  }, population)
 }
 
 /**
@@ -232,6 +242,8 @@ export type SectionConfigInput = {
   consultSpecialtyKeys: string[]
   /** Which preoperative vitals are required (10.6.0). Left out, they stay as they are. */
   vitals?: Partial<PreopVitalsSettings>
+  /** Whether a current medication may be typed as written (10.6.0). Left out, it stays as it is. */
+  medicationsFreeText?: boolean
 }
 
 const MAX_LABEL = 200
@@ -295,6 +307,9 @@ export async function updateSectionRows(
     }
     vitalsInput[key as PreopVitalsSettingKey] = value
   }
+  if (input.medicationsFreeText !== undefined && typeof input.medicationsFreeText !== "boolean") {
+    throw new PreopSectionsError("INVALID_MEDICATIONS_FREE_TEXT")
+  }
 
   for (const [sectionKey, enabled] of Object.entries(sectionInput)) {
     await db.preopProfileSection.upsert({
@@ -310,6 +325,14 @@ export async function updateSectionRows(
       where: { profileId_sectionKey: { profileId, sectionKey } },
       create: { profileId, sectionKey, enabled: required },
       update: { enabled: required },
+    })
+  }
+
+  if (input.medicationsFreeText !== undefined) {
+    await db.preopProfileSection.upsert({
+      where: { profileId_sectionKey: { profileId, sectionKey: PREOP_MEDICATIONS_FREE_TEXT_ROW } },
+      create: { profileId, sectionKey: PREOP_MEDICATIONS_FREE_TEXT_ROW, enabled: input.medicationsFreeText },
+      update: { enabled: input.medicationsFreeText },
     })
   }
 

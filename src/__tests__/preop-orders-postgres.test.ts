@@ -191,4 +191,22 @@ describe.skipIf(!runPostgres)("preop ward orders and medication instructions in 
       await write({ required: true, bloodPressure: true, heartRate: true, respiratoryRate: true })
     }
   })
+
+  it("keeps typing a current medication off until an operator turns it on, per population", async () => {
+    const before = (await service.activePreopProfile(prisma, "ADULT", true))!
+    const shape = service.serializePreopProfile(before).sectionConfig!
+    const options = shape.orderOptions.map(option => ({ key: option.key, list: option.list, enabled: option.enabled, labelEn: option.labelEn, labelBg: option.labelBg, hoursMode: option.hoursMode }))
+    const write = (medicationsFreeText: unknown) => prisma.$transaction(tx => service.updatePreopSectionConfig(tx, userId, {
+      sections: {}, orderOptions: options, consultSpecialtyKeys: shape.consultSpecialtyKeys, medicationsFreeText: medicationsFreeText as boolean,
+    }, "Free text test", "ADULT"))
+    expect(shape.medicationsFreeText).toBe(false)
+    try {
+      await expect(write("yes")).rejects.toMatchObject({ code: "INVALID_MEDICATIONS_FREE_TEXT" })
+      expect(service.serializePreopProfile(await write(true)).sectionConfig!.medicationsFreeText).toBe(true)
+      const pediatric = (await service.activePreopProfile(prisma, "PEDIATRIC", true))!
+      expect(service.serializePreopProfile(pediatric).sectionConfig!.medicationsFreeText).toBe(false)
+    } finally {
+      await write(false)
+    }
+  })
 })
