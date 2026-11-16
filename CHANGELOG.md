@@ -1,6 +1,6 @@
 # Changelog - LOSPOR API
 
-## [Unreleased]
+## [10.5.0] - 2026-11-16
 
 ### Changed — OMOP export (exchange contract 2.9.0, data dictionary 4.12.0)
 
@@ -29,6 +29,34 @@ Found by a 200-case end-to-end export through a Hospital appliance and Central o
   - Ids are permanent.
 - **Provenance leaves the patient rows.** Rule, preset and dose-calculation provenance and the clinical rules
   version stay in LOSPOR's audit and are no longer OMOP observations.
+
+### Changed — ICD-10 mapping
+
+- **A code WHO retired** (K35.0, Q35.2, I84 and 61 others) maps through its retired ICD10 concept when it has no active
+  one; the seed no longer filters sources on `invalidReason`.
+- **A code OMOP does not hold maps through its nearest parent.** NHIS uses WHO's optional subdivisions (an external
+  cause's place and activity, a musculoskeletal site), one level below OMOP's ICD10, so 23,373 codes left as concept 0.
+  They now take the concept of the nearest parent the vocabulary holds (W37.48 → W37, M15.81 → M15.8), method
+  `*-parent-maps-to`, confidence 0.8, with a note naming the parent; the full code stays in the source value. The
+  2026-09-14 decision to leave them at 0 is replaced. `icd10-omop.json`: 39,211 of 39,613 codes map (was 15,838).
+
+### Fixed — security
+
+- **OMOP export** redacts the typed answer to a preoperative question (`assessmentAnswers.valueText`); it left as the
+  observation value uncleaned.
+- **A head of department was refused lab and monitor scans** on every case of the department not assigned to them:
+  both routes selected the owner's institution, not the case's. `CaseAccessRecord.institutionId` is now required,
+  so a select that leaves it out does not compile.
+- **Monitor scan** no longer logs the AI provider's error body.
+- **Transactional email** no longer logs the recipient, and a Brevo failure keeps only its status and error code.
+
+### Changed
+
+- Core 10.5.0.
+
+### Dependencies
+
+- No minor or patch updates since 10.4.2. `npm audit --omit=dev`: 0.
 
 ## [10.4.2] - 2026-11-15
 
