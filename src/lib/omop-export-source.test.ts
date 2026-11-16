@@ -18,6 +18,7 @@ const row = {
       { nameRaw: "Sodium Chloride", inn: "sodium chloride", atcCode: "B05XA03" },
       // Typed as written (10.6.0): no ATC code, no INN.
       { nameRaw: "Prestarium Neo 5 mg, рецепта от 12.03.2026, тел. 0888123456" },
+      { nameRaw: "Ivan Petrov" },
     ],
     assessmentAnswers: [
       { state: "YES", optionKey: "CLEAR_FLUIDS", valueText: "Гладно от 06:00, звъннете на майката Елена Димитрова 0888123456" },
@@ -89,5 +90,7 @@ describe("a current medication typed as written (10.6.0)", () => {
     expect(preop.medications[0].nameRaw).toBe("Sodium Chloride")
     expect(preop.medications[1].nameRaw).toContain("Prestarium Neo 5 mg")
     expect(preop.medications[1].nameRaw).not.toMatch(/12.03.2026|0888123456/)
+    // Not a medicine the list knows: the name guess stays on.
+    expect(preop.medications[2].nameRaw).not.toContain("Ivan Petrov")
   })
 })

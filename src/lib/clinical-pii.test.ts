@@ -41,5 +41,9 @@ describe("current medications at save, where identifying text is screened (10.6.
       { label: "Prestarium Neo 5 mg" },
     ))).toBeNull()
     expect(checkClinicalPayloadPII(meds({ label: "Билки 7501020018" }))).not.toBeNull()
+    expect(checkClinicalPayloadPII(meds(
+      { label: "Paracetamol Sopharma", inn: "paracetamol", atcCode: "N02BE01" },
+      { label: "Ivan Petrov" },
+    ))).toMatchObject({ reason: "likely_name" })
   })
 })

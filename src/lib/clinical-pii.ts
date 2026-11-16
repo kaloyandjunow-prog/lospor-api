@@ -1,3 +1,5 @@
+import { startsWithKnownMedicine } from "@lospor/core/medications"
+import { medicationRows } from "@lospor/core/vocabulary/medications"
 import type { BlockedSaveIssue } from "@lospor/core/sync"
 import { findPII, type PiiIssue } from "@/lib/pii-check"
 
@@ -35,6 +37,16 @@ function isCatalogSelectionList(items: unknown): boolean {
         ?? text(item?.inn)
         ?? text(item?.atcCode),
       ),
+    )
+}
+
+/** Every entry picked from the drug list, or typed and starting with a medicine it knows (10.6.0). */
+function isMedicationList(items: unknown): boolean {
+  return Array.isArray(items)
+    && items.length > 0
+    && items.every((item: Labelled) =>
+      Boolean(text(item?.inn) ?? text(item?.atcCode) ?? text(item?.code))
+      || startsWithKnownMedicine(medicationRows(), text(item?.label) ?? ""),
     )
 }
 
@@ -148,12 +160,13 @@ export function checkClinicalPayloadPII(payload: {
       field: "currentMedications",
       value: labelList(preop.currentMedications),
       blockedKeys: ["currentMedications"],
-      // Every entry is a medicine's name, picked or typed as written (10.6.0),
-      // and trade names are capitalised pairs -- "Prestarium Neo", "Concor
-      // Cor" -- that the name guess reads as a person. One typed entry used to
-      // switch the guess on for the whole list. ЕГН, long numbers, dates and
-      // email are still refused.
-      skipNameCheck: true,
+      // Trade names are capitalised pairs -- "Prestarium Neo", "Concor Cor" --
+      // that the name guess reads as a person, so one typed entry (10.6.0)
+      // used to refuse the whole list. The guess now stands down only when
+      // every entry is from the list or starts with a medicine the list
+      // knows; "Ivan Petrov" is still refused. ЕГН, long numbers, dates and
+      // email are refused either way.
+      skipNameCheck: isMedicationList(preop.currentMedications),
     },
     { field: "familyAnesthesiaDetails", value: text(preop.familyAnesthesiaDetails), blockedKeys: ["familyAnesthesiaDetails"] },
     { field: "difficultAirwayNotes", value: text(preop.difficultAirwayNotes), blockedKeys: ["difficultAirwayNotes"] },
