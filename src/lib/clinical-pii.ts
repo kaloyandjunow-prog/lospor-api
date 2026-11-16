@@ -148,7 +148,12 @@ export function checkClinicalPayloadPII(payload: {
       field: "currentMedications",
       value: labelList(preop.currentMedications),
       blockedKeys: ["currentMedications"],
-      skipNameCheck: isCatalogSelectionList(preop.currentMedications),
+      // Every entry is a medicine's name, picked or typed as written (10.6.0),
+      // and trade names are capitalised pairs -- "Prestarium Neo", "Concor
+      // Cor" -- that the name guess reads as a person. One typed entry used to
+      // switch the guess on for the whole list. ЕГН, long numbers, dates and
+      // email are still refused.
+      skipNameCheck: true,
     },
     { field: "familyAnesthesiaDetails", value: text(preop.familyAnesthesiaDetails), blockedKeys: ["familyAnesthesiaDetails"] },
     { field: "difficultAirwayNotes", value: text(preop.difficultAirwayNotes), blockedKeys: ["difficultAirwayNotes"] },

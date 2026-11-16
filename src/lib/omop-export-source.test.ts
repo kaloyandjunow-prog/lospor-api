@@ -17,7 +17,7 @@ const row = {
     medications: [
       { nameRaw: "Sodium Chloride", inn: "sodium chloride", atcCode: "B05XA03" },
       // Typed as written (10.6.0): no ATC code, no INN.
-      { nameRaw: "Билки от съседката Мария Иванова" },
+      { nameRaw: "Prestarium Neo 5 mg, рецепта от 12.03.2026, тел. 0888123456" },
     ],
     assessmentAnswers: [
       { state: "YES", optionKey: "CLEAR_FLUIDS", valueText: "Гладно от 06:00, звъннете на майката Елена Димитрова 0888123456" },
@@ -85,8 +85,9 @@ describe("the OMOP export cleans free text only", () => {
 describe("a current medication typed as written (10.6.0)", () => {
   const preop = (redactExportRow(row) as unknown as { preop: { medications: { nameRaw: string }[] } }).preop
 
-  it("is cleaned like a note, while one picked from the list passes through", () => {
+  it("loses dates and numbers but keeps its trade name, while one picked from the list passes through", () => {
     expect(preop.medications[0].nameRaw).toBe("Sodium Chloride")
-    expect(preop.medications[1].nameRaw).not.toContain("Мария Иванова")
+    expect(preop.medications[1].nameRaw).toContain("Prestarium Neo 5 mg")
+    expect(preop.medications[1].nameRaw).not.toMatch(/12.03.2026|0888123456/)
   })
 })

@@ -46,10 +46,12 @@ export function redactExportRow(c: ExportRow) {
         valueText: answer.valueText ? redactText(answer.valueText) : answer.valueText,
       })),
       // A medication picked from the drug list is a drug name. One typed as
-      // written (10.6.0) -- no ATC code, no INN -- can say anything, so its
-      // name is cleaned like the notes are.
+      // written (10.6.0) -- no ATC code, no INN -- can say anything, so it is
+      // cleaned of ЕГН, long numbers, dates and email. Not of the name guess:
+      // it is a trade name more often than not ("Prestarium Neo", "Аспирин
+      // Протект"), and the guess would erase the one thing the row carries.
       medications: (c.preop.medications ?? []).map(row => isTypedMedication(row) && row.nameRaw
-        ? { ...row, nameRaw: redactText(row.nameRaw) }
+        ? { ...row, nameRaw: redactText(row.nameRaw, { nameHeuristic: false }) }
         : row),
     } : c.preop,
     events: (c.events ?? []).map(e => ({
