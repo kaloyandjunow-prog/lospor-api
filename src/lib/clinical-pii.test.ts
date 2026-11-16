@@ -31,3 +31,19 @@ describe("identifying text at save, on the cloud demo", () => {
     expect(screensIdentifyingTextAtSave()).toBe(true)
   })
 })
+
+describe("current medications at save, where identifying text is screened (10.6.0)", () => {
+  it("takes a trade name typed as written beside drugs from the list, and still refuses an ЕГН", () => {
+    vi.stubEnv("LOSPOR_DEPLOYMENT_MODE", "serverless")
+    const meds = (...labels: { label: string; inn?: string; atcCode?: string }[]) => ({ preop: { currentMedications: labels } })
+    expect(checkClinicalPayloadPII(meds(
+      { label: "Paracetamol Sopharma", inn: "paracetamol", atcCode: "N02BE01" },
+      { label: "Prestarium Neo 5 mg" },
+    ))).toBeNull()
+    expect(checkClinicalPayloadPII(meds({ label: "Билки 7501020018" }))).not.toBeNull()
+    expect(checkClinicalPayloadPII(meds(
+      { label: "Paracetamol Sopharma", inn: "paracetamol", atcCode: "N02BE01" },
+      { label: "Ivan Petrov" },
+    ))).toMatchObject({ reason: "likely_name" })
+  })
+})

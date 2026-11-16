@@ -1,14 +1,19 @@
-import { ClinicalMode, PreopOrderStatus, Prisma } from "@/generated/prisma/client"
+import { ClinicalMode, PreopOrderStatus, PreopProfileStatus, Prisma } from "@/generated/prisma/client"
+import type { PreopVitalsRequirement } from "@lospor/core/clinical-validation"
 import { DEFAULT_CONSULT_SPECIALTY_KEYS, NHIS_SPECIALTIES, NHIS_SPECIALTY_BY_KEY } from "@lospor/core/nhis-specialties"
 import {
   BUNDLED_PREOP_ORDER_OPTIONS,
   CUSTOM_ORDER_KEY_PREFIX,
+  DEFAULT_PREOP_VITALS_SETTINGS,
+  PREOP_MEDICATIONS_FREE_TEXT_ROW,
+  PREOP_VITALS_SETTING_ROWS,
   MORNING_GLUCOSE_CONCEPT_ID,
   MORNING_GLUCOSE_LOINC,
   isCustomOrderKey,
   medicationInstructionProblems,
   preopSectionConfigFor,
   preopSectionDefinition,
+  preopVitalsRequirementFor,
   preopSectionsFor,
   wardOrderIdentity,
   wardOrderProblems,
@@ -20,6 +25,8 @@ import {
   type PreopOrderOption,
   type PreopSectionConfig,
   type PreopSectionKey,
+  type PreopVitalsSettingKey,
+  type PreopVitalsSettings,
   type PreopWardOrder,
   type PreopWardOrderInput,
 } from "@lospor/core/preop-orders"
@@ -168,7 +175,54 @@ export function sectionConfigOf(profile: ProfileSectionRows, population: Clinica
     : [...DEFAULT_CONSULT_SPECIALTY_KEYS]
   const order = new Map(NHIS_SPECIALTIES.map((item, index) => [item.key, index]))
   specialties.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0))
-  return preopSectionConfigFor({ [population]: { sections, orderOptions, consultSpecialtyKeys: specialties } }, population)
+  return preopSectionConfigFor({
+    [population]: {
+      sections,
+      orderOptions,
+      consultSpecialtyKeys: specialties,
+      vitals: vitalsSettingsOf(stored),
+      // No row is off (10.6.0): typing a medication is the hospital's choice.
+      medicationsFreeText: stored.get(PREOP_MEDICATIONS_FREE_TEXT_ROW) === true,
+    },
+  }, population)
+}
+
+/**
+ * What the readiness gates require of a case's preoperative vitals, from the
+ * population's published profile (10.6.0). Finalization asks this rather than
+ * trusting a client, so a case the form let through without vitals closes, and
+ * one a site still requires them for does not.
+ *
+ * A paediatric case falls back to the adult profile when it has none, as the
+ * case read does; no profile at all means the pre-10.6.0 rule, all three.
+ */
+export async function preopVitalsRequirement(
+  db: Pick<Prisma.TransactionClient, "preopAssessmentProfile">,
+  population: ClinicalMode,
+): Promise<PreopVitalsRequirement> {
+  const keys = Object.values(PREOP_VITALS_SETTING_ROWS)
+  const read = (wanted: ClinicalMode) => db.preopAssessmentProfile.findFirst({
+    where: { status: PreopProfileStatus.PUBLISHED, population: wanted },
+    orderBy: { version: "desc" },
+    select: { sections: { where: { sectionKey: { in: keys } }, select: { sectionKey: true, enabled: true } } },
+  })
+  const profile = (await read(population)) ?? (population === ClinicalMode.ADULT ? null : await read(ClinicalMode.ADULT))
+  const stored = new Map(profile?.sections.map(row => [row.sectionKey, row.enabled]) ?? [])
+  return preopVitalsRequirementFor({ vitals: vitalsSettingsOf(stored) })
+}
+
+/**
+ * The vitals switches (10.6.0), stored as rows beside the section switches.
+ * No row is the default -- required -- so a profile from before 10.6.0
+ * changes nothing until an operator chooses.
+ */
+function vitalsSettingsOf(stored: Map<string, boolean>): PreopVitalsSettings {
+  const settings = { ...DEFAULT_PREOP_VITALS_SETTINGS }
+  for (const key of Object.keys(PREOP_VITALS_SETTING_ROWS) as PreopVitalsSettingKey[]) {
+    const row = stored.get(PREOP_VITALS_SETTING_ROWS[key])
+    if (row !== undefined) settings[key] = row
+  }
+  return settings
 }
 
 // ── An operator's change ──────────────────────────────────────────────────
@@ -186,6 +240,10 @@ export type SectionConfigInput = {
     hoursMode?: PreopHoursMode
   }[]
   consultSpecialtyKeys: string[]
+  /** Which preoperative vitals are required (10.6.0). Left out, they stay as they are. */
+  vitals?: Partial<PreopVitalsSettings>
+  /** Whether a current medication may be typed as written (10.6.0). Left out, it stays as it is. */
+  medicationsFreeText?: boolean
 }
 
 const MAX_LABEL = 200
@@ -241,12 +299,40 @@ export async function updateSectionRows(
   for (const key of input.consultSpecialtyKeys) {
     if (!NHIS_SPECIALTY_BY_KEY.has(key)) throw new PreopSectionsError("UNKNOWN_SPECIALTY", { specialtyKey: key })
   }
+  const vitalsInput: Partial<Record<PreopVitalsSettingKey, boolean>> = {}
+  for (const [key, value] of Object.entries(input.vitals ?? {})) {
+    if (value === undefined) continue
+    if (!Object.prototype.hasOwnProperty.call(PREOP_VITALS_SETTING_ROWS, key) || typeof value !== "boolean") {
+      throw new PreopSectionsError("UNKNOWN_VITALS_SETTING", { key })
+    }
+    vitalsInput[key as PreopVitalsSettingKey] = value
+  }
+  if (input.medicationsFreeText !== undefined && typeof input.medicationsFreeText !== "boolean") {
+    throw new PreopSectionsError("INVALID_MEDICATIONS_FREE_TEXT")
+  }
 
   for (const [sectionKey, enabled] of Object.entries(sectionInput)) {
     await db.preopProfileSection.upsert({
       where: { profileId_sectionKey: { profileId, sectionKey } },
       create: { profileId, sectionKey, enabled },
       update: { enabled },
+    })
+  }
+
+  for (const [key, required] of Object.entries(vitalsInput) as [PreopVitalsSettingKey, boolean][]) {
+    const sectionKey = PREOP_VITALS_SETTING_ROWS[key]
+    await db.preopProfileSection.upsert({
+      where: { profileId_sectionKey: { profileId, sectionKey } },
+      create: { profileId, sectionKey, enabled: required },
+      update: { enabled: required },
+    })
+  }
+
+  if (input.medicationsFreeText !== undefined) {
+    await db.preopProfileSection.upsert({
+      where: { profileId_sectionKey: { profileId, sectionKey: PREOP_MEDICATIONS_FREE_TEXT_ROW } },
+      create: { profileId, sectionKey: PREOP_MEDICATIONS_FREE_TEXT_ROW, enabled: input.medicationsFreeText },
+      update: { enabled: input.medicationsFreeText },
     })
   }
 
