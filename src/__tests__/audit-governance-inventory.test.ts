@@ -52,6 +52,8 @@ const INVENTORIED_TRANSACTION_HELPERS: Readonly<Record<string, string>> = {
     "The 9.15.0 v3 baseline step, run inside the inventoried bundled-baseline provisioner transaction",
   "src/lib/clinical-rules/bundled-baseline-v4-provisioner.ts":
     "The 10.2.0 v4 baseline step, run inside the same transaction after the v3 step",
+  "src/lib/clinical-rules/bundled-baseline-v5-provisioner.ts":
+    "The 10.7.0 v5 baseline step, run inside the same transaction after the v4 step",
 }
 
 // These mutate only short-lived authentication/session bookkeeping or
