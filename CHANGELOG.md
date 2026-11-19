@@ -1,5 +1,20 @@
 # Changelog - LOSPOR API
 
+## [10.7.0] - 2026-11-19
+
+Released with Core 10.7.0. No column changes.
+
+### Added
+
+- **Clinical baseline v5.** The three inhaled agents become clinical rules, so an agent's range, step and quick
+  buttons are versioned and editable like any dose: `ADULT_AGENT_PROFILE` (adults, 271 rules) and
+  `PEDIATRIC_AGENT_PROFILE` (children, 369 rules). v5 is v4 plus those six rules; nothing is changed or removed, and
+  the values are those in use before (sevoflurane 0-8, desflurane 0-18, isoflurane 0-5, step 0.1).
+- **v5 becomes the platform's rules by itself after an update**, but only where the 10.2.0 release made the
+  selection (v4). A selection a person made is never overwritten. It installs beside v2, v3 and v4, which stay
+  exactly as installed, under its own release principal `lospor-release:10.7.0`; its publication evidence is the
+  exact difference from v4. Fingerprints are pinned, so a later change to the rules must be a new baseline.
+
 ## [10.6.0] - 2026-11-16
 
 Data dictionary 4.13.0; no column changes. Released with Core 10.6.0.
