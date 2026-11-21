@@ -1,12 +1,20 @@
 import { Prisma } from "@/generated/prisma/client"
+import { isNurse, nurseCaseWhere, nurseReachesCase, type NurseScope } from "@/lib/nurse-access"
 
 export type AuthUser = {
   id: string
   role?: string | null
   institutionId?: string | null
+  /** An anaesthesia nurse's cases and theatres today (10.8.0). */
+  nurseScope?: NurseScope
 }
 
 type CaseAccessRecord = {
+  /** A nurse reaches a case by these (10.8.0); without them she is refused. */
+  id?: string
+  operatingTheatreId?: string | null
+  finalizedAt?: Date | null
+  plannedSurgeryDate?: Date | null
   userId: string
   createdById?: string | null
   // Required, though it may be null. Every head-of-department decision reads the
@@ -29,6 +37,8 @@ export function requireRole<U extends { role?: string | null }>(
 }
 
 export function canReadCase(user: AuthUser, record: CaseAccessRecord): boolean {
+  // A nurse reaches only the cases she is on and her theatre's cases today.
+  if (isNurse(user)) return nurseReachesCase(user.nurseScope, record)
   if (user.role === "ADMIN") return true
   if (record.userId === user.id) return true
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
@@ -48,6 +58,7 @@ export function canReadCase(user: AuthUser, record: CaseAccessRecord): boolean {
 }
 
 export function canWriteCase(user: AuthUser, record: CaseAccessRecord): boolean {
+  if (isNurse(user)) return nurseReachesCase(user.nurseScope, record)
   if (user.role === "ADMIN") return true
   if (record.userId === user.id) return true
   return user.role === "HEAD_OF_DEPT"
@@ -135,6 +146,7 @@ export function headOfDeptCaseScope(institutionId: string): Prisma.CaseWhereInpu
 
 export function caseReadWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereInput {
   const base = id ? { id } : {}
+  if (isNurse(user)) return { ...base, ...nurseCaseWhere(user.nurseScope ?? { caseIds: [], theatreIds: [], shiftDate: "" }) }
   if (user.role === "ADMIN") return base
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
     // canReadCase permits the assignee unconditionally, before it ever looks
@@ -160,6 +172,7 @@ export function caseReadWhereForUser(user: AuthUser, id?: string): Prisma.CaseWh
 
 export function caseWriteWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereInput {
   const base = id ? { id } : {}
+  if (isNurse(user)) return { ...base, ...nurseCaseWhere(user.nurseScope ?? { caseIds: [], theatreIds: [], shiftDate: "" }) }
   if (user.role === "ADMIN") return base
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
     // Same gap as caseReadWhereForUser, and canWriteCase permits the assignee
@@ -194,6 +207,21 @@ export const caseWhereForUser = caseReadWhereForUser
  * refused later would be offering a choice that cannot work.
  */
 export function colleagueWhereForUser(user: AuthUser): Prisma.UserWhereInput | null {
+  // A nurse hands a case on only to another nurse of her department (10.8.0).
+  if (isNurse(user)) {
+    return user.institutionId
+      ? {
+          institutionId: user.institutionId,
+          id: { not: user.id },
+          role: "ANAESTHESIA_NURSE",
+          activatedAt: { not: null },
+          suspendedAt: null,
+          recoveryRequiredAt: null,
+          deletedAt: null,
+          anonymizedAt: null,
+        }
+      : null
+  }
   if (user.role === "ADMIN") {
     return {
       id: { not: user.id },

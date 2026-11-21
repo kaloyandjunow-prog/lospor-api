@@ -93,12 +93,11 @@ export async function PUT(
   const event = { ...parsed, ...(atomicIntraopPatch ? { intraopPatch: atomicIntraopPatch } : {}), id: eventId }
   const piiError = checkEventPII(event)
   if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
-
   try {
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -203,7 +202,7 @@ export async function DELETE(
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {

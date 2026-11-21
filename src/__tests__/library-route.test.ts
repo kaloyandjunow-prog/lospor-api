@@ -98,7 +98,8 @@ describe("GET /api/library/:category", () => {
     expect(body.map(option => [option.label, option.customColor, option.customGroupColor])).toEqual([
       ["Fentanyl", "#3b82f6", "#3b82f6"],
       ["Remifentanil", "#ec4899", "#3b82f6"],
-      ["Ondansetron", undefined, undefined],
+      // 10.8.0: no colour of the hospital's, so the ISO 26825 colour of its group.
+      ["Ondansetron", "#fa8072", undefined],
     ])
     // The bundled colour still travels, for a client that predates the custom one.
     expect(body[0].color).toBe("#f97316")

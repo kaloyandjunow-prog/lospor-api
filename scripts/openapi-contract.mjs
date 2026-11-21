@@ -1243,6 +1243,12 @@ add("PATCH", "/v1/cases/{id}/transfer", "Accept or decline a case transfer", { p
 add("GET", "/v1/cases/{id}/transfers", "Read a case handover history", { parameters: [id], result: arrayOf("Transfer") })
 add("GET", "/v1/cases/transfers/pending", "List pending case transfers", { parameters: [query("direction", { type: "string", enum: ["incoming", "outgoing"], default: "incoming" })], result: arrayOf("Transfer") })
 add("GET", "/v1/users/colleagues", "List colleagues eligible for transfer", { result: arrayOf("Colleague") })
+// 10.8.0: anaesthesia nurses on a case and on a theatre for a day.
+add("GET", "/v1/users/nurses", "List the anaesthesia nurses of the caller's department", { result: ref("JsonObject") })
+add("GET", "/v1/cases/{id}/nurses", "Read a case's anaesthesia nurses", { parameters: [id], result: ref("JsonObject") })
+add("POST", "/v1/cases/{id}/nurses", "Assign or remove a case's anaesthesia nurse, or hand a nurse's place over to another nurse", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
+add("GET", "/v1/operating-theatres/shifts", "Read the anaesthesia nurses on the operating theatres for a day", { parameters: [query("date", { type: "string" })], result: ref("JsonObject") })
+add("POST", "/v1/operating-theatres/shifts", "Put an anaesthesia nurse on an operating theatre for a day, or take her off", { requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 
 add("POST", "/v1/cases/{id}/ai/advise", "Generate case-specific AI advice", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 add("POST", "/v1/ai/advise", "Generate AI advice from supplied structured data", { requestBody: body(ref("JsonObject")), result: ref("JsonObject") })

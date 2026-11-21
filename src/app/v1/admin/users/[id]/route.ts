@@ -21,7 +21,7 @@ import {
 } from "@/lib/account-lifecycle"
 
 const schema = z.object({
-  role: z.enum(["MEMBER", "HEAD_OF_DEPT"]).optional(),
+  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ANAESTHESIA_NURSE"]).optional(),
   accountKind: z.enum(["CLINICAL", "RESEARCH_ONLY"]).optional(),
 }).strict().refine(value => value.role !== undefined || value.accountKind !== undefined, {
   message: "At least one account field is required",

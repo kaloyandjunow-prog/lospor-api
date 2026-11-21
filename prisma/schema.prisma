@@ -28,6 +28,10 @@ model User {
   institutionId                 String?
   institution                   Institution?                         @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
   cases                         Case[]                               @relation("CaseAssignee")
+  nurseAssignments              CaseNurse[]                          @relation("CaseNurseAssignee")
+  nurseAssignmentsMade          CaseNurse[]                          @relation("CaseNurseAssigner")
+  theatreShifts                 TheatreNurseShift[]                  @relation("TheatreShiftNurse")
+  theatreShiftsAssigned         TheatreNurseShift[]                  @relation("TheatreShiftAssigner")
   casesCreated                  Case[]                               @relation("CaseCreator")
   roleRequests                  RoleRequest[]
   institutionChangeRequests     InstitutionChangeRequest[]
@@ -180,6 +184,9 @@ enum UserRole {
   MEMBER
   HEAD_OF_DEPT
   ADMIN
+  /// An anaesthesia nurse (10.8.0): works only in the cases assigned to her,
+  /// in the intraoperative and postoperative stages (Core clinical-roles).
+  ANAESTHESIA_NURSE
   CLINICIAN // legacy
   RESEARCHER // legacy
 }
@@ -279,6 +286,10 @@ model Case {
   /// The theatre's name when intraop started, kept so a later rename does not
   /// rewrite where the case happened. Null until then.
   operatingTheatreName String?
+  /// When the operation is planned (10.8.0), optional, a calendar date in the
+  /// case's own zone. Set from the dashboard; theatre nurses see a theatre's
+  /// cases for their day by it.
+  plannedSurgeryDate   DateTime?    @db.Date
   indicatorSummary     CaseIndicatorSummary?
   status               CaseStatus   @default(DRAFT)
   /// A cancelled procedure (10.0.0): when, by whom, why (Core
@@ -330,6 +341,7 @@ model Case {
   finalizations        CaseFinalization[]
   clinicalCalculations CaseClinicalCalculation[]
   consentPrints        CaseConsentPrint[]
+  nurses               CaseNurse[]
 
   @@unique([userId, caseCode])
   @@unique([createdById, clientDraftId])
@@ -350,9 +362,53 @@ model OperatingTheatre {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cases Case[]
+  cases       Case[]
+  nurseShifts TheatreNurseShift[]
 
   @@index([active, sortOrder])
+}
+
+/// How a nurse came to be on a case (10.8.0).
+enum CaseNurseSource {
+  /// Assigned on the case by its doctor or a head of department.
+  ASSIGNED
+  /// On the case's theatre that day, and worked on it: kept until finalised.
+  THEATRE
+  /// Handed over by another nurse.
+  HANDOVER
+}
+
+/// The anaesthesia nurses of a case (10.8.0), any number of them. Each may do
+/// everything a nurse may in it; the last edit wins.
+model CaseNurse {
+  caseId       String
+  case         Case            @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User            @relation("CaseNurseAssignee", fields: [userId], references: [id])
+  assignedById String?
+  assignedBy   User?           @relation("CaseNurseAssigner", fields: [assignedById], references: [id])
+  source       CaseNurseSource @default(ASSIGNED)
+  assignedAt   DateTime        @default(now())
+
+  @@id([caseId, userId])
+  @@index([userId])
+}
+
+/// A nurse on an operating theatre for a day (10.8.0): she sees the theatre's
+/// unfinalised cases planned for that day.
+model TheatreNurseShift {
+  id           String           @id @default(cuid())
+  theatreId    String
+  theatre      OperatingTheatre @relation(fields: [theatreId], references: [id])
+  userId       String
+  user         User             @relation("TheatreShiftNurse", fields: [userId], references: [id])
+  shiftDate    DateTime         @db.Date
+  assignedById String?
+  assignedBy   User?            @relation("TheatreShiftAssigner", fields: [assignedById], references: [id])
+  createdAt    DateTime         @default(now())
+
+  @@unique([theatreId, userId, shiftDate])
+  @@index([userId, shiftDate])
 }
 
 /// The unit indicators' thresholds and whether colleagues are named (10.0.0),

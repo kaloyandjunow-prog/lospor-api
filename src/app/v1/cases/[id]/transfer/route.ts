@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { caseWriteWhereForUser } from "@/lib/access-control"
@@ -31,6 +32,8 @@ function transferError(error: unknown, caseId: string) {
 // POST - initiate a transfer
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "HAND_OVER_TO_DOCTOR")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id: caseId } = await params
@@ -189,6 +192,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 // PATCH - recipient accepts or declines
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "HAND_OVER_TO_DOCTOR")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id: caseId } = await params

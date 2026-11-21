@@ -60,9 +60,14 @@ describe("case vitals scan route", () => {
     expect(findUniqueMock).toHaveBeenCalledWith({
       where: { id: "case-1" },
       select: {
+        id: true,
         userId: true,
         // The case's own institution: a head of department is scoped by it.
         institutionId: true,
+        // 10.8.0: an anaesthesia nurse reaches a case by these.
+        operatingTheatreId: true,
+        finalizedAt: true,
+        plannedSurgeryDate: true,
         user: { select: { institutionId: true } },
         // Consent is read from the database, never from the client, exactly as
         // the case advise route does it.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server"
 import { z } from "zod"
 
 import { getAuthUser } from "@/lib/mobile-auth"
+import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
@@ -134,6 +135,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   const removes = [...new Set(parsed.remove)]
   const allEvents = [...adds, ...updates]
+  // Giving a drug despite an allergy warning is the doctor's decision (10.8.0):
+  // a new administration only; an edit of one the doctor gave keeps its acknowledgement.
+  if (adds.some(event => Array.isArray(event.allergyAck) && event.allergyAck.length > 0)) {
+    const allergyRefusal = refuseIfNotAllowed(user, "GIVE_DESPITE_ALLERGY")
+    if (allergyRefusal) return allergyRefusal
+  }
   await resolveDrugExposureConcepts(prisma, allEvents)
   const source = clinicalEventSource(user)
   const madeAt = madeAtFrom(req.headers.get("x-lospor-made-at"))
@@ -142,10 +149,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      await recordNurseWork(tx, user, id)
       if (caseRecord.status === "CANCELLED") return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
       if (caseRecord.status === "COMPLETE") return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)

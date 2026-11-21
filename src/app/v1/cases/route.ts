@@ -1,4 +1,5 @@
 import { PREOP_ANSWER_REFUSED, PreopContractError, populationForMode, preopContractBlockedKeys, preparePreopProfile, savePreopAnswers, savePreopOrders } from "@/lib/preop/service"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { preopVitalsRequirement } from "@/lib/preop/sections"
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -37,6 +38,8 @@ async function findIdempotentCase(userId: string, idempotencyKey: string) {
 
 export async function POST(req: NextRequest) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "CREATE_CASE")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const userId = user.id
 
@@ -279,6 +282,8 @@ export async function GET(req: NextRequest) {
     intraop: { select: { monthYear: true, durationMinutes: true, endTime: true, startedAt: true, startTime: true } },
     operatingTheatre: { select: { name: true } },
     user: { select: { name: true } },
+    // 10.8.0: the case's anaesthesia nurses, for the dashboard row.
+    nurses: { select: { userId: true, user: { select: { name: true } } }, orderBy: { assignedAt: "asc" as const } },
     transfers: {
       where: { status: "PENDING" as const },
       // toUserId lets a client tell "a handover addressed to me" apart from

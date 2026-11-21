@@ -84,6 +84,18 @@ export type Case = Prisma.CaseModel
  */
 export type OperatingTheatre = Prisma.OperatingTheatreModel
 /**
+ * Model CaseNurse
+ * The anaesthesia nurses of a case (10.8.0), any number of them. Each may do
+ * everything a nurse may in it; the last edit wins.
+ */
+export type CaseNurse = Prisma.CaseNurseModel
+/**
+ * Model TheatreNurseShift
+ * A nurse on an operating theatre for a day (10.8.0): she sees the theatre's
+ * unfinalised cases planned for that day.
+ */
+export type TheatreNurseShift = Prisma.TheatreNurseShiftModel
+/**
  * Model IndicatorPolicy
  * The unit indicators' thresholds and whether colleagues are named (10.0.0),
  * set in Status. One row; no row means the bundled defaults (Core).

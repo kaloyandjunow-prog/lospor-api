@@ -17,7 +17,7 @@ import { invalidateAccountState, notePasswordChanged } from "@/lib/password-epoc
 import { accountAdministrationRefusal } from "@/lib/deployment-capabilities"
 
 const schema = z.object({
-  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ADMIN"]).optional(),
+  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ADMIN", "ANAESTHESIA_NURSE"]).optional(),
   accountKind: z.enum(["CLINICAL", "RESEARCH_ONLY"]).optional(),
   currentPassword: z.string().min(1),
   reason: z.string().trim().min(3).max(500),

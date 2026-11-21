@@ -227,6 +227,7 @@ export type OperatingTheatreWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"OperatingTheatre"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"OperatingTheatre"> | Date | string
   cases?: Prisma.CaseListRelationFilter
+  nurseShifts?: Prisma.TheatreNurseShiftListRelationFilter
 }
 
 export type OperatingTheatreOrderByWithRelationInput = {
@@ -237,6 +238,7 @@ export type OperatingTheatreOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   cases?: Prisma.CaseOrderByRelationAggregateInput
+  nurseShifts?: Prisma.TheatreNurseShiftOrderByRelationAggregateInput
 }
 
 export type OperatingTheatreWhereUniqueInput = Prisma.AtLeast<{
@@ -250,6 +252,7 @@ export type OperatingTheatreWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"OperatingTheatre"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"OperatingTheatre"> | Date | string
   cases?: Prisma.CaseListRelationFilter
+  nurseShifts?: Prisma.TheatreNurseShiftListRelationFilter
 }, "id">
 
 export type OperatingTheatreOrderByWithAggregationInput = {
@@ -286,6 +289,7 @@ export type OperatingTheatreCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   cases?: Prisma.CaseCreateNestedManyWithoutOperatingTheatreInput
+  nurseShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutTheatreInput
 }
 
 export type OperatingTheatreUncheckedCreateInput = {
@@ -296,6 +300,7 @@ export type OperatingTheatreUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutOperatingTheatreInput
+  nurseShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutTheatreInput
 }
 
 export type OperatingTheatreUpdateInput = {
@@ -306,6 +311,7 @@ export type OperatingTheatreUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUpdateManyWithoutOperatingTheatreNestedInput
+  nurseShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutTheatreNestedInput
 }
 
 export type OperatingTheatreUncheckedUpdateInput = {
@@ -316,6 +322,7 @@ export type OperatingTheatreUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutOperatingTheatreNestedInput
+  nurseShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutTheatreNestedInput
 }
 
 export type OperatingTheatreCreateManyInput = {
@@ -385,6 +392,11 @@ export type OperatingTheatreSumOrderByAggregateInput = {
   sortOrder?: Prisma.SortOrder
 }
 
+export type OperatingTheatreScalarRelationFilter = {
+  is?: Prisma.OperatingTheatreWhereInput
+  isNot?: Prisma.OperatingTheatreWhereInput
+}
+
 export type OperatingTheatreCreateNestedOneWithoutCasesInput = {
   create?: Prisma.XOR<Prisma.OperatingTheatreCreateWithoutCasesInput, Prisma.OperatingTheatreUncheckedCreateWithoutCasesInput>
   connectOrCreate?: Prisma.OperatingTheatreCreateOrConnectWithoutCasesInput
@@ -405,6 +417,20 @@ export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
+export type OperatingTheatreCreateNestedOneWithoutNurseShiftsInput = {
+  create?: Prisma.XOR<Prisma.OperatingTheatreCreateWithoutNurseShiftsInput, Prisma.OperatingTheatreUncheckedCreateWithoutNurseShiftsInput>
+  connectOrCreate?: Prisma.OperatingTheatreCreateOrConnectWithoutNurseShiftsInput
+  connect?: Prisma.OperatingTheatreWhereUniqueInput
+}
+
+export type OperatingTheatreUpdateOneRequiredWithoutNurseShiftsNestedInput = {
+  create?: Prisma.XOR<Prisma.OperatingTheatreCreateWithoutNurseShiftsInput, Prisma.OperatingTheatreUncheckedCreateWithoutNurseShiftsInput>
+  connectOrCreate?: Prisma.OperatingTheatreCreateOrConnectWithoutNurseShiftsInput
+  upsert?: Prisma.OperatingTheatreUpsertWithoutNurseShiftsInput
+  connect?: Prisma.OperatingTheatreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OperatingTheatreUpdateToOneWithWhereWithoutNurseShiftsInput, Prisma.OperatingTheatreUpdateWithoutNurseShiftsInput>, Prisma.OperatingTheatreUncheckedUpdateWithoutNurseShiftsInput>
+}
+
 export type OperatingTheatreCreateWithoutCasesInput = {
   id?: string
   name: string
@@ -412,6 +438,7 @@ export type OperatingTheatreCreateWithoutCasesInput = {
   active?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  nurseShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutTheatreInput
 }
 
 export type OperatingTheatreUncheckedCreateWithoutCasesInput = {
@@ -421,6 +448,7 @@ export type OperatingTheatreUncheckedCreateWithoutCasesInput = {
   active?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  nurseShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutTheatreInput
 }
 
 export type OperatingTheatreCreateOrConnectWithoutCasesInput = {
@@ -446,6 +474,7 @@ export type OperatingTheatreUpdateWithoutCasesInput = {
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  nurseShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutTheatreNestedInput
 }
 
 export type OperatingTheatreUncheckedUpdateWithoutCasesInput = {
@@ -455,6 +484,63 @@ export type OperatingTheatreUncheckedUpdateWithoutCasesInput = {
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  nurseShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutTheatreNestedInput
+}
+
+export type OperatingTheatreCreateWithoutNurseShiftsInput = {
+  id?: string
+  name: string
+  sortOrder?: number
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  cases?: Prisma.CaseCreateNestedManyWithoutOperatingTheatreInput
+}
+
+export type OperatingTheatreUncheckedCreateWithoutNurseShiftsInput = {
+  id?: string
+  name: string
+  sortOrder?: number
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutOperatingTheatreInput
+}
+
+export type OperatingTheatreCreateOrConnectWithoutNurseShiftsInput = {
+  where: Prisma.OperatingTheatreWhereUniqueInput
+  create: Prisma.XOR<Prisma.OperatingTheatreCreateWithoutNurseShiftsInput, Prisma.OperatingTheatreUncheckedCreateWithoutNurseShiftsInput>
+}
+
+export type OperatingTheatreUpsertWithoutNurseShiftsInput = {
+  update: Prisma.XOR<Prisma.OperatingTheatreUpdateWithoutNurseShiftsInput, Prisma.OperatingTheatreUncheckedUpdateWithoutNurseShiftsInput>
+  create: Prisma.XOR<Prisma.OperatingTheatreCreateWithoutNurseShiftsInput, Prisma.OperatingTheatreUncheckedCreateWithoutNurseShiftsInput>
+  where?: Prisma.OperatingTheatreWhereInput
+}
+
+export type OperatingTheatreUpdateToOneWithWhereWithoutNurseShiftsInput = {
+  where?: Prisma.OperatingTheatreWhereInput
+  data: Prisma.XOR<Prisma.OperatingTheatreUpdateWithoutNurseShiftsInput, Prisma.OperatingTheatreUncheckedUpdateWithoutNurseShiftsInput>
+}
+
+export type OperatingTheatreUpdateWithoutNurseShiftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUpdateManyWithoutOperatingTheatreNestedInput
+}
+
+export type OperatingTheatreUncheckedUpdateWithoutNurseShiftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutOperatingTheatreNestedInput
 }
 
 
@@ -464,10 +550,12 @@ export type OperatingTheatreUncheckedUpdateWithoutCasesInput = {
 
 export type OperatingTheatreCountOutputType = {
   cases: number
+  nurseShifts: number
 }
 
 export type OperatingTheatreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   cases?: boolean | OperatingTheatreCountOutputTypeCountCasesArgs
+  nurseShifts?: boolean | OperatingTheatreCountOutputTypeCountNurseShiftsArgs
 }
 
 /**
@@ -487,6 +575,13 @@ export type OperatingTheatreCountOutputTypeCountCasesArgs<ExtArgs extends runtim
   where?: Prisma.CaseWhereInput
 }
 
+/**
+ * OperatingTheatreCountOutputType without action
+ */
+export type OperatingTheatreCountOutputTypeCountNurseShiftsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TheatreNurseShiftWhereInput
+}
+
 
 export type OperatingTheatreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -496,6 +591,7 @@ export type OperatingTheatreSelect<ExtArgs extends runtime.Types.Extensions.Inte
   createdAt?: boolean
   updatedAt?: boolean
   cases?: boolean | Prisma.OperatingTheatre$casesArgs<ExtArgs>
+  nurseShifts?: boolean | Prisma.OperatingTheatre$nurseShiftsArgs<ExtArgs>
   _count?: boolean | Prisma.OperatingTheatreCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["operatingTheatre"]>
 
@@ -529,6 +625,7 @@ export type OperatingTheatreSelectScalar = {
 export type OperatingTheatreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "sortOrder" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["operatingTheatre"]>
 export type OperatingTheatreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   cases?: boolean | Prisma.OperatingTheatre$casesArgs<ExtArgs>
+  nurseShifts?: boolean | Prisma.OperatingTheatre$nurseShiftsArgs<ExtArgs>
   _count?: boolean | Prisma.OperatingTheatreCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OperatingTheatreIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -538,6 +635,7 @@ export type $OperatingTheatrePayload<ExtArgs extends runtime.Types.Extensions.In
   name: "OperatingTheatre"
   objects: {
     cases: Prisma.$CasePayload<ExtArgs>[]
+    nurseShifts: Prisma.$TheatreNurseShiftPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -941,6 +1039,7 @@ readonly fields: OperatingTheatreFieldRefs;
 export interface Prisma__OperatingTheatreClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   cases<T extends Prisma.OperatingTheatre$casesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.OperatingTheatre$casesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  nurseShifts<T extends Prisma.OperatingTheatre$nurseShiftsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.OperatingTheatre$nurseShiftsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TheatreNurseShiftPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1390,6 +1489,30 @@ export type OperatingTheatre$casesArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.CaseScalarFieldEnum | Prisma.CaseScalarFieldEnum[]
+}
+
+/**
+ * OperatingTheatre.nurseShifts
+ */
+export type OperatingTheatre$nurseShiftsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TheatreNurseShift
+   */
+  select?: Prisma.TheatreNurseShiftSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TheatreNurseShift
+   */
+  omit?: Prisma.TheatreNurseShiftOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TheatreNurseShiftInclude<ExtArgs> | null
+  where?: Prisma.TheatreNurseShiftWhereInput
+  orderBy?: Prisma.TheatreNurseShiftOrderByWithRelationInput | Prisma.TheatreNurseShiftOrderByWithRelationInput[]
+  cursor?: Prisma.TheatreNurseShiftWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TheatreNurseShiftScalarFieldEnum | Prisma.TheatreNurseShiftScalarFieldEnum[]
 }
 
 /**

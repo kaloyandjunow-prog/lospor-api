@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -37,6 +38,8 @@ function refused(req: NextRequest, error: unknown, caseId: string) {
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "CANCEL_PROCEDURE")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id: caseId } = await params
   const parsed = cancelSchema.safeParse(await req.json().catch(() => null))
@@ -73,6 +76,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "CANCEL_PROCEDURE")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id: caseId } = await params
   try {

@@ -22,6 +22,7 @@ export const UserRole = {
   MEMBER: 'MEMBER',
   HEAD_OF_DEPT: 'HEAD_OF_DEPT',
   ADMIN: 'ADMIN',
+  ANAESTHESIA_NURSE: 'ANAESTHESIA_NURSE',
   CLINICIAN: 'CLINICIAN',
   RESEARCHER: 'RESEARCHER'
 } as const
@@ -58,6 +59,15 @@ export const LegalDocumentLocale = {
 } as const
 
 export type LegalDocumentLocale = (typeof LegalDocumentLocale)[keyof typeof LegalDocumentLocale]
+
+
+export const CaseNurseSource = {
+  ASSIGNED: 'ASSIGNED',
+  THEATRE: 'THEATRE',
+  HANDOVER: 'HANDOVER'
+} as const
+
+export type CaseNurseSource = (typeof CaseNurseSource)[keyof typeof CaseNurseSource]
 
 
 export const TransferStatus = {

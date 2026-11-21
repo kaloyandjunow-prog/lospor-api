@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
+import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
@@ -108,6 +109,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const piiError = piiForEvent(event)
   if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
+  // Giving a drug despite an allergy warning is the doctor's decision (10.8.0).
+  if (Array.isArray(event.allergyAck) && event.allergyAck.length > 0) {
+    const allergyRefusal = refuseIfNotAllowed(user, "GIVE_DESPITE_ALLERGY")
+    if (allergyRefusal) return allergyRefusal
+  }
 
   // Drug vocabulary lookup is read-only and does not need to hold the case lock.
   if (event.type === "drug" && event.atcCode && !event.drugId) {
@@ -130,12 +136,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
+      await recordNurseWork(tx, user, id)
       // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
       if (caseRecord.status === "CANCELLED") {
         return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })

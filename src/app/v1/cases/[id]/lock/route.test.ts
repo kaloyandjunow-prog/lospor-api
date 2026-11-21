@@ -66,7 +66,9 @@ describe("case lock route", () => {
     expect(acquireAtomic).not.toHaveBeenCalled()
   })
 
-  it("reports the actual holder after losing the compare-and-set", async () => {
+  // 10.8.0: several people edit one case at once; another device holding the
+  // heartbeat is reported, and this one still edits.
+  it("shares the case and reports the actual holder after losing the compare-and-set", async () => {
     const expiresAt = new Date(Date.now() + 30_000)
     acquireAtomic.mockResolvedValue(null)
     readLock.mockResolvedValue({
@@ -80,21 +82,23 @@ describe("case lock route", () => {
 
     const response = await POST(request("POST", { deviceId: "device-1" }), context)
 
-    expect(response.status).toBe(409)
+    expect(response.status).toBe(200)
     await expect(response.json()).resolves.toMatchObject({
-      acquired: false,
+      acquired: true,
+      locked: false,
+      shared: true,
       holderName: "Other clinician",
     })
   })
 
-  it("does not let a heartbeat overwrite another active lease", async () => {
+  it("does not let a heartbeat overwrite another active lease, and still lets this device edit", async () => {
     acquireAtomic.mockResolvedValue(null)
     const { PATCH } = await import("./route")
 
     const response = await PATCH(request("PATCH", { deviceId: "device-1" }), context)
 
-    expect(response.status).toBe(409)
-    await expect(response.json()).resolves.toMatchObject({ extended: false })
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toMatchObject({ extended: false, shared: true, locked: false })
   })
 
   it("force releases the current lease after case authorization", async () => {

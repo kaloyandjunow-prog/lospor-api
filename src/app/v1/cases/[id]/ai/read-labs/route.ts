@@ -72,8 +72,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const existing = await prisma.case.findUnique({
     where: { id },
     select: {
+      id: true,
       userId: true,
       institutionId: true,
+      operatingTheatreId: true,
+      finalizedAt: true,
+      plannedSurgeryDate: true,
       user: { select: { institutionId: true } },
       preop: { select: { aiOptIn: true } },
     },
