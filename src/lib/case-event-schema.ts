@@ -19,6 +19,10 @@ const answerKind = z.string().min(1).max(120).refine(
   value => (VITAL_COMPLICATION_KINDS as readonly string[]).includes(value)
     || value === "card"
     || value === "succession"
+    // 10.8.0: an airway/vascular event deleted from the chart (its section's change rides on this note),
+    // and a vitals-logged event kept after its reading was corrected.
+    || value === "section"
+    || value === "keep_auto_event"
     || CONTEXT_LINK_AUTOMATION_IDS.has(value)
     || /^(card-reveal|reverse|reading|lab|reminder|timer|monitor):[A-Za-z0-9_-]+$/.test(value),
   "Unknown question",
