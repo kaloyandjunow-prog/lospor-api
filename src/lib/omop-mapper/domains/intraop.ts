@@ -425,16 +425,24 @@ export function mapIntraopToOmop(
   // the CDM, a null end date reads as "still running".
   const fluidEnd = new Map<string, Date>()
   const agentEnd = new Map<number, Date>()
+  // 10.8.0: stopped on the record at the end, but going on after the case (to recovery or the ICU).
+  const goesOn = (ev: { metadataJson?: unknown }) => (ev.metadataJson as Record<string, unknown> | null | undefined)?.continuesAfterEnd === true
+  const continuing = new Set<string>()
   let openAgentIndex: number | null = null
   ordered.forEach((ev, index) => {
-    if (ev.type === "infusion_stop" && ev.infId) infusionEnd.set(ev.infId, ev.timestamp)
-    if (ev.type === "fluid_end" && ev.fluidId) fluidEnd.set(ev.fluidId, ev.timestamp)
+    if (ev.type === "infusion_stop" && ev.infId) { infusionEnd.set(ev.infId, ev.timestamp); if (goesOn(ev)) continuing.add(`inf:${ev.infId}`) }
+    if (ev.type === "fluid_end" && ev.fluidId) { fluidEnd.set(ev.fluidId, ev.timestamp); if (goesOn(ev)) continuing.add(`fluid:${ev.fluidId}`) }
     if (ev.type === "agent_start") openAgentIndex = index
     if (ev.type === "agent_stop" && openAgentIndex != null) {
       agentEnd.set(openAgentIndex, ev.timestamp)
+      if (goesOn(ev)) continuing.add(`agent:${openAgentIndex}`)
       openAgentIndex = null
     }
   })
+  const continuesAfterCase = (ev: typeof drugEvents[number], index: number) =>
+    ev.type === "infusion_start" ? continuing.has(`inf:${ev.infId}`)
+      : ev.type === "fluid_start" ? continuing.has(`fluid:${ev.fluidId}`)
+        : ev.type === "agent_start" ? continuing.has(`agent:${index}`) : false
   // A target-controlled infusion (2026-10-18): its amount is the pump's own
   // total when entered, else the model's calculation over its targets; null
   // while it has no end. The patient comes from the preoperative record.
@@ -697,6 +705,8 @@ export function mapIntraopToOmop(
       route_source_value:         drugRoute,
       visit_occurrence_id:        ctx.visitId,
     })
+    // 10.8.0: it went on after the case -- the row's end is the end of anaesthesia, not of the drug.
+    if (continuesAfterCase(ev, index)) ctx.sourceObservation("LOSPOR:CONTINUES_AFTER_CASE", String((meta.name as string | undefined) ?? ev.label ?? ""), endAtFor(ev, index) ?? ev.timestamp, null)
     // An infusion's two rates (2026-10-18): the dose rate is the row above;
     // the pump rate and the syringe it was worked out from go beside it.
     if (ev.type === "infusion_start") {

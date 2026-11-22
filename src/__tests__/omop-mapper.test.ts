@@ -1004,6 +1004,17 @@ describe("infusions and volatiles carry the interval they actually ran", () => {
     expect(agent!.drug_exposure_end_date).toBe("2026-06-01")
   })
 
+  // 10.8.0: stopped on the record at the end of the case, but going on after it (recovery, ICU).
+  it("says when an infusion went on after the case", () => {
+    const c = completeCase() as never as { events: { type: string; metadataJson?: Record<string, unknown> }[] }
+    c.events = c.events.map(ev => ev.type === "infusion_stop" ? { ...ev, metadataJson: { ...(ev.metadataJson ?? {}), continuesAfterEnd: true } } : ev)
+    const bundle = mapCasesToOmop([c as never], options as never)
+    const rows = bundle.observation.filter(row => row.observation_source_value === "LOSPOR:CONTINUES_AFTER_CASE")
+    expect(rows).toHaveLength(1)
+    expect(mapCasesToOmop([completeCase() as never], options as never).observation
+      .filter(row => row.observation_source_value === "LOSPOR:CONTINUES_AFTER_CASE")).toHaveLength(0)
+  })
+
   it("leaves an unstopped infusion open rather than inventing an end", () => {
     // Still running when the case ended is a real state. Filling it in with the
     // case end time would manufacture a duration nobody recorded.
