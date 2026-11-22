@@ -310,6 +310,9 @@ export const intraopSchema = z.object({
   // them, so a stored reading always has a monitor behind it.
 
   vascularAccesses:     z.array(z.unknown()).optional(),
+  // 10.8.0: an airway or vascular event deleted from the chart takes its device or line off the section.
+  // Only on an event's attached change; the merge removes entries pointing at these events.
+  removedSourceEventIds: z.array(z.string().min(1).max(100)).max(50).optional(),
   premedicationEvening: z.string().max(500).nullable().optional(),
   premedicationMorning: z.string().max(500).nullable().optional(),
   drugsAdministered:    z.array(z.unknown()).optional(),

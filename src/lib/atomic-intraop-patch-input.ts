@@ -15,6 +15,8 @@ export const ATOMIC_INTRAOP_PATCH_KEYS: readonly string[] = Object.freeze([
   "cormackLehane", "ventilationModes", "airwayNotes", "presentsIntubated",
   "vascularAccesses",
   "techniques", "techniqueSides",
+  // 10.8.0: the devices and lines of events deleted from the chart (see rebaseAtomicIntraopPatch).
+  "removedSourceEventIds",
 ])
 
 const ALLOWED = new Set(ATOMIC_INTRAOP_PATCH_KEYS)

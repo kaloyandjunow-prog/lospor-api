@@ -214,7 +214,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // record so an offline retry remains safe when another screen advanced
       // the section revision. The event itself stays unchanged for audit and
       // idempotent replay; only the materialized section patch is rebased.
-      const patchToApply = atomicIntraopPatch && revisionConflictDetected
+      const patchToApply = atomicIntraopPatch && (revisionConflictDetected || Array.isArray(atomicIntraopPatch.removedSourceEventIds))
         ? rebaseAtomicIntraopPatch(existing.intraop as unknown as Record<string, unknown>, atomicIntraopPatch)
         : atomicIntraopPatch
 

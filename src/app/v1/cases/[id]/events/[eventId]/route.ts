@@ -146,7 +146,7 @@ export async function PUT(
       const refused = timelineRefusal(timelineIssuesFor(current, next))
       if (refused) return refused
 
-      const patchToApply = atomicIntraopPatch && revisionConflictDetected
+      const patchToApply = atomicIntraopPatch && (revisionConflictDetected || Array.isArray(atomicIntraopPatch.removedSourceEventIds))
         ? rebaseAtomicIntraopPatch(existing.intraop as unknown as Record<string, unknown>, atomicIntraopPatch)
         : atomicIntraopPatch
       const revisionReserved = revision != null && !!existing.intraop && !revisionConflictDetected

@@ -39,9 +39,10 @@ const incomingRecordWins = (current: unknown, incoming: unknown): boolean => {
  * original clinical payload and idempotency key.
  */
 export function rebaseAtomicIntraopPatch(
-  current: JsonRecord,
+  currentRecord: JsonRecord | null | undefined,
   incoming: JsonRecord,
 ): JsonRecord {
+  const current: JsonRecord = currentRecord ?? {}
   const next: JsonRecord = { ...incoming }
 
   if (incoming.airwayNotApplicable === true) return next
@@ -114,6 +115,18 @@ export function rebaseAtomicIntraopPatch(
       if (currentValue === undefined || incomingRecordWins(currentValue, value)) merged.set(key, value)
     })
     next.vascularAccesses = [...merged.values()]
+  }
+
+  // 10.8.0: the one way an entry leaves the section through this path -- its own event was deleted
+  // from the chart. Only entries that point at those events go; nothing else is erased.
+  if (Array.isArray(incoming.removedSourceEventIds)) {
+    const gone = new Set(incoming.removedSourceEventIds.filter((value): value is string => typeof value === "string"))
+    const keep = (value: unknown) => !gone.has(String(asRecord(value)?.sourceEventId ?? ""))
+    const airway = Array.isArray(next.airwayDeviceEntries) ? next.airwayDeviceEntries : parseAirwayDeviceEntries(current.airwayDeviceEntries)
+    const vascular = Array.isArray(next.vascularAccesses) ? next.vascularAccesses : Array.isArray(current.vascularAccesses) ? current.vascularAccesses : []
+    if (airway.some(entry => !keep(entry))) next.airwayDeviceEntries = airway.filter(keep)
+    if (vascular.some(entry => !keep(entry))) next.vascularAccesses = vascular.filter(keep)
+    delete next.removedSourceEventIds
   }
 
   return next
