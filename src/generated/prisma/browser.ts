@@ -90,6 +90,12 @@ export type OperatingTheatre = Prisma.OperatingTheatreModel
  */
 export type CaseNurse = Prisma.CaseNurseModel
 /**
+ * Model CasePresence
+ * Who has a case open (10.8.0): one row per person and screen, refreshed by the screen's heartbeat and
+ * counted while recent. Only a notice ("the case is open by ...") -- nothing is locked by it.
+ */
+export type CasePresence = Prisma.CasePresenceModel
+/**
  * Model TheatreNurseShift
  * A nurse on an operating theatre for a day (10.8.0): she sees the theatre's
  * unfinalised cases planned for that day.

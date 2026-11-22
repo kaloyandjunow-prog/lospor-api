@@ -409,6 +409,7 @@ export const ModelName = {
   Case: 'Case',
   OperatingTheatre: 'OperatingTheatre',
   CaseNurse: 'CaseNurse',
+  CasePresence: 'CasePresence',
   TheatreNurseShift: 'TheatreNurseShift',
   IndicatorPolicy: 'IndicatorPolicy',
   IntraopAutomationPolicy: 'IntraopAutomationPolicy',
@@ -502,7 +503,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "operatingTheatre" | "caseNurse" | "theatreNurseShift" | "indicatorPolicy" | "intraopAutomationPolicy" | "vitalStatTally" | "vitalStatTallyScope" | "vitalStatTallyCase" | "caseIndicatorSummary" | "operatingTheatrePolicy" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "drugColor" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopDocumentPolicy" | "consentTemplateVersion" | "caseConsentPrint" | "preopProfileQuestion" | "preopProfileSection" | "preopProfileOrderOption" | "preopProfileConsultSpecialty" | "preopWardOrder" | "preopMedicationInstruction" | "preopPremedicationOrder" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "performedProcedure" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "operatingTheatre" | "caseNurse" | "casePresence" | "theatreNurseShift" | "indicatorPolicy" | "intraopAutomationPolicy" | "vitalStatTally" | "vitalStatTallyScope" | "vitalStatTallyCase" | "caseIndicatorSummary" | "operatingTheatrePolicy" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "drugColor" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopDocumentPolicy" | "consentTemplateVersion" | "caseConsentPrint" | "preopProfileQuestion" | "preopProfileSection" | "preopProfileOrderOption" | "preopProfileConsultSpecialty" | "preopWardOrder" | "preopMedicationInstruction" | "preopPremedicationOrder" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "performedProcedure" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1391,6 +1392,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.CaseNurseCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.CaseNurseCountAggregateOutputType> | number
+        }
+      }
+    }
+    CasePresence: {
+      payload: Prisma.$CasePresencePayload<ExtArgs>
+      fields: Prisma.CasePresenceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CasePresenceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CasePresenceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        findFirst: {
+          args: Prisma.CasePresenceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CasePresenceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        findMany: {
+          args: Prisma.CasePresenceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>[]
+        }
+        create: {
+          args: Prisma.CasePresenceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        createMany: {
+          args: Prisma.CasePresenceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CasePresenceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>[]
+        }
+        delete: {
+          args: Prisma.CasePresenceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        update: {
+          args: Prisma.CasePresenceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        deleteMany: {
+          args: Prisma.CasePresenceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CasePresenceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CasePresenceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>[]
+        }
+        upsert: {
+          args: Prisma.CasePresenceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        aggregate: {
+          args: Prisma.CasePresenceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCasePresence>
+        }
+        groupBy: {
+          args: Prisma.CasePresenceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CasePresenceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CasePresenceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CasePresenceCountAggregateOutputType> | number
         }
       }
     }
@@ -7399,6 +7474,16 @@ export const CaseNurseScalarFieldEnum = {
 export type CaseNurseScalarFieldEnum = (typeof CaseNurseScalarFieldEnum)[keyof typeof CaseNurseScalarFieldEnum]
 
 
+export const CasePresenceScalarFieldEnum = {
+  caseId: 'caseId',
+  userId: 'userId',
+  deviceId: 'deviceId',
+  seenAt: 'seenAt'
+} as const
+
+export type CasePresenceScalarFieldEnum = (typeof CasePresenceScalarFieldEnum)[keyof typeof CasePresenceScalarFieldEnum]
+
+
 export const TheatreNurseShiftScalarFieldEnum = {
   id: 'id',
   theatreId: 'theatreId',
@@ -9736,6 +9821,7 @@ export type GlobalOmitConfig = {
   case?: Prisma.CaseOmit
   operatingTheatre?: Prisma.OperatingTheatreOmit
   caseNurse?: Prisma.CaseNurseOmit
+  casePresence?: Prisma.CasePresenceOmit
   theatreNurseShift?: Prisma.TheatreNurseShiftOmit
   indicatorPolicy?: Prisma.IndicatorPolicyOmit
   intraopAutomationPolicy?: Prisma.IntraopAutomationPolicyOmit

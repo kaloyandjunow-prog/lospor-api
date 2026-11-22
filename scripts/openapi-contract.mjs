@@ -421,6 +421,11 @@ export const schemas = {
     holderName: nullable({ type: "string" }),
   }, ["acquired", "locked"]),
   ReleaseResponse: object({ released: { type: "boolean" }, forced: { type: "boolean" } }, ["released"]),
+  CasePresence: object({
+    people: { type: "array", items: object({ name: { type: "string" }, you: { type: "boolean" } }, ["name", "you"]) },
+    screens: { type: "integer", minimum: 0 },
+  }, ["people", "screens"]),
+  CasePresenceLeft: object({ left: { type: "boolean" } }, ["left"]),
   Event: {
     type: "object",
     required: ["type", "ts"],
@@ -1201,6 +1206,8 @@ add("POST", "/v1/cases/{id}/unfinalize", "Resume editing a finalized case", { pa
 
 add("POST", "/v1/cases/{id}/lock", "Acquire a case editing lease", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("LockResponse") })
 add("PATCH", "/v1/cases/{id}/lock", "Refresh or reclaim a case editing lease", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("LockResponse") })
+add("POST", "/v1/cases/{id}/presence", "Report that this screen has the case open and learn who else does (a notice, nothing is locked)", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("CasePresence") })
+add("DELETE", "/v1/cases/{id}/presence", "This screen no longer has the case open", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("CasePresenceLeft") })
 add("DELETE", "/v1/cases/{id}/lock", "Release or force-release a case editing lease", { parameters: [id], requestBody: body(ref("LockReleaseRequest")), result: ref("ReleaseResponse") })
 
 add("POST", "/v1/cases/{id}/events", "Append an idempotent intraoperative event", {
