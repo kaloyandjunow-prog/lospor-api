@@ -72,6 +72,9 @@ export function caseCapabilitiesForUser(user: AuthUser, record: CaseAccessRecord
     canWrite: canWriteCase(user, record),
     isCreator: record.createdById === user.id,
     isAssignee: record.userId === user.id,
+    // 10.8.0: an anaesthesia nurse writes intraop and postop only; the clients hide the rest
+    // (Core roleMay), the routes refuse it anyway.
+    isNurse: isNurse(user),
   }
 }
 

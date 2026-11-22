@@ -81,6 +81,7 @@ describe("access control helpers", () => {
       canWrite: false,
       isCreator: true,
       isAssignee: false,
+      isNurse: false,
     })
     expect(caseReadWhereForUser(creator)).toEqual({
       OR: [
