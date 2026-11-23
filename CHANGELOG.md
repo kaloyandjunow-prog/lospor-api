@@ -1,5 +1,30 @@
 # Changelog - LOSPOR API
 
+## [10.8.0] - 2026-11-23
+
+Released with Core 10.8.0. Two new tables, no change to a clinical column; run `prisma migrate deploy`.
+
+### Added
+
+- **Anaesthesia nurses** (migration `20261122100000_anaesthesia_nurses`). A nurse role; the nurses of a case (assigned,
+  by theatre, handed over to another nurse); nurses on a theatre for a day; an optional planned operation date. A nurse
+  reaches only her own and her theatre's cases and writes only intraop and postop. She is refused finalising, deleting,
+  unfinalising, cancelling, handing over to a doctor, preoperative edits, a new case and giving a drug despite an
+  allergy warning. Capabilities say whether the reader is a nurse; Bulgarian messages for the nurse routes.
+- **Who has a case open** (migration `20261122110000_case_presence`): `POST` and `DELETE /v1/cases/{id}/presence` keep
+  one row per person and device for a minute and answer who else is in the case. A notice only.
+- **Prompt answers** may name a section change and a kept vitals event.
+
+### Changed
+
+- **Several people can work in one case.** The case lock no longer refuses a second editor: the last edit wins, and a
+  stale write is still told apart by its made-at header (an event made before a later one is refused as superseded).
+- **An airway or vascular event deleted from the chart takes its device or line off the section.**
+- **OMOP:** an infusion, fluid or agent that went on after the case is exported with `LOSPOR:CONTINUES_AFTER_CASE`
+  beside its row. `continuesAfterEnd` is accepted on stops.
+- Dependencies: `jose`, `read-excel-file`, the AWS SDK clients and `puppeteer-core` to their latest minor; `effect` is
+  held at 3.22.5 or later (the Prisma CLI's configuration loader pulled in 3.20, which has a published ReDoS advisory).
+
 ## [10.7.0] - 2026-11-19
 
 Released with Core 10.7.0. No column changes.
