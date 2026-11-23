@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
-import { refuseIfNotAllowed } from "@/lib/nurse-access"
+import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
@@ -149,6 +149,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
+      // After the checks that can refuse, so a refused request has written nothing.
+      await recordNurseWork(tx, user, id)
       const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
       if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({

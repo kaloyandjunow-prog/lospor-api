@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server"
 import { z } from "zod"
 
 import { getAuthUser } from "@/lib/mobile-auth"
-import { refuseChangedAllergyAck, refuseIfNotAllowed } from "@/lib/nurse-access"
+import { recordNurseWork, refuseChangedAllergyAck, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
@@ -155,6 +155,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       if (caseRecord.status === "CANCELLED") return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
       if (caseRecord.status === "COMPLETE") return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      // After the checks that can refuse, so a refused request has written nothing.
+      await recordNurseWork(tx, user, id)
       const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
       if (pediatricBlock) return pediatricBlock
 

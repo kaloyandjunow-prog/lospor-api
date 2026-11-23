@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server"
-import { refuseIfNotAllowed } from "@/lib/nurse-access"
+import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 import { mapPreop, mapPreopUpdate, mapIntraop, mapIntraopUpdate, mapPostop, mapPostopUpdate } from "../_mappers"
@@ -306,15 +306,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
-      // After the checks that can refuse, so a refused request has written nothing (a 409 that had changed the planned date).
-      if (plannedSurgeryDate !== undefined) {
-        await tx.case.update({
-          where: { id },
-          data: { plannedSurgeryDate: plannedSurgeryDate ? new Date(`${plannedSurgeryDate}T00:00:00.000Z`) : null },
-        })
-        await logAuditInTransaction(tx, userId, "CASE_PLANNED_DATE_SET", id, { date: plannedSurgeryDate })
-      }
-
       const existingPreop = await tx.preoperativeAssessment.findUnique({ where: { caseId: id } })
       const existingIntraop = intraop
         ? await tx.intraoperativeRecord.findUnique({
@@ -414,6 +405,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           reason: first.reason,
           serverVersion: first.serverVersion,
         }, { status: 409 })
+      }
+
+      // Last of the refusals above: from here nothing returns early, so a refused request has written nothing -- a returned
+      // response commits the transaction (a 409 that had changed the planned date and logged it).
+      await recordNurseWork(tx, user, id)
+      if (plannedSurgeryDate !== undefined) {
+        await tx.case.update({
+          where: { id },
+          data: { plannedSurgeryDate: plannedSurgeryDate ? new Date(`${plannedSurgeryDate}T00:00:00.000Z`) : null },
+        })
+        await logAuditInTransaction(tx, userId, "CASE_PLANNED_DATE_SET", id, { date: plannedSurgeryDate })
       }
 
 

@@ -4,6 +4,7 @@ import {
   canAccessCaseWithOwnerFallback,
   canWriteCase,
   caseCapabilitiesForUser,
+  caseExportWhereForUser,
   caseReadWhereForUser,
   caseWriteWhereForUser,
   colleagueWhereForUser,
@@ -132,5 +133,10 @@ describe("anaesthesia nurses and the senior nurse (2026-11-23)", () => {
   it("offers a nurse only nurses as colleagues, and a doctor no nurses", () => {
     expect(colleagueWhereForUser(nurse)).toMatchObject({ role: { in: ["ANAESTHESIA_NURSE", "ANAESTHESIA_SENIOR_NURSE"] } })
     expect(colleagueWhereForUser({ id: "doctor", role: "MEMBER", institutionId: "inst-1" })).toMatchObject({ role: { notIn: ["ANAESTHESIA_NURSE", "ANAESTHESIA_SENIOR_NURSE"] } })
+  })
+
+  it("exports a nurse only the cases she is on or made, never the hospital's", () => {
+    expect(caseExportWhereForUser(nurse)).toEqual({ OR: [{ nurses: { some: { userId: nurse.id } } }, { createdById: nurse.id }] })
+    expect(caseExportWhereForUser({ id: "doctor", role: "MEMBER", institutionId: "inst-1" })).toEqual(caseReadWhereForUser({ id: "doctor", role: "MEMBER", institutionId: "inst-1" }))
   })
 })

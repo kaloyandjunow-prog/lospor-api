@@ -55,8 +55,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Not allowed to put nurses on this case", code: "ASSIGN_NURSES_NOT_ALLOWED" }, { status: 403 })
     }
   } else if ("handoverTo" in body) {
-    // She hands over a case she can work on.
+    // She hands over her own place on a case she can work on. Reaching the case through her theatre is no place on it, and
+    // handing over to herself is no way onto a case that already has nurses; whoever may put nurses on the case needs no place.
     if (!await prisma.case.count({ where: caseWriteWhereForUser(user, id) })) return NextResponse.json({ error: "Not found" }, { status: 404 })
+    if (body.handoverTo === user.id) return NextResponse.json({ error: "Not an anaesthesia nurse of this department", code: "NOT_A_NURSE" }, { status: 400 })
+    const mayPlace = mayAssignNurses({ accountRole: user.role, ownsCase: caseRecord.userId === user.id, sameInstitution })
+    if (!mayPlace && !await prisma.caseNurse.count({ where: { caseId: id, userId: user.id } })) {
+      return NextResponse.json({ error: "Not allowed to put nurses on this case", code: "ASSIGN_NURSES_NOT_ALLOWED" }, { status: 403 })
+    }
   } else {
     const nursesOnCase = await prisma.caseNurse.count({ where: { caseId: id } })
     if (!mayTakeCase({ accountRole: user.role, nursesOnCase, sameInstitution })) {

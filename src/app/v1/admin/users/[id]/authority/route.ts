@@ -79,6 +79,10 @@ export async function POST(
       const accountKindChanged = nextAccountKind !== target.accountKind
       // A nurse (or senior nurse) is never made a doctor or an administrator.
       if (isNurseAccountRole(target.role) && !isNurseAccountRole(nextRole)) return { code: "NURSE_CANNOT_BECOME_DOCTOR" as const }
+      if (isNurseAccountRole(nextRole) && !isNurseAccountRole(target.role)
+        && await transaction.case.count({ where: { userId: id, status: { notIn: ["COMPLETE", "CANCELLED"] } } }) > 0) {
+        return { code: "DOCTOR_HAS_OPEN_CASES" as const }
+      }
       if (!roleChanged && !accountKindChanged) {
         return { code: "NO_CHANGE" as const }
       }

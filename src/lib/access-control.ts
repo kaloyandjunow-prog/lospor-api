@@ -198,6 +198,15 @@ export function caseWriteWhereForUser(user: AuthUser, id?: string): Prisma.CaseW
   return { ...base, userId: user.id }
 }
 
+/**
+ * The cases a person's own data export holds (2026-11-23): her own. A nurse reads every case of her hospital, but her export
+ * is only the ones she is on or created, never the hospital's patients.
+ */
+export function caseExportWhereForUser(user: AuthUser): Prisma.CaseWhereInput {
+  if (isNurse(user)) return { OR: [{ nurses: { some: { userId: user.id } } }, { createdById: user.id }] }
+  return caseReadWhereForUser(user)
+}
+
 /** @deprecated Read alias retained for compatibility; writes must never use it. */
 export const caseWhereForUser = caseReadWhereForUser
 
