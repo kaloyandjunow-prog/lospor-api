@@ -2,9 +2,26 @@
 
 ## [10.8.0] - 2026-11-23
 
-Released with Core 10.8.0. Two new tables, no change to a clinical column; run `prisma migrate deploy`.
+Released with Core 10.8.0. New tables and values, no change to a clinical column; run `prisma migrate deploy` (migrations `20261123120000_senior_nurse` and `20261124100000_case_staff_log` are the newest).
 
 ### Added
+
+- **A senior nurse** (migration `20261123120000_senior_nurse`). Nurses see every case of their hospital and change only the ones
+  they are on (put on by hand, through their theatre, or by themselves) -- a senior nurse changes every case of her hospital and
+  puts nurses on cases. The administrator and the head of department put nurses on any case, a doctor on her own. A nurse may put
+  herself on a case that has no nurse (`{ take: true }`) and hands her own place to another nurse. A nurse account is never made a
+  doctor, and a doctor with open cases is not made a nurse. A nurse's personal export holds only her own cases.
+- **The nurses of a theatre are put on its cases**: when a nurse is put on a theatre for a day, when a case is put in a theatre
+  and when a case's planned date changes. A place stays until the case is finalised.
+- **Who was on a case, and when** (migration `20261124100000_case_staff_log`): every joining and leaving of a doctor or a nurse is
+  recorded and kept for good -- the database refuses to change or remove a row, and only a deleted case takes its rows with it.
+  Filled in for existing cases. `GET /v1/cases/{id}/staff`.
+- Refusals say why: the authority route returns a readable message with its code, in Bulgarian too.
+
+### Fixed
+
+- A refused save (409) no longer leaves the planned date changed and logged; a nurse's edit no longer drops the doctor's allergy
+  acknowledgement; a recipient of a case is never a nurse.
 
 - **Anaesthesia nurses** (migration `20261122100000_anaesthesia_nurses`). A nurse role; the nurses of a case (assigned,
   by theatre, handed over to another nurse); nurses on a theatre for a day; an optional planned operation date. A nurse
