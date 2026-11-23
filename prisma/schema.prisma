@@ -188,6 +188,8 @@ enum UserRole {
   /// An anaesthesia nurse (10.8.0): works only in the cases assigned to her,
   /// in the intraoperative and postoperative stages (Core clinical-roles).
   ANAESTHESIA_NURSE
+  /// The senior nurse (2026-11-23): a nurse who edits every case of her hospital and puts nurses on cases.
+  ANAESTHESIA_SENIOR_NURSE
   CLINICIAN // legacy
   RESEARCHER // legacy
 }
@@ -378,6 +380,8 @@ enum CaseNurseSource {
   THEATRE
   /// Handed over by another nurse.
   HANDOVER
+  /// A nurse put herself on a case that had no nurse (2026-11-23).
+  SELF
 }
 
 /// The anaesthesia nurses of a case (10.8.0), any number of them. Each may do

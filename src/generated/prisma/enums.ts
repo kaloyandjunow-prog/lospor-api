@@ -23,6 +23,7 @@ export const UserRole = {
   HEAD_OF_DEPT: 'HEAD_OF_DEPT',
   ADMIN: 'ADMIN',
   ANAESTHESIA_NURSE: 'ANAESTHESIA_NURSE',
+  ANAESTHESIA_SENIOR_NURSE: 'ANAESTHESIA_SENIOR_NURSE',
   CLINICIAN: 'CLINICIAN',
   RESEARCHER: 'RESEARCHER'
 } as const
@@ -64,7 +65,8 @@ export type LegalDocumentLocale = (typeof LegalDocumentLocale)[keyof typeof Lega
 export const CaseNurseSource = {
   ASSIGNED: 'ASSIGNED',
   THEATRE: 'THEATRE',
-  HANDOVER: 'HANDOVER'
+  HANDOVER: 'HANDOVER',
+  SELF: 'SELF'
 } as const
 
 export type CaseNurseSource = (typeof CaseNurseSource)[keyof typeof CaseNurseSource]

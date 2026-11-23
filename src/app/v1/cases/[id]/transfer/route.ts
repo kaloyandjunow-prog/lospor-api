@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { NURSE_ACCOUNT_ROLES } from "@lospor/core/clinical-roles"
 import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           where: {
             id: toUserId,
             // A case goes to a doctor; a nurse takes part in it, she is not its owner.
-            role: { not: "ANAESTHESIA_NURSE" },
+            role: { notIn: [...NURSE_ACCOUNT_ROLES] },
             activatedAt: { not: null },
             suspendedAt: null,
             recoveryRequiredAt: null,

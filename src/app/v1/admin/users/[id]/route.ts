@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { isNurseAccountRole } from "@lospor/core/clinical-roles"
 import { canHaveHeadOfDepartment } from "@/lib/institutions"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
@@ -21,7 +22,7 @@ import {
 } from "@/lib/account-lifecycle"
 
 const schema = z.object({
-  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ANAESTHESIA_NURSE"]).optional(),
+  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ANAESTHESIA_NURSE", "ANAESTHESIA_SENIOR_NURSE"]).optional(),
   accountKind: z.enum(["CLINICAL", "RESEARCH_ONLY"]).optional(),
 }).strict().refine(value => value.role !== undefined || value.accountKind !== undefined, {
   message: "At least one account field is required",
@@ -74,8 +75,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return "INVALID_HOD_INSTITUTION" as const
     }
     // A nurse is never made a doctor; a doctor with cases of their own is not made a nurse (the cases would have no responsible doctor).
-    if (target.role === "ANAESTHESIA_NURSE" && data.role && data.role !== "ANAESTHESIA_NURSE") return "NURSE_CANNOT_BECOME_DOCTOR" as const
-    if (data.role === "ANAESTHESIA_NURSE" && target.role !== "ANAESTHESIA_NURSE" && await transaction.case.count({ where: { userId: id, status: { notIn: ["COMPLETE", "CANCELLED"] } } }) > 0) return "DOCTOR_HAS_OPEN_CASES" as const
+    if (isNurseAccountRole(target.role) && data.role && !isNurseAccountRole(data.role)) return "NURSE_CANNOT_BECOME_DOCTOR" as const
+    if (isNurseAccountRole(data.role) && !isNurseAccountRole(target.role) && await transaction.case.count({ where: { userId: id, status: { notIn: ["COMPLETE", "CANCELLED"] } } }) > 0) return "DOCTOR_HAS_OPEN_CASES" as const
     if (data.role === target.role) {
       return {
         id,

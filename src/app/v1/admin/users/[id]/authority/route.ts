@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { isNurseAccountRole } from "@lospor/core/clinical-roles"
 import { z } from "zod"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
@@ -17,7 +18,7 @@ import { invalidateAccountState, notePasswordChanged } from "@/lib/password-epoc
 import { accountAdministrationRefusal } from "@/lib/deployment-capabilities"
 
 const schema = z.object({
-  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ADMIN", "ANAESTHESIA_NURSE"]).optional(),
+  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ADMIN", "ANAESTHESIA_NURSE", "ANAESTHESIA_SENIOR_NURSE"]).optional(),
   accountKind: z.enum(["CLINICAL", "RESEARCH_ONLY"]).optional(),
   currentPassword: z.string().min(1),
   reason: z.string().trim().min(3).max(500),
@@ -76,6 +77,8 @@ export async function POST(
       const nextAccountKind = parsed.data.accountKind ?? target.accountKind
       const roleChanged = nextRole !== target.role
       const accountKindChanged = nextAccountKind !== target.accountKind
+      // A nurse (or senior nurse) is never made a doctor or an administrator.
+      if (isNurseAccountRole(target.role) && !isNurseAccountRole(nextRole)) return { code: "NURSE_CANNOT_BECOME_DOCTOR" as const }
       if (!roleChanged && !accountKindChanged) {
         return { code: "NO_CHANGE" as const }
       }

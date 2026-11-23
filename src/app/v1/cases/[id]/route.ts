@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server"
-import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 import { mapPreop, mapPreopUpdate, mapIntraop, mapIntraopUpdate, mapPostop, mapPostopUpdate } from "../_mappers"
@@ -307,8 +307,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
       // After the checks that can refuse, so a refused request has written nothing (a 409 that had changed the planned date).
-      // A nurse who writes to her theatre's case keeps it until it is finalised (10.8.0).
-      await recordNurseWork(tx, user, id)
       if (plannedSurgeryDate !== undefined) {
         await tx.case.update({
           where: { id },

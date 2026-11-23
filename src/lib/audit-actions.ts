@@ -97,6 +97,7 @@ export const AUDIT_ACTION_REGISTRY = defineAuditActions([
   // 10.8.0: anaesthesia nurses on a case and on a theatre for a day, and the planned date.
   { code: "CASE_NURSE_ASSIGN", category: "CASE", labels: { bg: "Назначена анестезиологична сестра", en: "Anaesthesia nurse assigned" } },
   { code: "CASE_NURSE_REMOVE", category: "CASE", labels: { bg: "Махната анестезиологична сестра", en: "Anaesthesia nurse removed" } },
+  { code: "CASE_NURSE_TAKE", category: "CASE", labels: { bg: "Сестра се назначи сама на случай", en: "Nurse put herself on a case" } },
   { code: "CASE_NURSE_HANDOVER", category: "CASE", labels: { bg: "Случаят е предаден на друга сестра", en: "Case handed over to another nurse" } },
   { code: "THEATRE_NURSE_SHIFT_SET", category: "CASE", labels: { bg: "Сестра на операционна за деня", en: "Nurse on a theatre for the day" } },
   { code: "THEATRE_NURSE_SHIFT_CLEAR", category: "CASE", labels: { bg: "Сестра махната от операционна", en: "Nurse taken off a theatre" } },

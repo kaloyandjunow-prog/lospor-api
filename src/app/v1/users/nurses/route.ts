@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
+import { NURSE_ACCOUNT_ROLES } from "@lospor/core/clinical-roles"
 import { prisma } from "@/lib/prisma"
 
 /** The anaesthesia nurses of the caller's department, for the pickers (10.8.0). */
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   if (user.role !== "ADMIN" && !user.institutionId) return NextResponse.json({ nurses: [] }, { headers: corsHeaders(req) })
   const nurses = await prisma.user.findMany({
     where: {
-      role: "ANAESTHESIA_NURSE",
+      role: { in: [...NURSE_ACCOUNT_ROLES] },
       activatedAt: { not: null },
       suspendedAt: null,
       deletedAt: null,

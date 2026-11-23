@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { NURSE_ACCOUNT_ROLES } from "@lospor/core/clinical-roles"
 import { z } from "zod"
 import { calendarDayKey } from "@lospor/core/dashboard-date-scope"
 import { corsHeaders } from "@/lib/cors"
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
   const nurse = await prisma.user.findFirst({
-    where: { id: nurseId, role: "ANAESTHESIA_NURSE", deletedAt: null, ...(user.role === "ADMIN" || !user.institutionId ? {} : { institutionId: user.institutionId }) },
+    where: { id: nurseId, role: { in: [...NURSE_ACCOUNT_ROLES] }, deletedAt: null, ...(user.role === "ADMIN" || !user.institutionId ? {} : { institutionId: user.institutionId }) },
     select: { id: true },
   })
   if (!nurse) return NextResponse.json({ error: "Not an anaesthesia nurse", code: "NOT_A_NURSE" }, { status: 400 })
