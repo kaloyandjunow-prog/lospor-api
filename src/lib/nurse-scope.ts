@@ -3,7 +3,7 @@ import { calendarDayKey } from "@lospor/core/dashboard-date-scope"
 import { prisma } from "@/lib/prisma"
 import type { NurseScope } from "@/lib/nurse-access"
 
-export { isNurse, isSeniorNurse, nurseCaseWhere, recordNurseWork, nurseReachesCase, refuseIfNotAllowed, userMay, type NurseScope } from "@/lib/nurse-access"
+export { isNurse, isSeniorNurse, nurseCaseWhere, recordNurseWork, pinTheatreNurses, pinNursesOfCaseTheatre, nurseReachesCase, refuseIfNotAllowed, userMay, type NurseScope } from "@/lib/nurse-access"
 
 /** A nurse's cases and theatres today, loaded once per request with the account (10.8.0). */
 export async function loadNurseScope(userId: string, now: Date = new Date()): Promise<NurseScope> {

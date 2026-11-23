@@ -26,6 +26,20 @@ const schema = z.object({
   message: "At least one authority field is required",
 })
 
+const REFUSAL_TEXT: Record<string, string> = {
+  NOT_FOUND: "Account not found",
+  DELETED: "This account was deleted",
+  INACTIVE: "This account is inactive, suspended or awaiting recovery",
+  NO_CHANGE: "The account already has this role",
+  STANDARD_ROUTE_REQUIRED: "This role change does not need administrator re-entry; use the ordinary role change",
+  ADMIN_MUST_BE_CLINICAL: "An administrator must have a clinical account",
+  INVALID_HOD_INSTITUTION: "A head of department needs an institution",
+  LAST_ADMIN: "The last administrator cannot be demoted",
+  CONFLICT: "The account changed at the same time; try again",
+  NURSE_CANNOT_BECOME_DOCTOR: "A nurse account cannot be made a doctor",
+  DOCTOR_HAS_OPEN_CASES: "This doctor still has open cases; hand them over first",
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -153,8 +167,9 @@ export async function POST(
     }, serializableTransaction)
 
     if (outcome.code !== "OK") {
+      // A reason a person can read (translated by the clients), with the code kept for programs.
       return NextResponse.json(
-        { error: outcome.code },
+        { error: REFUSAL_TEXT[outcome.code] ?? outcome.code, code: outcome.code },
         { status: outcome.code === "NOT_FOUND" ? 404 : 409 },
       )
     }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server"
-import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
+import { pinNursesOfCaseTheatre, recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
 import { mapPreop, mapPreopUpdate, mapIntraop, mapIntraopUpdate, mapPostop, mapPostopUpdate } from "../_mappers"
@@ -416,6 +416,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           data: { plannedSurgeryDate: plannedSurgeryDate ? new Date(`${plannedSurgeryDate}T00:00:00.000Z`) : null },
         })
         await logAuditInTransaction(tx, userId, "CASE_PLANNED_DATE_SET", id, { date: plannedSurgeryDate })
+        // The day's theatre nurses are put on the case once its date puts it on their day.
+        await pinNursesOfCaseTheatre(tx, id)
       }
 
 

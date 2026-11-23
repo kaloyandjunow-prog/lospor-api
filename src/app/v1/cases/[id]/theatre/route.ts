@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { refuseIfNotAllowed } from "@/lib/nurse-access"
+import { pinNursesOfCaseTheatre, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (!visible) throw new OperatingTheatreError("CASE_NOT_FOUND", 404)
       const change = await assignCaseTheatre(tx, caseId, parsed.data.theatreId, parsed.data.expectedTheatreId)
       if (change.before !== change.after) {
+        await pinNursesOfCaseTheatre(tx, caseId)
         await logAuditInTransaction(tx, user.id, "CASE_THEATRE_ASSIGN", caseId, { from: change.before, to: change.after })
       }
       return change

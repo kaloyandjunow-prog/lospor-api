@@ -5,7 +5,7 @@ import { calendarDayKey } from "@lospor/core/dashboard-date-scope"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { logAuditInTransaction } from "@/lib/audit"
-import { isNurse } from "@/lib/nurse-access"
+import { isNurse, pinTheatreNurses } from "@/lib/nurse-access"
 import { prisma } from "@/lib/prisma"
 
 /**
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
         create: { theatreId: theatre.id, userId: nurse.id, shiftDate: dateOf(date), assignedById: user.id },
         update: {},
       })
+      await pinTheatreNurses(tx, { theatreId: theatre.id, shiftDate: date, userId: nurse.id, today })
       await logAuditInTransaction(tx, user.id, "THEATRE_NURSE_SHIFT_SET", theatre.id, { nurse: nurse.id, date })
     }
   })
