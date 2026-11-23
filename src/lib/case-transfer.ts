@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
 import { generateCaseCode, isPrismaUniqueError, reserveCaseCode } from "@/lib/case-code"
+import { logCaseStaff } from "@/lib/case-staff-log"
 
 export type TransferOutcome = {
   /** The code the case carried before the move, when it had to be renumbered. */
@@ -40,11 +41,11 @@ export async function transferCaseOwnershipInTransaction(
   tx: Prisma.TransactionClient,
   caseId: string,
   toUserId: string,
-  opts: { supersedePending?: boolean; acceptTransferId?: string } = {},
+  opts: { supersedePending?: boolean; acceptTransferId?: string; byUserId?: string } = {},
 ): Promise<TransferOutcome> {
   const current = await tx.case.findUniqueOrThrow({
     where: { id: caseId },
-    select: { caseCode: true, institutionId: true },
+    select: { caseCode: true, institutionId: true, userId: true },
   })
   const recipient = await tx.user.findUniqueOrThrow({
     where: { id: toUserId },
@@ -104,6 +105,13 @@ export async function transferCaseOwnershipInTransaction(
     where: { id: caseId },
     data: { userId: toUserId, caseCode },
   })
+  // Who was the doctor of the case, and when: kept for good. Its nurses stay on it.
+  if (current.userId !== toUserId) {
+    await logCaseStaff(tx, [
+      { caseId, userId: current.userId, kind: "DOCTOR", action: "LEFT", reason: "TRANSFER", byUserId: opts.byUserId },
+      { caseId, userId: toUserId, kind: "DOCTOR", action: "JOINED", reason: "TRANSFER", byUserId: opts.byUserId },
+    ])
+  }
 
   return { previousCaseCode, caseCode, institutionId: current.institutionId }
 }

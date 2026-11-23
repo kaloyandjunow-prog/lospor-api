@@ -14,8 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model CaseNurse
- * The anaesthesia nurses of a case (10.8.0), any number of them. Each may do
- * everything a nurse may in it; the last edit wins.
+ * 
  */
 export type CaseNurseModel = runtime.Types.Result.DefaultSelection<Prisma.$CaseNursePayload>
 

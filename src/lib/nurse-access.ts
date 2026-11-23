@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { SENIOR_NURSE_ACCOUNT_ROLE, clinicalRoleOf, isNurseAccountRole, roleMay, type CaseAction } from "@lospor/core/clinical-roles"
+import { logCaseStaff } from "@/lib/case-staff-log"
 import { calendarDayKey } from "@lospor/core/dashboard-date-scope"
 import type { Prisma } from "@/generated/prisma/client"
 
@@ -79,7 +80,7 @@ export function nurseReachesCase(scope: NurseScope | undefined, record: {
  * never taken back by the shift being cleared: it stays until the case is finalised, like a place she was given by hand.
  */
 export async function pinTheatreNurses(
-  db: Pick<Prisma.TransactionClient, "case" | "caseNurse" | "theatreNurseShift">,
+  db: Pick<Prisma.TransactionClient, "case" | "caseNurse" | "caseStaffLog" | "theatreNurseShift">,
   scope: { theatreId: string; shiftDate: string; userId?: string; caseId?: string; today: string },
 ): Promise<number> {
   const day = dateOf(scope.shiftDate)
@@ -98,16 +99,19 @@ export async function pinTheatreNurses(
     select: { id: true },
   })
   if (!cases.length) return 0
-  const made = await db.caseNurse.createMany({
-    data: cases.flatMap(row => shifts.map(shift => ({ caseId: row.id, userId: shift.userId, source: "THEATRE" as const }))),
-    skipDuplicates: true,
-  })
+  const wanted = cases.flatMap(row => shifts.map(shift => ({ caseId: row.id, userId: shift.userId })))
+  const present = await db.caseNurse.findMany({ where: { OR: wanted.map(pair => ({ caseId: pair.caseId, userId: pair.userId })) }, select: { caseId: true, userId: true } })
+  const had = new Set(present.map(pair => `${pair.caseId}:${pair.userId}`))
+  const fresh = wanted.filter(pair => !had.has(`${pair.caseId}:${pair.userId}`))
+  if (!fresh.length) return 0
+  const made = await db.caseNurse.createMany({ data: fresh.map(pair => ({ ...pair, source: "THEATRE" as const })), skipDuplicates: true })
+  await logCaseStaff(db, fresh.map(pair => ({ ...pair, kind: "NURSE" as const, action: "JOINED" as const, reason: "THEATRE" })))
   return made.count
 }
 
 /** The nurses on this case's theatre for its day (its planned date, or today when it has none) get a place on it. */
 export async function pinNursesOfCaseTheatre(
-  db: Pick<Prisma.TransactionClient, "case" | "caseNurse" | "theatreNurseShift">,
+  db: Pick<Prisma.TransactionClient, "case" | "caseNurse" | "caseStaffLog" | "theatreNurseShift">,
   caseId: string,
 ): Promise<number> {
   const row = await db.case.findUnique({ where: { id: caseId }, select: { operatingTheatreId: true, plannedSurgeryDate: true } })
@@ -122,11 +126,13 @@ export async function pinNursesOfCaseTheatre(
  * midnight: the case is hers now (source THEATRE). A nurse put on the case, and a senior nurse, are not pinned by writing.
  */
 export async function recordNurseWork(
-  db: Pick<Prisma.TransactionClient, "caseNurse">,
+  db: Pick<Prisma.TransactionClient, "caseNurse" | "caseStaffLog">,
   user: { id: string; role?: string | null },
   caseId: string,
 ): Promise<void> {
   if (!isNurse(user) || isSeniorNurse(user)) return
+  if (await db.caseNurse.count({ where: { caseId, userId: user.id } }) > 0) return
+  await logCaseStaff(db, [{ caseId, userId: user.id, kind: "NURSE", action: "JOINED", reason: "THEATRE", byUserId: user.id }])
   await db.caseNurse.upsert({
     where: { caseId_userId: { caseId, userId: user.id } },
     create: { caseId, userId: user.id, source: "THEATRE" },

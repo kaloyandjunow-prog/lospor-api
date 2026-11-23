@@ -72,6 +72,22 @@ export const CaseNurseSource = {
 export type CaseNurseSource = (typeof CaseNurseSource)[keyof typeof CaseNurseSource]
 
 
+export const CaseStaffKind = {
+  DOCTOR: 'DOCTOR',
+  NURSE: 'NURSE'
+} as const
+
+export type CaseStaffKind = (typeof CaseStaffKind)[keyof typeof CaseStaffKind]
+
+
+export const CaseStaffAction = {
+  JOINED: 'JOINED',
+  LEFT: 'LEFT'
+} as const
+
+export type CaseStaffAction = (typeof CaseStaffAction)[keyof typeof CaseStaffAction]
+
+
 export const TransferStatus = {
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',

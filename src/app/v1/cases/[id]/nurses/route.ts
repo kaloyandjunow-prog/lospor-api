@@ -7,6 +7,7 @@ import { logAuditInTransaction } from "@/lib/audit"
 import { NURSE_ACCOUNT_ROLES, mayAssignNurses, mayTakeCase } from "@lospor/core/clinical-roles"
 import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { prisma } from "@/lib/prisma"
+import { logCaseStaff } from "@/lib/case-staff-log"
 
 /**
  * The anaesthesia nurses of a case (10.8.0), any number. The head of department and the administrator assign and remove them
@@ -80,17 +81,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   await prisma.$transaction(async tx => {
+    // The history of who was on the case (never removed): a joining is logged only when the place is new.
+    const had = async (userId: string) => (await tx.caseNurse.count({ where: { caseId: id, userId } })) > 0
+    const joined = async (userId: string, reason: string) => { if (!await had(userId)) await logCaseStaff(tx, [{ caseId: id, userId, kind: "NURSE", action: "JOINED", reason, byUserId: user.id }]) }
+    const left = async (userId: string, reason: string) => { if (await had(userId)) await logCaseStaff(tx, [{ caseId: id, userId, kind: "NURSE", action: "LEFT", reason, byUserId: user.id }]) }
     if ("assign" in body) {
+      await joined(body.assign, "ASSIGNED")
       await tx.caseNurse.upsert({ where: { caseId_userId: { caseId: id, userId: body.assign } }, create: { caseId: id, userId: body.assign, assignedById: user.id, source: "ASSIGNED" }, update: {} })
       await logAuditInTransaction(tx, user.id, "CASE_NURSE_ASSIGN", id, { nurse: body.assign })
     } else if ("remove" in body) {
+      await left(body.remove, "REMOVED")
       await tx.caseNurse.deleteMany({ where: { caseId: id, userId: body.remove } })
       await logAuditInTransaction(tx, user.id, "CASE_NURSE_REMOVE", id, { nurse: body.remove })
     } else if ("handoverTo" in body) {
+      await left(user.id, "HANDOVER")
+      await joined(body.handoverTo, "HANDOVER")
       await tx.caseNurse.deleteMany({ where: { caseId: id, userId: user.id } })
       await tx.caseNurse.upsert({ where: { caseId_userId: { caseId: id, userId: body.handoverTo } }, create: { caseId: id, userId: body.handoverTo, assignedById: user.id, source: "HANDOVER" }, update: {} })
       await logAuditInTransaction(tx, user.id, "CASE_NURSE_HANDOVER", id, { to: body.handoverTo })
     } else {
+      await joined(user.id, "SELF")
       await tx.caseNurse.upsert({ where: { caseId_userId: { caseId: id, userId: user.id } }, create: { caseId: id, userId: user.id, assignedById: user.id, source: "SELF" }, update: {} })
       await logAuditInTransaction(tx, user.id, "CASE_NURSE_TAKE", id, {})
     }

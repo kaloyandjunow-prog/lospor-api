@@ -148,6 +148,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         const outcome = await transferCaseOwnershipInTransaction(tx, caseId, toUserId, {
           supersedePending: true,
+          byUserId: user.id,
         })
         const transfer = await tx.caseTransfer.create({
           data: {
@@ -243,6 +244,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
           const outcome = await transferCaseOwnershipInTransaction(tx, caseId, user.id, {
             acceptTransferId: transfer.id,
+            byUserId: user.id,
           })
           await logAuditInTransaction(tx, user.id, "CASE_TRANSFER_ACCEPT", caseId, {
             fromUserId: transfer.fromUserId,

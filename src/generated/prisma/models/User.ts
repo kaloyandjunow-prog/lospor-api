@@ -412,6 +412,8 @@ export type UserWhereInput = {
   cases?: Prisma.CaseListRelationFilter
   nurseAssignments?: Prisma.CaseNurseListRelationFilter
   nurseAssignmentsMade?: Prisma.CaseNurseListRelationFilter
+  caseStaffEntries?: Prisma.CaseStaffLogListRelationFilter
+  caseStaffEntriesMade?: Prisma.CaseStaffLogListRelationFilter
   casePresence?: Prisma.CasePresenceListRelationFilter
   theatreShifts?: Prisma.TheatreNurseShiftListRelationFilter
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftListRelationFilter
@@ -478,6 +480,8 @@ export type UserOrderByWithRelationInput = {
   cases?: Prisma.CaseOrderByRelationAggregateInput
   nurseAssignments?: Prisma.CaseNurseOrderByRelationAggregateInput
   nurseAssignmentsMade?: Prisma.CaseNurseOrderByRelationAggregateInput
+  caseStaffEntries?: Prisma.CaseStaffLogOrderByRelationAggregateInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogOrderByRelationAggregateInput
   casePresence?: Prisma.CasePresenceOrderByRelationAggregateInput
   theatreShifts?: Prisma.TheatreNurseShiftOrderByRelationAggregateInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftOrderByRelationAggregateInput
@@ -547,6 +551,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   cases?: Prisma.CaseListRelationFilter
   nurseAssignments?: Prisma.CaseNurseListRelationFilter
   nurseAssignmentsMade?: Prisma.CaseNurseListRelationFilter
+  caseStaffEntries?: Prisma.CaseStaffLogListRelationFilter
+  caseStaffEntriesMade?: Prisma.CaseStaffLogListRelationFilter
   casePresence?: Prisma.CasePresenceListRelationFilter
   theatreShifts?: Prisma.TheatreNurseShiftListRelationFilter
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftListRelationFilter
@@ -684,6 +690,8 @@ export type UserCreateInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -749,6 +757,8 @@ export type UserUncheckedCreateInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -814,6 +824,8 @@ export type UserUpdateInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -879,6 +891,8 @@ export type UserUncheckedUpdateInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -1324,6 +1338,36 @@ export type UserUpdateOneRequiredWithoutCasesCreatedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCasesCreatedInput, Prisma.UserUpdateWithoutCasesCreatedInput>, Prisma.UserUncheckedUpdateWithoutCasesCreatedInput>
 }
 
+export type UserCreateNestedOneWithoutCaseStaffEntriesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCaseStaffEntriesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutCaseStaffEntriesMadeInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesMadeInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesMadeInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCaseStaffEntriesMadeInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCaseStaffEntriesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCaseStaffEntriesInput
+  upsert?: Prisma.UserUpsertWithoutCaseStaffEntriesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCaseStaffEntriesInput, Prisma.UserUpdateWithoutCaseStaffEntriesInput>, Prisma.UserUncheckedUpdateWithoutCaseStaffEntriesInput>
+}
+
+export type UserUpdateOneWithoutCaseStaffEntriesMadeNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesMadeInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesMadeInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCaseStaffEntriesMadeInput
+  upsert?: Prisma.UserUpsertWithoutCaseStaffEntriesMadeInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCaseStaffEntriesMadeInput, Prisma.UserUpdateWithoutCaseStaffEntriesMadeInput>, Prisma.UserUncheckedUpdateWithoutCaseStaffEntriesMadeInput>
+}
+
 export type UserCreateNestedOneWithoutNurseAssignmentsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutNurseAssignmentsInput, Prisma.UserUncheckedCreateWithoutNurseAssignmentsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutNurseAssignmentsInput
@@ -1731,6 +1775,8 @@ export type UserCreateWithoutEmailVerificationTokensInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -1795,6 +1841,8 @@ export type UserUncheckedCreateWithoutEmailVerificationTokensInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -1875,6 +1923,8 @@ export type UserUpdateWithoutEmailVerificationTokensInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -1939,6 +1989,8 @@ export type UserUncheckedUpdateWithoutEmailVerificationTokensInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -2003,6 +2055,8 @@ export type UserCreateWithoutPasswordResetTokensInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -2067,6 +2121,8 @@ export type UserUncheckedCreateWithoutPasswordResetTokensInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -2147,6 +2203,8 @@ export type UserUpdateWithoutPasswordResetTokensInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -2211,6 +2269,8 @@ export type UserUncheckedUpdateWithoutPasswordResetTokensInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -2275,6 +2335,8 @@ export type UserCreateWithoutAuthSessionsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -2339,6 +2401,8 @@ export type UserUncheckedCreateWithoutAuthSessionsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -2419,6 +2483,8 @@ export type UserUpdateWithoutAuthSessionsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -2483,6 +2549,8 @@ export type UserUncheckedUpdateWithoutAuthSessionsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -2547,6 +2615,8 @@ export type UserCreateWithoutMfaLoginChallengesInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -2611,6 +2681,8 @@ export type UserUncheckedCreateWithoutMfaLoginChallengesInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -2691,6 +2763,8 @@ export type UserUpdateWithoutMfaLoginChallengesInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -2755,6 +2829,8 @@ export type UserUncheckedUpdateWithoutMfaLoginChallengesInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -2819,6 +2895,8 @@ export type UserCreateWithoutMfaRecoveryCodesInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -2883,6 +2961,8 @@ export type UserUncheckedCreateWithoutMfaRecoveryCodesInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -2963,6 +3043,8 @@ export type UserUpdateWithoutMfaRecoveryCodesInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -3027,6 +3109,8 @@ export type UserUncheckedUpdateWithoutMfaRecoveryCodesInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -3091,6 +3175,8 @@ export type UserCreateWithoutLegalAcceptancesInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -3155,6 +3241,8 @@ export type UserUncheckedCreateWithoutLegalAcceptancesInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -3235,6 +3323,8 @@ export type UserUpdateWithoutLegalAcceptancesInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -3299,6 +3389,8 @@ export type UserUncheckedUpdateWithoutLegalAcceptancesInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -3362,6 +3454,8 @@ export type UserCreateWithoutInstitutionInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -3426,6 +3520,8 @@ export type UserUncheckedCreateWithoutInstitutionInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -3551,6 +3647,8 @@ export type UserCreateWithoutCasesInput = {
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -3615,6 +3713,8 @@ export type UserUncheckedCreateWithoutCasesInput = {
   createdAt?: Date | string
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -3685,6 +3785,8 @@ export type UserCreateWithoutCasesCreatedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -3749,6 +3851,8 @@ export type UserUncheckedCreateWithoutCasesCreatedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -3828,6 +3932,8 @@ export type UserUpdateWithoutCasesInput = {
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -3892,6 +3998,8 @@ export type UserUncheckedUpdateWithoutCasesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -3968,6 +4076,8 @@ export type UserUpdateWithoutCasesCreatedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -4032,9 +4142,571 @@ export type UserUncheckedUpdateWithoutCasesCreatedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutCaseStaffEntriesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
+  nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
+  casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
+  theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCaseStaffEntriesInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
+  nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
+  casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
+  theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCaseStaffEntriesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesInput>
+}
+
+export type UserCreateWithoutCaseStaffEntriesMadeInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
+  cases?: Prisma.CaseCreateNestedManyWithoutUserInput
+  nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
+  nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
+  theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
+  casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCaseStaffEntriesMadeInput = {
+  id?: string
+  email?: string | null
+  username?: string | null
+  usernameCanonical?: string | null
+  name: string
+  firstName?: string
+  lastName?: string
+  title?: string
+  passwordHash: string
+  role?: $Enums.UserRole
+  accountKind?: $Enums.AccountKind
+  institutionId?: string | null
+  activatedAt?: Date | string | null
+  emailVerifiedAt?: Date | string | null
+  acceptedTermsAt?: Date | string | null
+  acceptedPrivacyAt?: Date | string | null
+  termsVersion?: string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: number
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  mfaTotpSecretCiphertext?: string | null
+  mfaEnabledAt?: Date | string | null
+  mfaLastTotpStep?: number | null
+  suspendedAt?: Date | string | null
+  recoveryRequiredAt?: Date | string | null
+  deletedAt?: Date | string | null
+  anonymizedAt?: Date | string | null
+  createdAt?: Date | string
+  cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
+  nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
+  nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
+  theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
+  casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
+  roleRequests?: Prisma.RoleRequestUncheckedCreateNestedManyWithoutUserInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutFromUserInput
+  transfersReceived?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutToUserInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedCreateNestedManyWithoutUserInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedCreateNestedManyWithoutOwnerInput
+  researchExports?: Prisma.ResearchExportUncheckedCreateNestedManyWithoutOwnerInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutUserInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedCreateNestedManyWithoutGrantedByInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedCreateNestedManyWithoutUserInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedCreateNestedManyWithoutReviewerInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutCreatedByInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutPublishedByInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedCreateNestedManyWithoutConfirmedByInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedCreateNestedManyWithoutOwnerUserInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedCreateNestedManyWithoutUserInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedCreateNestedManyWithoutSelectedByInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutDesignatedReviewerInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutHodApproverInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedCreateNestedManyWithoutProposedByInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+  authSessions?: Prisma.AuthSessionUncheckedCreateNestedManyWithoutUserInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedCreateNestedManyWithoutUserInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedCreateNestedManyWithoutUserInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCaseStaffEntriesMadeInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesMadeInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesMadeInput>
+}
+
+export type UserUpsertWithoutCaseStaffEntriesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCaseStaffEntriesInput, Prisma.UserUncheckedUpdateWithoutCaseStaffEntriesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCaseStaffEntriesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCaseStaffEntriesInput, Prisma.UserUncheckedUpdateWithoutCaseStaffEntriesInput>
+}
+
+export type UserUpdateWithoutCaseStaffEntriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
+  nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
+  casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
+  theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCaseStaffEntriesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
+  nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
+  casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
+  theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUncheckedUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUncheckedUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUncheckedUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUncheckedUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUncheckedUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUncheckedUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUncheckedUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUncheckedUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUncheckedUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUncheckedUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUncheckedUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUncheckedUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUncheckedUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUncheckedUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUncheckedUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserUpsertWithoutCaseStaffEntriesMadeInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCaseStaffEntriesMadeInput, Prisma.UserUncheckedUpdateWithoutCaseStaffEntriesMadeInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCaseStaffEntriesMadeInput, Prisma.UserUncheckedCreateWithoutCaseStaffEntriesMadeInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCaseStaffEntriesMadeInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCaseStaffEntriesMadeInput, Prisma.UserUncheckedUpdateWithoutCaseStaffEntriesMadeInput>
+}
+
+export type UserUpdateWithoutCaseStaffEntriesMadeInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
+  cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
+  nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
+  nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
+  theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
+  casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
+  roleRequests?: Prisma.RoleRequestUpdateManyWithoutUserNestedInput
+  institutionChangeRequests?: Prisma.InstitutionChangeRequestUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.CaseTransferUpdateManyWithoutFromUserNestedInput
+  transfersReceived?: Prisma.CaseTransferUpdateManyWithoutToUserNestedInput
+  emailVerificationTokens?: Prisma.EmailVerificationTokenUpdateManyWithoutUserNestedInput
+  researchCohorts?: Prisma.ResearchCohortUpdateManyWithoutOwnerNestedInput
+  researchExports?: Prisma.ResearchExportUpdateManyWithoutOwnerNestedInput
+  researchAccessGrants?: Prisma.ResearchAccessGrantUpdateManyWithoutUserNestedInput
+  researchGrantsIssued?: Prisma.ResearchAccessGrantUpdateManyWithoutGrantedByNestedInput
+  researchSelfAuthorizations?: Prisma.ResearchSelfAuthorizationUpdateManyWithoutUserNestedInput
+  clinicalRuleReviews?: Prisma.ClinicalRuleReviewUpdateManyWithoutReviewerNestedInput
+  clinicalPresetsCreated?: Prisma.ClinicalPresetUpdateManyWithoutCreatedByNestedInput
+  clinicalPresetsPublished?: Prisma.ClinicalPresetUpdateManyWithoutPublishedByNestedInput
+  clinicalPublicationsConfirmed?: Prisma.ClinicalRulesetPublicationEvidenceUpdateManyWithoutConfirmedByNestedInput
+  clinicalPresetsOwned?: Prisma.ClinicalPresetUpdateManyWithoutOwnerUserNestedInput
+  clinicalPresetSelections?: Prisma.UserClinicalPresetSelectionUpdateManyWithoutUserNestedInput
+  platformPresetSelections?: Prisma.PlatformClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  institutionPresetSelections?: Prisma.InstitutionClinicalPresetSelectionUpdateManyWithoutSelectedByNestedInput
+  clinicalOverridesToReview?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutDesignatedReviewerNestedInput
+  clinicalOverridesApproved?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutHodApproverNestedInput
+  clinicalOverridesProposed?: Prisma.InstitutionClinicalRuleOverrideUpdateManyWithoutProposedByNestedInput
+  passwordResetTokens?: Prisma.PasswordResetTokenUpdateManyWithoutUserNestedInput
+  authSessions?: Prisma.AuthSessionUpdateManyWithoutUserNestedInput
+  mfaLoginChallenges?: Prisma.MfaLoginChallengeUpdateManyWithoutUserNestedInput
+  mfaRecoveryCodes?: Prisma.MfaRecoveryCodeUpdateManyWithoutUserNestedInput
+  legalAcceptances?: Prisma.LegalAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCaseStaffEntriesMadeInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usernameCanonical?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  accountKind?: Prisma.EnumAccountKindFieldUpdateOperationsInput | $Enums.AccountKind
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedTermsAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedPrivacyAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  termsVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferences?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  preferencesRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaTotpSecretCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mfaLastTotpStep?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  suspendedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  recoveryRequiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  anonymizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
+  nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
+  nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
+  theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
+  theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
+  casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
   roleRequests?: Prisma.RoleRequestUncheckedUpdateManyWithoutUserNestedInput
   institutionChangeRequests?: Prisma.InstitutionChangeRequestUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.CaseTransferUncheckedUpdateManyWithoutFromUserNestedInput
@@ -4095,6 +4767,8 @@ export type UserCreateWithoutNurseAssignmentsInput = {
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -4159,6 +4833,8 @@ export type UserUncheckedCreateWithoutNurseAssignmentsInput = {
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -4228,6 +4904,8 @@ export type UserCreateWithoutNurseAssignmentsMadeInput = {
   institution?: Prisma.InstitutionCreateNestedOneWithoutUsersInput
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -4292,6 +4970,8 @@ export type UserUncheckedCreateWithoutNurseAssignmentsMadeInput = {
   createdAt?: Date | string
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -4372,6 +5052,8 @@ export type UserUpdateWithoutNurseAssignmentsInput = {
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -4436,6 +5118,8 @@ export type UserUncheckedUpdateWithoutNurseAssignmentsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -4511,6 +5195,8 @@ export type UserUpdateWithoutNurseAssignmentsMadeInput = {
   institution?: Prisma.InstitutionUpdateOneWithoutUsersNestedInput
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -4575,6 +5261,8 @@ export type UserUncheckedUpdateWithoutNurseAssignmentsMadeInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -4640,6 +5328,8 @@ export type UserCreateWithoutCasePresenceInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
   casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
@@ -4704,6 +5394,8 @@ export type UserUncheckedCreateWithoutCasePresenceInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
   casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4784,6 +5476,8 @@ export type UserUpdateWithoutCasePresenceInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
   casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
@@ -4848,6 +5542,8 @@ export type UserUncheckedUpdateWithoutCasePresenceInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
   casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -4912,6 +5608,8 @@ export type UserCreateWithoutTheatreShiftsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
   casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
@@ -4976,6 +5674,8 @@ export type UserUncheckedCreateWithoutTheatreShiftsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
   casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5045,6 +5745,8 @@ export type UserCreateWithoutTheatreShiftsAssignedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   casesCreated?: Prisma.CaseCreateNestedManyWithoutCreatedByInput
@@ -5109,6 +5811,8 @@ export type UserUncheckedCreateWithoutTheatreShiftsAssignedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   casesCreated?: Prisma.CaseUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5189,6 +5893,8 @@ export type UserUpdateWithoutTheatreShiftsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
   casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
@@ -5253,6 +5959,8 @@ export type UserUncheckedUpdateWithoutTheatreShiftsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
   casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5328,6 +6036,8 @@ export type UserUpdateWithoutTheatreShiftsAssignedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   casesCreated?: Prisma.CaseUpdateManyWithoutCreatedByNestedInput
@@ -5392,6 +6102,8 @@ export type UserUncheckedUpdateWithoutTheatreShiftsAssignedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   casesCreated?: Prisma.CaseUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5456,6 +6168,8 @@ export type UserCreateWithoutTransfersSentInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -5520,6 +6234,8 @@ export type UserUncheckedCreateWithoutTransfersSentInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -5589,6 +6305,8 @@ export type UserCreateWithoutTransfersReceivedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -5653,6 +6371,8 @@ export type UserUncheckedCreateWithoutTransfersReceivedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -5733,6 +6453,8 @@ export type UserUpdateWithoutTransfersSentInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -5797,6 +6519,8 @@ export type UserUncheckedUpdateWithoutTransfersSentInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -5872,6 +6596,8 @@ export type UserUpdateWithoutTransfersReceivedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -5936,6 +6662,8 @@ export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -6000,6 +6728,8 @@ export type UserCreateWithoutRoleRequestsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -6064,6 +6794,8 @@ export type UserUncheckedCreateWithoutRoleRequestsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -6144,6 +6876,8 @@ export type UserUpdateWithoutRoleRequestsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -6208,6 +6942,8 @@ export type UserUncheckedUpdateWithoutRoleRequestsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -6272,6 +7008,8 @@ export type UserCreateWithoutInstitutionChangeRequestsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -6336,6 +7074,8 @@ export type UserUncheckedCreateWithoutInstitutionChangeRequestsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -6416,6 +7156,8 @@ export type UserUpdateWithoutInstitutionChangeRequestsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -6480,6 +7222,8 @@ export type UserUncheckedUpdateWithoutInstitutionChangeRequestsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -6544,6 +7288,8 @@ export type UserCreateWithoutClinicalRuleReviewsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -6608,6 +7354,8 @@ export type UserUncheckedCreateWithoutClinicalRuleReviewsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -6688,6 +7436,8 @@ export type UserUpdateWithoutClinicalRuleReviewsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -6752,6 +7502,8 @@ export type UserUncheckedUpdateWithoutClinicalRuleReviewsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -6816,6 +7568,8 @@ export type UserCreateWithoutClinicalPresetsOwnedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -6880,6 +7634,8 @@ export type UserUncheckedCreateWithoutClinicalPresetsOwnedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -6949,6 +7705,8 @@ export type UserCreateWithoutClinicalPresetsCreatedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -7013,6 +7771,8 @@ export type UserUncheckedCreateWithoutClinicalPresetsCreatedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -7082,6 +7842,8 @@ export type UserCreateWithoutClinicalPresetsPublishedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -7146,6 +7908,8 @@ export type UserUncheckedCreateWithoutClinicalPresetsPublishedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -7226,6 +7990,8 @@ export type UserUpdateWithoutClinicalPresetsOwnedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -7290,6 +8056,8 @@ export type UserUncheckedUpdateWithoutClinicalPresetsOwnedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -7365,6 +8133,8 @@ export type UserUpdateWithoutClinicalPresetsCreatedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -7429,6 +8199,8 @@ export type UserUncheckedUpdateWithoutClinicalPresetsCreatedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -7504,6 +8276,8 @@ export type UserUpdateWithoutClinicalPresetsPublishedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -7568,6 +8342,8 @@ export type UserUncheckedUpdateWithoutClinicalPresetsPublishedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -7632,6 +8408,8 @@ export type UserCreateWithoutClinicalPublicationsConfirmedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -7696,6 +8474,8 @@ export type UserUncheckedCreateWithoutClinicalPublicationsConfirmedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -7776,6 +8556,8 @@ export type UserUpdateWithoutClinicalPublicationsConfirmedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -7840,6 +8622,8 @@ export type UserUncheckedUpdateWithoutClinicalPublicationsConfirmedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -7904,6 +8688,8 @@ export type UserCreateWithoutPlatformPresetSelectionsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -7968,6 +8754,8 @@ export type UserUncheckedCreateWithoutPlatformPresetSelectionsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -8048,6 +8836,8 @@ export type UserUpdateWithoutPlatformPresetSelectionsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -8112,6 +8902,8 @@ export type UserUncheckedUpdateWithoutPlatformPresetSelectionsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -8176,6 +8968,8 @@ export type UserCreateWithoutInstitutionPresetSelectionsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -8240,6 +9034,8 @@ export type UserUncheckedCreateWithoutInstitutionPresetSelectionsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -8320,6 +9116,8 @@ export type UserUpdateWithoutInstitutionPresetSelectionsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -8384,6 +9182,8 @@ export type UserUncheckedUpdateWithoutInstitutionPresetSelectionsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -8448,6 +9248,8 @@ export type UserCreateWithoutClinicalPresetSelectionsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -8512,6 +9314,8 @@ export type UserUncheckedCreateWithoutClinicalPresetSelectionsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -8592,6 +9396,8 @@ export type UserUpdateWithoutClinicalPresetSelectionsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -8656,6 +9462,8 @@ export type UserUncheckedUpdateWithoutClinicalPresetSelectionsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -8720,6 +9528,8 @@ export type UserCreateWithoutClinicalOverridesProposedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -8784,6 +9594,8 @@ export type UserUncheckedCreateWithoutClinicalOverridesProposedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -8853,6 +9665,8 @@ export type UserCreateWithoutClinicalOverridesToReviewInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -8917,6 +9731,8 @@ export type UserUncheckedCreateWithoutClinicalOverridesToReviewInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -8986,6 +9802,8 @@ export type UserCreateWithoutClinicalOverridesApprovedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -9050,6 +9868,8 @@ export type UserUncheckedCreateWithoutClinicalOverridesApprovedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -9130,6 +9950,8 @@ export type UserUpdateWithoutClinicalOverridesProposedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -9194,6 +10016,8 @@ export type UserUncheckedUpdateWithoutClinicalOverridesProposedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -9269,6 +10093,8 @@ export type UserUpdateWithoutClinicalOverridesToReviewInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -9333,6 +10159,8 @@ export type UserUncheckedUpdateWithoutClinicalOverridesToReviewInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -9408,6 +10236,8 @@ export type UserUpdateWithoutClinicalOverridesApprovedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -9472,6 +10302,8 @@ export type UserUncheckedUpdateWithoutClinicalOverridesApprovedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -9536,6 +10368,8 @@ export type UserCreateWithoutResearchAccessGrantsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -9600,6 +10434,8 @@ export type UserUncheckedCreateWithoutResearchAccessGrantsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -9669,6 +10505,8 @@ export type UserCreateWithoutResearchGrantsIssuedInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -9733,6 +10571,8 @@ export type UserUncheckedCreateWithoutResearchGrantsIssuedInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -9813,6 +10653,8 @@ export type UserUpdateWithoutResearchAccessGrantsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -9877,6 +10719,8 @@ export type UserUncheckedUpdateWithoutResearchAccessGrantsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -9952,6 +10796,8 @@ export type UserUpdateWithoutResearchGrantsIssuedInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -10016,6 +10862,8 @@ export type UserUncheckedUpdateWithoutResearchGrantsIssuedInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -10080,6 +10928,8 @@ export type UserCreateWithoutResearchSelfAuthorizationsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -10144,6 +10994,8 @@ export type UserUncheckedCreateWithoutResearchSelfAuthorizationsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -10224,6 +11076,8 @@ export type UserUpdateWithoutResearchSelfAuthorizationsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -10288,6 +11142,8 @@ export type UserUncheckedUpdateWithoutResearchSelfAuthorizationsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -10352,6 +11208,8 @@ export type UserCreateWithoutResearchCohortsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -10416,6 +11274,8 @@ export type UserUncheckedCreateWithoutResearchCohortsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -10496,6 +11356,8 @@ export type UserUpdateWithoutResearchCohortsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -10560,6 +11422,8 @@ export type UserUncheckedUpdateWithoutResearchCohortsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -10624,6 +11488,8 @@ export type UserCreateWithoutResearchExportsInput = {
   cases?: Prisma.CaseCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftCreateNestedManyWithoutAssignedByInput
@@ -10688,6 +11554,8 @@ export type UserUncheckedCreateWithoutResearchExportsInput = {
   cases?: Prisma.CaseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignments?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutUserInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutAssignedByInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutUserInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutByInput
   casePresence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutUserInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutUserInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedCreateNestedManyWithoutAssignedByInput
@@ -10768,6 +11636,8 @@ export type UserUpdateWithoutResearchExportsInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -10832,6 +11702,8 @@ export type UserUncheckedUpdateWithoutResearchExportsInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -10926,6 +11798,8 @@ export type UserUpdateWithoutInstitutionInput = {
   cases?: Prisma.CaseUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUpdateManyWithoutAssignedByNestedInput
@@ -10990,6 +11864,8 @@ export type UserUncheckedUpdateWithoutInstitutionInput = {
   cases?: Prisma.CaseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignments?: Prisma.CaseNurseUncheckedUpdateManyWithoutUserNestedInput
   nurseAssignmentsMade?: Prisma.CaseNurseUncheckedUpdateManyWithoutAssignedByNestedInput
+  caseStaffEntries?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutUserNestedInput
+  caseStaffEntriesMade?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutByNestedInput
   casePresence?: Prisma.CasePresenceUncheckedUpdateManyWithoutUserNestedInput
   theatreShifts?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutUserNestedInput
   theatreShiftsAssigned?: Prisma.TheatreNurseShiftUncheckedUpdateManyWithoutAssignedByNestedInput
@@ -11062,6 +11938,8 @@ export type UserCountOutputType = {
   cases: number
   nurseAssignments: number
   nurseAssignmentsMade: number
+  caseStaffEntries: number
+  caseStaffEntriesMade: number
   casePresence: number
   theatreShifts: number
   theatreShiftsAssigned: number
@@ -11098,6 +11976,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   cases?: boolean | UserCountOutputTypeCountCasesArgs
   nurseAssignments?: boolean | UserCountOutputTypeCountNurseAssignmentsArgs
   nurseAssignmentsMade?: boolean | UserCountOutputTypeCountNurseAssignmentsMadeArgs
+  caseStaffEntries?: boolean | UserCountOutputTypeCountCaseStaffEntriesArgs
+  caseStaffEntriesMade?: boolean | UserCountOutputTypeCountCaseStaffEntriesMadeArgs
   casePresence?: boolean | UserCountOutputTypeCountCasePresenceArgs
   theatreShifts?: boolean | UserCountOutputTypeCountTheatreShiftsArgs
   theatreShiftsAssigned?: boolean | UserCountOutputTypeCountTheatreShiftsAssignedArgs
@@ -11159,6 +12039,20 @@ export type UserCountOutputTypeCountNurseAssignmentsArgs<ExtArgs extends runtime
  */
 export type UserCountOutputTypeCountNurseAssignmentsMadeArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.CaseNurseWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCaseStaffEntriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CaseStaffLogWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCaseStaffEntriesMadeArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CaseStaffLogWhereInput
 }
 
 /**
@@ -11406,6 +12300,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   cases?: boolean | Prisma.User$casesArgs<ExtArgs>
   nurseAssignments?: boolean | Prisma.User$nurseAssignmentsArgs<ExtArgs>
   nurseAssignmentsMade?: boolean | Prisma.User$nurseAssignmentsMadeArgs<ExtArgs>
+  caseStaffEntries?: boolean | Prisma.User$caseStaffEntriesArgs<ExtArgs>
+  caseStaffEntriesMade?: boolean | Prisma.User$caseStaffEntriesMadeArgs<ExtArgs>
   casePresence?: boolean | Prisma.User$casePresenceArgs<ExtArgs>
   theatreShifts?: boolean | Prisma.User$theatreShiftsArgs<ExtArgs>
   theatreShiftsAssigned?: boolean | Prisma.User$theatreShiftsAssignedArgs<ExtArgs>
@@ -11543,6 +12439,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   cases?: boolean | Prisma.User$casesArgs<ExtArgs>
   nurseAssignments?: boolean | Prisma.User$nurseAssignmentsArgs<ExtArgs>
   nurseAssignmentsMade?: boolean | Prisma.User$nurseAssignmentsMadeArgs<ExtArgs>
+  caseStaffEntries?: boolean | Prisma.User$caseStaffEntriesArgs<ExtArgs>
+  caseStaffEntriesMade?: boolean | Prisma.User$caseStaffEntriesMadeArgs<ExtArgs>
   casePresence?: boolean | Prisma.User$casePresenceArgs<ExtArgs>
   theatreShifts?: boolean | Prisma.User$theatreShiftsArgs<ExtArgs>
   theatreShiftsAssigned?: boolean | Prisma.User$theatreShiftsAssignedArgs<ExtArgs>
@@ -11589,6 +12487,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     cases: Prisma.$CasePayload<ExtArgs>[]
     nurseAssignments: Prisma.$CaseNursePayload<ExtArgs>[]
     nurseAssignmentsMade: Prisma.$CaseNursePayload<ExtArgs>[]
+    caseStaffEntries: Prisma.$CaseStaffLogPayload<ExtArgs>[]
+    caseStaffEntriesMade: Prisma.$CaseStaffLogPayload<ExtArgs>[]
     casePresence: Prisma.$CasePresencePayload<ExtArgs>[]
     theatreShifts: Prisma.$TheatreNurseShiftPayload<ExtArgs>[]
     theatreShiftsAssigned: Prisma.$TheatreNurseShiftPayload<ExtArgs>[]
@@ -12087,6 +12987,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   cases<T extends Prisma.User$casesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$casesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   nurseAssignments<T extends Prisma.User$nurseAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$nurseAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseNursePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   nurseAssignmentsMade<T extends Prisma.User$nurseAssignmentsMadeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$nurseAssignmentsMadeArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseNursePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  caseStaffEntries<T extends Prisma.User$caseStaffEntriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$caseStaffEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseStaffLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  caseStaffEntriesMade<T extends Prisma.User$caseStaffEntriesMadeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$caseStaffEntriesMadeArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseStaffLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   casePresence<T extends Prisma.User$casePresenceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$casePresenceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasePresencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   theatreShifts<T extends Prisma.User$theatreShiftsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$theatreShiftsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TheatreNurseShiftPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   theatreShiftsAssigned<T extends Prisma.User$theatreShiftsAssignedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$theatreShiftsAssignedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TheatreNurseShiftPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -12664,6 +13566,54 @@ export type User$nurseAssignmentsMadeArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.CaseNurseScalarFieldEnum | Prisma.CaseNurseScalarFieldEnum[]
+}
+
+/**
+ * User.caseStaffEntries
+ */
+export type User$caseStaffEntriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CaseStaffLog
+   */
+  select?: Prisma.CaseStaffLogSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CaseStaffLog
+   */
+  omit?: Prisma.CaseStaffLogOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CaseStaffLogInclude<ExtArgs> | null
+  where?: Prisma.CaseStaffLogWhereInput
+  orderBy?: Prisma.CaseStaffLogOrderByWithRelationInput | Prisma.CaseStaffLogOrderByWithRelationInput[]
+  cursor?: Prisma.CaseStaffLogWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CaseStaffLogScalarFieldEnum | Prisma.CaseStaffLogScalarFieldEnum[]
+}
+
+/**
+ * User.caseStaffEntriesMade
+ */
+export type User$caseStaffEntriesMadeArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CaseStaffLog
+   */
+  select?: Prisma.CaseStaffLogSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CaseStaffLog
+   */
+  omit?: Prisma.CaseStaffLogOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CaseStaffLogInclude<ExtArgs> | null
+  where?: Prisma.CaseStaffLogWhereInput
+  orderBy?: Prisma.CaseStaffLogOrderByWithRelationInput | Prisma.CaseStaffLogOrderByWithRelationInput[]
+  cursor?: Prisma.CaseStaffLogWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CaseStaffLogScalarFieldEnum | Prisma.CaseStaffLogScalarFieldEnum[]
 }
 
 /**

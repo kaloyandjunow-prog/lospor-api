@@ -10,7 +10,8 @@ function fakeDb(opts: { shifts?: { userId: string }[]; cases?: { id: string }[];
     db: {
       theatreNurseShift: { findMany: vi.fn(async () => opts.shifts ?? []) },
       case: { findMany, findUnique: vi.fn(async () => opts.theatreCase ?? null) },
-      caseNurse: { createMany },
+      caseNurse: { createMany, findMany: vi.fn(async () => []) },
+      caseStaffLog: { createMany: vi.fn() },
     } as never,
   }
 }

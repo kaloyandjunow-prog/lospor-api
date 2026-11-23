@@ -108,9 +108,15 @@ export type Case = Prisma.CaseModel
  */
 export type OperatingTheatre = Prisma.OperatingTheatreModel
 /**
+ * Model CaseStaffLog
+ * Who was on a case, and when (2026-11-23): one row each time a doctor or a nurse joins or leaves it. Append-only, enforced
+ * in the database (the trigger in 20261124100000_case_staff_log): a row is never changed or removed, only the case's own
+ * deletion takes its rows with it. CaseNurse is only who is on the case now; this is the history.
+ */
+export type CaseStaffLog = Prisma.CaseStaffLogModel
+/**
  * Model CaseNurse
- * The anaesthesia nurses of a case (10.8.0), any number of them. Each may do
- * everything a nurse may in it; the last edit wins.
+ * 
  */
 export type CaseNurse = Prisma.CaseNurseModel
 /**

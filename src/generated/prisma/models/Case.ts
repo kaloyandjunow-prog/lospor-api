@@ -431,6 +431,7 @@ export type CaseWhereInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationListRelationFilter
   consentPrints?: Prisma.CaseConsentPrintListRelationFilter
   nurses?: Prisma.CaseNurseListRelationFilter
+  staffLog?: Prisma.CaseStaffLogListRelationFilter
   presence?: Prisma.CasePresenceListRelationFilter
 }
 
@@ -482,6 +483,7 @@ export type CaseOrderByWithRelationInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationOrderByRelationAggregateInput
   consentPrints?: Prisma.CaseConsentPrintOrderByRelationAggregateInput
   nurses?: Prisma.CaseNurseOrderByRelationAggregateInput
+  staffLog?: Prisma.CaseStaffLogOrderByRelationAggregateInput
   presence?: Prisma.CasePresenceOrderByRelationAggregateInput
 }
 
@@ -538,6 +540,7 @@ export type CaseWhereUniqueInput = Prisma.AtLeast<{
   clinicalCalculations?: Prisma.CaseClinicalCalculationListRelationFilter
   consentPrints?: Prisma.CaseConsentPrintListRelationFilter
   nurses?: Prisma.CaseNurseListRelationFilter
+  staffLog?: Prisma.CaseStaffLogListRelationFilter
   presence?: Prisma.CasePresenceListRelationFilter
 }, "id" | "researchId" | "userId_caseCode" | "createdById_clientDraftId">
 
@@ -655,6 +658,7 @@ export type CaseCreateInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -702,6 +706,7 @@ export type CaseUncheckedCreateInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -749,6 +754,7 @@ export type CaseUpdateInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -796,6 +802,7 @@ export type CaseUncheckedUpdateInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -1200,6 +1207,20 @@ export type CaseUncheckedUpdateManyWithoutOperatingTheatreNestedInput = {
   deleteMany?: Prisma.CaseScalarWhereInput | Prisma.CaseScalarWhereInput[]
 }
 
+export type CaseCreateNestedOneWithoutStaffLogInput = {
+  create?: Prisma.XOR<Prisma.CaseCreateWithoutStaffLogInput, Prisma.CaseUncheckedCreateWithoutStaffLogInput>
+  connectOrCreate?: Prisma.CaseCreateOrConnectWithoutStaffLogInput
+  connect?: Prisma.CaseWhereUniqueInput
+}
+
+export type CaseUpdateOneRequiredWithoutStaffLogNestedInput = {
+  create?: Prisma.XOR<Prisma.CaseCreateWithoutStaffLogInput, Prisma.CaseUncheckedCreateWithoutStaffLogInput>
+  connectOrCreate?: Prisma.CaseCreateOrConnectWithoutStaffLogInput
+  upsert?: Prisma.CaseUpsertWithoutStaffLogInput
+  connect?: Prisma.CaseWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CaseUpdateToOneWithWhereWithoutStaffLogInput, Prisma.CaseUpdateWithoutStaffLogInput>, Prisma.CaseUncheckedUpdateWithoutStaffLogInput>
+}
+
 export type CaseCreateNestedOneWithoutNursesInput = {
   create?: Prisma.XOR<Prisma.CaseCreateWithoutNursesInput, Prisma.CaseUncheckedCreateWithoutNursesInput>
   connectOrCreate?: Prisma.CaseCreateOrConnectWithoutNursesInput
@@ -1467,6 +1488,7 @@ export type CaseCreateWithoutUserInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -1513,6 +1535,7 @@ export type CaseUncheckedCreateWithoutUserInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -1569,6 +1592,7 @@ export type CaseCreateWithoutCreatedByInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -1615,6 +1639,7 @@ export type CaseUncheckedCreateWithoutCreatedByInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -1737,6 +1762,7 @@ export type CaseCreateWithoutInstitutionInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -1783,6 +1809,7 @@ export type CaseUncheckedCreateWithoutInstitutionInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -1855,6 +1882,7 @@ export type CaseCreateWithoutOperatingTheatreInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -1901,6 +1929,7 @@ export type CaseUncheckedCreateWithoutOperatingTheatreInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -1928,6 +1957,210 @@ export type CaseUpdateWithWhereUniqueWithoutOperatingTheatreInput = {
 export type CaseUpdateManyWithWhereWithoutOperatingTheatreInput = {
   where: Prisma.CaseScalarWhereInput
   data: Prisma.XOR<Prisma.CaseUpdateManyMutationInput, Prisma.CaseUncheckedUpdateManyWithoutOperatingTheatreInput>
+}
+
+export type CaseCreateWithoutStaffLogInput = {
+  id?: string
+  researchId?: string
+  caseCode?: string | null
+  notes?: string | null
+  operatingTheatreName?: string | null
+  plannedSurgeryDate?: Date | string | null
+  status?: $Enums.CaseStatus
+  cancelledAt?: Date | string | null
+  cancelledById?: string | null
+  cancellationReason?: string | null
+  cancellationNote?: string | null
+  statusBeforeCancel?: $Enums.CaseStatus | null
+  clinicalMode?: $Enums.ClinicalMode
+  clinicalRulesVersion?: string | null
+  awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
+  finalizedAt?: Date | string | null
+  clientDraftId?: string | null
+  clinicalRevision?: number
+  eventRevision?: number
+  relationalRevision?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutCasesInput
+  createdBy: Prisma.UserCreateNestedOneWithoutCasesCreatedInput
+  institution?: Prisma.InstitutionCreateNestedOneWithoutCasesInput
+  operatingTheatre?: Prisma.OperatingTheatreCreateNestedOneWithoutCasesInput
+  indicatorSummary?: Prisma.CaseIndicatorSummaryCreateNestedOneWithoutCaseInput
+  preop?: Prisma.PreoperativeAssessmentCreateNestedOneWithoutCaseInput
+  intraop?: Prisma.IntraoperativeRecordCreateNestedOneWithoutCaseInput
+  postop?: Prisma.PostoperativeRecordCreateNestedOneWithoutCaseInput
+  transfers?: Prisma.CaseTransferCreateNestedManyWithoutCaseInput
+  lock?: Prisma.CaseLockCreateNestedOneWithoutCaseInput
+  events?: Prisma.CaseEventCreateNestedManyWithoutCaseInput
+  selections?: Prisma.CaseSelectionCreateNestedManyWithoutCaseInput
+  complications?: Prisma.CaseComplicationCreateNestedManyWithoutCaseInput
+  fieldStatuses?: Prisma.ClinicalFieldStatusCreateNestedManyWithoutCaseInput
+  fieldChanges?: Prisma.CaseFieldChangeCreateNestedManyWithoutCaseInput
+  finalizations?: Prisma.CaseFinalizationCreateNestedManyWithoutCaseInput
+  clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
+  consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
+  nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
+}
+
+export type CaseUncheckedCreateWithoutStaffLogInput = {
+  id?: string
+  researchId?: string
+  caseCode?: string | null
+  notes?: string | null
+  userId: string
+  createdById: string
+  institutionId?: string | null
+  operatingTheatreId?: string | null
+  operatingTheatreName?: string | null
+  plannedSurgeryDate?: Date | string | null
+  status?: $Enums.CaseStatus
+  cancelledAt?: Date | string | null
+  cancelledById?: string | null
+  cancellationReason?: string | null
+  cancellationNote?: string | null
+  statusBeforeCancel?: $Enums.CaseStatus | null
+  clinicalMode?: $Enums.ClinicalMode
+  clinicalRulesVersion?: string | null
+  awaitingReviewAt?: Date | string | null
+  closeAttemptCount?: number
+  closeNextAttemptAt?: Date | string | null
+  finalizedAt?: Date | string | null
+  clientDraftId?: string | null
+  clinicalRevision?: number
+  eventRevision?: number
+  relationalRevision?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  indicatorSummary?: Prisma.CaseIndicatorSummaryUncheckedCreateNestedOneWithoutCaseInput
+  preop?: Prisma.PreoperativeAssessmentUncheckedCreateNestedOneWithoutCaseInput
+  intraop?: Prisma.IntraoperativeRecordUncheckedCreateNestedOneWithoutCaseInput
+  postop?: Prisma.PostoperativeRecordUncheckedCreateNestedOneWithoutCaseInput
+  transfers?: Prisma.CaseTransferUncheckedCreateNestedManyWithoutCaseInput
+  lock?: Prisma.CaseLockUncheckedCreateNestedOneWithoutCaseInput
+  events?: Prisma.CaseEventUncheckedCreateNestedManyWithoutCaseInput
+  selections?: Prisma.CaseSelectionUncheckedCreateNestedManyWithoutCaseInput
+  complications?: Prisma.CaseComplicationUncheckedCreateNestedManyWithoutCaseInput
+  fieldStatuses?: Prisma.ClinicalFieldStatusUncheckedCreateNestedManyWithoutCaseInput
+  fieldChanges?: Prisma.CaseFieldChangeUncheckedCreateNestedManyWithoutCaseInput
+  finalizations?: Prisma.CaseFinalizationUncheckedCreateNestedManyWithoutCaseInput
+  clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
+  consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
+  nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
+}
+
+export type CaseCreateOrConnectWithoutStaffLogInput = {
+  where: Prisma.CaseWhereUniqueInput
+  create: Prisma.XOR<Prisma.CaseCreateWithoutStaffLogInput, Prisma.CaseUncheckedCreateWithoutStaffLogInput>
+}
+
+export type CaseUpsertWithoutStaffLogInput = {
+  update: Prisma.XOR<Prisma.CaseUpdateWithoutStaffLogInput, Prisma.CaseUncheckedUpdateWithoutStaffLogInput>
+  create: Prisma.XOR<Prisma.CaseCreateWithoutStaffLogInput, Prisma.CaseUncheckedCreateWithoutStaffLogInput>
+  where?: Prisma.CaseWhereInput
+}
+
+export type CaseUpdateToOneWithWhereWithoutStaffLogInput = {
+  where?: Prisma.CaseWhereInput
+  data: Prisma.XOR<Prisma.CaseUpdateWithoutStaffLogInput, Prisma.CaseUncheckedUpdateWithoutStaffLogInput>
+}
+
+export type CaseUpdateWithoutStaffLogInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  researchId?: Prisma.StringFieldUpdateOperationsInput | string
+  caseCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  operatingTheatreName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedSurgeryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.EnumCaseStatusFieldUpdateOperationsInput | $Enums.CaseStatus
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellationNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  statusBeforeCancel?: Prisma.NullableEnumCaseStatusFieldUpdateOperationsInput | $Enums.CaseStatus | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  eventRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  relationalRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutCasesNestedInput
+  createdBy?: Prisma.UserUpdateOneRequiredWithoutCasesCreatedNestedInput
+  institution?: Prisma.InstitutionUpdateOneWithoutCasesNestedInput
+  operatingTheatre?: Prisma.OperatingTheatreUpdateOneWithoutCasesNestedInput
+  indicatorSummary?: Prisma.CaseIndicatorSummaryUpdateOneWithoutCaseNestedInput
+  preop?: Prisma.PreoperativeAssessmentUpdateOneWithoutCaseNestedInput
+  intraop?: Prisma.IntraoperativeRecordUpdateOneWithoutCaseNestedInput
+  postop?: Prisma.PostoperativeRecordUpdateOneWithoutCaseNestedInput
+  transfers?: Prisma.CaseTransferUpdateManyWithoutCaseNestedInput
+  lock?: Prisma.CaseLockUpdateOneWithoutCaseNestedInput
+  events?: Prisma.CaseEventUpdateManyWithoutCaseNestedInput
+  selections?: Prisma.CaseSelectionUpdateManyWithoutCaseNestedInput
+  complications?: Prisma.CaseComplicationUpdateManyWithoutCaseNestedInput
+  fieldStatuses?: Prisma.ClinicalFieldStatusUpdateManyWithoutCaseNestedInput
+  fieldChanges?: Prisma.CaseFieldChangeUpdateManyWithoutCaseNestedInput
+  finalizations?: Prisma.CaseFinalizationUpdateManyWithoutCaseNestedInput
+  clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
+  consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
+  nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
+}
+
+export type CaseUncheckedUpdateWithoutStaffLogInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  researchId?: Prisma.StringFieldUpdateOperationsInput | string
+  caseCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdById?: Prisma.StringFieldUpdateOperationsInput | string
+  institutionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  operatingTheatreId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  operatingTheatreName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedSurgeryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.EnumCaseStatusFieldUpdateOperationsInput | $Enums.CaseStatus
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cancellationNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  statusBeforeCancel?: Prisma.NullableEnumCaseStatusFieldUpdateOperationsInput | $Enums.CaseStatus | null
+  clinicalMode?: Prisma.EnumClinicalModeFieldUpdateOperationsInput | $Enums.ClinicalMode
+  clinicalRulesVersion?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  awaitingReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  closeAttemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  closeNextAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  clientDraftId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  clinicalRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  eventRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  relationalRevision?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  indicatorSummary?: Prisma.CaseIndicatorSummaryUncheckedUpdateOneWithoutCaseNestedInput
+  preop?: Prisma.PreoperativeAssessmentUncheckedUpdateOneWithoutCaseNestedInput
+  intraop?: Prisma.IntraoperativeRecordUncheckedUpdateOneWithoutCaseNestedInput
+  postop?: Prisma.PostoperativeRecordUncheckedUpdateOneWithoutCaseNestedInput
+  transfers?: Prisma.CaseTransferUncheckedUpdateManyWithoutCaseNestedInput
+  lock?: Prisma.CaseLockUncheckedUpdateOneWithoutCaseNestedInput
+  events?: Prisma.CaseEventUncheckedUpdateManyWithoutCaseNestedInput
+  selections?: Prisma.CaseSelectionUncheckedUpdateManyWithoutCaseNestedInput
+  complications?: Prisma.CaseComplicationUncheckedUpdateManyWithoutCaseNestedInput
+  fieldStatuses?: Prisma.ClinicalFieldStatusUncheckedUpdateManyWithoutCaseNestedInput
+  fieldChanges?: Prisma.CaseFieldChangeUncheckedUpdateManyWithoutCaseNestedInput
+  finalizations?: Prisma.CaseFinalizationUncheckedUpdateManyWithoutCaseNestedInput
+  clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
+  consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
+  nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
 export type CaseCreateWithoutNursesInput = {
@@ -1973,6 +2206,7 @@ export type CaseCreateWithoutNursesInput = {
   finalizations?: Prisma.CaseFinalizationCreateNestedManyWithoutCaseInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -2019,6 +2253,7 @@ export type CaseUncheckedCreateWithoutNursesInput = {
   finalizations?: Prisma.CaseFinalizationUncheckedCreateNestedManyWithoutCaseInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -2081,6 +2316,7 @@ export type CaseUpdateWithoutNursesInput = {
   finalizations?: Prisma.CaseFinalizationUpdateManyWithoutCaseNestedInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -2127,6 +2363,7 @@ export type CaseUncheckedUpdateWithoutNursesInput = {
   finalizations?: Prisma.CaseFinalizationUncheckedUpdateManyWithoutCaseNestedInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -2174,6 +2411,7 @@ export type CaseCreateWithoutPresenceInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
 }
 
 export type CaseUncheckedCreateWithoutPresenceInput = {
@@ -2220,6 +2458,7 @@ export type CaseUncheckedCreateWithoutPresenceInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
 }
 
 export type CaseCreateOrConnectWithoutPresenceInput = {
@@ -2282,6 +2521,7 @@ export type CaseUpdateWithoutPresenceInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
 }
 
 export type CaseUncheckedUpdateWithoutPresenceInput = {
@@ -2328,6 +2568,7 @@ export type CaseUncheckedUpdateWithoutPresenceInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
 }
 
 export type CaseCreateWithoutIndicatorSummaryInput = {
@@ -2373,6 +2614,7 @@ export type CaseCreateWithoutIndicatorSummaryInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -2419,6 +2661,7 @@ export type CaseUncheckedCreateWithoutIndicatorSummaryInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -2481,6 +2724,7 @@ export type CaseUpdateWithoutIndicatorSummaryInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -2527,6 +2771,7 @@ export type CaseUncheckedUpdateWithoutIndicatorSummaryInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -2573,6 +2818,7 @@ export type CaseCreateWithoutLockInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -2619,6 +2865,7 @@ export type CaseUncheckedCreateWithoutLockInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -2681,6 +2928,7 @@ export type CaseUpdateWithoutLockInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -2727,6 +2975,7 @@ export type CaseUncheckedUpdateWithoutLockInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -2773,6 +3022,7 @@ export type CaseCreateWithoutTransfersInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -2819,6 +3069,7 @@ export type CaseUncheckedCreateWithoutTransfersInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -2881,6 +3132,7 @@ export type CaseUpdateWithoutTransfersInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -2927,6 +3179,7 @@ export type CaseUncheckedUpdateWithoutTransfersInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -2973,6 +3226,7 @@ export type CaseCreateWithoutFieldStatusesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -3019,6 +3273,7 @@ export type CaseUncheckedCreateWithoutFieldStatusesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -3081,6 +3336,7 @@ export type CaseUpdateWithoutFieldStatusesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -3127,6 +3383,7 @@ export type CaseUncheckedUpdateWithoutFieldStatusesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -3173,6 +3430,7 @@ export type CaseCreateWithoutFieldChangesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -3219,6 +3477,7 @@ export type CaseUncheckedCreateWithoutFieldChangesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -3281,6 +3540,7 @@ export type CaseUpdateWithoutFieldChangesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -3327,6 +3587,7 @@ export type CaseUncheckedUpdateWithoutFieldChangesInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -3373,6 +3634,7 @@ export type CaseCreateWithoutFinalizationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -3419,6 +3681,7 @@ export type CaseUncheckedCreateWithoutFinalizationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -3481,6 +3744,7 @@ export type CaseUpdateWithoutFinalizationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -3527,6 +3791,7 @@ export type CaseUncheckedUpdateWithoutFinalizationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -3573,6 +3838,7 @@ export type CaseCreateWithoutEventsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -3619,6 +3885,7 @@ export type CaseUncheckedCreateWithoutEventsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -3681,6 +3948,7 @@ export type CaseUpdateWithoutEventsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -3727,6 +3995,7 @@ export type CaseUncheckedUpdateWithoutEventsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -3773,6 +4042,7 @@ export type CaseCreateWithoutPreopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -3819,6 +4089,7 @@ export type CaseUncheckedCreateWithoutPreopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -3881,6 +4152,7 @@ export type CaseUpdateWithoutPreopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -3927,6 +4199,7 @@ export type CaseUncheckedUpdateWithoutPreopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -3973,6 +4246,7 @@ export type CaseCreateWithoutConsentPrintsInput = {
   finalizations?: Prisma.CaseFinalizationCreateNestedManyWithoutCaseInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -4019,6 +4293,7 @@ export type CaseUncheckedCreateWithoutConsentPrintsInput = {
   finalizations?: Prisma.CaseFinalizationUncheckedCreateNestedManyWithoutCaseInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -4081,6 +4356,7 @@ export type CaseUpdateWithoutConsentPrintsInput = {
   finalizations?: Prisma.CaseFinalizationUpdateManyWithoutCaseNestedInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -4127,6 +4403,7 @@ export type CaseUncheckedUpdateWithoutConsentPrintsInput = {
   finalizations?: Prisma.CaseFinalizationUncheckedUpdateManyWithoutCaseNestedInput
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -4173,6 +4450,7 @@ export type CaseCreateWithoutIntraopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -4219,6 +4497,7 @@ export type CaseUncheckedCreateWithoutIntraopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -4281,6 +4560,7 @@ export type CaseUpdateWithoutIntraopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -4327,6 +4607,7 @@ export type CaseUncheckedUpdateWithoutIntraopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -4373,6 +4654,7 @@ export type CaseCreateWithoutPostopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -4419,6 +4701,7 @@ export type CaseUncheckedCreateWithoutPostopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -4481,6 +4764,7 @@ export type CaseUpdateWithoutPostopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -4527,6 +4811,7 @@ export type CaseUncheckedUpdateWithoutPostopInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -4573,6 +4858,7 @@ export type CaseCreateWithoutClinicalCalculationsInput = {
   finalizations?: Prisma.CaseFinalizationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -4619,6 +4905,7 @@ export type CaseUncheckedCreateWithoutClinicalCalculationsInput = {
   finalizations?: Prisma.CaseFinalizationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -4681,6 +4968,7 @@ export type CaseUpdateWithoutClinicalCalculationsInput = {
   finalizations?: Prisma.CaseFinalizationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -4727,6 +5015,7 @@ export type CaseUncheckedUpdateWithoutClinicalCalculationsInput = {
   finalizations?: Prisma.CaseFinalizationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -4773,6 +5062,7 @@ export type CaseCreateWithoutComplicationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -4819,6 +5109,7 @@ export type CaseUncheckedCreateWithoutComplicationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -4881,6 +5172,7 @@ export type CaseUpdateWithoutComplicationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -4927,6 +5219,7 @@ export type CaseUncheckedUpdateWithoutComplicationsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -4973,6 +5266,7 @@ export type CaseCreateWithoutSelectionsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceCreateNestedManyWithoutCaseInput
 }
 
@@ -5019,6 +5313,7 @@ export type CaseUncheckedCreateWithoutSelectionsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedCreateNestedManyWithoutCaseInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedCreateNestedManyWithoutCaseInput
   nurses?: Prisma.CaseNurseUncheckedCreateNestedManyWithoutCaseInput
+  staffLog?: Prisma.CaseStaffLogUncheckedCreateNestedManyWithoutCaseInput
   presence?: Prisma.CasePresenceUncheckedCreateNestedManyWithoutCaseInput
 }
 
@@ -5081,6 +5376,7 @@ export type CaseUpdateWithoutSelectionsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -5127,6 +5423,7 @@ export type CaseUncheckedUpdateWithoutSelectionsInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -5233,6 +5530,7 @@ export type CaseUpdateWithoutUserInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -5279,6 +5577,7 @@ export type CaseUncheckedUpdateWithoutUserInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -5355,6 +5654,7 @@ export type CaseUpdateWithoutCreatedByInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -5401,6 +5701,7 @@ export type CaseUncheckedUpdateWithoutCreatedByInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -5507,6 +5808,7 @@ export type CaseUpdateWithoutInstitutionInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -5553,6 +5855,7 @@ export type CaseUncheckedUpdateWithoutInstitutionInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -5659,6 +5962,7 @@ export type CaseUpdateWithoutOperatingTheatreInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUpdateManyWithoutCaseNestedInput
 }
 
@@ -5705,6 +6009,7 @@ export type CaseUncheckedUpdateWithoutOperatingTheatreInput = {
   clinicalCalculations?: Prisma.CaseClinicalCalculationUncheckedUpdateManyWithoutCaseNestedInput
   consentPrints?: Prisma.CaseConsentPrintUncheckedUpdateManyWithoutCaseNestedInput
   nurses?: Prisma.CaseNurseUncheckedUpdateManyWithoutCaseNestedInput
+  staffLog?: Prisma.CaseStaffLogUncheckedUpdateManyWithoutCaseNestedInput
   presence?: Prisma.CasePresenceUncheckedUpdateManyWithoutCaseNestedInput
 }
 
@@ -5754,6 +6059,7 @@ export type CaseCountOutputType = {
   clinicalCalculations: number
   consentPrints: number
   nurses: number
+  staffLog: number
   presence: number
 }
 
@@ -5768,6 +6074,7 @@ export type CaseCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   clinicalCalculations?: boolean | CaseCountOutputTypeCountClinicalCalculationsArgs
   consentPrints?: boolean | CaseCountOutputTypeCountConsentPrintsArgs
   nurses?: boolean | CaseCountOutputTypeCountNursesArgs
+  staffLog?: boolean | CaseCountOutputTypeCountStaffLogArgs
   presence?: boolean | CaseCountOutputTypeCountPresenceArgs
 }
 
@@ -5854,6 +6161,13 @@ export type CaseCountOutputTypeCountNursesArgs<ExtArgs extends runtime.Types.Ext
 /**
  * CaseCountOutputType without action
  */
+export type CaseCountOutputTypeCountStaffLogArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CaseStaffLogWhereInput
+}
+
+/**
+ * CaseCountOutputType without action
+ */
 export type CaseCountOutputTypeCountPresenceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.CasePresenceWhereInput
 }
@@ -5907,6 +6221,7 @@ export type CaseSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   clinicalCalculations?: boolean | Prisma.Case$clinicalCalculationsArgs<ExtArgs>
   consentPrints?: boolean | Prisma.Case$consentPrintsArgs<ExtArgs>
   nurses?: boolean | Prisma.Case$nursesArgs<ExtArgs>
+  staffLog?: boolean | Prisma.Case$staffLogArgs<ExtArgs>
   presence?: boolean | Prisma.Case$presenceArgs<ExtArgs>
   _count?: boolean | Prisma.CaseCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["case"]>
@@ -6033,6 +6348,7 @@ export type CaseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   clinicalCalculations?: boolean | Prisma.Case$clinicalCalculationsArgs<ExtArgs>
   consentPrints?: boolean | Prisma.Case$consentPrintsArgs<ExtArgs>
   nurses?: boolean | Prisma.Case$nursesArgs<ExtArgs>
+  staffLog?: boolean | Prisma.Case$staffLogArgs<ExtArgs>
   presence?: boolean | Prisma.Case$presenceArgs<ExtArgs>
   _count?: boolean | Prisma.CaseCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -6071,6 +6387,7 @@ export type $CasePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     clinicalCalculations: Prisma.$CaseClinicalCalculationPayload<ExtArgs>[]
     consentPrints: Prisma.$CaseConsentPrintPayload<ExtArgs>[]
     nurses: Prisma.$CaseNursePayload<ExtArgs>[]
+    staffLog: Prisma.$CaseStaffLogPayload<ExtArgs>[]
     presence: Prisma.$CasePresencePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -6555,6 +6872,7 @@ export interface Prisma__CaseClient<T, Null = never, ExtArgs extends runtime.Typ
   clinicalCalculations<T extends Prisma.Case$clinicalCalculationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Case$clinicalCalculationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseClinicalCalculationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   consentPrints<T extends Prisma.Case$consentPrintsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Case$consentPrintsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseConsentPrintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   nurses<T extends Prisma.Case$nursesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Case$nursesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseNursePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  staffLog<T extends Prisma.Case$staffLogArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Case$staffLogArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CaseStaffLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   presence<T extends Prisma.Case$presenceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Case$presenceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CasePresencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -7384,6 +7702,30 @@ export type Case$nursesArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.CaseNurseScalarFieldEnum | Prisma.CaseNurseScalarFieldEnum[]
+}
+
+/**
+ * Case.staffLog
+ */
+export type Case$staffLogArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CaseStaffLog
+   */
+  select?: Prisma.CaseStaffLogSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CaseStaffLog
+   */
+  omit?: Prisma.CaseStaffLogOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CaseStaffLogInclude<ExtArgs> | null
+  where?: Prisma.CaseStaffLogWhereInput
+  orderBy?: Prisma.CaseStaffLogOrderByWithRelationInput | Prisma.CaseStaffLogOrderByWithRelationInput[]
+  cursor?: Prisma.CaseStaffLogWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CaseStaffLogScalarFieldEnum | Prisma.CaseStaffLogScalarFieldEnum[]
 }
 
 /**

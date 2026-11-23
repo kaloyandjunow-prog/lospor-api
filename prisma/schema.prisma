@@ -30,6 +30,8 @@ model User {
   cases                         Case[]                               @relation("CaseAssignee")
   nurseAssignments              CaseNurse[]                          @relation("CaseNurseAssignee")
   nurseAssignmentsMade          CaseNurse[]                          @relation("CaseNurseAssigner")
+  caseStaffEntries              CaseStaffLog[]                       @relation("CaseStaffMember")
+  caseStaffEntriesMade          CaseStaffLog[]                       @relation("CaseStaffBy")
   casePresence                  CasePresence[]
   theatreShifts                 TheatreNurseShift[]                  @relation("TheatreShiftNurse")
   theatreShiftsAssigned         TheatreNurseShift[]                  @relation("TheatreShiftAssigner")
@@ -345,6 +347,7 @@ model Case {
   clinicalCalculations CaseClinicalCalculation[]
   consentPrints        CaseConsentPrint[]
   nurses               CaseNurse[]
+  staffLog             CaseStaffLog[]
   presence             CasePresence[]
 
   @@unique([userId, caseCode])
@@ -386,6 +389,37 @@ enum CaseNurseSource {
 
 /// The anaesthesia nurses of a case (10.8.0), any number of them. Each may do
 /// everything a nurse may in it; the last edit wins.
+enum CaseStaffKind {
+  DOCTOR
+  NURSE
+}
+
+enum CaseStaffAction {
+  JOINED
+  LEFT
+}
+
+/// Who was on a case, and when (2026-11-23): one row each time a doctor or a nurse joins or leaves it. Append-only, enforced
+/// in the database (the trigger in 20261124100000_case_staff_log): a row is never changed or removed, only the case's own
+/// deletion takes its rows with it. CaseNurse is only who is on the case now; this is the history.
+model CaseStaffLog {
+  id       String          @id @default(cuid())
+  caseId   String
+  case     Case            @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User            @relation("CaseStaffMember", fields: [userId], references: [id])
+  kind     CaseStaffKind
+  action   CaseStaffAction
+  /// How: CREATED, TRANSFER, ASSIGNED, THEATRE, HANDOVER, SELF, REMOVED, BACKFILL.
+  reason   String
+  byUserId String?
+  by       User?           @relation("CaseStaffBy", fields: [byUserId], references: [id])
+  at       DateTime        @default(now())
+
+  @@index([caseId, at])
+  @@index([userId])
+}
+
 model CaseNurse {
   caseId       String
   case         Case            @relation(fields: [caseId], references: [id], onDelete: Cascade)

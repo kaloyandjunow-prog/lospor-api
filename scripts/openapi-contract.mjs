@@ -1252,6 +1252,7 @@ add("GET", "/v1/cases/transfers/pending", "List pending case transfers", { param
 add("GET", "/v1/users/colleagues", "List colleagues eligible for transfer", { result: arrayOf("Colleague") })
 // 10.8.0: anaesthesia nurses on a case and on a theatre for a day.
 add("GET", "/v1/users/nurses", "List the anaesthesia nurses of the caller's department", { result: ref("JsonObject") })
+add("GET", "/v1/cases/{id}/staff", "Who was on the case, and when: the doctors and nurses who joined or left it, oldest first (kept for good, never changed)", { parameters: [id], result: ref("JsonObject") })
 add("GET", "/v1/cases/{id}/nurses", "Read a case's anaesthesia nurses", { parameters: [id], result: ref("JsonObject") })
 add("POST", "/v1/cases/{id}/nurses", "Assign or remove a case's anaesthesia nurse, or hand a nurse's place over to another nurse", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 add("GET", "/v1/operating-theatres/shifts", "Read the anaesthesia nurses on the operating theatres for a day", { parameters: [query("date", { type: "string" })], result: ref("JsonObject") })

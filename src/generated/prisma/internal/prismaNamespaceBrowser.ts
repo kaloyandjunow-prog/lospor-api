@@ -62,6 +62,7 @@ export const ModelName = {
   Institution: 'Institution',
   Case: 'Case',
   OperatingTheatre: 'OperatingTheatre',
+  CaseStaffLog: 'CaseStaffLog',
   CaseNurse: 'CaseNurse',
   CasePresence: 'CasePresence',
   TheatreNurseShift: 'TheatreNurseShift',
@@ -341,6 +342,20 @@ export const OperatingTheatreScalarFieldEnum = {
 } as const
 
 export type OperatingTheatreScalarFieldEnum = (typeof OperatingTheatreScalarFieldEnum)[keyof typeof OperatingTheatreScalarFieldEnum]
+
+
+export const CaseStaffLogScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  userId: 'userId',
+  kind: 'kind',
+  action: 'action',
+  reason: 'reason',
+  byUserId: 'byUserId',
+  at: 'at'
+} as const
+
+export type CaseStaffLogScalarFieldEnum = (typeof CaseStaffLogScalarFieldEnum)[keyof typeof CaseStaffLogScalarFieldEnum]
 
 
 export const CaseNurseScalarFieldEnum = {

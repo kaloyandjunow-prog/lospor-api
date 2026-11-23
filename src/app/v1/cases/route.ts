@@ -21,6 +21,7 @@ import { evaluateCaseFinalization } from "@lospor/core/clinical-validation"
 import { findCasesByPriority } from "@/lib/priority-case-list"
 import { caseTheatreView } from "@lospor/core/operating-theatres"
 import { operatingTheatresEnabled } from "@/lib/operating-theatres"
+import { logCaseStaff } from "@/lib/case-staff-log"
 
 const CORS = (req: NextRequest) => corsHeaders(req)
 
@@ -182,6 +183,7 @@ export async function POST(req: NextRequest) {
               preop: { select: { id: true, updatedAt: true, syncRevision: true } },
             },
           })
+          await logCaseStaff(tx, [{ caseId: created.id, userId, kind: "DOCTOR", action: "JOINED", reason: "CREATED", byUserId: userId }])
           if (created.preop) {
             await savePreopAnswers(tx, {
               caseId: created.id,
