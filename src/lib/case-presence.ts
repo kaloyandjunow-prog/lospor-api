@@ -7,12 +7,20 @@ import { prisma } from "@/lib/prisma"
  */
 export async function touchCasePresence(input: { caseId: string; userId: string; deviceId: string }, now = new Date()): Promise<CasePresence> {
   const since = new Date(now.getTime() - CASE_PRESENCE_TTL_MS)
-  await prisma.casePresence.deleteMany({ where: { seenAt: { lt: since } } })
-  await prisma.casePresence.upsert({
+  // This case's old rows go on every heartbeat (the (caseId, seenAt) index serves it); the whole table is swept now and
+  // then, so rows of cases nobody opens again do not stay.
+  await prisma.casePresence.deleteMany({ where: { caseId: input.caseId, seenAt: { lt: since } } })
+  if (Math.random() < 0.02) await prisma.casePresence.deleteMany({ where: { seenAt: { lt: since } } })
+  const report = () => prisma.casePresence.upsert({
     where: { caseId_userId_deviceId: { caseId: input.caseId, userId: input.userId, deviceId: input.deviceId } },
     create: { ...input, seenAt: now },
     update: { seenAt: now },
   })
+  try { await report() } catch (error) {
+    // Two heartbeats of one screen can both find no row and both create one: the second is simply an update.
+    if ((error as { code?: string }).code !== "P2002") throw error
+    await report()
+  }
   return readCasePresence(input.caseId, input.userId, now)
 }
 

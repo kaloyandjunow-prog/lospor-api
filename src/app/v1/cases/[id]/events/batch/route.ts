@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server"
 import { z } from "zod"
 
 import { getAuthUser } from "@/lib/mobile-auth"
-import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
+import { recordNurseWork, refuseChangedAllergyAck, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
@@ -153,9 +153,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      await recordNurseWork(tx, user, id)
       if (caseRecord.status === "CANCELLED") return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
       if (caseRecord.status === "COMPLETE") return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      // After the checks that can refuse, so a refused request has written nothing.
+      await recordNurseWork(tx, user, id)
       const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
       if (pediatricBlock) return pediatricBlock
 
@@ -179,6 +180,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const eventsToWrite: LogEvent[] = []
       for (const raw of [...updates, ...adds]) {
         let candidate = raw as unknown as LogEvent
+        // An update cannot put or change an allergy acknowledgement for a nurse either.
+        const allergyRefusal = refuseChangedAllergyAck(user, current.find(item => item.id === candidate.id) as { allergyAck?: unknown } | undefined, candidate as { allergyAck?: unknown })
+        if (allergyRefusal) return allergyRefusal
         const duplicate = automationDuplicateClinicalEvent([...current, ...eventsToWrite], candidate)
         if (duplicate) candidate = coalesceAutomationClinicalEvent(duplicate, candidate)
         if (candidate.intraopPatch && candidate.suggestion?.startsWith("context:")) {

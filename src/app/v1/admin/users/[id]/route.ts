@@ -73,6 +73,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (data.role === "HEAD_OF_DEPT" && !canHaveHeadOfDepartment(target.institutionId)) {
       return "INVALID_HOD_INSTITUTION" as const
     }
+    // A nurse is never made a doctor; a doctor with cases of their own is not made a nurse (the cases would have no responsible doctor).
+    if (target.role === "ANAESTHESIA_NURSE" && data.role && data.role !== "ANAESTHESIA_NURSE") return "NURSE_CANNOT_BECOME_DOCTOR" as const
+    if (data.role === "ANAESTHESIA_NURSE" && target.role !== "ANAESTHESIA_NURSE" && await transaction.case.count({ where: { userId: id, status: { notIn: ["COMPLETE", "CANCELLED"] } } }) > 0) return "DOCTOR_HAS_OPEN_CASES" as const
     if (data.role === target.role) {
       return {
         id,
@@ -126,6 +129,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       { error: "This user's institution cannot have a head of department" },
       { status: 422 },
     )
+  }
+  if (updated === "NURSE_CANNOT_BECOME_DOCTOR") {
+    return NextResponse.json({ error: "A nurse account cannot be made a doctor", code: "NURSE_CANNOT_BECOME_DOCTOR" }, { status: 409 })
+  }
+  if (updated === "DOCTOR_HAS_OPEN_CASES") {
+    return NextResponse.json({ error: "This doctor still has open cases; hand them over first", code: "DOCTOR_HAS_OPEN_CASES" }, { status: 409 })
   }
   if (updated === "ADMIN_AUTHORITY_ROUTE") {
     return NextResponse.json(

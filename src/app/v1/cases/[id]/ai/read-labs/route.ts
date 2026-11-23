@@ -1,3 +1,4 @@
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { NextRequest, NextResponse } from "next/server"
 import { scanLabImage } from "@/lib/lab-scan"
 import { logAudit } from "@/lib/audit"
@@ -58,6 +59,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (contentLength > MAX_BYTES * 1.4) {
     return NextResponse.json({ error: "Image too large" }, { status: 413 })
   }
+
+  // Reading labs fills the preoperative record: not for an anaesthesia nurse.
+  const nurseRefusal = refuseIfNotAllowed(user, "EDIT_PREOP")
+  if (nurseRefusal) return nurseRefusal
 
   const rl = await rateLimit(`ai-labs:${user.id}`, 10, 60 * 60 * 1000)
   if (!rl.allowed) {

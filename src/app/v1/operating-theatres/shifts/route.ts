@@ -20,6 +20,8 @@ const bodySchema = z.object({
 }).strict()
 
 const dateOf = (key: string) => new Date(`${key}T00:00:00.000Z`)
+/** A real calendar day: 2026-02-31 passes the shape check but is not one, and would reach the database as an Invalid Date. */
+const isRealDay = (key: string) => { const day = dateOf(key); return !Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === key }
 
 export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req) })
@@ -38,7 +40,9 @@ export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const date = req.nextUrl.searchParams.get("date") ?? calendarDayKey(new Date())
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: "Invalid date" }, { status: 400 })
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !isRealDay(date)) return NextResponse.json({ error: "Invalid date" }, { status: 400 })
+  // A person with no institution sees nobody's shifts (an empty institution filter would be every hospital's).
+  if (user.role !== "ADMIN" && !user.institutionId) return NextResponse.json({ date, shifts: [] }, { headers: corsHeaders(req) })
   return NextResponse.json({ date, shifts: await shiftsFor(date, user.role === "ADMIN" ? null : user.institutionId) }, { headers: corsHeaders(req) })
 }
 
@@ -49,6 +53,8 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "theatreId required" }, { status: 400 })
   const today = calendarDayKey(new Date())
   const date = parsed.data.date ?? today
+  if (!isRealDay(date)) return NextResponse.json({ error: "Invalid date" }, { status: 400 })
+  if (user.role !== "ADMIN" && !user.institutionId) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   const nurseId = parsed.data.userId ?? user.id
   const manager = user.role === "ADMIN" || user.role === "HEAD_OF_DEPT"
   // A nurse manages only her own place, and only today.

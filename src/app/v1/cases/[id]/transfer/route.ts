@@ -63,6 +63,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const recipient = await tx.user.findUnique({
           where: {
             id: toUserId,
+            // A case goes to a doctor; a nurse takes part in it, she is not its owner.
+            role: { not: "ANAESTHESIA_NURSE" },
             activatedAt: { not: null },
             suspendedAt: null,
             recoveryRequiredAt: null,

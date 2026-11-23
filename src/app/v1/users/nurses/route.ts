@@ -11,6 +11,8 @@ export async function OPTIONS(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  // No institution, no department: nobody to list (an empty filter would list every hospital's nurses).
+  if (user.role !== "ADMIN" && !user.institutionId) return NextResponse.json({ nurses: [] }, { headers: corsHeaders(req) })
   const nurses = await prisma.user.findMany({
     where: {
       role: "ANAESTHESIA_NURSE",

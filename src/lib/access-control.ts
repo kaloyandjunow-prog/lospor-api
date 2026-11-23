@@ -228,6 +228,7 @@ export function colleagueWhereForUser(user: AuthUser): Prisma.UserWhereInput | n
   if (user.role === "ADMIN") {
     return {
       id: { not: user.id },
+      role: { not: "ANAESTHESIA_NURSE" },
       accountKind: "CLINICAL",
       activatedAt: { not: null },
       suspendedAt: null,
@@ -240,6 +241,7 @@ export function colleagueWhereForUser(user: AuthUser): Prisma.UserWhereInput | n
     return {
       institutionId: user.institutionId,
       id: { not: user.id },
+      role: { not: "ANAESTHESIA_NURSE" },
       accountKind: "CLINICAL",
       activatedAt: { not: null },
       suspendedAt: null,

@@ -299,6 +299,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
+      // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
+      if (caseRecord.status === "CANCELLED") {
+        return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
+      }
+      if (caseRecord.status === "COMPLETE") {
+        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      }
+      // After the checks that can refuse, so a refused request has written nothing (a 409 that had changed the planned date).
       // A nurse who writes to her theatre's case keeps it until it is finalised (10.8.0).
       await recordNurseWork(tx, user, id)
       if (plannedSurgeryDate !== undefined) {
@@ -307,13 +315,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           data: { plannedSurgeryDate: plannedSurgeryDate ? new Date(`${plannedSurgeryDate}T00:00:00.000Z`) : null },
         })
         await logAuditInTransaction(tx, userId, "CASE_PLANNED_DATE_SET", id, { date: plannedSurgeryDate })
-      }
-      // A cancelled procedure is closed to editing until the cancellation is undone (10.0.0).
-      if (caseRecord.status === "CANCELLED") {
-        return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
-      }
-      if (caseRecord.status === "COMPLETE") {
-        return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
 
       const existingPreop = await tx.preoperativeAssessment.findUnique({ where: { caseId: id } })
