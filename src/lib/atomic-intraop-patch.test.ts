@@ -59,6 +59,27 @@ describe("rebaseAtomicIntraopPatch", () => {
     ])
   })
 
+  // 10.8.0: an airway or vascular event deleted from the chart takes its own device or line off the section.
+  it("removes only the entries whose event was deleted, even from a stale list", () => {
+    const result = rebaseAtomicIntraopPatch(
+      {
+        airwayDeviceEntries: [
+          { id: "tube", device: "ORAL_ETT", details: {}, status: "in_use", sourceEventId: "e-intubated" },
+          { id: "lma", device: "LMA", details: {}, status: "in_use", sourceEventId: "e-lma" },
+        ],
+        vascularAccesses: [{ id: "iv", site: "VEN_PERIPHERAL", sourceEventId: "e-iv" }, { id: "art", site: "ART_RADIAL", sourceEventId: "e-art" }],
+      },
+      { removedSourceEventIds: ["e-intubated", "e-iv"] },
+    )
+    expect((result.airwayDeviceEntries as { id: string }[]).map(entry => entry.id)).toEqual(["lma"])
+    expect((result.vascularAccesses as { id: string }[]).map(entry => entry.id)).toEqual(["art"])
+    expect(result).not.toHaveProperty("removedSourceEventIds")
+  })
+
+  it("works on a case with no intraop record yet", () => {
+    expect(rebaseAtomicIntraopPatch(null, { removedSourceEventIds: ["x"] })).toEqual({})
+  })
+
   it("does not rebase the explicit no-airway-intervention action", () => {
     expect(rebaseAtomicIntraopPatch(
       { airwayDeviceEntries: [{ id: "old", device: "LMA", details: {}, status: "in_use" }] },

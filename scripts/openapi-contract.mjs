@@ -421,6 +421,11 @@ export const schemas = {
     holderName: nullable({ type: "string" }),
   }, ["acquired", "locked"]),
   ReleaseResponse: object({ released: { type: "boolean" }, forced: { type: "boolean" } }, ["released"]),
+  CasePresence: object({
+    people: { type: "array", items: object({ name: { type: "string" }, you: { type: "boolean" } }, ["name", "you"]) },
+    screens: { type: "integer", minimum: 0 },
+  }, ["people", "screens"]),
+  CasePresenceLeft: object({ left: { type: "boolean" } }, ["left"]),
   Event: {
     type: "object",
     required: ["type", "ts"],
@@ -1201,6 +1206,8 @@ add("POST", "/v1/cases/{id}/unfinalize", "Resume editing a finalized case", { pa
 
 add("POST", "/v1/cases/{id}/lock", "Acquire a case editing lease", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("LockResponse") })
 add("PATCH", "/v1/cases/{id}/lock", "Refresh or reclaim a case editing lease", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("LockResponse") })
+add("POST", "/v1/cases/{id}/presence", "Report that this screen has the case open and learn who else does (a notice, nothing is locked)", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("CasePresence") })
+add("DELETE", "/v1/cases/{id}/presence", "This screen no longer has the case open", { parameters: [id], requestBody: body(ref("LockRequest")), result: ref("CasePresenceLeft") })
 add("DELETE", "/v1/cases/{id}/lock", "Release or force-release a case editing lease", { parameters: [id], requestBody: body(ref("LockReleaseRequest")), result: ref("ReleaseResponse") })
 
 add("POST", "/v1/cases/{id}/events", "Append an idempotent intraoperative event", {
@@ -1243,6 +1250,13 @@ add("PATCH", "/v1/cases/{id}/transfer", "Accept or decline a case transfer", { p
 add("GET", "/v1/cases/{id}/transfers", "Read a case handover history", { parameters: [id], result: arrayOf("Transfer") })
 add("GET", "/v1/cases/transfers/pending", "List pending case transfers", { parameters: [query("direction", { type: "string", enum: ["incoming", "outgoing"], default: "incoming" })], result: arrayOf("Transfer") })
 add("GET", "/v1/users/colleagues", "List colleagues eligible for transfer", { result: arrayOf("Colleague") })
+// 10.8.0: anaesthesia nurses on a case and on a theatre for a day.
+add("GET", "/v1/users/nurses", "List the anaesthesia nurses of the caller's department", { result: ref("JsonObject") })
+add("GET", "/v1/cases/{id}/staff", "Who was on the case, and when: the doctors and nurses who joined or left it, oldest first (kept for good, never changed)", { parameters: [id], result: ref("JsonObject") })
+add("GET", "/v1/cases/{id}/nurses", "Read a case's anaesthesia nurses", { parameters: [id], result: ref("JsonObject") })
+add("POST", "/v1/cases/{id}/nurses", "Assign or remove a case's anaesthesia nurse, or hand a nurse's place over to another nurse", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
+add("GET", "/v1/operating-theatres/shifts", "Read the anaesthesia nurses on the operating theatres for a day", { parameters: [query("date", { type: "string" })], result: ref("JsonObject") })
+add("POST", "/v1/operating-theatres/shifts", "Put an anaesthesia nurse on an operating theatre for a day, or take her off", { requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 
 add("POST", "/v1/cases/{id}/ai/advise", "Generate case-specific AI advice", { parameters: [id], requestBody: body(ref("JsonObject")), result: ref("JsonObject") })
 add("POST", "/v1/ai/advise", "Generate AI advice from supplied structured data", { requestBody: body(ref("JsonObject")), result: ref("JsonObject") })

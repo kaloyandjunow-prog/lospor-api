@@ -86,12 +86,18 @@ export async function POST(
       holderName = holder?.name ?? holder?.username ?? holder?.email ?? null
     } catch {}
   }
+  // 10.8.0: several people may work in one case at once (the anaesthetist and
+  // the nurses); the last edit wins and each sees the others' edits live. The
+  // lock row only keeps the screen's heartbeat, so another device holding it
+  // is reported, not refused.
   return NextResponse.json({
-    acquired: false,
-    locked: true,
+    acquired: true,
+    locked: false,
+    shared: true,
+    yours: false,
     holder: { holderName },
     holderName,
-  }, { status: 409 })
+  })
 }
 
 export async function PATCH(
@@ -114,10 +120,8 @@ export async function PATCH(
   if (acquired) {
     return NextResponse.json({ acquired: true, locked: false, extended: true })
   }
-  return NextResponse.json(
-    { acquired: false, locked: true, extended: false },
-    { status: 409 },
-  )
+  // Shared editing (10.8.0): another device keeps the heartbeat; this one still edits.
+  return NextResponse.json({ acquired: true, locked: false, extended: false, shared: true })
 }
 
 export async function DELETE(

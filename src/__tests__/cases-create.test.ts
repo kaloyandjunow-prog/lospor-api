@@ -25,7 +25,7 @@ vi.mock("@/lib/prisma", () => ({
     // No published profile: the pre-10.6.0 vitals rule, all three required.
     preopAssessmentProfile: { findFirst: vi.fn().mockResolvedValue(null) },
     // The case and its answer rows are created in one transaction.
-    $transaction: (run: (tx: unknown) => unknown) => run({ case: { create: createMock } }),
+    $transaction: (run: (tx: unknown) => unknown) => run({ case: { create: createMock }, caseStaffLog: { createMany: vi.fn() } }),
   },
 }))
 vi.mock("@/lib/preop/service", async importOriginal => ({

@@ -5,7 +5,7 @@ import type { Prisma } from "@/generated/prisma/client"
 import { API_RELEASE_VERSION } from "@/lib/api-version"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma } from "@/lib/prisma"
-import { caseReadWhereForUser } from "@/lib/access-control"
+import { caseExportWhereForUser } from "@/lib/access-control"
 import type { AuthUser } from "@/lib/mobile-auth"
 
 export const runtime = "nodejs"
@@ -61,7 +61,7 @@ async function* caseLines(user: AuthUser): AsyncGenerator<string> {
   let cursor: string | undefined
   for (;;) {
     const rows = await prisma.case.findMany({
-      where: caseReadWhereForUser(user),
+      where: caseExportWhereForUser(user),
       include: CASE_EXPORT_INCLUDE,
       orderBy: { id: "asc" },
       take: PAGE_SIZE,
@@ -151,7 +151,7 @@ export async function GET(req: NextRequest) {
         deletedAt: true,
       },
     }),
-    prisma.case.count({ where: caseReadWhereForUser(user) }),
+    prisma.case.count({ where: caseExportWhereForUser(user) }),
     prisma.auditLog.count({ where: { userId: user.id } }),
     prisma.roleRequest.count({ where: { userId: user.id } }),
     prisma.caseTransfer.count({

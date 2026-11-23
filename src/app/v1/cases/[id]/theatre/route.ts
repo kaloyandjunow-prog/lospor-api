@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { pinNursesOfCaseTheatre, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -23,6 +24,8 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "EDIT_PREOP")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id: caseId } = await params
   const parsed = bodySchema.safeParse(await req.json().catch(() => null))
@@ -34,6 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (!visible) throw new OperatingTheatreError("CASE_NOT_FOUND", 404)
       const change = await assignCaseTheatre(tx, caseId, parsed.data.theatreId, parsed.data.expectedTheatreId)
       if (change.before !== change.after) {
+        await pinNursesOfCaseTheatre(tx, caseId)
         await logAuditInTransaction(tx, user.id, "CASE_THEATRE_ASSIGN", caseId, { from: change.before, to: change.after })
       }
       return change

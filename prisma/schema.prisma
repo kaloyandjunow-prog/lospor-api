@@ -28,6 +28,13 @@ model User {
   institutionId                 String?
   institution                   Institution?                         @relation("UserPrimaryInstitution", fields: [institutionId], references: [id])
   cases                         Case[]                               @relation("CaseAssignee")
+  nurseAssignments              CaseNurse[]                          @relation("CaseNurseAssignee")
+  nurseAssignmentsMade          CaseNurse[]                          @relation("CaseNurseAssigner")
+  caseStaffEntries              CaseStaffLog[]                       @relation("CaseStaffMember")
+  caseStaffEntriesMade          CaseStaffLog[]                       @relation("CaseStaffBy")
+  casePresence                  CasePresence[]
+  theatreShifts                 TheatreNurseShift[]                  @relation("TheatreShiftNurse")
+  theatreShiftsAssigned         TheatreNurseShift[]                  @relation("TheatreShiftAssigner")
   casesCreated                  Case[]                               @relation("CaseCreator")
   roleRequests                  RoleRequest[]
   institutionChangeRequests     InstitutionChangeRequest[]
@@ -180,6 +187,11 @@ enum UserRole {
   MEMBER
   HEAD_OF_DEPT
   ADMIN
+  /// An anaesthesia nurse (10.8.0): works only in the cases assigned to her,
+  /// in the intraoperative and postoperative stages (Core clinical-roles).
+  ANAESTHESIA_NURSE
+  /// The senior nurse (2026-11-23): a nurse who edits every case of her hospital and puts nurses on cases.
+  ANAESTHESIA_SENIOR_NURSE
   CLINICIAN // legacy
   RESEARCHER // legacy
 }
@@ -197,15 +209,15 @@ enum TechnicalPrincipalKind {
 }
 
 model TechnicalPrincipal {
-  id                    String                 @id
-  kind                  TechnicalPrincipalKind
-  displayName           String
-  releaseVersion        String
-  createdAt             DateTime               @default(now())
-  clinicalPresetsCreated   ClinicalPreset[]                    @relation("ClinicalPresetTechnicalCreator")
-  clinicalPresetsPublished ClinicalPreset[]                    @relation("ClinicalPresetTechnicalPublisher")
-  publicationsConfirmed   ClinicalRulesetPublicationEvidence[] @relation("ClinicalRulesetTechnicalConfirmer")
-  platformSelections      PlatformClinicalPresetSelection[]    @relation("PlatformClinicalPresetTechnicalSelector")
+  id                       String                               @id
+  kind                     TechnicalPrincipalKind
+  displayName              String
+  releaseVersion           String
+  createdAt                DateTime                             @default(now())
+  clinicalPresetsCreated   ClinicalPreset[]                     @relation("ClinicalPresetTechnicalCreator")
+  clinicalPresetsPublished ClinicalPreset[]                     @relation("ClinicalPresetTechnicalPublisher")
+  publicationsConfirmed    ClinicalRulesetPublicationEvidence[] @relation("ClinicalRulesetTechnicalConfirmer")
+  platformSelections       PlatformClinicalPresetSelection[]    @relation("PlatformClinicalPresetTechnicalSelector")
 
   @@unique([kind, releaseVersion])
 }
@@ -261,26 +273,30 @@ model Institution {
 // ─── Case ────────────────────────────────────────────────────────────────────
 
 model Case {
-  id                   String       @id @default(cuid())
+  id                   String                @id @default(cuid())
   /// Stable opaque identifier used by research APIs and artifacts. Operational
   /// identifiers (`id` and `caseCode`) must never cross the research boundary.
-  researchId           String       @unique @default(uuid()) @db.Uuid
+  researchId           String                @unique @default(uuid()) @db.Uuid
   caseCode             String?
   notes                String?
   userId               String
-  user                 User         @relation("CaseAssignee", fields: [userId], references: [id])
+  user                 User                  @relation("CaseAssignee", fields: [userId], references: [id])
   createdById          String
-  createdBy            User         @relation("CaseCreator", fields: [createdById], references: [id])
+  createdBy            User                  @relation("CaseCreator", fields: [createdById], references: [id])
   institutionId        String?
-  institution          Institution? @relation(fields: [institutionId], references: [id])
+  institution          Institution?          @relation(fields: [institutionId], references: [id])
   /// The operating theatre (10.0.0), optional; assigned until intraop starts.
   operatingTheatreId   String?
-  operatingTheatre     OperatingTheatre? @relation(fields: [operatingTheatreId], references: [id])
+  operatingTheatre     OperatingTheatre?     @relation(fields: [operatingTheatreId], references: [id])
   /// The theatre's name when intraop started, kept so a later rename does not
   /// rewrite where the case happened. Null until then.
   operatingTheatreName String?
+  /// When the operation is planned (10.8.0), optional, a calendar date in the
+  /// case's own zone. Set from the dashboard; theatre nurses see a theatre's
+  /// cases for their day by it.
+  plannedSurgeryDate   DateTime?             @db.Date
   indicatorSummary     CaseIndicatorSummary?
-  status               CaseStatus   @default(DRAFT)
+  status               CaseStatus            @default(DRAFT)
   /// A cancelled procedure (10.0.0): when, by whom, why (Core
   /// CANCELLATION_REASONS) and the status to return to if it is undone.
   cancelledAt          DateTime?
@@ -288,7 +304,7 @@ model Case {
   cancellationReason   String?
   cancellationNote     String?
   statusBeforeCancel   CaseStatus?
-  clinicalMode         ClinicalMode @default(ADULT)
+  clinicalMode         ClinicalMode          @default(ADULT)
   clinicalRulesVersion String?
   /// Set once, the moment status first transitions to AWAITING_REVIEW (never
   /// touched by a later edit that keeps it there). Anchors the pending-close
@@ -307,15 +323,15 @@ model Case {
   ///
   /// Null means no backoff is in effect: never attempted, or attempted and
   /// closed. Cleared if the case leaves AWAITING_REVIEW and returns.
-  closeAttemptCount    Int          @default(0)
+  closeAttemptCount    Int                   @default(0)
   closeNextAttemptAt   DateTime?
   finalizedAt          DateTime?
   clientDraftId        String?
-  clinicalRevision     Int          @default(0)
-  eventRevision        Int          @default(0)
-  relationalRevision   Int          @default(0)
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  clinicalRevision     Int                   @default(0)
+  eventRevision        Int                   @default(0)
+  relationalRevision   Int                   @default(0)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 
   preop                PreoperativeAssessment?
   intraop              IntraoperativeRecord?
@@ -330,6 +346,9 @@ model Case {
   finalizations        CaseFinalization[]
   clinicalCalculations CaseClinicalCalculation[]
   consentPrints        CaseConsentPrint[]
+  nurses               CaseNurse[]
+  staffLog             CaseStaffLog[]
+  presence             CasePresence[]
 
   @@unique([userId, caseCode])
   @@unique([createdById, clientDraftId])
@@ -350,9 +369,100 @@ model OperatingTheatre {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cases Case[]
+  cases       Case[]
+  nurseShifts TheatreNurseShift[]
 
   @@index([active, sortOrder])
+}
+
+/// How a nurse came to be on a case (10.8.0).
+enum CaseNurseSource {
+  /// Assigned on the case by its doctor or a head of department.
+  ASSIGNED
+  /// On the case's theatre that day, and worked on it: kept until finalised.
+  THEATRE
+  /// Handed over by another nurse.
+  HANDOVER
+  /// A nurse put herself on a case that had no nurse (2026-11-23).
+  SELF
+}
+
+/// The anaesthesia nurses of a case (10.8.0), any number of them. Each may do
+/// everything a nurse may in it; the last edit wins.
+enum CaseStaffKind {
+  DOCTOR
+  NURSE
+}
+
+enum CaseStaffAction {
+  JOINED
+  LEFT
+}
+
+/// Who was on a case, and when (2026-11-23): one row each time a doctor or a nurse joins or leaves it. Append-only, enforced
+/// in the database (the trigger in 20261124100000_case_staff_log): a row is never changed or removed, only the case's own
+/// deletion takes its rows with it. CaseNurse is only who is on the case now; this is the history.
+model CaseStaffLog {
+  id       String          @id @default(cuid())
+  caseId   String
+  case     Case            @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User            @relation("CaseStaffMember", fields: [userId], references: [id])
+  kind     CaseStaffKind
+  action   CaseStaffAction
+  /// How: CREATED, TRANSFER, ASSIGNED, THEATRE, HANDOVER, SELF, REMOVED, BACKFILL.
+  reason   String
+  byUserId String?
+  by       User?           @relation("CaseStaffBy", fields: [byUserId], references: [id])
+  at       DateTime        @default(now())
+
+  @@index([caseId, at])
+  @@index([userId])
+}
+
+model CaseNurse {
+  caseId       String
+  case         Case            @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User            @relation("CaseNurseAssignee", fields: [userId], references: [id])
+  assignedById String?
+  assignedBy   User?           @relation("CaseNurseAssigner", fields: [assignedById], references: [id])
+  source       CaseNurseSource @default(ASSIGNED)
+  assignedAt   DateTime        @default(now())
+
+  @@id([caseId, userId])
+  @@index([userId])
+}
+
+/// Who has a case open (10.8.0): one row per person and screen, refreshed by the screen's heartbeat and
+/// counted while recent. Only a notice ("the case is open by ...") -- nothing is locked by it.
+model CasePresence {
+  caseId   String
+  case     Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId String
+  seenAt   DateTime
+
+  @@id([caseId, userId, deviceId])
+  @@index([caseId, seenAt])
+}
+
+/// A nurse on an operating theatre for a day (10.8.0): she sees the theatre's
+/// unfinalised cases planned for that day.
+model TheatreNurseShift {
+  id           String           @id @default(cuid())
+  theatreId    String
+  theatre      OperatingTheatre @relation(fields: [theatreId], references: [id])
+  userId       String
+  user         User             @relation("TheatreShiftNurse", fields: [userId], references: [id])
+  shiftDate    DateTime         @db.Date
+  assignedById String?
+  assignedBy   User?            @relation("TheatreShiftAssigner", fields: [assignedById], references: [id])
+  createdAt    DateTime         @default(now())
+
+  @@unique([theatreId, userId, shiftDate])
+  @@index([userId, shiftDate])
 }
 
 /// The unit indicators' thresholds and whether colleagues are named (10.0.0),
@@ -781,7 +891,7 @@ model ConceptMap {
   /// combination code such as E11.2, diabetes with a kidney complication):
   /// standardConceptId is then null and the export writes one row per id.
   /// Empty otherwise.
-  standardConceptIds Int[]              @default([])
+  standardConceptIds Int[]                @default([])
   standardLabel      String?
   mappingStatus      ConceptMappingStatus @default(SOURCE_ONLY)
   sourceVersion      String?
@@ -1157,31 +1267,31 @@ model PreoperativeAssessment {
   bloodType         BloodType?
   rhFactor          RhFactor?
 
-  diagnosis          String
-  diagnosesJson      Json?
-  plannedProcedure   String
-  proceduresJson     Json?
+  diagnosis             String
+  diagnosesJson         Json?
+  plannedProcedure      String
+  proceduresJson        Json?
   /// The planned procedure is not yet known: decided during surgery (10.0.0).
   procedureUndetermined Boolean @default(false)
   /// LEGACY, read-only. The first diagnosis code, denormalised. The diagnoses
   /// themselves export properly through the PreopDiagnosis mirror, so nothing
   /// is lost by this not being exported; it survives because the printed
   /// summary still displays it beside the diagnosis text.
-  icdCode            String?
-  teamNotes          String?
-  physicalExamReport String?
-  notes              String?
+  icdCode               String?
+  teamNotes             String?
+  physicalExamReport    String?
+  notes                 String?
 
   // Comorbidities as ICD-10 tagged list: [{label, sub, system}]
   comorbidities Json @default("[]")
 
   // Safety-critical fields kept explicit
-  allergies                Boolean?
-  allergyDetails           String?
-  latexAllergy             Boolean?
-  currentMedications       String?
-  familyAnesthesiaProblems Boolean?
-  familyAnesthesiaDetails  String?
+  allergies                           Boolean?
+  allergyDetails                      String?
+  latexAllergy                        Boolean?
+  currentMedications                  String?
+  familyAnesthesiaProblems            Boolean?
+  familyAnesthesiaDetails             String?
   // The patient's own anaesthetic history, asked alongside the family history
   // above but answering for the patient rather than their relatives.
   unexplainedAnaesthesiaComplications Boolean?
@@ -1189,10 +1299,10 @@ model PreoperativeAssessment {
   // The anaesthetist's overall airway judgement, so prediction can be paired
   // against the cormackLehane grade actually found at laryngoscopy.
   anticipatedDifficultAirway          Boolean?
-  dentalProsthetics        Boolean?
-  looseTeeth               Boolean?
-  smoking                  Boolean?
-  substanceAbuse           Boolean?
+  dentalProsthetics                   Boolean?
+  looseTeeth                          Boolean?
+  smoking                             Boolean?
+  substanceAbuse                      Boolean?
 
   bpSystolic                  Int?
   bpDiastolic                 Int?
@@ -1220,16 +1330,16 @@ model PreoperativeAssessment {
   cormackLehane          CormackLehane?
   airwayUnobtainable     Boolean           @default(false)
 
-  asaScore         ASAScore?
+  asaScore                  ASAScore?
   // What the ASA suggestion rules said at the last save (Core asa.ts), kept
   // beside the class chosen so agreement can be read per rule. The deciding
   // rules only: the reasons of the winning class.
   asaSuggestedScore         ASAScore?
   asaSuggestionReasons      String[]  @default([])
   asaSuggestionRulesVersion String?
-  elective         Boolean   @default(false)
-  emergencySurgery Boolean   @default(false)
-  highRiskSurgery  Boolean   @default(false)
+  elective                  Boolean   @default(false)
+  emergencySurgery          Boolean   @default(false)
+  highRiskSurgery           Boolean   @default(false)
 
   // Individual RCRI inputs — stored so the form can be restored accurately
   rcriIschemicHeart Boolean?
@@ -1270,7 +1380,7 @@ model PreoperativeAssessment {
   coldsAirwayDevice    String?
   coldsSurgery         String?
 
-  pediatricFasting Json @default("[]")
+  pediatricFasting   Json @default("[]")
   /// The anaesthesia planned at the preop visit (optional): Core PlannedAnaesthesia
   /// (techniques, airway devices and instruments, lines, postop ventilation).
   plannedAnaesthesia Json @default("{}")
@@ -1280,13 +1390,13 @@ model PreoperativeAssessment {
   aiOptIn Boolean @default(false)
 
   // Normalised mirrors of the JSON arrays above (queryable; written best-effort)
-  diagnoses       PreopDiagnosis[]
-  procedureRows   PreopProcedure[]
-  comorbidityRows Comorbidity[]
-  labRows         LabResult[]
-  medications     Medication[]
-  assessmentAnswers     PreopAssessmentAnswer[]
-  assessmentSuggestions PreopAssessmentSuggestion[]
+  diagnoses              PreopDiagnosis[]
+  procedureRows          PreopProcedure[]
+  comorbidityRows        Comorbidity[]
+  labRows                LabResult[]
+  medications            Medication[]
+  assessmentAnswers      PreopAssessmentAnswer[]
+  assessmentSuggestions  PreopAssessmentSuggestion[]
   wardOrders             PreopWardOrder[]
   medicationInstructions PreopMedicationInstruction[]
   premedicationOrders    PreopPremedicationOrder[]
@@ -1355,15 +1465,14 @@ model PreopAssessmentProfile {
   publishedById  String?
   createdAt      DateTime           @default(now())
 
-  questions   PreopProfileQuestion[]
+  questions          PreopProfileQuestion[]
   sections           PreopProfileSection[]
   orderOptions       PreopProfileOrderOption[]
   consultSpecialties PreopProfileConsultSpecialty[]
-  auditEvents PreopAssessmentAuditEvent[]
+  auditEvents        PreopAssessmentAuditEvent[]
 
   @@index([population, status, version])
 }
-
 
 /// Whether this site shows the preop summary page and prints the written
 /// consent with it. One row; off unless an operator switches them on in
@@ -1577,35 +1686,35 @@ model PreopPremedicationOrder {
 }
 
 model PreopAssessmentAnswer {
-  id             String                   @id @default(cuid())
+  id             String                  @id @default(cuid())
   preopId        String
-  preop          PreoperativeAssessment   @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  preop          PreoperativeAssessment  @relation(fields: [preopId], references: [id], onDelete: Cascade)
   questionId     String
-  question       PreopQuestionDefinition  @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  question       PreopQuestionDefinition @relation(fields: [questionId], references: [id], onDelete: Restrict)
   profileId      String
   profileVersion Int
   state          PreopAnswerState
   optionKey      String?
-  option         PreopAnswerOption?       @relation(fields: [questionId, optionKey], references: [questionId, key], onDelete: Restrict)
+  option         PreopAnswerOption?      @relation(fields: [questionId, optionKey], references: [questionId, key], onDelete: Restrict)
   valueText      String?
   valueNumber    Float?
   valueDate      DateTime?
-  source         String                   @default("clinician")
+  source         String                  @default("clinician")
   provenance     Json?
   authorId       String?
-  createdAt      DateTime                 @default(now())
-  updatedAt      DateTime                 @updatedAt
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
 
   @@unique([preopId, questionId])
   @@index([questionId, state])
 }
 
 model PreopAssessmentSuggestion {
-  id                  String                   @id @default(cuid())
+  id                  String                  @id @default(cuid())
   preopId             String
-  preop               PreoperativeAssessment   @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  preop               PreoperativeAssessment  @relation(fields: [preopId], references: [id], onDelete: Cascade)
   questionId          String
-  question            PreopQuestionDefinition  @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  question            PreopQuestionDefinition @relation(fields: [questionId], references: [id], onDelete: Restrict)
   profileVersion      Int
   proposedState       PreopAnswerState?
   proposedOptionKey   String?
@@ -1616,15 +1725,15 @@ model PreopAssessmentSuggestion {
   evidence            Json
   ruleId              String
   ruleVersion         String
-  status              PreopSuggestionStatus @default(PENDING)
+  status              PreopSuggestionStatus   @default(PENDING)
   reviewedById        String?
   reviewedAt          DateTime?
-  createdAt           DateTime               @default(now())
+  createdAt           DateTime                @default(now())
 
+  @@unique([preopId, questionId, ruleId, ruleVersion])
   @@index([preopId, status])
   @@index([questionId, status])
   @@index([linkedDiagnosisId])
-  @@unique([preopId, questionId, ruleId, ruleVersion])
 }
 
 model PreopAssessmentAuditEvent {
@@ -1633,7 +1742,7 @@ model PreopAssessmentAuditEvent {
   profile   PreopAssessmentProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
   caseId    String?
   action    String
-  actorId    String
+  actorId   String
   detail    Json?
   createdAt DateTime                @default(now())
 
@@ -1695,23 +1804,23 @@ model IntraoperativeRecord {
   // start/end on the same footing as the events they bracket — comparable
   // across sites and against the event stream. Local wall clock stays exactly
   // derivable for display from the instant + zone.
-  startedAt DateTime?
-  endedAt   DateTime?
-  timezone  String?
+  startedAt   DateTime?
+  endedAt     DateTime?
+  timezone    String?
   /// Set when the case was ended automatically 48 hours after it started with
   /// no screen open on it (1.4.9); cleared on Resume. The apps show a notice.
   autoEndedAt DateTime?
 
   positions Json @default("[]")
 
-  techniques        Json           @default("[]")
-  airwayDevice      AirwayDevice?
-  tubeSize          Float? // legacy: shared by LMA/Oral/Nasal ETT before per-device columns existed; kept for old rows, no longer written
-  cuffed            Boolean? // legacy: see tubeSize
-  peepCmH2O         Float?
-  ippv              Boolean        @default(false)
-  jetVentilation    Boolean        @default(false)
-  fob               Boolean        @default(false)
+  techniques     Json          @default("[]")
+  airwayDevice   AirwayDevice?
+  tubeSize       Float? // legacy: shared by LMA/Oral/Nasal ETT before per-device columns existed; kept for old rows, no longer written
+  cuffed         Boolean? // legacy: see tubeSize
+  peepCmH2O      Float?
+  ippv           Boolean       @default(false)
+  jetVentilation Boolean       @default(false)
+  fob            Boolean       @default(false)
 
   // Why this case has no airway device of its own. Both were checkboxes that
   // lived only in the web form's React state: they relaxed the finalisation
@@ -1724,32 +1833,32 @@ model IntraoperativeRecord {
   // the record; this team simply did not perform it.
   // airwayNotApplicable: no airway intervention at all -- a regional or
   // sedation case where the patient kept their own airway throughout.
-  presentsIntubated    Boolean     @default(false)
-  airwayNotApplicable  Boolean     @default(false)
+  presentsIntubated   Boolean @default(false)
+  airwayNotApplicable Boolean @default(false)
 
-  airwayTools       Json           @default("[]")
-  airwayNotes       String?
-  cormackLehane     CormackLehane?
-  airwayDevices     Json           @default("[]")
+  airwayTools         Json           @default("[]")
+  airwayNotes         String?
+  cormackLehane       CormackLehane?
+  airwayDevices       Json           @default("[]")
   /// Each airway device its own entry (10.2.0): kind, details, time in, in use /
   /// failed / replaced. Empty on cases saved before; airwayDevices and the size
   /// columns stay filled from it so older readers keep working.
-  airwayDeviceEntries Json         @default("[]")
+  airwayDeviceEntries Json           @default("[]")
   /// Preparation-only state for Smart Equipment; not a clinical event.
-  equipmentPrepared  Json          @default("{}")
+  equipmentPrepared   Json           @default("{}")
   /// The side of a block or unilateral spinal (10.2.0), by technique code: LEFT, RIGHT or BOTH.
   /// Empty on cases saved before; their techniques carry no side.
-  techniqueSides    Json           @default("{}")
-  ventilationModes  Json           @default("[]")
-  lmaSize           Float?
-  oralTubeSize      Float?
-  oralCuffed        Boolean?
-  nasalTubeSize     Float?
-  nasalCuffed       Boolean?
-  dltType           String?
-  dltSide           String?
-  dltSize           Float?
-  endobronchialSize Float?
+  techniqueSides      Json           @default("{}")
+  ventilationModes    Json           @default("[]")
+  lmaSize             Float?
+  oralTubeSize        Float?
+  oralCuffed          Boolean?
+  nasalTubeSize       Float?
+  nasalCuffed         Boolean?
+  dltType             String?
+  dltSide             String?
+  dltSize             Float?
+  endobronchialSize   Float?
 
   /// LEGACY, read-only. Superseded by the agent_start events, which carry the
   /// agent with its start, end and concentration and export as drug_exposure.
@@ -1761,7 +1870,7 @@ model IntraoperativeRecord {
   /// vascularAccesses arrays, which export properly and allow more than one.
   /// Unlike this column they had no reader anywhere -- no control wrote them,
   /// no screen showed them, nothing exported them.
-  volatileAgent    VolatileAgent?
+  volatileAgent VolatileAgent?
 
   ecg              Boolean @default(false)
   urinaryCatheter  Boolean @default(false)
@@ -1883,14 +1992,14 @@ model PostoperativeRecord {
   recoverySpO2Unobtainable        Boolean             @default(false)
   recoveryTemperatureUnobtainable Boolean             @default(false)
 
-  complications    String?
-  disposition      Disposition?
-  dispositionNotes String?
+  complications           String?
+  disposition             Disposition?
+  dispositionNotes        String?
   /// The procedure done (10.0.0), as the planned procedures are kept; filled
   /// in with the planned ones, changed when the operation differed.
   performedProceduresJson Json?
   performedProcedureRows  PerformedProcedure[]
-  handoverItems    Json         @default("[]")
+  handoverItems           Json                 @default("[]")
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -1931,39 +2040,39 @@ model ClinicalRuleReview {
 }
 
 model ClinicalPreset {
-  id                    String                               @id @default(cuid())
-  key                   String
-  name                  String
-  description           String?
-  clinicalMode          ClinicalMode                         @default(PEDIATRIC)
-  scope                 ClinicalPresetScope                  @default(PLATFORM)
-  ownerInstitutionId    String?
-  ownerInstitution      Institution?                         @relation("ClinicalPresetInstitutionOwner", fields: [ownerInstitutionId], references: [id], onDelete: Cascade)
-  ownerUserId           String?
-  ownerUser             User?                                @relation("ClinicalPresetUserOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
-  copiedFromPresetId    String?
-  copiedFromPreset      ClinicalPreset?                      @relation("ClinicalPresetCopies", fields: [copiedFromPresetId], references: [id], onDelete: SetNull)
-  copies                ClinicalPreset[]                     @relation("ClinicalPresetCopies")
-  copiedFromVersion     Int?
-  version               Int
-  status                ClinicalPresetStatus                 @default(DRAFT)
-  createdById           String?
-  createdBy             User?                                @relation("ClinicalPresetCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  createdByTechnicalPrincipalId String?
-  createdByTechnicalPrincipal TechnicalPrincipal?            @relation("ClinicalPresetTechnicalCreator", fields: [createdByTechnicalPrincipalId], references: [id], onDelete: Restrict)
-  publishedById         String?
-  publishedBy           User?                                @relation("ClinicalPresetPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  id                              String                               @id @default(cuid())
+  key                             String
+  name                            String
+  description                     String?
+  clinicalMode                    ClinicalMode                         @default(PEDIATRIC)
+  scope                           ClinicalPresetScope                  @default(PLATFORM)
+  ownerInstitutionId              String?
+  ownerInstitution                Institution?                         @relation("ClinicalPresetInstitutionOwner", fields: [ownerInstitutionId], references: [id], onDelete: Cascade)
+  ownerUserId                     String?
+  ownerUser                       User?                                @relation("ClinicalPresetUserOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  copiedFromPresetId              String?
+  copiedFromPreset                ClinicalPreset?                      @relation("ClinicalPresetCopies", fields: [copiedFromPresetId], references: [id], onDelete: SetNull)
+  copies                          ClinicalPreset[]                     @relation("ClinicalPresetCopies")
+  copiedFromVersion               Int?
+  version                         Int
+  status                          ClinicalPresetStatus                 @default(DRAFT)
+  createdById                     String?
+  createdBy                       User?                                @relation("ClinicalPresetCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdByTechnicalPrincipalId   String?
+  createdByTechnicalPrincipal     TechnicalPrincipal?                  @relation("ClinicalPresetTechnicalCreator", fields: [createdByTechnicalPrincipalId], references: [id], onDelete: Restrict)
+  publishedById                   String?
+  publishedBy                     User?                                @relation("ClinicalPresetPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
   publishedByTechnicalPrincipalId String?
-  publishedByTechnicalPrincipal TechnicalPrincipal?          @relation("ClinicalPresetTechnicalPublisher", fields: [publishedByTechnicalPrincipalId], references: [id], onDelete: Restrict)
-  publishedAt           DateTime?
-  createdAt             DateTime                             @default(now())
-  updatedAt             DateTime                             @updatedAt
-  rules                 ClinicalPresetRule[]
-  platformSelections    PlatformClinicalPresetSelection[]
-  institutionSelections InstitutionClinicalPresetSelection[]
-  userSelections        UserClinicalPresetSelection[]
-  overrides             InstitutionClinicalRuleOverride[]
-  publicationEvidence   ClinicalRulesetPublicationEvidence?
+  publishedByTechnicalPrincipal   TechnicalPrincipal?                  @relation("ClinicalPresetTechnicalPublisher", fields: [publishedByTechnicalPrincipalId], references: [id], onDelete: Restrict)
+  publishedAt                     DateTime?
+  createdAt                       DateTime                             @default(now())
+  updatedAt                       DateTime                             @updatedAt
+  rules                           ClinicalPresetRule[]
+  platformSelections              PlatformClinicalPresetSelection[]
+  institutionSelections           InstitutionClinicalPresetSelection[]
+  userSelections                  UserClinicalPresetSelection[]
+  overrides                       InstitutionClinicalRuleOverride[]
+  publicationEvidence             ClinicalRulesetPublicationEvidence?
 
   @@index([scope, clinicalMode, status])
   @@index([ownerInstitutionId, clinicalMode, status])
@@ -1978,20 +2087,20 @@ model ClinicalPreset {
 /// personal publication keep the exact resulting content and an empty or
 /// applicable baseline diff through the same contract.
 model ClinicalRulesetPublicationEvidence {
-  id                    String         @id @default(cuid())
-  presetId              String         @unique
-  preset                ClinicalPreset @relation(fields: [presetId], references: [id], onDelete: Restrict)
-  baselinePresetId      String?
-  baselinePresetVersion Int?
-  reason                String?
-  contentSha256         String
-  diffSha256            String
-  exactDiff             Json
-  confirmedById         String?
-  confirmedBy           User?          @relation("ClinicalRulesetPublicationConfirmer", fields: [confirmedById], references: [id], onDelete: SetNull)
+  id                              String              @id @default(cuid())
+  presetId                        String              @unique
+  preset                          ClinicalPreset      @relation(fields: [presetId], references: [id], onDelete: Restrict)
+  baselinePresetId                String?
+  baselinePresetVersion           Int?
+  reason                          String?
+  contentSha256                   String
+  diffSha256                      String
+  exactDiff                       Json
+  confirmedById                   String?
+  confirmedBy                     User?               @relation("ClinicalRulesetPublicationConfirmer", fields: [confirmedById], references: [id], onDelete: SetNull)
   confirmedByTechnicalPrincipalId String?
-  confirmedByTechnicalPrincipal TechnicalPrincipal? @relation("ClinicalRulesetTechnicalConfirmer", fields: [confirmedByTechnicalPrincipalId], references: [id], onDelete: Restrict)
-  confirmedAt           DateTime       @default(now())
+  confirmedByTechnicalPrincipal   TechnicalPrincipal? @relation("ClinicalRulesetTechnicalConfirmer", fields: [confirmedByTechnicalPrincipalId], references: [id], onDelete: Restrict)
+  confirmedAt                     DateTime            @default(now())
 
   @@index([baselinePresetId])
   @@index([confirmedById, confirmedAt])
@@ -1999,15 +2108,15 @@ model ClinicalRulesetPublicationEvidence {
 }
 
 model PlatformClinicalPresetSelection {
-  clinicalMode ClinicalMode   @id
-  presetId     String
-  preset       ClinicalPreset @relation(fields: [presetId], references: [id], onDelete: Restrict)
-  selectedById String?
-  selectedBy   User?          @relation(fields: [selectedById], references: [id], onDelete: SetNull)
+  clinicalMode                   ClinicalMode        @id
+  presetId                       String
+  preset                         ClinicalPreset      @relation(fields: [presetId], references: [id], onDelete: Restrict)
+  selectedById                   String?
+  selectedBy                     User?               @relation(fields: [selectedById], references: [id], onDelete: SetNull)
   selectedByTechnicalPrincipalId String?
-  selectedByTechnicalPrincipal TechnicalPrincipal? @relation("PlatformClinicalPresetTechnicalSelector", fields: [selectedByTechnicalPrincipalId], references: [id], onDelete: Restrict)
-  selectedAt   DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  selectedByTechnicalPrincipal   TechnicalPrincipal? @relation("PlatformClinicalPresetTechnicalSelector", fields: [selectedByTechnicalPrincipalId], references: [id], onDelete: Restrict)
+  selectedAt                     DateTime            @default(now())
+  updatedAt                      DateTime            @updatedAt
 
   @@index([presetId])
   @@index([selectedByTechnicalPrincipalId])
@@ -2210,30 +2319,30 @@ enum MedicationKind {
 // failure never blocks a clinical save. caseId is denormalised for research joins.
 
 model PreopDiagnosis {
-  id                String                 @id @default(cuid())
-  preopId           String
-  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
-  caseId            String
-  code              String?
-  label             String
-  labelEn           String?
-  labelBg           String?
-  system            String?
-  sourceVocabulary  String?
-  sourceCode        String?
-  standardConceptId Int?
+  id                 String                      @id @default(cuid())
+  preopId            String
+  preop              PreoperativeAssessment      @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId             String
+  code               String?
+  label              String
+  labelEn            String?
+  labelBg            String?
+  system             String?
+  sourceVocabulary   String?
+  sourceCode         String?
+  standardConceptId  Int?
   /// Every standard concept, when the source code maps to several (an ICD-10
   /// combination code such as E11.2, diabetes with a kidney complication):
   /// standardConceptId is then null and the export writes one row per id.
   /// Empty otherwise.
-  standardConceptIds Int[]              @default([])
-  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
-  source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
-  clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
-  suggestions       PreopAssessmentSuggestion[]
-  sourceVersion     String?
-  ordinal           Int                    @default(0)
-  createdAt         DateTime               @default(now())
+  standardConceptIds Int[]                       @default([])
+  mappingStatus      ConceptMappingStatus        @default(SOURCE_ONLY)
+  source             String                      @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
+  clinicalSource     String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
+  suggestions        PreopAssessmentSuggestion[]
+  sourceVersion      String?
+  ordinal            Int                         @default(0)
+  createdAt          DateTime                    @default(now())
 
   @@index([caseId])
   @@index([preopId])
@@ -2296,30 +2405,30 @@ model PreopProcedure {
 }
 
 model Comorbidity {
-  id                String                 @id @default(cuid())
-  preopId           String
-  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
-  caseId            String
-  label             String
-  labelEn           String?
-  labelBg           String?
-  code              String?
-  icd10Code         String? // ICD-10 code (Gap 2: comorbidities coded same as diagnoses)
-  system            String?
-  sourceVocabulary  String?
-  sourceCode        String?
-  standardConceptId Int?
+  id                 String                 @id @default(cuid())
+  preopId            String
+  preop              PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId             String
+  label              String
+  labelEn            String?
+  labelBg            String?
+  code               String?
+  icd10Code          String? // ICD-10 code (Gap 2: comorbidities coded same as diagnoses)
+  system             String?
+  sourceVocabulary   String?
+  sourceCode         String?
+  standardConceptId  Int?
   /// Every standard concept, when the source code maps to several (an ICD-10
   /// combination code such as E11.2, diabetes with a kidney complication):
   /// standardConceptId is then null and the export writes one row per id.
   /// Empty otherwise.
-  standardConceptIds Int[]              @default([])
-  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
-  source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
-  clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
-  sourceVersion     String?
-  ordinal           Int                    @default(0)
-  createdAt         DateTime               @default(now())
+  standardConceptIds Int[]                  @default([])
+  mappingStatus      ConceptMappingStatus   @default(SOURCE_ONLY)
+  source             String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
+  clinicalSource     String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
+  sourceVersion      String?
+  ordinal            Int                    @default(0)
+  createdAt          DateTime               @default(now())
 
   @@index([caseId])
   @@index([preopId])
@@ -2376,10 +2485,10 @@ model LabResult {
   sourceVocabulary  String?
   sourceCode        String?
   standardConceptId Int?
-  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
+  mappingStatus     ConceptMappingStatus @default(SOURCE_ONLY)
   sourceVersion     String?
-  ordinal           Int                    @default(0)
-  createdAt         DateTime               @default(now())
+  ordinal           Int                  @default(0)
+  createdAt         DateTime             @default(now())
 
   @@index([caseId])
   @@index([preopId])
@@ -2392,31 +2501,31 @@ model LabResult {
 
 // Preop medications as coded rows (Theme C3; currentMedications JSON kept for backwards compat)
 model Medication {
-  id                String                 @id @default(cuid())
-  preopId           String
-  preop             PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
-  caseId            String
-  kind              MedicationKind         @default(CURRENT)
-  drugId            String? // FK to Drug if matched
-  nameRaw           String // raw label as entered
-  inn               String?
-  atcCode           String?
-  dose              String?
-  route             String?
-  frequency         String?
-  sourceVocabulary  String?
-  sourceCode        String?
-  standardConceptId Int?
+  id                 String                 @id @default(cuid())
+  preopId            String
+  preop              PreoperativeAssessment @relation(fields: [preopId], references: [id], onDelete: Cascade)
+  caseId             String
+  kind               MedicationKind         @default(CURRENT)
+  drugId             String? // FK to Drug if matched
+  nameRaw            String // raw label as entered
+  inn                String?
+  atcCode            String?
+  dose               String?
+  route              String?
+  frequency          String?
+  sourceVocabulary   String?
+  sourceCode         String?
+  standardConceptId  Int?
   /// Every ingredient concept of a combination product with no combination
   /// concept of its own: standardConceptId is then null and the export writes
   /// one drug_exposure row per id. Empty otherwise.
-  standardConceptIds Int[]                 @default([])
-  mappingStatus     ConceptMappingStatus   @default(SOURCE_ONLY)
-  source            String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
-  clinicalSource    String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
-  sourceVersion     String?
-  ordinal           Int                    @default(0)
-  createdAt         DateTime               @default(now())
+  standardConceptIds Int[]                  @default([])
+  mappingStatus      ConceptMappingStatus   @default(SOURCE_ONLY)
+  source             String                 @default("sync") // sync-audit metadata, always "relational-sync" — NOT clinical provenance
+  clinicalSource     String? // "manual" | "ai-scan" | "import"; who/what recorded this item. Nullable: absent means unknown for pre-existing rows.
+  sourceVersion      String?
+  ordinal            Int                    @default(0)
+  createdAt          DateTime               @default(now())
 
   @@index([caseId])
   @@index([preopId])

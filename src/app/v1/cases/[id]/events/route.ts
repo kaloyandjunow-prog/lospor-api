@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, after } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
+import { recordNurseWork, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody, type ClinicalPiiIssue } from "@/lib/clinical-pii"
@@ -108,6 +109,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const piiError = piiForEvent(event)
   if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
+  // Giving a drug despite an allergy warning is the doctor's decision (10.8.0).
+  if (Array.isArray(event.allergyAck) && event.allergyAck.length > 0) {
+    const allergyRefusal = refuseIfNotAllowed(user, "GIVE_DESPITE_ALLERGY")
+    if (allergyRefusal) return allergyRefusal
+  }
 
   // Drug vocabulary lookup is read-only and does not need to hold the case lock.
   if (event.type === "drug" && event.atcCode && !event.drugId) {
@@ -130,7 +136,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -143,6 +149,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (caseRecord.status === "COMPLETE") {
         return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
       }
+      // After the checks that can refuse, so a refused request has written nothing.
+      await recordNurseWork(tx, user, id)
       const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
       if (pediatricBlock) return pediatricBlock
       const existingIntraop = await tx.intraoperativeRecord.findUnique({
@@ -207,7 +215,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // record so an offline retry remains safe when another screen advanced
       // the section revision. The event itself stays unchanged for audit and
       // idempotent replay; only the materialized section patch is rebased.
-      const patchToApply = atomicIntraopPatch && revisionConflictDetected
+      const patchToApply = atomicIntraopPatch && (revisionConflictDetected || Array.isArray(atomicIntraopPatch.removedSourceEventIds))
         ? rebaseAtomicIntraopPatch(existing.intraop as unknown as Record<string, unknown>, atomicIntraopPatch)
         : atomicIntraopPatch
 

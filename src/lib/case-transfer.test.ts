@@ -24,7 +24,7 @@ function tx(currentCode: string | null, clashingCode: string | null) {
     handle: {
       case: {
         findUniqueOrThrow: vi.fn().mockResolvedValue({
-          caseCode: currentCode, institutionId: "inst-1",
+          caseCode: currentCode, institutionId: "inst-1", userId: "owner-1",
         }),
         findFirst: vi.fn().mockImplementation(({ where }) =>
           Promise.resolve(where.caseCode === clashingCode ? { id: "other-case" } : null)),
@@ -34,6 +34,7 @@ function tx(currentCode: string | null, clashingCode: string | null) {
         findUniqueOrThrow: vi.fn().mockResolvedValue({ institutionId: "inst-1" }),
       },
       caseTransfer: { updateMany: vi.fn(), update: vi.fn() },
+      caseStaffLog: { createMany: vi.fn() },
     },
     caseUpdate,
   }
@@ -107,5 +108,16 @@ describe("transferring case ownership", () => {
     const { handle } = tx("2026-0007", "2026-0007")
     await transferCaseOwnershipInTransaction(handle as never, "case-1", "peer-1")
     expect(reserveCaseCode).toHaveBeenCalledWith("peer-1", expect.anything(), "2026-0099")
+  })
+
+  it("keeps who was the doctor and when: a leaving and a joining, by whom", async () => {
+    const { handle } = tx(null, null)
+    await transferCaseOwnershipInTransaction(handle as never, "case-1", "peer-1", { byUserId: "head-1" })
+    expect((handle as unknown as { caseStaffLog: { createMany: ReturnType<typeof vi.fn> } }).caseStaffLog.createMany).toHaveBeenCalledWith({
+      data: [
+        { caseId: "case-1", userId: "owner-1", kind: "DOCTOR", action: "LEFT", reason: "TRANSFER", byUserId: "head-1" },
+        { caseId: "case-1", userId: "peer-1", kind: "DOCTOR", action: "JOINED", reason: "TRANSFER", byUserId: "head-1" },
+      ],
+    })
   })
 })

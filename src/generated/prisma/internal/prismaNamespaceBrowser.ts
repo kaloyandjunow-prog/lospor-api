@@ -62,6 +62,10 @@ export const ModelName = {
   Institution: 'Institution',
   Case: 'Case',
   OperatingTheatre: 'OperatingTheatre',
+  CaseStaffLog: 'CaseStaffLog',
+  CaseNurse: 'CaseNurse',
+  CasePresence: 'CasePresence',
+  TheatreNurseShift: 'TheatreNurseShift',
   IndicatorPolicy: 'IndicatorPolicy',
   IntraopAutomationPolicy: 'IntraopAutomationPolicy',
   VitalStatTally: 'VitalStatTally',
@@ -304,6 +308,7 @@ export const CaseScalarFieldEnum = {
   institutionId: 'institutionId',
   operatingTheatreId: 'operatingTheatreId',
   operatingTheatreName: 'operatingTheatreName',
+  plannedSurgeryDate: 'plannedSurgeryDate',
   status: 'status',
   cancelledAt: 'cancelledAt',
   cancelledById: 'cancelledById',
@@ -337,6 +342,53 @@ export const OperatingTheatreScalarFieldEnum = {
 } as const
 
 export type OperatingTheatreScalarFieldEnum = (typeof OperatingTheatreScalarFieldEnum)[keyof typeof OperatingTheatreScalarFieldEnum]
+
+
+export const CaseStaffLogScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  userId: 'userId',
+  kind: 'kind',
+  action: 'action',
+  reason: 'reason',
+  byUserId: 'byUserId',
+  at: 'at'
+} as const
+
+export type CaseStaffLogScalarFieldEnum = (typeof CaseStaffLogScalarFieldEnum)[keyof typeof CaseStaffLogScalarFieldEnum]
+
+
+export const CaseNurseScalarFieldEnum = {
+  caseId: 'caseId',
+  userId: 'userId',
+  assignedById: 'assignedById',
+  source: 'source',
+  assignedAt: 'assignedAt'
+} as const
+
+export type CaseNurseScalarFieldEnum = (typeof CaseNurseScalarFieldEnum)[keyof typeof CaseNurseScalarFieldEnum]
+
+
+export const CasePresenceScalarFieldEnum = {
+  caseId: 'caseId',
+  userId: 'userId',
+  deviceId: 'deviceId',
+  seenAt: 'seenAt'
+} as const
+
+export type CasePresenceScalarFieldEnum = (typeof CasePresenceScalarFieldEnum)[keyof typeof CasePresenceScalarFieldEnum]
+
+
+export const TheatreNurseShiftScalarFieldEnum = {
+  id: 'id',
+  theatreId: 'theatreId',
+  userId: 'userId',
+  shiftDate: 'shiftDate',
+  assignedById: 'assignedById',
+  createdAt: 'createdAt'
+} as const
+
+export type TheatreNurseShiftScalarFieldEnum = (typeof TheatreNurseShiftScalarFieldEnum)[keyof typeof TheatreNurseShiftScalarFieldEnum]
 
 
 export const IndicatorPolicyScalarFieldEnum = {

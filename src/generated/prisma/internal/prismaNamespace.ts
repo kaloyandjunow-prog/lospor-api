@@ -408,6 +408,10 @@ export const ModelName = {
   Institution: 'Institution',
   Case: 'Case',
   OperatingTheatre: 'OperatingTheatre',
+  CaseStaffLog: 'CaseStaffLog',
+  CaseNurse: 'CaseNurse',
+  CasePresence: 'CasePresence',
+  TheatreNurseShift: 'TheatreNurseShift',
   IndicatorPolicy: 'IndicatorPolicy',
   IntraopAutomationPolicy: 'IntraopAutomationPolicy',
   VitalStatTally: 'VitalStatTally',
@@ -500,7 +504,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "operatingTheatre" | "indicatorPolicy" | "intraopAutomationPolicy" | "vitalStatTally" | "vitalStatTallyScope" | "vitalStatTallyCase" | "caseIndicatorSummary" | "operatingTheatrePolicy" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "drugColor" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopDocumentPolicy" | "consentTemplateVersion" | "caseConsentPrint" | "preopProfileQuestion" | "preopProfileSection" | "preopProfileOrderOption" | "preopProfileConsultSpecialty" | "preopWardOrder" | "preopMedicationInstruction" | "preopPremedicationOrder" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "performedProcedure" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
+    modelProps: "user" | "emailVerificationToken" | "passwordResetToken" | "authSession" | "mfaLoginChallenge" | "mfaRecoveryCode" | "technicalPrincipal" | "legalAcceptance" | "institution" | "case" | "operatingTheatre" | "caseStaffLog" | "caseNurse" | "casePresence" | "theatreNurseShift" | "indicatorPolicy" | "intraopAutomationPolicy" | "vitalStatTally" | "vitalStatTallyScope" | "vitalStatTallyCase" | "caseIndicatorSummary" | "operatingTheatrePolicy" | "caseLock" | "caseCodeSequence" | "caseTransfer" | "roleRequest" | "institutionChangeRequest" | "icd10Code" | "icd10Synonym" | "labLoinc" | "atc" | "drug" | "optionLibrary" | "drugColor" | "conceptMap" | "omopVocabulary" | "omopDomain" | "omopConcept" | "omopConceptRelationship" | "omopConceptAncestor" | "omopConceptSynonym" | "omopVocabularyImport" | "clinicalFieldStatus" | "caseFieldChange" | "caseFinalization" | "revokedToken" | "rateLimit" | "caseEvent" | "auditLog" | "customTerm" | "preoperativeAssessment" | "preopQuestionDefinition" | "preopAnswerOption" | "preopAssessmentProfile" | "preopDocumentPolicy" | "consentTemplateVersion" | "caseConsentPrint" | "preopProfileQuestion" | "preopProfileSection" | "preopProfileOrderOption" | "preopProfileConsultSpecialty" | "preopWardOrder" | "preopMedicationInstruction" | "preopPremedicationOrder" | "preopAssessmentAnswer" | "preopAssessmentSuggestion" | "preopAssessmentAuditEvent" | "intraoperativeRecord" | "postoperativeRecord" | "caseClinicalCalculation" | "clinicalRuleReview" | "clinicalPreset" | "clinicalRulesetPublicationEvidence" | "platformClinicalPresetSelection" | "institutionClinicalPresetSelection" | "userClinicalPresetSelection" | "clinicalPresetRule" | "institutionClinicalRuleOverride" | "preopDiagnosis" | "performedProcedure" | "preopProcedure" | "comorbidity" | "labResult" | "medication" | "vascularAccess" | "premedicationAdministration" | "caseComplication" | "caseSelection" | "researchAccessGrant" | "researchSelfAuthorization" | "researchCohort" | "researchExport"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1315,6 +1319,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.OperatingTheatreCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.OperatingTheatreCountAggregateOutputType> | number
+        }
+      }
+    }
+    CaseStaffLog: {
+      payload: Prisma.$CaseStaffLogPayload<ExtArgs>
+      fields: Prisma.CaseStaffLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CaseStaffLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CaseStaffLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>
+        }
+        findFirst: {
+          args: Prisma.CaseStaffLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CaseStaffLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>
+        }
+        findMany: {
+          args: Prisma.CaseStaffLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>[]
+        }
+        create: {
+          args: Prisma.CaseStaffLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>
+        }
+        createMany: {
+          args: Prisma.CaseStaffLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CaseStaffLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>[]
+        }
+        delete: {
+          args: Prisma.CaseStaffLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>
+        }
+        update: {
+          args: Prisma.CaseStaffLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.CaseStaffLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CaseStaffLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CaseStaffLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.CaseStaffLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseStaffLogPayload>
+        }
+        aggregate: {
+          args: Prisma.CaseStaffLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCaseStaffLog>
+        }
+        groupBy: {
+          args: Prisma.CaseStaffLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseStaffLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CaseStaffLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseStaffLogCountAggregateOutputType> | number
+        }
+      }
+    }
+    CaseNurse: {
+      payload: Prisma.$CaseNursePayload<ExtArgs>
+      fields: Prisma.CaseNurseFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CaseNurseFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CaseNurseFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>
+        }
+        findFirst: {
+          args: Prisma.CaseNurseFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CaseNurseFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>
+        }
+        findMany: {
+          args: Prisma.CaseNurseFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>[]
+        }
+        create: {
+          args: Prisma.CaseNurseCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>
+        }
+        createMany: {
+          args: Prisma.CaseNurseCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CaseNurseCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>[]
+        }
+        delete: {
+          args: Prisma.CaseNurseDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>
+        }
+        update: {
+          args: Prisma.CaseNurseUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>
+        }
+        deleteMany: {
+          args: Prisma.CaseNurseDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CaseNurseUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CaseNurseUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>[]
+        }
+        upsert: {
+          args: Prisma.CaseNurseUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CaseNursePayload>
+        }
+        aggregate: {
+          args: Prisma.CaseNurseAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCaseNurse>
+        }
+        groupBy: {
+          args: Prisma.CaseNurseGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseNurseGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CaseNurseCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CaseNurseCountAggregateOutputType> | number
+        }
+      }
+    }
+    CasePresence: {
+      payload: Prisma.$CasePresencePayload<ExtArgs>
+      fields: Prisma.CasePresenceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CasePresenceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CasePresenceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        findFirst: {
+          args: Prisma.CasePresenceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CasePresenceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        findMany: {
+          args: Prisma.CasePresenceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>[]
+        }
+        create: {
+          args: Prisma.CasePresenceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        createMany: {
+          args: Prisma.CasePresenceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CasePresenceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>[]
+        }
+        delete: {
+          args: Prisma.CasePresenceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        update: {
+          args: Prisma.CasePresenceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        deleteMany: {
+          args: Prisma.CasePresenceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CasePresenceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CasePresenceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>[]
+        }
+        upsert: {
+          args: Prisma.CasePresenceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CasePresencePayload>
+        }
+        aggregate: {
+          args: Prisma.CasePresenceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCasePresence>
+        }
+        groupBy: {
+          args: Prisma.CasePresenceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CasePresenceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CasePresenceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CasePresenceCountAggregateOutputType> | number
+        }
+      }
+    }
+    TheatreNurseShift: {
+      payload: Prisma.$TheatreNurseShiftPayload<ExtArgs>
+      fields: Prisma.TheatreNurseShiftFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TheatreNurseShiftFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TheatreNurseShiftFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>
+        }
+        findFirst: {
+          args: Prisma.TheatreNurseShiftFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TheatreNurseShiftFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>
+        }
+        findMany: {
+          args: Prisma.TheatreNurseShiftFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>[]
+        }
+        create: {
+          args: Prisma.TheatreNurseShiftCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>
+        }
+        createMany: {
+          args: Prisma.TheatreNurseShiftCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TheatreNurseShiftCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>[]
+        }
+        delete: {
+          args: Prisma.TheatreNurseShiftDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>
+        }
+        update: {
+          args: Prisma.TheatreNurseShiftUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>
+        }
+        deleteMany: {
+          args: Prisma.TheatreNurseShiftDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TheatreNurseShiftUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TheatreNurseShiftUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>[]
+        }
+        upsert: {
+          args: Prisma.TheatreNurseShiftUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TheatreNurseShiftPayload>
+        }
+        aggregate: {
+          args: Prisma.TheatreNurseShiftAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTheatreNurseShift>
+        }
+        groupBy: {
+          args: Prisma.TheatreNurseShiftGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TheatreNurseShiftGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TheatreNurseShiftCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TheatreNurseShiftCountAggregateOutputType> | number
         }
       }
     }
@@ -7202,6 +7502,7 @@ export const CaseScalarFieldEnum = {
   institutionId: 'institutionId',
   operatingTheatreId: 'operatingTheatreId',
   operatingTheatreName: 'operatingTheatreName',
+  plannedSurgeryDate: 'plannedSurgeryDate',
   status: 'status',
   cancelledAt: 'cancelledAt',
   cancelledById: 'cancelledById',
@@ -7235,6 +7536,53 @@ export const OperatingTheatreScalarFieldEnum = {
 } as const
 
 export type OperatingTheatreScalarFieldEnum = (typeof OperatingTheatreScalarFieldEnum)[keyof typeof OperatingTheatreScalarFieldEnum]
+
+
+export const CaseStaffLogScalarFieldEnum = {
+  id: 'id',
+  caseId: 'caseId',
+  userId: 'userId',
+  kind: 'kind',
+  action: 'action',
+  reason: 'reason',
+  byUserId: 'byUserId',
+  at: 'at'
+} as const
+
+export type CaseStaffLogScalarFieldEnum = (typeof CaseStaffLogScalarFieldEnum)[keyof typeof CaseStaffLogScalarFieldEnum]
+
+
+export const CaseNurseScalarFieldEnum = {
+  caseId: 'caseId',
+  userId: 'userId',
+  assignedById: 'assignedById',
+  source: 'source',
+  assignedAt: 'assignedAt'
+} as const
+
+export type CaseNurseScalarFieldEnum = (typeof CaseNurseScalarFieldEnum)[keyof typeof CaseNurseScalarFieldEnum]
+
+
+export const CasePresenceScalarFieldEnum = {
+  caseId: 'caseId',
+  userId: 'userId',
+  deviceId: 'deviceId',
+  seenAt: 'seenAt'
+} as const
+
+export type CasePresenceScalarFieldEnum = (typeof CasePresenceScalarFieldEnum)[keyof typeof CasePresenceScalarFieldEnum]
+
+
+export const TheatreNurseShiftScalarFieldEnum = {
+  id: 'id',
+  theatreId: 'theatreId',
+  userId: 'userId',
+  shiftDate: 'shiftDate',
+  assignedById: 'assignedById',
+  createdAt: 'createdAt'
+} as const
+
+export type TheatreNurseShiftScalarFieldEnum = (typeof TheatreNurseShiftScalarFieldEnum)[keyof typeof TheatreNurseShiftScalarFieldEnum]
 
 
 export const IndicatorPolicyScalarFieldEnum = {
@@ -8953,6 +9301,48 @@ export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
+ * Reference to a field of type 'CaseStaffKind'
+ */
+export type EnumCaseStaffKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStaffKind'>
+    
+
+
+/**
+ * Reference to a field of type 'CaseStaffKind[]'
+ */
+export type ListEnumCaseStaffKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStaffKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CaseStaffAction'
+ */
+export type EnumCaseStaffActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStaffAction'>
+    
+
+
+/**
+ * Reference to a field of type 'CaseStaffAction[]'
+ */
+export type ListEnumCaseStaffActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseStaffAction[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CaseNurseSource'
+ */
+export type EnumCaseNurseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseNurseSource'>
+    
+
+
+/**
+ * Reference to a field of type 'CaseNurseSource[]'
+ */
+export type ListEnumCaseNurseSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CaseNurseSource[]'>
+    
+
+
+/**
  * Reference to a field of type 'TransferStatus'
  */
 export type EnumTransferStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransferStatus'>
@@ -9547,6 +9937,10 @@ export type GlobalOmitConfig = {
   institution?: Prisma.InstitutionOmit
   case?: Prisma.CaseOmit
   operatingTheatre?: Prisma.OperatingTheatreOmit
+  caseStaffLog?: Prisma.CaseStaffLogOmit
+  caseNurse?: Prisma.CaseNurseOmit
+  casePresence?: Prisma.CasePresenceOmit
+  theatreNurseShift?: Prisma.TheatreNurseShiftOmit
   indicatorPolicy?: Prisma.IndicatorPolicyOmit
   intraopAutomationPolicy?: Prisma.IntraopAutomationPolicyOmit
   vitalStatTally?: Prisma.VitalStatTallyOmit

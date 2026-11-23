@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { NURSE_ACCOUNT_ROLES } from "@lospor/core/clinical-roles"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { corsHeaders } from "@/lib/cors"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { caseWriteWhereForUser } from "@/lib/access-control"
@@ -31,6 +33,8 @@ function transferError(error: unknown, caseId: string) {
 // POST - initiate a transfer
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "HAND_OVER_TO_DOCTOR")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id: caseId } = await params
@@ -60,6 +64,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const recipient = await tx.user.findUnique({
           where: {
             id: toUserId,
+            // A case goes to a doctor; a nurse takes part in it, she is not its owner.
+            role: { notIn: [...NURSE_ACCOUNT_ROLES] },
             activatedAt: { not: null },
             suspendedAt: null,
             recoveryRequiredAt: null,
@@ -142,6 +148,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         const outcome = await transferCaseOwnershipInTransaction(tx, caseId, toUserId, {
           supersedePending: true,
+          byUserId: user.id,
         })
         const transfer = await tx.caseTransfer.create({
           data: {
@@ -189,6 +196,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 // PATCH - recipient accepts or declines
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "HAND_OVER_TO_DOCTOR")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id: caseId } = await params
@@ -235,6 +244,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
           const outcome = await transferCaseOwnershipInTransaction(tx, caseId, user.id, {
             acceptTransferId: transfer.id,
+            byUserId: user.id,
           })
           await logAuditInTransaction(tx, user.id, "CASE_TRANSFER_ACCEPT", caseId, {
             fromUserId: transfer.fromUserId,

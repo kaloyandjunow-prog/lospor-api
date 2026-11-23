@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server"
 import { z } from "zod"
 
 import { getAuthUser } from "@/lib/mobile-auth"
+import { recordNurseWork, refuseChangedAllergyAck, refuseIfNotAllowed } from "@/lib/nurse-access"
 import { clinicalEventSource } from "@/lib/event-provenance"
 import { prisma } from "@/lib/prisma"
 import { checkEventPII, piiErrorBody } from "@/lib/clinical-pii"
@@ -134,6 +135,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   const removes = [...new Set(parsed.remove)]
   const allEvents = [...adds, ...updates]
+  // Giving a drug despite an allergy warning is the doctor's decision (10.8.0):
+  // a new administration only; an edit of one the doctor gave keeps its acknowledgement.
+  if (adds.some(event => Array.isArray(event.allergyAck) && event.allergyAck.length > 0)) {
+    const allergyRefusal = refuseIfNotAllowed(user, "GIVE_DESPITE_ALLERGY")
+    if (allergyRefusal) return allergyRefusal
+  }
   await resolveDrugExposureConcepts(prisma, allEvents)
   const source = clinicalEventSource(user)
   const madeAt = madeAtFrom(req.headers.get("x-lospor-made-at"))
@@ -142,12 +149,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       if (caseRecord.status === "CANCELLED") return NextResponse.json({ error: "CASE_CANCELLED", code: "CASE_CANCELLED" }, { status: 409 })
       if (caseRecord.status === "COMPLETE") return NextResponse.json({ error: "Case is finalised" }, { status: 403 })
+      // After the checks that can refuse, so a refused request has written nothing.
+      await recordNurseWork(tx, user, id)
       const pediatricBlock = pediatricMutationResponse(req, caseRecord.clinicalMode)
       if (pediatricBlock) return pediatricBlock
 
@@ -171,6 +180,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const eventsToWrite: LogEvent[] = []
       for (const raw of [...updates, ...adds]) {
         let candidate = raw as unknown as LogEvent
+        // An update cannot put or change an allergy acknowledgement for a nurse either.
+        const allergyRefusal = refuseChangedAllergyAck(user, current.find(item => item.id === candidate.id) as { allergyAck?: unknown } | undefined, candidate as { allergyAck?: unknown })
+        if (allergyRefusal) return allergyRefusal
         const duplicate = automationDuplicateClinicalEvent([...current, ...eventsToWrite], candidate)
         if (duplicate) candidate = coalesceAutomationClinicalEvent(duplicate, candidate)
         if (candidate.intraopPatch && candidate.suggestion?.startsWith("context:")) {

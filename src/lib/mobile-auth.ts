@@ -5,6 +5,7 @@ import { resolveAccount } from "@/lib/password-epoch"
 import { validateTrackedSession } from "@/lib/auth-sessions"
 import type { AuthSessionClient } from "@/lib/auth-sessions"
 import type { AccountKind, PreferredLocale } from "@lospor/core/account"
+import { isNurse, loadNurseScope, type NurseScope } from "@/lib/nurse-scope"
 
 export const AUTH_COOKIE_NAME = "lospor_session"
 export const AUTH_TOKEN_TTL_SECONDS = 8 * 60 * 60
@@ -21,6 +22,8 @@ export type AuthUser = {
   title: string | null
   jti: string | null
   clientType: AuthSessionClient
+  /** An anaesthesia nurse's cases and theatres today (10.8.0); absent for everyone else. */
+  nurseScope?: NurseScope
 }
 
 function secret() {
@@ -105,9 +108,11 @@ export async function getAuthUser(req: Request): Promise<AuthUser | null> {
       : req.headers.get("authorization")?.startsWith("Bearer ")
         ? "NATIVE"
         : "WEB"
+    const role = account.role ?? (payload.role as string)
     return {
       id: payload.id as string,
-      role: account.role ?? (payload.role as string),
+      role,
+      ...(isNurse({ role }) ? { nurseScope: await loadNurseScope(payload.id as string) } : {}),
       accountKind: account.accountKind,
       preferredLocale: account.preferredLocale,
       institutionId: account.institutionId,

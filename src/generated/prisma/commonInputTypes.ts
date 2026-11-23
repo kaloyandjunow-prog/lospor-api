@@ -433,6 +433,57 @@ export type BoolWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedBoolFilter<$PrismaModel>
 }
 
+export type EnumCaseStaffKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffKind | Prisma.EnumCaseStaffKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffKindFilter<$PrismaModel> | $Enums.CaseStaffKind
+}
+
+export type EnumCaseStaffActionFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffAction | Prisma.EnumCaseStaffActionFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffActionFilter<$PrismaModel> | $Enums.CaseStaffAction
+}
+
+export type EnumCaseStaffKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffKind | Prisma.EnumCaseStaffKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffKindWithAggregatesFilter<$PrismaModel> | $Enums.CaseStaffKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCaseStaffKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCaseStaffKindFilter<$PrismaModel>
+}
+
+export type EnumCaseStaffActionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffAction | Prisma.EnumCaseStaffActionFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffActionWithAggregatesFilter<$PrismaModel> | $Enums.CaseStaffAction
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCaseStaffActionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCaseStaffActionFilter<$PrismaModel>
+}
+
+export type EnumCaseNurseSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseNurseSource | Prisma.EnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseNurseSourceFilter<$PrismaModel> | $Enums.CaseNurseSource
+}
+
+export type EnumCaseNurseSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseNurseSource | Prisma.EnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseNurseSourceWithAggregatesFilter<$PrismaModel> | $Enums.CaseNurseSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCaseNurseSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCaseNurseSourceFilter<$PrismaModel>
+}
+
 export type JsonNullableFilter<$PrismaModel = never> =
 | Prisma.PatchUndefined<
     Prisma.Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -1462,6 +1513,57 @@ export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedBoolFilter<$PrismaModel>
   _max?: Prisma.NestedBoolFilter<$PrismaModel>
+}
+
+export type NestedEnumCaseStaffKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffKind | Prisma.EnumCaseStaffKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffKindFilter<$PrismaModel> | $Enums.CaseStaffKind
+}
+
+export type NestedEnumCaseStaffActionFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffAction | Prisma.EnumCaseStaffActionFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffActionFilter<$PrismaModel> | $Enums.CaseStaffAction
+}
+
+export type NestedEnumCaseStaffKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffKind | Prisma.EnumCaseStaffKindFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffKind[] | Prisma.ListEnumCaseStaffKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffKindWithAggregatesFilter<$PrismaModel> | $Enums.CaseStaffKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCaseStaffKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCaseStaffKindFilter<$PrismaModel>
+}
+
+export type NestedEnumCaseStaffActionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseStaffAction | Prisma.EnumCaseStaffActionFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseStaffAction[] | Prisma.ListEnumCaseStaffActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseStaffActionWithAggregatesFilter<$PrismaModel> | $Enums.CaseStaffAction
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCaseStaffActionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCaseStaffActionFilter<$PrismaModel>
+}
+
+export type NestedEnumCaseNurseSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseNurseSource | Prisma.EnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseNurseSourceFilter<$PrismaModel> | $Enums.CaseNurseSource
+}
+
+export type NestedEnumCaseNurseSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CaseNurseSource | Prisma.EnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CaseNurseSource[] | Prisma.ListEnumCaseNurseSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCaseNurseSourceWithAggregatesFilter<$PrismaModel> | $Enums.CaseNurseSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCaseNurseSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCaseNurseSourceFilter<$PrismaModel>
 }
 
 export type NestedJsonNullableFilter<$PrismaModel = never> =

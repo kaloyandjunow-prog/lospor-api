@@ -47,7 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const records = await withLockedCaseTransaction(id, async tx => {
     const record = await tx.case.findUnique({
       where: { id },
-      select: { id: true, userId: true, createdById: true, institutionId: true, status: true },
+      select: { id: true, userId: true, createdById: true, institutionId: true, status: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
     })
     if (!record) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
     if (!canReadCase(user, record)) {
@@ -76,6 +76,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           id: true,
           userId: true,
           institutionId: true,
+          operatingTheatreId: true,
+          finalizedAt: true,
+          plannedSurgeryDate: true,
           status: true,
           clinicalMode: true,
         },

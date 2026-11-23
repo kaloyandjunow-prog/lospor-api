@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
@@ -28,6 +29,8 @@ export async function OPTIONS(req: NextRequest) {
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "FINALISE")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const userId = user.id
   const { id } = await params

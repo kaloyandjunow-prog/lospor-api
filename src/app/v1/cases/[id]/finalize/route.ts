@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { corsHeaders } from "@/lib/cors"
@@ -42,6 +43,8 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "FINALISE")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const userId = user.id
   const { id } = await params
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {

@@ -19,6 +19,10 @@ const answerKind = z.string().min(1).max(120).refine(
   value => (VITAL_COMPLICATION_KINDS as readonly string[]).includes(value)
     || value === "card"
     || value === "succession"
+    // 10.8.0: an airway/vascular event deleted from the chart (its section's change rides on this note),
+    // and a vitals-logged event kept after its reading was corrected.
+    || value === "section"
+    || value === "keep_auto_event"
     || CONTEXT_LINK_AUTOMATION_IDS.has(value)
     || /^(card-reveal|reverse|reading|lab|reminder|timer|monitor):[A-Za-z0-9_-]+$/.test(value),
   "Unknown question",
@@ -119,6 +123,9 @@ export const caseEventSchema = z.object({
   // entry time that is not an instant would make that question unanswerable.
   recordedAt: z.string().datetime({ offset: true }).optional(),
   stopConfirmed: z.boolean().optional(),
+  // 10.8.0: on the End case stop, the item went on after the case (an
+  // infusion continued on the ward). Only a stop carries it.
+  continuesAfterEnd: z.boolean().optional(),
   // Every charted vital, bounded. Without these they arrived through
   // passthrough below and were coerced with a bare Number(), so the API stored
   // whatever a client sent -- a BIS of -500, a train-of-four of 20 -- with the
@@ -212,6 +219,9 @@ export const caseEventSchema = z.object({
   }
   if (event.site && !(event.type === "clinical_event" && (event.label === "Tourniquet on" || event.label === "Tourniquet off"))) {
     context.addIssue({ code: "custom", path: ["site"], message: "Only a tourniquet has a site" })
+  }
+  if (event.continuesAfterEnd != null && !["infusion_stop", "fluid_end", "agent_stop", "gas_stop", "jet_stop"].includes(event.type)) {
+    context.addIssue({ code: "custom", path: ["continuesAfterEnd"], message: "Only a stop goes on after the case" })
   }
   if ((event.pumpTotal != null || event.pumpTotalUnit) && event.type !== "infusion_stop") {
     context.addIssue({ code: "custom", path: ["pumpTotal"], message: "A pump total is entered on the stop" })

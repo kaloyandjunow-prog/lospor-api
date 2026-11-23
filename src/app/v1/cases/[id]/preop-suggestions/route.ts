@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { canReadCase, canWriteCaseWithOwnerFallback } from "@/lib/access-control"
 import { CaseWriteError, isCaseFinalizedDatabaseError, withLockedCaseTransaction } from "@/lib/clinical-transaction"
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "EDIT_PREOP")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id } = await params
   try {

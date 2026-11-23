@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { ZodError } from "zod"
 import { caseReadWhereForUser } from "@/lib/access-control"
 import { getAuthUser } from "@/lib/mobile-auth"
@@ -14,6 +15,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "EDIT_PREOP")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id } = await params
 

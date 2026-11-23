@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { isNurseAccountRole } from "@lospor/core/clinical-roles"
 import { z } from "zod"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { requireRole } from "@/lib/access-control"
@@ -17,13 +18,27 @@ import { invalidateAccountState, notePasswordChanged } from "@/lib/password-epoc
 import { accountAdministrationRefusal } from "@/lib/deployment-capabilities"
 
 const schema = z.object({
-  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ADMIN"]).optional(),
+  role: z.enum(["MEMBER", "HEAD_OF_DEPT", "ADMIN", "ANAESTHESIA_NURSE", "ANAESTHESIA_SENIOR_NURSE"]).optional(),
   accountKind: z.enum(["CLINICAL", "RESEARCH_ONLY"]).optional(),
   currentPassword: z.string().min(1),
   reason: z.string().trim().min(3).max(500),
 }).strict().refine(value => value.role !== undefined || value.accountKind !== undefined, {
   message: "At least one authority field is required",
 })
+
+const REFUSAL_TEXT: Record<string, string> = {
+  NOT_FOUND: "Account not found",
+  DELETED: "This account was deleted",
+  INACTIVE: "This account is inactive, suspended or awaiting recovery",
+  NO_CHANGE: "The account already has this role",
+  STANDARD_ROUTE_REQUIRED: "This role change does not need administrator re-entry; use the ordinary role change",
+  ADMIN_MUST_BE_CLINICAL: "An administrator must have a clinical account",
+  INVALID_HOD_INSTITUTION: "A head of department needs an institution",
+  LAST_ADMIN: "The last administrator cannot be demoted",
+  CONFLICT: "The account changed at the same time; try again",
+  NURSE_CANNOT_BECOME_DOCTOR: "A nurse account cannot be made a doctor",
+  DOCTOR_HAS_OPEN_CASES: "This doctor still has open cases; hand them over first",
+}
 
 export async function POST(
   request: NextRequest,
@@ -76,6 +91,12 @@ export async function POST(
       const nextAccountKind = parsed.data.accountKind ?? target.accountKind
       const roleChanged = nextRole !== target.role
       const accountKindChanged = nextAccountKind !== target.accountKind
+      // A nurse (or senior nurse) is never made a doctor or an administrator.
+      if (isNurseAccountRole(target.role) && !isNurseAccountRole(nextRole)) return { code: "NURSE_CANNOT_BECOME_DOCTOR" as const }
+      if (isNurseAccountRole(nextRole) && !isNurseAccountRole(target.role)
+        && await transaction.case.count({ where: { userId: id, status: { notIn: ["COMPLETE", "CANCELLED"] } } }) > 0) {
+        return { code: "DOCTOR_HAS_OPEN_CASES" as const }
+      }
       if (!roleChanged && !accountKindChanged) {
         return { code: "NO_CHANGE" as const }
       }
@@ -146,8 +167,9 @@ export async function POST(
     }, serializableTransaction)
 
     if (outcome.code !== "OK") {
+      // A reason a person can read (translated by the clients), with the code kept for programs.
       return NextResponse.json(
-        { error: outcome.code },
+        { error: REFUSAL_TEXT[outcome.code] ?? outcome.code, code: outcome.code },
         { status: outcome.code === "NOT_FOUND" ? 404 : 409 },
       )
     }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server"
 import { z } from "zod"
 
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
+import { refuseChangedAllergyAck } from "@/lib/nurse-access"
 import { logAudit } from "@/lib/audit"
 import { addEvent, deleteEvent, rebuildProjection, reserveIntraopRevision, type LogEvent, activeCaseLog, cascadeDeleteIds, laterChangeMade, madeAtFrom, timelineIssuesFor, sameContent } from "@/lib/case-events"
 import { supersededRefusal as superseded, timelineRefusal } from "@/lib/timeline-refusal"
@@ -93,12 +94,11 @@ export async function PUT(
   const event = { ...parsed, ...(atomicIntraopPatch ? { intraopPatch: atomicIntraopPatch } : {}), id: eventId }
   const piiError = checkEventPII(event)
   if (piiError) return NextResponse.json(piiErrorBody(piiError), { status: 400 })
-
   try {
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {
@@ -130,6 +130,9 @@ export async function PUT(
       const existing = { ...caseRecord, intraop: existingIntraop }
       const current = await activeCaseLog(tx, id)
       const existingEvent = current.find(item => item.id === event.id)
+      // Giving a drug despite an allergy warning is the doctor's decision: a nurse's edit cannot put or change it.
+      const allergyRefusal = refuseChangedAllergyAck(user, existingEvent as { allergyAck?: unknown } | undefined, event as { allergyAck?: unknown })
+      if (allergyRefusal) return allergyRefusal
       if (existingEvent && sameContent(existingEvent as unknown as Record<string, unknown>, event as unknown as Record<string, unknown>)) {
         return { changed: false, fresh: existingIntraop }
       }
@@ -147,7 +150,7 @@ export async function PUT(
       const refused = timelineRefusal(timelineIssuesFor(current, next))
       if (refused) return refused
 
-      const patchToApply = atomicIntraopPatch && revisionConflictDetected
+      const patchToApply = atomicIntraopPatch && (revisionConflictDetected || Array.isArray(atomicIntraopPatch.removedSourceEventIds))
         ? rebaseAtomicIntraopPatch(existing.intraop as unknown as Record<string, unknown>, atomicIntraopPatch)
         : atomicIntraopPatch
       const revisionReserved = revision != null && !!existing.intraop && !revisionConflictDetected
@@ -203,7 +206,7 @@ export async function DELETE(
     const result = await withLockedCaseTransaction(id, async tx => {
       const caseRecord = await tx.case.findUnique({
         where: { id },
-        select: { userId: true, status: true, institutionId: true, clinicalMode: true },
+        select: { id: true, userId: true, status: true, institutionId: true, clinicalMode: true, operatingTheatreId: true, finalizedAt: true, plannedSurgeryDate: true },
       })
       if (!caseRecord) throw new CaseWriteError("CASE_NOT_FOUND", 404, "Not found")
       if (!await canWriteCaseWithOwnerFallback(tx, user, caseRecord)) {

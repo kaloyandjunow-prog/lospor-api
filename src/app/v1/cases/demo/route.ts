@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { prisma }  from "@/lib/prisma"
 import { withLockedCaseTransaction } from "@/lib/clinical-transaction"
+import { logCaseStaff } from "@/lib/case-staff-log"
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
@@ -211,5 +212,6 @@ export async function GET(req: NextRequest) {
     },
   })
 
+  await logCaseStaff(prisma, [{ caseId: caseRecord.id, userId, kind: "DOCTOR", action: "JOINED", reason: "CREATED", byUserId: userId }])
   return NextResponse.json({ id: caseRecord.id })
 }

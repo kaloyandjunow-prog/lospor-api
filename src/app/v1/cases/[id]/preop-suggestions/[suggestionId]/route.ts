@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { z } from "zod"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
@@ -9,6 +10,8 @@ const bodySchema = z.object({ status: z.enum(["ACCEPTED", "REJECTED"]) })
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string, suggestionId: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "EDIT_PREOP")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id, suggestionId } = await params
   try {

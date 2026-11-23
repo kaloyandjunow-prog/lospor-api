@@ -1,12 +1,21 @@
 import { Prisma } from "@/generated/prisma/client"
+import { mayAssignNurses, NURSE_ACCOUNT_ROLES } from "@lospor/core/clinical-roles"
+import { isNurse, isSeniorNurse, nurseCaseWhere, nurseReachesCase, type NurseScope } from "@/lib/nurse-access"
 
 export type AuthUser = {
   id: string
   role?: string | null
   institutionId?: string | null
+  /** An anaesthesia nurse's cases and theatres today (10.8.0). */
+  nurseScope?: NurseScope
 }
 
 type CaseAccessRecord = {
+  /** A nurse reaches a case by these (10.8.0); without them she is refused. */
+  id?: string
+  operatingTheatreId?: string | null
+  finalizedAt?: Date | null
+  plannedSurgeryDate?: Date | null
   userId: string
   createdById?: string | null
   // Required, though it may be null. Every head-of-department decision reads the
@@ -29,6 +38,8 @@ export function requireRole<U extends { role?: string | null }>(
 }
 
 export function canReadCase(user: AuthUser, record: CaseAccessRecord): boolean {
+  // A nurse sees every case of her hospital (2026-11-23); what she may change is canWriteCase.
+  if (isNurse(user)) return (!!user.institutionId && record.institutionId === user.institutionId) || nurseReachesCase(user.nurseScope, record)
   if (user.role === "ADMIN") return true
   if (record.userId === user.id) return true
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
@@ -48,6 +59,9 @@ export function canReadCase(user: AuthUser, record: CaseAccessRecord): boolean {
 }
 
 export function canWriteCase(user: AuthUser, record: CaseAccessRecord): boolean {
+  // A senior nurse edits every case of her hospital; a nurse the cases she is on and her theatre's today.
+  if (isSeniorNurse(user)) return !!user.institutionId && record.institutionId === user.institutionId
+  if (isNurse(user)) return nurseReachesCase(user.nurseScope, record)
   if (user.role === "ADMIN") return true
   if (record.userId === user.id) return true
   return user.role === "HEAD_OF_DEPT"
@@ -61,6 +75,12 @@ export function caseCapabilitiesForUser(user: AuthUser, record: CaseAccessRecord
     canWrite: canWriteCase(user, record),
     isCreator: record.createdById === user.id,
     isAssignee: record.userId === user.id,
+    // 10.8.0: an anaesthesia nurse writes intraop and postop only; the clients hide the rest
+    // (Core roleMay), the routes refuse it anyway.
+    isNurse: isNurse(user),
+    isSeniorNurse: isSeniorNurse(user),
+    // Who may put nurses on this case (Core mayAssignNurses): the head and the administrator, the case's own doctor, a senior nurse.
+    canAssignNurses: mayAssignNurses({ accountRole: user.role, ownsCase: record.userId === user.id, sameInstitution: !!user.institutionId && record.institutionId === user.institutionId }),
   }
 }
 
@@ -135,6 +155,11 @@ export function headOfDeptCaseScope(institutionId: string): Prisma.CaseWhereInpu
 
 export function caseReadWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereInput {
   const base = id ? { id } : {}
+  // Every case of her hospital, and the ones she is on (2026-11-23).
+  if (isNurse(user)) {
+    const own = nurseCaseWhere(user.nurseScope ?? { caseIds: [], theatreIds: [], shiftDate: "" })
+    return { ...base, OR: user.institutionId ? [{ institutionId: user.institutionId }, own] : [own] }
+  }
   if (user.role === "ADMIN") return base
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
     // canReadCase permits the assignee unconditionally, before it ever looks
@@ -160,6 +185,8 @@ export function caseReadWhereForUser(user: AuthUser, id?: string): Prisma.CaseWh
 
 export function caseWriteWhereForUser(user: AuthUser, id?: string): Prisma.CaseWhereInput {
   const base = id ? { id } : {}
+  if (isSeniorNurse(user)) return user.institutionId ? { ...base, institutionId: user.institutionId } : { ...base, id: { in: [] } }
+  if (isNurse(user)) return { ...base, ...nurseCaseWhere(user.nurseScope ?? { caseIds: [], theatreIds: [], shiftDate: "" }) }
   if (user.role === "ADMIN") return base
   if (user.role === "HEAD_OF_DEPT" && user.institutionId) {
     // Same gap as caseReadWhereForUser, and canWriteCase permits the assignee
@@ -169,6 +196,15 @@ export function caseWriteWhereForUser(user: AuthUser, id?: string): Prisma.CaseW
     return { ...base, OR: [{ userId: user.id }, headOfDeptCaseScope(user.institutionId)] }
   }
   return { ...base, userId: user.id }
+}
+
+/**
+ * The cases a person's own data export holds (2026-11-23): her own. A nurse reads every case of her hospital, but her export
+ * is only the ones she is on or created, never the hospital's patients.
+ */
+export function caseExportWhereForUser(user: AuthUser): Prisma.CaseWhereInput {
+  if (isNurse(user)) return { OR: [{ nurses: { some: { userId: user.id } } }, { createdById: user.id }] }
+  return caseReadWhereForUser(user)
 }
 
 /** @deprecated Read alias retained for compatibility; writes must never use it. */
@@ -194,9 +230,25 @@ export const caseWhereForUser = caseReadWhereForUser
  * refused later would be offering a choice that cannot work.
  */
 export function colleagueWhereForUser(user: AuthUser): Prisma.UserWhereInput | null {
+  // A nurse hands a case on only to another nurse of her department (10.8.0).
+  if (isNurse(user)) {
+    return user.institutionId
+      ? {
+          institutionId: user.institutionId,
+          id: { not: user.id },
+          role: { in: [...NURSE_ACCOUNT_ROLES] },
+          activatedAt: { not: null },
+          suspendedAt: null,
+          recoveryRequiredAt: null,
+          deletedAt: null,
+          anonymizedAt: null,
+        }
+      : null
+  }
   if (user.role === "ADMIN") {
     return {
       id: { not: user.id },
+      role: { notIn: [...NURSE_ACCOUNT_ROLES] },
       accountKind: "CLINICAL",
       activatedAt: { not: null },
       suspendedAt: null,
@@ -209,6 +261,7 @@ export function colleagueWhereForUser(user: AuthUser): Prisma.UserWhereInput | n
     return {
       institutionId: user.institutionId,
       id: { not: user.id },
+      role: { notIn: [...NURSE_ACCOUNT_ROLES] },
       accountKind: "CLINICAL",
       activatedAt: { not: null },
       suspendedAt: null,

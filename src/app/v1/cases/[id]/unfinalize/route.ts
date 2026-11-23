@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { refuseIfNotAllowed } from "@/lib/nurse-access"
 import { getAuthUser } from "@/lib/mobile-auth"
 import { logAuditInTransaction } from "@/lib/audit"
 import { canWriteCaseWithOwnerFallback } from "@/lib/access-control"
@@ -17,6 +18,8 @@ export async function OPTIONS(req: NextRequest) {
 // POST — undo finalization within the shared FINALIZE_UNDO_WINDOW_MS window
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(req)
+  const nurseRefusal = refuseIfNotAllowed(user, "UNFINALISE")
+  if (nurseRefusal) return nurseRefusal
   if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { id } = await params
 
